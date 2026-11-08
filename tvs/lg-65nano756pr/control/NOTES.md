@@ -1,10 +1,10 @@
 # LG 65NANO756PR remote via AC-009 (machine a60120fb-0764-4ced-812e-6326f8b62577)
 Canonical notes + menu map live on AC-009: %LOCALAPPDATA%\LGTVRemote\README.md
-- Helper: lgtv.ps1 (saved key client-key-remote.txt; LGKEYS, LGREAD=1, LGPAIR=1 only for deliberate pairing)
+- Helper: tvs/lg-65nano756pr/control/lgtv.ps1 (saved key client-key-remote.txt; LGKEYS, LGREAD=1, LGPAIR=1 only for deliberate pairing)
 - Allowed: buttons, read backlight/contrast/brightness/color/energySaving, foreground app. Denied: picture writes, screenshots, launch.
 - Menu path: MENU > All Settings > Picture > (RIGHT,DOWN,DOWN,ENTER) Advanced Settings > Brightness > Panel Brightness/Adjust Contrast/Screen Brightness/Auto Dynamic Contrast/Gamma/Black Level
 - 02:39: ENTER,LEFT on Panel Brightness gave no readback change (100). Unverified.
-- 02:45: Claude Opus 5.5 review in /workspace/lg-tv/claude-review.md. Framing/ENTER correct. FG can't see menus (always hdmi2). Trim/whitelist fix applied. Next test: LEFT alone on Panel Brightness with LGREAD=1.
+- 02:45: Claude Opus 5.5 review in /workspace/lg-tv/tvs/lg-65nano756pr/research/ai-reviews/claude-review.md. Framing/ENTER correct. FG can't see menus (always hdmi2). Trim/whitelist fix applied. Next test: LEFT alone on Panel Brightness with LGREAD=1.
 - 02:45: sent MENU via saved key; awaiting photo.
 - 02:59: sent MENU again via saved key; awaiting confirmation.
 - 03:01 CORRECTION: no TV ack exists for buttons; no automated button effect proven. Framing correct. Sent pointer-move test (8 moves, no click); awaiting user observation.
@@ -36,10 +36,10 @@ Confirmed: Sharp 0 (changed), SuperRes/NR/MPEG/SmoothGrad Off, CinemaScreen On, 
 
 ## Official guide added 2026-11-08
 Exact-model support: https://www.lg.com/uk/support/product-support/cs-65NANO756PR.AEK/
-Official English PDF: /workspace/lg-tv/official-guide-extracted/w6.0_mr10_e10_eng.pdf
-Full source-checked Picture tree and limitations: /workspace/lg-tv/gemini-menu-research.md
+Official English PDF: /workspace/lg-tv/tvs/lg-65nano756pr/sources/official-guide-extracted/w6.0_mr10_e10_eng.pdf
+Full source-checked Picture tree and limitations: /workspace/lg-tv/tvs/lg-65nano756pr/research/ai-reviews/gemini-menu-research.md
 This is the webOS6 family guide linked from model65NANO756PR.AEK; regional suffix of owner's unit unknown. Conditional OLED/DolbyVision/local-dimming features do not establish support on this NanoCell. Quick Settings can be reordered: QMENU,ENTER is confirmed for current layout, not a universal focus reset. Numeric controls and live focus need observed confirmation. Gemini high-tier subscription attempt timed out with no generated answer; official-manual research succeeded independently.
 User photo additionally confirms PanelBrightness40; sharpness0 already confirmed. SDR only; HDR untouched.
-- 03:37 device facts in /workspace/lg-tv/device-facts.md (model 65NANO756PR, DVB; firmware version 401-unavailable).
+- 03:37 device facts in /workspace/lg-tv/tvs/lg-65nano756pr/docs/device-facts.md (model 65NANO756PR, DVB; firmware version 401-unavailable).
 - 03:42:56 sent EXIT,QMENU,ENTER,LEFT,UPx4,DOWNx3 aiming Support category (unverified).
 - 03:43 prior Support route landed on General (non-deterministic, don't reuse). 03:43:44 sent DOWN -> Support (awaiting photo).

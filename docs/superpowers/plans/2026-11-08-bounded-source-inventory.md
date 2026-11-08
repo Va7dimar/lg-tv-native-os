@@ -1,8 +1,8 @@
 # Bounded source-archive inventory tooling addendum
 
 Date: 2026-11-08 (Atlantic/Reykjavik)
-Parent plan: `docs/superpowers/plans/2026-11-08-native-bootable-os.md` Task 2 / G2a lines 81-93
-Approval basis: owner continue (t64), keep going (t65), full allowance (t66) after the E-tooling proposal in `handoff/e-tooling-proposal.md`
+Parent plan: `tvs/lg-65nano756pr/docs/plans/2026-11-08-native-bootable-os.md` Task 2 / G2a lines 81-93
+Approval basis: owner continue (t64), keep going (t65), full allowance (t66) after the E-tooling proposal in `tvs/lg-65nano756pr/handoff/e-tooling-proposal.md`
 Status: implementable addendum for a box-only reader. This does **not** authorize TV/hardware/account actions, firmware, flashing, builds, downloaded-code execution, nested archive expansion, ceiling increases, package installation, network requests, or security-check bypass.
 
 This tooling produces an inventory. It does **not** establish a compatible BSP, boot route, recovery path, or installable replacement OS.
@@ -13,7 +13,7 @@ Ship a small, tested, streaming archive-inventory tool under `/workspace/lg-tv/t
 
 This implementation session uses **synthetic adversarial fixtures only**. Do not parse the catalog archives before independent review.
 
-Catalog originals (opaque-byte hashes from `evidence/catalog-manifest.json`; do not open in this session):
+Catalog originals (opaque-byte hashes from `tvs/lg-65nano756pr/evidence/catalog-manifest.json`; do not open in this session):
 
 | Filename | Bytes | SHA256 |
 |---|---|---|

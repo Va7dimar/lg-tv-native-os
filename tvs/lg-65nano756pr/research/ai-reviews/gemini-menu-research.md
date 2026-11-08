@@ -6,11 +6,11 @@ Exact model regional support page https://www.lg.com/uk/support/product-support/
 http://kr.eguide.lgappstv.com/manual/w21_mr10/userguide_w6.0_mr10_e10.html
 and downloadable archive:
 https://gscs-b2c.lge.com/downloadFile?fileId=xTNMAXUHlxmsjAmsx9LVw
-Downloaded archive successfully. It contains English AND Icelandic PDFs, among other languages. English original is /workspace/lg-tv/official-guide-extracted/w6.0_mr10_e10_eng.pdf; searchable text /workspace/lg-tv/official-guide-eng.txt. Icelandic: w6.0_mr10_e10_ice.pdf. This is an official manual explicitly linked from exact 65NANO756PR.AEK support, NOT merely a similar-model search result. It is still a family guide: explicitly says options differ by model/input/mode. Its OLED/Dolby Vision/local dimming entries do not establish those features on this NanoCell. Regional suffix AEK may differ from owner's exact suffix, which is unknown. Support page lists manual revision 14/10/2026; actual TV firmware/menu can differ.
+Downloaded archive successfully. It contains English AND Icelandic PDFs, among other languages. English original is /workspace/lg-tv/tvs/lg-65nano756pr/sources/official-guide-extracted/w6.0_mr10_e10_eng.pdf; searchable text /workspace/lg-tv/tvs/lg-65nano756pr/sources/official-guide-eng.txt. Icelandic: w6.0_mr10_e10_ice.pdf. This is an official manual explicitly linked from exact 65NANO756PR.AEK support, NOT merely a similar-model search result. It is still a family guide: explicitly says options differ by model/input/mode. Its OLED/Dolby Vision/local dimming entries do not establish those features on this NanoCell. Regional suffix AEK may differ from owner's exact suffix, which is unknown. Support page lists manual revision 14/10/2026; actual TV firmware/menu can differ.
 HTTPS online guide fetch failed500; curl identified hostname/certificate mismatch. Did NOT disable TLS checking. Original LG-linked HTTP page fetched via WebFetch. Official HTTPS archive worked and is the substantive source.
 
 ## Official physical remote operations (PDF pp13,65)
-Visually checked PDF p13 icons in /workspace/lg-tv/manual-remote-page.png:
+Visually checked PDF p13 icons in /workspace/lg-tv/tvs/lg-65nano756pr/sources/web-snapshots/manual-remote-page.png:
 - Short press gear = Quick Settings.
 - Hold gear >1 second = All Settings directly.
 - BACK = previous step; hold BACK = closes menu.
@@ -85,7 +85,7 @@ Actual key semantics are USER-OBSERVED, not specified by manual: LEFT on selecte
 Manual confirms hierarchy/labels/purpose and physical remote opening operations. It does NOT establish current selected row, exact index when conditional entries hide, or navigation timing. No screenshot/private API attempts made.
 
 ## Gemini subscription consultation
-agy models succeeded and listed gemini-4-argon-high. Sequential bounded command: timeout160 agy -p <sanitized exact-model read-only research prompt> --model gemini-4-argon-high. No lower-tier fallback. Output /workspace/lg-tv/gemini-menu-output.txt. Actual result appended below.
+agy models succeeded and listed gemini-4-argon-high. Sequential bounded command: timeout160 agy -p <sanitized exact-model read-only research prompt> --model gemini-4-argon-high. No lower-tier fallback. Output /workspace/lg-tv/tvs/lg-65nano756pr/research/ai-reviews/gemini-menu-output.txt. Actual result appended below.
 
 ### Actual Gemini outcome
 Model-list retrieval authenticated sufficiently to list available models; research inference did NOT complete. Exact high-tier command timed out after160 seconds, exit124, with empty output. No auth error reported, but no generated answer either. Therefore no Gemini conclusions to verify and no claim Gemini found the manual. Independent official LG manual research above succeeded during that bounded attempt. Do not retry through another tier or CLI as a workaround.

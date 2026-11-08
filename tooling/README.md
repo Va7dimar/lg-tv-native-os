@@ -11,7 +11,7 @@ python3 --version
 python3 -m unittest discover -s /workspace/lg-tv/tooling/tests -v
 ```
 
-Expected for the reviewed fix revision: `Ran 61 tests` and `OK` (historical48-test suite preceded the fix loop). Do not point the tool at `source-catalog/archives/` until an independent review of this tooling has passed.
+Expected for the reviewed fix revision: `Ran 61 tests` and `OK` (historical48-test suite preceded the fix loop). Do not point the tool at `tvs/lg-65nano756pr/sources/catalog/archives/` (or a leftover top-level `source-catalog/archives/`) until an independent review of this tooling has passed.
 
 ## Direct (non-isolated) invocation
 
