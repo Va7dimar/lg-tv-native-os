@@ -50,8 +50,8 @@ install list. None are recorded as installed.
 
 ## Not re-checked after reboot (unknown until a later photo or note)
 
-- Software Version still `03.53.45`
-- Auto Update still OFF
+- Whether Software Version is still `03.53.45`
+- Whether Auto Update is still OFF
 - Whether `03.53.46` is still offered
 - Sales suffix, board, PCB revision, panel variant, SoC
 - Storage layout, boot policy, recovery entry
