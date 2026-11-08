@@ -58,3 +58,15 @@ No flashing how-to is recorded here.
 ## Stop/go
 Unchanged: **no verified legitimate custom-OS boot route** for this unit in
 checked sources. Official stock USB updating does not fill that gap.
+
+# Follow-up — official USB guide wording (2026-11-08 later, Atlantic/Reykjavik)
+
+`TV_Software_Update_Guide_v3.pdf` English page 2, extracted from the
+official download (hash in `recovery-case.md`; file not committed):
+if the USB memory device holds the **same or lower** software version
+than the TV, the install message does not appear. Combined with the
+already-recorded support-page listings, official consumer updating is
+forward-only when the stock UI can show that prompt.
+
+It still does not document acceptance of a custom image, a bootloader
+unlock, or a replacement OS. Deployment no-go is unchanged.

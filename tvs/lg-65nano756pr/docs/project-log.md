@@ -269,3 +269,23 @@ Pushed pinned SlopBro README plus webosbrew rooting/exploits interpretation to s
 
 # Off-TV SDK/boot follow-up — 2026-11-08 ~16:45 Atlantic/Reykjavik
 Owner t86u: keep going; no rooting, no SlopBro, no TV changes. Third metadata-only filename pass of the 20191125 SDK index: gold/ld.bfd binaries and ldscripts present; still no binutils version (UNKNOWN). Official UK/regional support pages list stock 03.53.45 and 03.53.46 software ZIPs plus TV_Software_Update_Guide_v3.pdf for model lists that include 65NANO756PR. Official USB path is consumer stock update with a documented lower-version refusal; it does not establish custom-OS boot or independent recovery. No firmware downloaded. Claude/Codex/Gemini agreed binutils stays unknown and the recovery no-go stands. Unit hold: stay on 03.53.45, Auto Update OFF. See evidence/binutils-metadata-search-2026-11-08.md, evidence/boot-route.md, evidence/recovery-case.md.
+
+# Off-TV inquiry draft, suffix mapping, official recovery cross-check — 2026-11-08 later Atlantic/Reykjavik
+Owner was mid SlopBro attempt; this pass did not touch the TV and did
+not document exploit steps.
+
+- Draft inquiry (not sent): `handoff/lg-opensource-inquiry-draft.md`.
+  Proposed recipient `opensource@lge.com` / https://opensource.lge.com/inquiry
+  (FOSS form). Recovery questions may need local support per that page.
+- Suffix/firmware mapping: `evidence/sales-suffix-firmware-mapping-2026-11-08.md`.
+  Official SW lists use the base name `65NANO756PR`. Same listed
+  03.53.45 / 03.53.46 ZIP sizes and dates on `.AEK`/`.AEKD` URL, `.AEU`,
+  and `.API` pages. This unit’s suffix still unknown.
+- Official `TV_Software_Update_Guide_v3.pdf` (tmp only; SHA-256
+  `631f18abd8360e9f2328ddb9a41dc4cc4377a1f1a7f706e7c953af4f152ed2e5`):
+  USB install prompt does not appear for the same or lower version.
+- No public official consumer recovery beyond stock forward update,
+  settings reset, and authorised service referral. Recovery no-go
+  unchanged. Reviews: `research/ai-reviews/claude-official-recovery-2026-11-08.md`,
+  `codex-official-recovery-2026-11-08.md`,
+  `gemini-official-recovery-2026-11-08.md`.

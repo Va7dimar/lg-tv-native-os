@@ -56,3 +56,74 @@ provisioning preservation proof.
 Documentary recovery no-go for a custom-OS experiment is **unchanged**. That
 is an evidence limit, not a claim that manufacturer service recovery cannot
 exist anywhere.
+
+# Follow-up — official recovery beyond stock USB (2026-11-08 later, Atlantic/Reykjavik)
+
+Desk-only. No firmware downloaded into git. The official update guide PDF
+was fetched to `/tmp` for text extraction only (2,062,230 bytes, SHA-256
+`631f18abd8360e9f2328ddb9a41dc4cc4377a1f1a7f706e7c953af4f152ed2e5`) and
+was not committed. Independent reviews:
+`research/ai-reviews/claude-official-recovery-2026-11-08.md` (repo guide
+only; web tools declined),
+`research/ai-reviews/codex-official-recovery-2026-11-08.md`,
+`research/ai-reviews/gemini-official-recovery-2026-11-08.md` (second run,
+using pasted official excerpts after a headless shell-permission miss).
+
+## Newly confirmed official wording
+
+`TV_Software_Update_Guide_v3.pdf` English page 2: if the USB package is
+the **same or lower** software version than the TV, the install message
+does not appear. That is stronger than the earlier “lower version will
+not work” excerpt. It does **not** document a consumer way to reinstall
+`03.53.45` over itself.
+
+The same guide (English page 1) says to read the model name from the
+**back product ID labels** before downloading the file, then unzip it
+into a USB folder named `LG_DTV`.
+
+## Official options checked
+
+- **Stock USB or network update**, only when the stock updater can run,
+  and only for a *newer* package than the installed version. Already
+  documented. Same listed `Software_File` 03.53.45 / 03.53.46 sizes and
+  dates appear across `.AEK`/`.AEKD` URL, `.AEU`, and `.API` support
+  pages; applicable-model lists use the base name `65NANO756PR`. See
+  `sales-suffix-firmware-mapping-2026-11-08.md`.
+- **Factory / initial-settings reset**, when menus still work. Official
+  2021/webOS 6 path in one LG USA article is All Settings → General →
+  System → Reset to Initial Settings
+  (https://www.lg.com/us/support/help-library/lg-tv-initialization-resetting-the-product-to-the-factory-default-state--20153293558665).
+  Another LG USA article lists Support → Reset to Initial Settings for
+  webOS 6.0. Either way, this reverts settings; it is not described as
+  firmware restore.
+- **Authorised repair / customer service** when the consumer updater
+  cannot run. Public entry example:
+  https://www.lg.com/uk/support/product-support/repair-request/ .
+  What service would actually do (reflash, board swap, which software
+  version) is not published.
+- **LG Open Source Center** publishes source archives, not recovery
+  images. https://opensource.lge.com/inquiry directs product-operation
+  questions to local LG support.
+
+Codex cited two Malaysia help-library titles about a TV shutting down
+during an update and a firmware update that does not complete
+(https://www.lg.com/my/support/product-support/troubleshoot/help-library/cs-CT20180005-1412243925324/
+and
+https://www.lg.com/my/support/product-support/troubleshoot/help-library/cs-CT20180005-1412237441121/).
+Those URLs exist; this pass did not recover enough article body text to
+independently quote their troubleshooting steps, so those steps are not
+adopted as confirmed wording.
+
+## Still not established
+
+- Any public official consumer recovery loader, emergency USB mode, or
+  procedure that works after overwritten bootloader, kernel, or system
+  partitions.
+- Same-version reinstall of 03.53.45 from the published ZIP.
+- Using 03.53.46 as an unbrick path (and the existing hold remains:
+  stay on 03.53.45, Auto Update OFF).
+- Independent recovery of this specific unit.
+
+Documentary recovery no-go for a custom-OS experiment is **unchanged**.
+That remains an evidence limit, not a claim that manufacturer service
+recovery cannot exist.

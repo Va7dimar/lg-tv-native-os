@@ -44,3 +44,11 @@ already-recorded webOS TV Version `6.5.3-47 (kisscurl-koli)`.
 Keep Software Version `03.53.45`. Leave Auto Update OFF. Do not install the
 offered `03.53.46` / `1142MB` update. Sales suffix, board, PCB revision, panel
 variant, and SoC remain unknown. No serial or MAC recorded in later notes.
+
+# 2026-11-08 later Atlantic/Reykjavik — sales suffix research
+Official firmware applicable-model lists use the base name
+`65NANO756PR` with no dotted suffix. Regional support pages publish
+`.AEK` (UK; URL slug also `.AEKD`), `.AEU` (Sweden/Portugal/Greece URL),
+and `.API` (Italy; also a Greece URL heading). This unit’s on-screen
+model is still `65NANO756PR` only. Rear ID-label suffix remains unknown.
+See `evidence/sales-suffix-firmware-mapping-2026-11-08.md`.
