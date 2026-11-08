@@ -39,3 +39,8 @@ User-photo-confirmed:
 
 This is the dotted software/firmware number. It is distinct from the
 already-recorded webOS TV Version `6.5.3-47 (kisscurl-koli)`.
+
+# Standing hold — 2026-11-08 later Atlantic/Reykjavik
+Keep Software Version `03.53.45`. Leave Auto Update OFF. Do not install the
+offered `03.53.46` / `1142MB` update. Sales suffix, board, PCB revision, panel
+variant, and SoC remain unknown. No serial or MAC recorded in later notes.

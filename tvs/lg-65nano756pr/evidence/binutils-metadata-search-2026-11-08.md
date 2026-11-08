@@ -77,3 +77,43 @@ against newer UAPI than a 4.4 kernel is common and fails at runtime only
 if newer syscalls/fields are actually used; kernel builds use in-tree
 headers, so this UAPI version is not itself a kernel-build blocker.
 
+## Third filename pass (2026-11-08 later, Atlantic/Reykjavik)
+
+Same `inspection-metadata-links-PENDING-REVIEW/members.jsonl` (66880 rows).
+No member contents were selected or executed.
+
+New metadata observations:
+- Still **no** `bfdver.h`, versioned `libbfd`/`libopcodes` sonames, `binutils.pc`,
+  man pages, or `src/debug/binutils*`.
+- Yocto-style debug prefixes that *are* present: `glibc/2.28-r0` (2860 members),
+  `lib32-glibc/2.28-r0` (2779), `libgcc/8.2.0-r0` (14), `lib32-libgcc/8.2.0-r0` (11).
+  These reinforce already-known GCC 8.2.0 / glibc 2.28 package labels. They do
+  not name binutils.
+- Locale catalogs: 22 `binutils.mo` files and 10 `gold.mo` files (binary gettext).
+- Regular linker binaries (sizes are not versions):
+  `arm-starfish-linux-gnueabi-ld` 1748664 B,
+  `arm-starfish-linux-gnueabi-ld.gold` 4899840 B,
+  `aarch64-starfish-linux-ld.bfd` 2894896 B,
+  `aarch64-starfish-linux-ld.gold` 4899840 B.
+- 308 regular files under `ldscripts/` (armelf / aarch64elf families).
+- `libiberty.h` (27266 B) and `plugin-api.h` (14593 B) remain in the GCC 8.2.0
+  plugin include trees; unread.
+
+Conclusion unchanged: **binutils version UNKNOWN**. Presence of both `ld.bfd`
+and `ld.gold` only shows that a gold-capable binutils set was packaged.
+
+A future selected-text read of `binutils.mo` / `gold.mo` gettext headers was
+suggested by Claude as a possible `Project-Id-Version` lead. Those files are
+binary catalogs, not UTF-8 plaintext under the current selector policy, so they
+were **not** read. Any such plan would need its own reviewed exception and
+would at best show a translation-catalog version, not a proven toolchain
+`--version`. Codex and Gemini did not treat CMake modules, `plugin-api.h`, or
+ldscripts as high-confidence version sources. No new selected-text plan was
+executed.
+
+Official guides still name `starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20190307.sh`.
+A public search on this date still found the already-acquired community
+`20191125` candidate, not a `20190307` download. Equivalence remains a
+hypothesis. The community publisher attributes `20191125` to an LG inquiry /
+webOS 5 / OLED CX `04.40.20` origin; that provenance is not independently
+authenticated and is not this unit's webOS 6.5 firmware proof.

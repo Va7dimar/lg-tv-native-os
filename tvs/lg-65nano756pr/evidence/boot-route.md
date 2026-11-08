@@ -21,3 +21,40 @@ Search-only low-relevance hits (not fetched/used as authority):generic webOS pri
 
 ## Stop/go
 U0 produces a dated deployment-no-go finding: **no verified legitimate custom-OS boot route for this unit/board in checked sources**. It does not say no route exists anywhere. Reconsider only on a public exact-board route with applicable revision/acceptance format/limits, independently recoverable failure coverage and compatible lawful hardware support. Identity mapping and source evidence must then be reconciled. This screen is not G3-D or G3-V proof. E1 bounded source-learning remains approved despite this finding. No architecture selected; internal OS goal unchanged.
+
+# Follow-up public screen — stock update vs custom boot (2026-11-08 later, Atlantic/Reykjavik)
+
+No firmware ZIP or update-guide PDF was downloaded. No USB media was prepared.
+No flashing how-to is recorded here.
+
+## Confirmed from official support pages
+- UK product support for `65NANO756PR.AEK` / page title also showing `.AEKD`
+  (`https://www.lg.com/uk/support/product-support/cs-65NANO756PR.AEKD/`) lists:
+  - `Software_File(Version_03.53.45).zip` (listed 1176144K, 30/09/2025)
+  - `Software_File(Version_03.53.46).zip` (listed 1176026K, 20/10/2026)
+  - `TV_Software_Update_Guide_v3.pdf` next to both
+- Page text: software upgrades include device drivers and firmware updates only
+  for specific models.
+- Regional applicable-model lists (for example the Greek/Norwegian support
+  pages) include `65NANO756PR` among many 2021 UP/NANO models that share those
+  SW files. That is a listing, not proof of this unit's sales suffix
+  (still unknown; TV Information showed `65NANO756PR` with no extra suffix).
+- Official LG help articles describe a *consumer stock* USB update path for
+  official software packages. An official update-guide excerpt states that a
+  *lower* version on USB will not work, while a *higher* version can be
+  detected. Same-version behaviour is not independently quoted here.
+- This is ordinary official-update language. It is **not** documentation that
+  the TV will accept a custom image, unlock a bootloader, or boot a
+  replacement OS.
+
+## Rumor / unofficial (not used as authority)
+- Third-party service-menu / InStart / factory-menu writeups. No official
+  consumer document fetched in this pass describes those menus as an
+  independent custom-image recovery path for this model. Entry methods are
+  not recorded here.
+- Community firmware-downgrade writeups exist. They are unofficial and are
+  not documented or recommended here.
+
+## Stop/go
+Unchanged: **no verified legitimate custom-OS boot route** for this unit in
+checked sources. Official stock USB updating does not fill that gap.
