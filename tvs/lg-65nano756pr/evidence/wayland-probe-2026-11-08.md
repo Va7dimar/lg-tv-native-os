@@ -25,3 +25,22 @@ Result: exit 0 in under a second, no surfaces created, no services touched.
 
 ## Next gate
 10-second full-screen surface run (`./wayland-hello --duration 10`), needs a separate owner notice.
+
+# Second on-TV run: 10-second full-screen surface (2026-11-08 18:47 Atlantic/Reykjavik)
+Owner approved ("Yes, run the 10-second test now"). Same binary (SHA256 verified again).
+Command: `XDG_RUNTIME_DIR=/tmp/xdg WAYLAND_DISPLAY=wayland-0 ./wayland-hello --duration 10`
+Ran 18:47:28 to 18:47:38. Exit 0 by deadline, no leftover process.
+
+## Confirmed
+- The compositor accepted a plain **wl_shell** surface from a root client (committed 640x360, then the
+  compositor sent configure 1920x1080, which the app clamped/used).
+- **Owner visually confirmed:** a test pattern/solid color appeared full-screen, then the normal picture
+  came back automatically after exit.
+- So a custom native app can take over the screen on the stock signed kernel without touching any
+  system partition, and it releases the screen cleanly when it exits.
+
+## Still unknown
+- Remote-control input (wl_seat / wl_webos_input_manager) is untested.
+- Whether wl_webos_shell gives better focus, stacking or key routing.
+- Behavior across standby/snapshot. GPU (EGL/mali_buffer_sharing) rendering is untested; this run used shm.
+- Persistent or startup launch hasn't been attempted.
