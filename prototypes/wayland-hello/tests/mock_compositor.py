@@ -155,7 +155,7 @@ class Client:
             return
         pts = {}
         w, h, stride, off = self.last_buf
-        for x, y in ((16, 16), (80, 120), (120, 120)):
+        for x, y in ((16, 16), (80, 120), (120, 120), (160, 120)):
             if 0 <= x < w and 0 <= y < h:
                 o = off + y * stride + x * 4
                 if 0 <= o <= len(self.mem) - 4:

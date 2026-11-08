@@ -18,7 +18,17 @@ showed nothing and got no focus. The TV's `libwayland-webos-client` has no
 `app_id`; about 1.5 s later SAM's `last_input_handler` relaunches
 `com.webos.app.home` and hides it. Version 0.5 sends an app id on both shell
 paths and, with `--webos-shell`, sends window type and `displayAffinity`
-before `set_state`. **0.5 has not been run on the TV.**
+before `set_state`. The owner ran 0.5: `set_title`/`set_class` still left
+LSM `app_id` empty and home reclaimed the CARD after about 1.5 s; the
+webOS path (appId, OVERLAY or CARD, `displayAffinity` 0, then `set_state` 3)
+produced no configure, no state events, no frame callback, and no LSM line.
+The surface was never mapped. The working assumption for 0.6 is that LSM
+maps and keeps a surface only for an app id that SAM itself launched.
+A hand-built IPK of the 0.5 binary, launched by SAM in plain `wl_shell`
+mode, held the full screen and keyboard focus for 30 s
+(`tvs/lg-65nano756pr/evidence/sam-launch-success-2026-11-08.md`). The same
+launch with `--webos-shell` was not shown. Version 0.6 packages that plain
+path as `--demo`. **This package has not been installed on the TV.**
 
 ## What it does
 - Connects to `$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY`. Defaults: `/tmp/xdg` and `wayland-0`. Override with `--runtime-dir` / `--display`. The name must not contain `/`.
@@ -29,7 +39,7 @@ before `set_state`. **0.5 has not been run on the TV.**
 - **Raw key log on stdout.** Every `wl_keyboard.key` value is printed, pressed and released, including codes this client does not name:
   `keycode raw=<u> state=pressed|released|other seat=<n> name=<wl_seat name or ->`
   A header line records the assumption: the protocol key field is the Linux evdev code (`linux/input-event-codes.h`), and the XKB keycode is that value plus 8. Assumed exit codes, press only: **KEY_ESC = 1** (XKB 9), **KEY_BACK = 158** (XKB 166), **KEY_EXIT = 174** (XKB 182). **KEY_OK = 352** and **KEY_ENTER = 28** are named on stderr and do not exit. The webOS DOM key code 461 is a different numbering; if the compositor sends it, stdout shows `raw=461` and stderr says `assumed_evdev=unknown`, and the process waits for the deadline. That stdout log is how the first 0.2 run should map BACK, EXIT, and OK.
-- **`--webos-shell`.** Optional. Replaces `wl_shell` for that run. The OSE protocol XML is vendored, unmodified, in `third_party/webos-wayland-extensions/` with the source URL, commit, blob id, and Apache-2.0 license. Opcodes are not compiled in. The client `dlopen`s `libwayland-webos-client.so.1` and sends `get_shell_surface`, `set_state`, and `set_property("appId")` only when that library's `wl_interface` has the same name and signature. Every `wl_webos_shell_surface` event the runtime interface describes (`state_changed`, `position_changed`, `close`, `exposed`, `state_about_to_change`, and any other name it actually has) is logged with the values its signature can carry. The public tv-6.4.0 dump matches the request opcodes this client sends; webOS 6.5.3 was not dumped. If the library is missing or a required signature does not match, the client exits 9 and sends no webOS request. Before the first commit it sends `set_property` for `appId`, optional `_WEBOS_WINDOW_TYPE` (`--window-type`), and `displayAffinity` `0`, and only then `set_state`. OSE luna-surfacemanager reads those property names, and its overlay/popup models keep a surface only when `displayAffinity` matches the display. Fullscreen stays OSE value **3** (maximized is 2). The TV has not shown which number it uses, so 3 is still an assumption, logged on every `set_state`. The earlier webOS run sent `set_state` while `appId` was still unset. This TV's client library has `get_shell_surface` opcode 1, `set_state` 1, `set_property` 2, and no `set_key_mask`.
+- **`--webos-shell`.** Optional. Replaces `wl_shell` for that run. The OSE protocol XML is vendored, unmodified, in `third_party/webos-wayland-extensions/` with the source URL, commit, blob id, and Apache-2.0 license. Opcodes are not compiled in. The client `dlopen`s `libwayland-webos-client.so.1` and sends `get_shell_surface`, `set_state`, and `set_property("appId")` only when that library's `wl_interface` has the same name and signature. Every `wl_webos_shell_surface` event the runtime interface describes (`state_changed`, `position_changed`, `close`, `exposed`, `state_about_to_change`, and any other name it actually has) is logged with the values its signature can carry. The public tv-6.4.0 dump matches the request opcodes this client sends; webOS 6.5.3 was not dumped. If the library is missing or a required signature does not match, the client exits 9 and sends no webOS request. Before the first commit it sends `set_property` for `appId`, `_WEBOS_WINDOW_TYPE` (default `_WEBOS_WINDOW_TYPE_CARD` when `--window-type` is omitted), and `displayAffinity` `0`, and only then `set_state`. OSE luna-surfacemanager reads those property names, and its overlay/popup models keep a surface only when `displayAffinity` matches the display. Fullscreen stays OSE value **3** (maximized is 2). The TV has not shown which number it uses, so 3 is still an assumption, logged on every `set_state`. The earlier webOS run sent `set_state` while `appId` was still unset. This TV's client library has `get_shell_surface` opcode 1, `set_state` 1, `set_property` 2, and no `set_key_mask`.
 - **`--webos-key-mask`.** Opt-in, and only with `--webos-shell`. It sends `set_key_mask` with the OSE mask `default|back|exit` (`0xFFFFFFF8 | 2 | 4`). Those numbers are checked against the vendored XML by `make test`. If the runtime interface has no `set_key_mask` with signature `u`, the client exits 9 before binding. Without this flag, no key mask is sent.
 - **`--exit-on-leave`.** After a seat's keyboard has entered, a `leave` on that seat exits through the normal cleanup path (`exiting (keyboard-leave)`). The 0.2 run kept going until the deadline after leave, while the picture had already come back. A leave that never had an enter does not exit.
 - **`--egl`.** Optional. `dlopen`s `libwayland-egl.so.1`, `libEGL.so.1`, and `libGLESv2.so.2` at runtime and draws a GLES2 clear plus a rotating triangle. Each missing library or symbol is logged. An ARM soft-float build refuses to call a library whose ELF flags are hard-float or which lack the soft-float flag. If anything fails, it logs `falling back to shm` and uses the SHM path, so a different Mali/EGL build does not stop the process. These calls happen inside the vendor libraries, so a stuck `eglInitialize` is bounded by the alarm, not by `poll`. Leave `WAYLAND_HELLO_LIB_DIR` unset on the TV; it exists so tests can point at fixtures.
@@ -65,6 +75,119 @@ The tests never touch a real compositor: each one forces a private temp socket s
 
 `build/` and `build-cache/` are git-ignored.
 
+## Native Homebrew IPK (0.6)
+
+`scripts/build_ipk.py` writes an `ar` archive with the same member order as
+ares-cli `package.js`: `debian-binary` (`2.0\n`), `control.tar.gz`,
+`data.tar.gz`. Member names are 16 bytes, space-padded, with no trailing
+`/`. GNU `ar` writes that slash, and this TV rejected it with
+`ipk verified failed` (errorCode -5); see the evidence note above. The data
+archive is `usr/palm/applications/org.va7dimar.waylandhello/`
+(`appinfo.json`, `icon.png`, `wayland-hello-launch.sh`, `wayland-hello`).
+It does not call the LG SDK. `make test` builds a stub IPK and checks that
+layout. The ARM package is:
+
+```sh
+python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello \
+  --out build/ipk/org.va7dimar.waylandhello_0.6.0_arm.ipk
+# optional: --lifecycle omit|1|2   --default-window-type card
+```
+
+`appinfo.json` id is `org.va7dimar.waylandhello`, type `native`, main
+`wayland-hello-launch.sh`. The default build sets `defaultWindowType` to
+`card` and `noSplashOnLaunch` to true, and leaves
+`nativeLifeCycleInterfaceVersion` out. `--lifecycle 1` or `--lifecycle 2`
+writes that integer. `--default-window-type overlay` (or another short
+token) replaces `card`. Homebrew's appinfo notes say `defaultWindowType`
+defaults to `card` and `noSplashOnLaunch` defaults to false
+([webosbrew.org/pages/appinfojson](https://www.webosbrew.org/pages/appinfojson)).
+Moonlight's packaged appinfo omits all three
+([mariotaku/moonlight-tv deploy/webos/appinfo.json](https://github.com/mariotaku/moonlight-tv/blob/cf96ecc72cdab3aae7ba0698f463b89065ae7e3b/deploy/webos/appinfo.json)).
+The webosbrew native template does too
+([template-native-gui-app appinfo.json](https://github.com/webosbrew/template-native-gui-app/blob/b211c67c648f37e9c9a76bfa212178aef75357e0/appinfo.json):
+id, type, main, icon, title, version). Stock `com.webos.app.factorywin` on
+this TV sets the lifecycle field to 2 and `defaultWindowType` to `overlay`.
+
+The launcher writes `/tmp/wh6.log`: `env`, then the client's existing `t=`
+lines. If `XDG_RUNTIME_DIR` or `WAYLAND_DISPLAY` is unset it sets them to
+`/tmp/xdg` and `wayland-0`. Stock processes on this TV export
+`XDG_DIR=/tmp/xdg`; this client reads `XDG_RUNTIME_DIR`. The app id passed
+to the client is the `APPID` environment variable when SAM set it, otherwise
+`appId` in the first argument. On the successful launch, argv[1] was
+`{"@system_native_app":true,"nid":"org.va7dimar.waylandhello"}` and `APPID`
+was set. webOS OSE "Developing Built-in Native Apps" says argv[1] is the
+document SAM passes on first launch. The `id` in `appinfo.json` is used only
+when both `APPID` and `appId` are missing.
+
+The launcher runs `wayland-hello --demo --app-id "$APPID"`. `--demo` is
+plain `wl_shell` (no `--webos-shell`), implies `--input`, and moves the
+green square with the remote arrows. A redraw allocates another SHM buffer
+when the current one is still busy, up to 8, and does not paint a busy
+buffer. The 30 s run recorded `releases=0`. BACK (evdev 158) or EXIT (174)
+ends it. `--duration` is only the safety cap: default 120 s with `--demo`,
+still 10 s and at most 30 s without it. The hard alarm is that cap plus 5 s.
+
+`--lifecycle 2` only changes `appinfo.json`. It does not call SAM. The OSE
+built-in sample that sets `nativeLifeCycleInterfaceVersion` to 2 also calls
+`luna://com.webos.service.applicationmanager/registerApp` with `{}` and stays
+subscribed
+([nativeqt ServiceRequest.cpp](https://github.com/webosose/samples/blob/df5fd71410733d120315321e30909e08864f0155/native-apps/built-in/com.example.app.nativeqt/ServiceRequest.cpp),
+[overview](https://www.webosose.org/docs/guides/development/native-apps/native-app-overview/)).
+That sample `LSRegister`s the app id, attaches a GLib main loop
+(`LSGmainAttach`), and uses `LSCall`. The ACG is `application.operation`
+(`requiredPermissions` in that sample's appinfo). Subscription events are
+`registered`, `relaunch` (with `parameters`), `pause`, and `close`
+([registerApp](https://www.webosose.org/docs/reference/ls2-api/com-webos-service-applicationmanager/)).
+Doing it here means dlopen of `libluna-service2` plus a main loop beside
+this client's `poll`, or a child that stays alive for the whole run. A
+one-shot `luna-send -n 1` ends the subscription when that process exits.
+None of that is linked or spawned in this package. Moonlight and the
+webosbrew template ship without the field and without that call.
+
+SDK binary SHA256 `54bcb2f27a59a3ff79161d989217a982f577619aa06820d1bb6264263b166bbc`.
+IPK SHA256 `1132d137dbe86236ff44f594cc0698697e0d3a3bec61c05d219eacb8439981fe`.
+Neither file is committed. `abi/wayland-hello-v6-ABI-REPORT.txt` records the
+same binary.
+
+### Install, launch, uninstall
+
+**NEEDS OWNER NOTICE** for this package. The hand-built IPK already ran; these
+commands are the same shape, with `</dev/null` because `luna-send-pub` reads
+stdin and will swallow a `sh -s` script
+(`tvs/lg-65nano756pr/evidence/sam-launch-success-2026-11-08.md`). Copy the
+IPK to `/tmp/org.va7dimar.waylandhello_0.6.0_arm.ipk` first. Developer mode
+has to already be on.
+
+Install uses OSE `com.webos.appInstallService/dev/install` (`id`, absolute
+`ipkUrl`, `subscribe`;
+[docs](https://www.webosose.org/docs/reference/ls2-api/com-webos-appinstallservice/)).
+Homebrew Channel calls that method with `luna-send-pub`
+([README](https://github.com/webosbrew/webos-homebrew-channel/blob/main/README.md)
+and `tools/install.sh`).
+
+```sh
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.6.0_arm.ipk","subscribe":true}' </dev/null
+```
+
+Launch uses OSE `com.webos.service.applicationmanager/launch` with `{"id":"..."}`
+([docs](https://www.webosose.org/docs/reference/ls2-api/com-webos-service-applicationmanager/)).
+This is the command that held the screen for 30 s, plus `</dev/null`.
+
+```sh
+luna-send-pub -n 1 luna://com.webos.service.applicationmanager/launch '{"id":"org.va7dimar.waylandhello"}' </dev/null
+```
+
+Uninstall uses OSE `dev/remove` with the app id
+([docs](https://www.webosose.org/docs/reference/ls2-api/com-webos-appinstallservice/)).
+
+```sh
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"org.va7dimar.waylandhello","subscribe":true}' </dev/null
+```
+
+Then read `/tmp/wh6.log`. Arrows should move the green square (`buf: spare`
+when the compositor has not released). BACK or EXIT should end it before the
+120 s cap. Pixels on screen are a separate observation.
+
 ## PROPOSED on-TV runs for 0.4
 0.1, 0.2, and 0.3 already ran with owner approval. **None of the steps below
 has been run.** Each one **NEEDS OWNER NOTICE**. Do not chain them. A frame
@@ -84,6 +207,9 @@ a hidden UI or a bad policy state has **not** been demonstrated. Do not treat it
 out-of-band recovery for any step below.
 
 The socket from the display-stack mapping and the probe is `/tmp/xdg/wayland-0` (root, group `composit`, mode 660). Copy only into `/tmp` (tmpfs). Keep stdout and stderr; runtime lines start with `t=`. Do not open `/dev/input`, `/dev/dri`, or `/dev/fb*`. The `hw_watchdog` unit was inactive at the input-device probe; that does not prove the kernel watchdog is disarmed.
+
+Steps 1 and 2 below are the 0.5 commands the owner already ran. They did not
+keep a mapped surface. The 0.6 install and launch are in the section above.
 
 1. **NEEDS OWNER NOTICE. Plain wl_shell, app id on set_title and set_class.**
    `XDG_RUNTIME_DIR=/tmp/xdg WAYLAND_DISPLAY=wayland-0 ./wayland-hello --input --exit-on-leave --duration 15 --app-id wayland-hello-prototype`

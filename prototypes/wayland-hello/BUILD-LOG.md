@@ -151,3 +151,34 @@ SDK binary SHA256
 (`build/sdk/wayland-hello`, not committed). `abi/wayland-hello-v5-ABI-REPORT.txt`
 ABI CHECK PASS, `e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`,
 `libdl.so.2`, `librt.so.1`. No 0.5 binary was copied to or run on the TV.
+
+## 2026-11-08: wayland-hello 0.6 (native Homebrew IPK)
+
+The owner ran 0.5. Plain `wl_shell` `set_title`/`set_class` still left LSM
+`app_id` empty, and home reclaimed the CARD after about 1.5 s. The webOS path
+with appId, OVERLAY or CARD, `displayAffinity` 0, and `set_state` 3 never
+mapped: no configure, no state events, no frame callback, no LSM line. 0.6
+packages the client as native app `org.va7dimar.waylandhello` so SAM is the
+process that launches that id. `--webos-shell` now defaults the window type
+to `_WEBOS_WINDOW_TYPE_CARD`. The launcher passes that type and `--duration 30`.
+The client default duration is still 10.
+
+Host `make test`: **132 tests, 0 failed**, plus `tests/test_ipk.py` (0 failed).
+
+The hand-built 0.5 IPK, SAM-launched in plain `wl_shell`, held the screen
+for 30 s (`tvs/lg-65nano756pr/evidence/sam-launch-success-2026-11-08.md`).
+`--webos-shell` was not shown. The packaged launcher now runs `--demo`
+(plain `wl_shell`, spare buffer, BACK/EXIT, 120 s cap). Archive member
+names are space-padded with no GNU `/`.
+
+SDK binary SHA256
+`54bcb2f27a59a3ff79161d989217a982f577619aa06820d1bb6264263b166bbc`
+(`build/sdk/wayland-hello`, not committed). IPK SHA256
+`1132d137dbe86236ff44f594cc0698697e0d3a3bec61c05d219eacb8439981fe`
+(`build/ipk/org.va7dimar.waylandhello_0.6.0_arm.ipk`, not committed). The
+default appinfo sets `defaultWindowType` to `card` and `noSplashOnLaunch`
+to true, and omits `nativeLifeCycleInterfaceVersion`. `--lifecycle 2` and
+`--default-window-type` change those fields only. The binary inside the IPK
+matches the SDK binary. `abi/wayland-hello-v6-ABI-REPORT.txt`
+ABI CHECK PASS, `e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`,
+`libdl.so.2`, `librt.so.1`. No 0.6 binary or IPK was copied to or run on the TV.

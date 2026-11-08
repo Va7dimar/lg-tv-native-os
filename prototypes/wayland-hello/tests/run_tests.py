@@ -51,13 +51,24 @@ def parser_tests():
     check("v2 flags parse", rc == 0 and "input=1" in out and "webos_shell=1" in out and "egl=1" in out
           and "app_id=wayland-hello-prototype" in out, out)
     rc, out, _, _ = run(["--version"])
-    check("version 0.5", rc == 0 and "0.5-prototype" in out, out)
+    check("version 0.6", rc == 0 and "0.6-prototype" in out, out)
     rc, _, err, _ = run(["--parse-only", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY"])
     check("window-type requires webos shell", rc == 2, "rc=%d %s" % (rc, err))
     rc, _, err, _ = run(["--parse-only", "--webos-shell", "--window-type", "OVERLAY"])
     check("window-type must be the webOS token", rc == 2, "rc=%d %s" % (rc, err))
     rc, out, _, _ = run(["--parse-only", "--webos-shell", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY", "--app-id", "wayland-hello-prototype"])
     check("window-type parses", rc == 0 and "window_type=_WEBOS_WINDOW_TYPE_OVERLAY" in out and "app_id=wayland-hello-prototype" in out, out)
+    rc, out, _, _ = run(["--parse-only", "--webos-shell"])
+    check("webos default window type is CARD", rc == 0 and "window_type=_WEBOS_WINDOW_TYPE_CARD" in out, out)
+    rc, out, err, _ = run(["--parse-only", "--demo"])
+    check("demo is plain wl_shell input with a 120s cap",
+          rc == 0 and "demo=1" in out and "input=1" in out and "webos_shell=0" in out and "duration_s=120" in out, out)
+    rc, out, _, _ = run(["--parse-only", "--demo", "--duration", "45"])
+    check("demo duration can exceed 30", rc == 0 and "duration_s=45" in out, out)
+    rc, _, err, _ = run(["--parse-only", "--demo", "--webos-shell"])
+    check("demo rejects webos-shell", rc == 2 and "plain wl_shell" in err, err)
+    rc, _, err, _ = run(["--parse-only", "--duration", "45"])
+    check("reject duration 45 without demo", rc == 2 and "1..30" in err, err)
     rc, _, err, _ = run(["--parse-only", "--webos-key-mask"])
     check("key mask requires webos shell", rc == 2, "rc=%d %s" % (rc, err))
     rc, out, _, _ = run(["--parse-only", "--webos-shell", "--webos-key-mask", "--exit-on-leave"])
@@ -281,6 +292,8 @@ def webos_tests():
     check("properties precede set_state", prop_at and max(prop_at) < state_at, str(seq))
     check("displayAffinity 0 is sent before state",
           any(r == "op2" and a == ["displayAffinity", "0"] for r, a in seq[:state_at]), str(seq))
+    check("default webos window type is CARD",
+          any(r == "op2" and a == ["_WEBOS_WINDOW_TYPE", "_WEBOS_WINDOW_TYPE_CARD"] for r, a in seq[:state_at]), str(seq))
     check("key mask not sent unless opted in", not any(r == "op3" for i, r, a in found), str(found))
     check("webos events logged with values",
           "webos: event state_changed value=3" in err and "webos: event position_changed x=10 y=20" in err
@@ -365,6 +378,21 @@ def telemetry_tests():
     check("busy redraw is deferred", rc == 0 and "redraw: deferred" in err and "input: model square" in err, err[-700:])
     check("deferred redraw does not write busy memory",
           pix and pix[-1].get("120,120") == 0xff00ff00 and pix[-1].get("80,120") != 0xff00ff00, str(pix))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p105", "--no-release"],
+                                          ["--demo", "--duration", "2"])
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("demo allocates a second buffer when none are released",
+          rc == 0 and "buf: spare gen=2" in err and "redraw: queued gen=2" in err
+          and "releases=0" in err and "redraw: deferred" not in err, err[-900:])
+    check("demo paints the moved square into the spare buffer",
+          pix and pix[-1].get("80,120") == 0xff00ff00 and pix[-1].get("120,120") != 0xff00ff00, str(pix))
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p158"],
+                                          ["--demo", "--duration", "6"])
+    check("demo exits on BACK", rc == 0 and dt < 4.0 and "exiting (back-key)" in err, "rc=%d dt=%.2f" % (rc, dt))
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p174"],
+                                          ["--demo", "--duration", "6"])
+    check("demo exits on EXIT", rc == 0 and dt < 4.0 and "exiting (exit-key)" in err, "rc=%d dt=%.2f" % (rc, dt))
 
     (rc, out, err, dt), ev, _ = with_mock(["--configure", "800x600", "--no-release"], ["--duration", "2"])
     check("resize logs generations and busy destruction",

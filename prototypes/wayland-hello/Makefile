@@ -38,6 +38,7 @@ build/host/wayland-hello: $(SRC)
 
 test: host
 	python3 -I tests/run_tests.py build/host/wayland-hello
+	python3 -I tests/test_ipk.py
 
 arm: build/arm/wayland-hello
 build/arm/wayland-hello: $(SRC)

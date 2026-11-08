@@ -47,11 +47,13 @@
 #include <unistd.h>
 #include <link.h>
 
-#define HELLO_VERSION "0.5-prototype"
+#define HELLO_VERSION "0.6-prototype"
 
 /* ---- limits ------------------------------------------------------------ */
 #define DEFAULT_DURATION_S 10
 #define MAX_DURATION_S     30
+#define DEMO_DURATION_S    120
+#define DEMO_MAX_BUFS      8
 #define DEFAULT_W          640
 #define DEFAULT_H          360
 #define MAX_W              1920
@@ -111,6 +113,7 @@ static struct {
 struct opts {
 	int dry_run;
 	int parse_only;
+	int demo;
 	int input;
 	int webos_shell;
 	int webos_key_mask;
@@ -123,7 +126,7 @@ struct opts {
 	const char *runtime_dir;
 	const char *display_name;
 	const char *app_id;
-	const char *window_type;    /* NULL unless --window-type; webOS shell only */
+	const char *window_type;    /* set with --webos-shell; default CARD */
 	uint32_t color;             /* 0xRRGGBB */
 };
 
@@ -137,12 +140,17 @@ static void usage(FILE *f)
 "usage: wayland-hello [options]\n"
 "  --dry-run            connect, print registry globals, exit (no surfaces)\n"
 "  --input              bind wl_seat; log keys/pointer; arrows move a square\n"
+"  --demo               plain wl_shell interactive mode (implies --input)\n"
+"                       spare SHM buffer so a redraw does not wait for release;\n"
+"                       runs until BACK or EXIT; --duration is the safety cap\n"
+"                       (default %d, max %d). Without --demo the cap stays %d.\n"
 "  --webos-shell        wl_webos_shell instead of wl_shell (fail closed)\n"
 "  --webos-key-mask     with --webos-shell, set_key_mask for BACK and EXIT\n"
 "  --exit-on-leave      exit when a focused wl_keyboard leaves\n"
 "  --egl                try GLES2 via dlopen; shm if the libraries differ\n"
 "  --app-id ID          app id (default wayland-hello-prototype)\n"
 "  --window-type TYPE   with --webos-shell, set_property _WEBOS_WINDOW_TYPE\n"
+"                       (default _WEBOS_WINDOW_TYPE_CARD)\n"
 "  --duration N         on-screen seconds after first configure or frame (1..%d, default %d)\n"
 "  --size WxH           initial buffer size (default %dx%d, max %dx%d)\n"
 "  --max-size WxH       cap for compositor-requested sizes (default %dx%d)\n"
@@ -152,6 +160,7 @@ static void usage(FILE *f)
 "  --display NAME       override WAYLAND_DISPLAY (default env, else wayland-0)\n"
 "  --parse-only         print parsed configuration and exit (no connect)\n"
 "  --version, --help\n",
+	DEMO_DURATION_S, DEMO_DURATION_S, MAX_DURATION_S,
 	MAX_DURATION_S, DEFAULT_DURATION_S, DEFAULT_W, DEFAULT_H, MAX_W, MAX_H, MAX_W, MAX_H);
 }
 
@@ -182,7 +191,7 @@ static int parse_size(const char *s, int maxw, int maxh, int *w, int *h)
 static int parse_opts(int argc, char **argv, struct opts *o)
 {
 	const char *e;
-	int i;
+	int i, duration_set = 0, duration_val = DEFAULT_DURATION_S;
 	memset(o, 0, sizeof *o);
 	o->duration_s = DEFAULT_DURATION_S;
 	o->width = DEFAULT_W; o->height = DEFAULT_H;
@@ -199,6 +208,7 @@ static int parse_opts(int argc, char **argv, struct opts *o)
 		const char *v = (i + 1 < argc) ? argv[i + 1] : NULL;
 		if (!strcmp(a, "--dry-run")) o->dry_run = 1;
 		else if (!strcmp(a, "--parse-only")) o->parse_only = 1;
+		else if (!strcmp(a, "--demo")) o->demo = 1;
 		else if (!strcmp(a, "--input")) o->input = 1;
 		else if (!strcmp(a, "--webos-shell")) o->webos_shell = 1;
 		else if (!strcmp(a, "--webos-key-mask")) o->webos_key_mask = 1;
@@ -208,9 +218,10 @@ static int parse_opts(int argc, char **argv, struct opts *o)
 		else if (!strcmp(a, "--help") || !strcmp(a, "-h")) { usage(stdout); return 1; }
 		else if (!strcmp(a, "--version")) { printf("wayland-hello %s\n", HELLO_VERSION); return 1; }
 		else if (!strcmp(a, "--duration")) {
-			if (parse_int(v, 1, MAX_DURATION_S, &o->duration_s)) {
-				elog("error: --duration must be 1..%d\n", MAX_DURATION_S); return -1;
+			if (parse_int(v, 1, DEMO_DURATION_S, &duration_val)) {
+				elog("error: --duration must be 1..%d\n", DEMO_DURATION_S); return -1;
 			}
+			duration_set = 1;
 			i++;
 		} else if (!strcmp(a, "--size")) {
 			if (parse_size(v, MAX_W, MAX_H, &o->width, &o->height)) {
@@ -290,6 +301,21 @@ static int parse_opts(int argc, char **argv, struct opts *o)
 	if (o->window_type && !o->webos_shell) {
 		elog("error: --window-type requires --webos-shell\n");
 		return -1;
+	}
+	if (o->webos_shell && !o->window_type)
+		o->window_type = "_WEBOS_WINDOW_TYPE_CARD";
+	if (o->demo && o->webos_shell) {
+		elog("error: --demo uses plain wl_shell; omit --webos-shell\n");
+		return -1;
+	}
+	if (o->demo) {
+		o->input = 1;
+		o->duration_s = duration_set ? duration_val : DEMO_DURATION_S;
+	} else if (duration_set) {
+		if (duration_val > MAX_DURATION_S) {
+			elog("error: --duration must be 1..%d\n", MAX_DURATION_S); return -1;
+		}
+		o->duration_s = duration_val;
 	}
 	return 0;
 }
@@ -481,6 +507,8 @@ static struct {
 	int cur_w, cur_h;
 	int resize_pending;
 	struct buf buf;
+	struct buf spare[DEMO_MAX_BUFS];
+	int nspare;
 	struct wl_proxy *frame_cb; /* at most one SHM wl_surface.frame callback */
 	int buf_gen_next;
 	int n_commits, n_frame_done, n_releases, n_deferred, n_redraws;
@@ -819,16 +847,21 @@ static void queue_frame_callback(void)
 	elog("frame: request queued before commit (shm only; egl frame callbacks are not covered)\n");
 }
 
-static void present(void)
+static void present_buf(struct buf *b)
 {
 	arm_countdown("commit-queued");
 	queue_frame_callback();
-	W.proxy_marshal(S.surface, SURFACE_ATTACH, S.buf.buffer, 0, 0);
-	W.proxy_marshal(S.surface, SURFACE_DAMAGE, 0, 0, S.buf.w, S.buf.h);
+	W.proxy_marshal(S.surface, SURFACE_ATTACH, b->buffer, 0, 0);
+	W.proxy_marshal(S.surface, SURFACE_DAMAGE, 0, 0, b->w, b->h);
 	W.proxy_marshal(S.surface, SURFACE_COMMIT);
-	S.buf.busy = 1;
+	b->busy = 1;
 	S.n_commits++;
-	elog("buf: commit-queued seq=%d gen=%d busy=1\n", S.n_commits, S.buf.gen);
+	elog("buf: commit-queued seq=%d gen=%d busy=1\n", S.n_commits, b->gen);
+}
+
+static void present(void)
+{
+	present_buf(&S.buf);
 }
 
 /* Suppress only an immediate repeat of the same key. A different key still logs. */
@@ -845,19 +878,61 @@ static int model_log_ok(uint32_t key)
 	return 1;
 }
 
+static void destroy_spares(void)
+{
+	int i;
+	for (i = 0; i < S.nspare; i++)
+		destroy_buf(&S.spare[i]);
+	S.nspare = 0;
+}
+
+/* Demo redraw. The 30 s SAM run committed one buffer and got releases=0, so
+ * painting that buffer again was deferred. A free buffer is painted instead.
+ * A busy buffer is never written. */
+static struct buf *demo_buffer(void)
+{
+	int i, rc, w, h;
+	struct buf *b;
+	if (S.buf.buffer && !S.buf.busy) return &S.buf;
+	for (i = 0; i < S.nspare; i++)
+		if (S.spare[i].buffer && !S.spare[i].busy) return &S.spare[i];
+	if (S.nspare >= DEMO_MAX_BUFS) return NULL;
+	w = S.buf.w > 0 ? S.buf.w : S.o->width;
+	h = S.buf.h > 0 ? S.buf.h : S.o->height;
+	b = &S.spare[S.nspare];
+	rc = create_buf(b, w, h);
+	if (rc != 0) { destroy_buf(b); S.fatal = rc; return NULL; }
+	S.nspare++;
+	elog("buf: spare gen=%d nspare=%d cap=%d\n", b->gen, S.nspare, DEMO_MAX_BUFS);
+	return b;
+}
+
 static void request_redraw(void)
 {
-	if (!S.buf.buffer || !S.buf.data) return;
-	if (S.buf.busy) {
-		S.dirty = 1;
-		S.n_deferred++;
-		elog("redraw: deferred gen=%d busy=1\n", S.buf.gen);
-		return;
+	struct buf *b;
+	if (S.o && S.o->demo) {
+		b = demo_buffer();
+		if (!b) {
+			if (S.fatal) return;
+			S.dirty = 1;
+			S.n_deferred++;
+			elog("redraw: deferred spare-cap=%d\n", DEMO_MAX_BUFS);
+			return;
+		}
+	} else {
+		if (!S.buf.buffer || !S.buf.data) return;
+		if (S.buf.busy) {
+			S.dirty = 1;
+			S.n_deferred++;
+			elog("redraw: deferred gen=%d busy=1\n", S.buf.gen);
+			return;
+		}
+		b = &S.buf;
 	}
 	S.n_redraws++;
-	elog("redraw: queued gen=%d busy=0\n", S.buf.gen);
-	paint(&S.buf, S.bg);
-	present();
+	elog("redraw: queued gen=%d busy=0\n", b->gen);
+	paint(b, S.bg);
+	present_buf(b);
 	S.dirty = 0;
 }
 
@@ -875,10 +950,10 @@ static void buf_release(void *data, struct wl_proxy *b)
 /* ---- main ------------------------------------------------------------- */
 static void print_config(const struct opts *o)
 {
-	printf("dry_run=%d\ninput=%d\nwebos_shell=%d\nwebos_key_mask=%d\nexit_on_leave=%d\negl=%d\napp_id=%s\nwindow_type=%s\nduration_s=%d\n"
+	printf("dry_run=%d\ndemo=%d\ninput=%d\nwebos_shell=%d\nwebos_key_mask=%d\nexit_on_leave=%d\negl=%d\napp_id=%s\nwindow_type=%s\nduration_s=%d\n"
 	       "size=%dx%d\nmax_size=%dx%d\ncolor=%06x\nfullscreen=%d\n"
 	       "runtime_dir=%s\ndisplay=%s\n",
-	       o->dry_run, o->input, o->webos_shell, o->webos_key_mask, o->exit_on_leave, o->egl, o->app_id,
+	       o->dry_run, o->demo, o->input, o->webos_shell, o->webos_key_mask, o->exit_on_leave, o->egl, o->app_id,
 	       o->window_type ? o->window_type : "-",
 	       o->duration_s, o->width, o->height, o->max_w, o->max_h,
 	       (unsigned)o->color, !o->no_fullscreen, o->runtime_dir, o->display_name);
@@ -1656,6 +1731,7 @@ static void cleanup(void)
 		S.frame_cb = NULL;
 		elog("frame: pending callback destroyed during cleanup\n");
 	}
+	destroy_spares();
 	if (S.buf.buffer || S.buf.data) destroy_buf(&S.buf);
 	if (S.shell_surface) W.proxy_destroy(S.shell_surface);
 	if (S.webos_shell_surface && W.proxy_destroy) W.proxy_destroy(S.webos_shell_surface);
@@ -1898,7 +1974,11 @@ int main(int argc, char **argv)
 		rc = create_buf(&S.buf, o.width, o.height);
 		if (rc != 0) { cleanup(); return rc; }
 		present();
-		elog("info: surface committed %dx%d; running until deadline\n", S.buf.w, S.buf.h);
+		if (o.demo)
+			elog("info: demo plain wl_shell; running until BACK (%u) or EXIT (%u); safety cap %ds; spare cap %d\n",
+			     (unsigned)KEY_BACK_EVDEV, (unsigned)KEY_EXIT_EVDEV, o.duration_s, DEMO_MAX_BUFS);
+		else
+			elog("info: surface committed %dx%d; running until deadline\n", S.buf.w, S.buf.h);
 	}
 
 	rc = EX_OK;
@@ -1919,6 +1999,7 @@ int main(int argc, char **argv)
 			} else if (!S.egl_on) {
 				elog("resize: apply old_gen=%d old=%dx%d busy=%d new=%dx%d\n",
 				     S.buf.gen, S.buf.w, S.buf.h, S.buf.busy, S.want_w, S.want_h);
+				destroy_spares();
 				destroy_buf(&S.buf);
 				clamp_square(S.want_w, S.want_h);
 				rc = create_buf(&S.buf, S.want_w, S.want_h);
