@@ -231,3 +231,17 @@ ALL3 pins 498625937B verified before parse; SELECTEDTEXT 50478B; ten mode-0600 f
 Findings (text only, not executed tools, not TV/20190307 compatibility): starfish 5.0.0 / 20191125 self-label (revision 032f3c60ecca3ecc5a2411216bee122c714335ca); triple arm-starfishmllib32-linux-gnueabi- with cortex-a9/neon/softfp flags; GCC path label 8.2.0; glibc headers __GLIBC__ 2 / __GLIBC_MINOR__ 28; LINUX_VERSION_CODE 266752 => 4.18.0 (not TV 4.4.84); binutils version UNKNOWN.
 
 Reader 3598007632b1c13790d16cad9f6a68c23e5f4b35a4996948a3917bef2d8f8168; launcher c4befa0c75267bb99e804076eda54d400edeb651151d61ea5112a4e3fd09387a. Review:`tooling/review/sdk-text-selector-dot-prefix-independent-review.md`; package:`tooling/review/sdk-text-selector-dot-prefix-2026-11-08/`; evidence:`tvs/lg-65nano756pr/evidence/sdk-selected-text-execution-2026-11-08/` and `tvs/lg-65nano756pr/evidence/sdk-selected-text-inspection.json`. Committed after reorg PR #1 merged as fed0224a1daa30bc08766548504f5d0414759ff2.
+
+# Repo merge and follow-up research — 2026-11-08 14:45 Atlantic/Reykjavik
+PR #1 merged with a merge commit (not squash) as fed0224a1daa30bc08766548504f5d0414759ff2 at 2026-11-08 14:37:58 UTC (same in Atlantic/Reykjavik). Local tree backed up to /workspace/lg-tv-backup-20261108-143747.tgz, WIP re-placed under the new layout, then committed and pushed as 0d7f1e875df034a65cb86a8c4b2dee4297999d78. Synthetic SDK suite on this box: Python 3.13.5, 71 tests, 0 failures, about 4.629s. Reviewed hashes unchanged (reader 3598007632b1c13790d16cad9f6a68c23e5f4b35a4996948a3917bef2d8f8168, launcher c4befa0c75267bb99e804076eda54d400edeb651151d61ea5112a4e3fd09387a).
+
+## Binutils
+Metadata-only filename search of the existing links inventory found no bfdver.h. as/ld names are binaries via symlinks; binutils.mo files are binary locales. Version remains UNKNOWN. See evidence/binutils-metadata-search-2026-11-08.md.
+
+## Unit identification
+Owner may now look at read-only info screens. No SSAP buttons sent (non-deterministic Support route; Software Update includes Check for Updates). Photograph instructions: evidence/unit-identification-photos-needed-2026-11-08.md. Installed firmware, sales suffix, board, panel, and SoC remain unknown.
+
+## Boot / recovery
+Unchanged documentary no-go: evidence/boot-route.md and evidence/recovery-case.md. Stock 03.53.45/.46 listings are not independent recovery from overwritten boot/system software.
+
+Claude Opus 5.5/high 71.168s read-only review of the binutils/header gap: no version from filenames; recommended libbfd-*.so / package-db / man-page filename search. That second search of the same members.jsonl found no versioned libbfd/libopcodes, manifests, or opkg/dpkg status files. Yocto thud/binutils 2.31.x remains a hypothesis. Raw: research/ai-reviews/claude-binutils-2026-11-08.md.
