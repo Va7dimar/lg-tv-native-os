@@ -33,7 +33,7 @@ Raw prompt/outcomes: [review packet](reviews/2026-11-08/README.md). These are op
 |---|---|---|
 |Claude, requested Opus 5.5 high; substantive exit 0, internal safety-truncation caveat|Map display ownership first; retain vendor compositor/services for a fullscreen shell|Agrees with Codex on route order. Claims “preserves all four by construction,” “zero brick risk,” fully reversible hooks and chroot GO are too strong: reject those assurances; require manual bounded testing before persistence.|
 |ChatGPT/Codex, CLI reported gpt-6.1-sol high; substantive exit 0|Map display owner/client ABI; manual shell milestone before hooks|Prefer its stricter reversible-test gates, memory budgeting, snapshot/restore caution and metadata/A-B qualifications. It notes a launcher does not equal complete replacement.|
-|Gemini, requested Argon high; exit 1, empty response|No recommendation obtained|Headless command permission auto-denied. No retry/escalation. No Gemini agreement/disagreement can be inferred.|
+|Gemini, requested Argon high; exit 0, empty response (not successful review)|No recommendation obtained|Headless command permission auto-denied. No retry/escalation. No Gemini agreement/disagreement can be inferred.|
 
 Both substantive reviews prioritize vendor-stack coexistence over direct framebuffer takeover, chroot before kernel replacement, and boot/recovery characterization before deployment. Neither establishes the display API. Claude's suggestion to install a startup hook early is deferred; Codex's manual-first sequence is adopted. No model approved this synthesis.
 
