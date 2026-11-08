@@ -182,3 +182,25 @@ to true, and omits `nativeLifeCycleInterfaceVersion`. `--lifecycle 2` and
 matches the SDK binary. `abi/wayland-hello-v6-ABI-REPORT.txt`
 ABI CHECK PASS, `e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`,
 `libdl.so.2`, `librt.so.1`. No 0.6 binary or IPK was copied to or run on the TV.
+
+## 2026-11-08: wayland-hello 0.7 (luna register and heartbeat)
+
+The 0.6 demo stayed on screen until about 31 s, when SAM
+`last_input_handler` relaunched Home and hid the surface. The process kept
+running (`tvs/lg-65nano756pr/evidence/interactive-demo-2026-11-08.md`). 0.7
+adds `--luna-register` (dlopen of libluna-service2 and libglib, `registerApp`
+with subscribe, `LS2_NAME` when set) and `--heartbeat-ms`. NEEDED stays
+libc/libdl/librt.
+
+Host `make test` equivalent: **147 tests, 0 failed**, plus `tests/test_ipk.py`
+(0 failed).
+
+SDK binary SHA256
+`3e608448426e5546d9a032ce8042d5f5e178ab231f35736437cda40978efe046`.
+Default IPK SHA256
+`ea3a5c14fbfef8eb9dfb24c0efe5badcd5748f19c35373112f5e23767149a12b`.
+Lifecycle-2 IPK SHA256
+`402648517e9e1e6f13d3606cd81b1c3bac1387d6a444c8e4d5c2e6aabe84e3a7`.
+`abi/wayland-hello-v7-ABI-REPORT.txt` ABI CHECK PASS, `e_flags 0x5000200`,
+max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`. No 0.7
+binary or IPK was copied to or run on the TV.

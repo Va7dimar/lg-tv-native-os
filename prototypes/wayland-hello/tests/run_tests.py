@@ -51,7 +51,7 @@ def parser_tests():
     check("v2 flags parse", rc == 0 and "input=1" in out and "webos_shell=1" in out and "egl=1" in out
           and "app_id=wayland-hello-prototype" in out, out)
     rc, out, _, _ = run(["--version"])
-    check("version 0.6", rc == 0 and "0.6-prototype" in out, out)
+    check("version 0.7", rc == 0 and "0.7-prototype" in out, out)
     rc, _, err, _ = run(["--parse-only", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY"])
     check("window-type requires webos shell", rc == 2, "rc=%d %s" % (rc, err))
     rc, _, err, _ = run(["--parse-only", "--webos-shell", "--window-type", "OVERLAY"])
@@ -67,6 +67,10 @@ def parser_tests():
     check("demo duration can exceed 30", rc == 0 and "duration_s=45" in out, out)
     rc, _, err, _ = run(["--parse-only", "--demo", "--webos-shell"])
     check("demo rejects webos-shell", rc == 2 and "plain wl_shell" in err, err)
+    rc, out, err, _ = run(["--parse-only", "--luna-register", "--heartbeat-ms", "500"])
+    check("luna and heartbeat parse", rc == 0 and "luna_register=1" in out and "heartbeat_ms=500" in out, out + err)
+    rc, _, err, _ = run(["--parse-only", "--heartbeat-ms", "50"])
+    check("reject heartbeat below 100", rc == 2 and "100..60000" in err, err)
     rc, _, err, _ = run(["--parse-only", "--duration", "45"])
     check("reject duration 45 without demo", rc == 2 and "1..30" in err, err)
     rc, _, err, _ = run(["--parse-only", "--webos-key-mask"])
@@ -393,6 +397,30 @@ def telemetry_tests():
     (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p174"],
                                           ["--demo", "--duration", "6"])
     check("demo exits on EXIT", rc == 0 and dt < 4.0 and "exiting (exit-key)" in err, "rc=%d dt=%.2f" % (rc, dt))
+
+    (rc, out, err, dt), ev, _ = with_mock([], ["--luna-register", "--duration", "2"],
+                                          env_extra={"WAYLAND_HELLO_LIB_DIR": "/tmp/wayland-hello-no-luna"})
+    check("missing luna library fails closed", rc == 10 and "libluna-service2.so.3" in err and "Failing closed" in err, err[-500:])
+    check("missing luna sends no bind", not any(e.get("req") == "bind" for e in ev), str(ev)[:400])
+
+    fix = tempfile.mkdtemp(prefix="wlh-luna-")
+    so = os.path.join(fix, "libluna-service2.so.3")
+    built = subprocess.run(["gcc", "-shared", "-fPIC", "-std=c99", "-o", so,
+                            os.path.join(HERE, "luna_fixture.c")],
+                           capture_output=True, text=True)
+    check("luna fixture builds", built.returncode == 0, built.stderr)
+    if built.returncode == 0:
+        os.symlink("libluna-service2.so.3", os.path.join(fix, "libglib-2.0.so.0"))
+        (rc, out, err, dt), ev, _ = with_mock([], ["--luna-register", "--duration", "2"],
+                                              env_extra={"WAYLAND_HELLO_LIB_DIR": fix, "LS2_NAME": "org.va7dimar.waylandhello-3"})
+        check("luna register uses LS2_NAME and exits on close",
+              rc == 0 and "luna: register name=org.va7dimar.waylandhello-3 source=LS2_NAME" in err
+              and "luna: LSCall luna://com.webos.service.applicationmanager/registerApp {\"subscribe\":true}" in err
+              and "luna: event=registered" in err and "luna: event=relaunch" in err
+              and "luna: event=close" in err and "exiting (luna-close)" in err, err[-1200:])
+
+    (rc, out, err, dt), ev, _ = with_mock([], ["--heartbeat-ms", "400", "--duration", "2"])
+    check("heartbeat ticks while idle", rc == 0 and "heartbeat: tick n=2" in err, err[-500:])
 
     (rc, out, err, dt), ev, _ = with_mock(["--configure", "800x600", "--no-release"], ["--duration", "2"])
     check("resize logs generations and busy destruction",

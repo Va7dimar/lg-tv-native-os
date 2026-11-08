@@ -1,6 +1,6 @@
 {
   "id": "org.va7dimar.waylandhello",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "vendor": "va7dimar",
   "type": "native",
   "main": "wayland-hello-launch.sh",
