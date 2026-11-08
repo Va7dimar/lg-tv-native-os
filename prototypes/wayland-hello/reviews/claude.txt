@@ -1,0 +1,35 @@
+I wrote the prototype, but **nothing was compiled or tested**, so there is no ARM ELF, no ABI report and no test result. Every file is untested.
+
+**Why nothing ran:** this session is non-interactive, and anything needing approval was simply refused. That included `make`, `gcc --version`, `python3 -m py_compile`, `apt-cache`, `sudo` and `curl`, as well as reading files outside the prototype folder. So I could **not** read `SOURCES.md`, the TV's `SOURCES.md`, the SDK audit or the display-stack mapping. The code follows your instructions only, and the existing SDK wasn't used. `which` did run: the box has only host `gcc`, `readelf` and `objdump`. There is no ARM cross compiler, weston, wayland-scanner or qemu-arm. Nothing was downloaded, so there are no package URLs or hashes yet. All of this is in `BUILD-LOG.md`.
+
+**Files** (all in `prototypes/wayland-hello/`):
+- **`src/wayland_hello.c`**: the client.
+  - The hard-exit alarm is set before connecting. All waits use `poll` against a deadline (`--duration` 1–30 s, default 10).
+  - `--dry-run` does one registry exchange, prints the globals and exits without binding anything or creating a surface.
+  - Default mode binds `wl_compositor`, `wl_shm` and `wl_shell` at version 1, requests fullscreen and shows a 640x360 checker pattern.
+  - Resize requests are clamped to at most 1920x1080 (8 MiB), with one buffer at a time.
+  - It answers ping. If `wl_shell` is missing it exits with code 5: no xdg-shell, no DRM/framebuffer fallback.
+- **How it stays compatible with old Wayland:** `libwayland-client.so.0` is loaded at runtime, not linked. It uses only calls that exist in Wayland 1.0.x, in the old pre-1.4 style. It never uses `wl_proxy_marshal_flags`, `wl_proxy_marshal_constructor` or `wl_proxy_get_version`. There are no stub libraries: if the real library lacks a needed symbol, it exits with code 6. I did not use the static-libc fallback.
+- **`scripts/fetch_buster_armel_sysroot.py`**: downloads `libc6`, `libc6-dev` and `linux-libc-dev` for Debian buster armel (glibc 2.28) from archive.debian.org. It checks the signed Release file with `gpgv` and stops if that fails, unless you pass `--allow-unsigned`, which it records. It then checks the package list and each package by SHA256. It unpacks only the file contents, without running package scripts, and writes a manifest of versions, URLs and hashes.
+- **`Makefile`**: `make host`, `make test`, `make arm` and `make abi`. The ARM build uses `-march=armv5te -marm -mfloat-abi=soft` and the 2.28 sysroot for headers, start files and libraries, and writes a link map.
+- **`scripts/abi-check.sh`**: writes the `file`, `readelf -h/-A/-l/-d` and `objdump -T` output. It fails unless all of these hold:
+  - ELF32 ARM with `e_flags 0x5000200` and no hard-float tag
+  - highest GLIBC version ≤ 2.28 (this also catches a 2.34 `__libc_start_main` leak)
+  - dependencies only `libc.so.6` and `libdl.so.2`
+  - loader `/lib/ld-linux.so.3`
+  - no Wayland symbols linked in
+
+  These checks describe our binary only, not the TV's compositor.
+- **`tests/mock_compositor.py` and `tests/run_tests.py`**: a small fake Wayland server on a private temporary socket, plus about 40 checks:
+  - option parsing: defaults, environment vs command-line, rejected values
+  - dry run creates nothing
+  - fail-closed exit when `wl_shell` is missing
+  - a server that never answers still exits in time
+  - surface mode sends the expected requests, at version 1
+  - an oversized resize is clamped
+  - the shared-memory size matches and temp files are removed
+  - a missing socket gives exit code 3
+- **`README.md`**: how it works, the exit codes, and the proposed on-TV steps, marked NOT EXECUTED. Step 1 is a 5-second dry run and step 2 a 10-second surface, each needing its own owner notice. It lists the screen, focus and compositor-crash risks, and states that the hard exit only ends this process and is not a recovery method.
+- **`.gitignore`** excludes `build/` and `build-cache/`.
+
+**To finish this** you need a session where commands can run. Install `gcc-arm-linux-gnueabi` and `libwayland-client0`, then run `python3 -I scripts/fetch_buster_armel_sysroot.py`, `make test` and `make abi`, and record the results in `BUILD-LOG.md`. Expect some first-compile fixes, because the C code has never been through a compiler. The buster signing key may also be missing from a newer host's keyrings, which would stop the download script.

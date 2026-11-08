@@ -1,0 +1,9 @@
+- **[P1] Hard deadline can hang indefinitely.** [wayland_hello.c:226](/workspace/lg-tv/prototypes/wayland-hello/src/wayland_hello.c:226) writes to stderr before `_exit(124)`. If stderr is a full pipe with a stalled reader, that blocking write prevents exit; the one-shot alarm has already fired.
+
+- **[P2] Buffer-size tests necessarily fail for correct requests.** [run_tests.py:104](/workspace/lg-tv/prototypes/wayland-hello/tests/run_tests.py:104) and line 105 treat argument positions 1/2 as width/height. The mock records `[new_id, offset, width, height, stride, format]`; position 1 is the zero offset.
+
+- **[P2] Proxy allocation failures cause invalid requests or crashes.** [wayland_hello.c:592](/workspace/lg-tv/prototypes/wayland-hello/src/wayland_hello.c:592) onward never checks compositor, SHM, shell, surface, or shell-surface allocations before marshalling or installing listeners. A NULL result can become an invalid constructor ID or a NULL proxy dereference instead of a controlled allocation failure.
+
+- **[P2] SHM backing allocation is unchecked.** [wayland_hello.c:452](/workspace/lg-tv/prototypes/wayland-hello/src/wayland_hello.c:452) only truncates the file; [line 489](/workspace/lg-tv/prototypes/wayland-hello/src/wayland_hello.c:489) immediately paints its mapping. On exhausted tmpfs, truncation and mapping can succeed while painting raises SIGBUS instead of returning `EX_ALLOC`.
+
+Static inspection places dry-run before global binding and surface creation. No edits, builds, tests, downloads, or TV/network access occurred. Legacy Wayland ABI compatibility and old-glibc armel linking remain unverified; **no build or ABI success is claimed**.
