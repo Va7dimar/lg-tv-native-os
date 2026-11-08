@@ -33,9 +33,9 @@ Raw prompt/outcomes: [review packet](reviews/2026-11-08/README.md). These are op
 |---|---|---|
 |Claude, requested Opus 5.5 high; substantive exit 0, internal safety-truncation caveat|Map display ownership first; retain vendor compositor/services for a fullscreen shell|Agrees with Codex on route order. Claims “preserves all four by construction,” “zero brick risk,” fully reversible hooks and chroot GO are too strong: reject those assurances; require manual bounded testing before persistence.|
 |ChatGPT/Codex, CLI reported gpt-6.1-sol high; substantive exit 0|Map display owner/client ABI; manual shell milestone before hooks|Prefer its stricter reversible-test gates, memory budgeting, snapshot/restore caution and metadata/A-B qualifications. It notes a launcher does not equal complete replacement.|
-|Gemini, requested Argon high; exit 0, empty response (not successful review)|No recommendation obtained|Headless command permission auto-denied. No retry/escalation. No Gemini agreement/disagreement can be inferred.|
+|Gemini, requested Argon high; initial empty response, then substantive content-only review, both exit 0|Same route ranking; promote snapshot/watchdog and HDMI/audio dependencies into Stage 1|Agrees with manual-first approach; adds useful pre-launch restoration/resource checks. Unit-specific compositor/plane/MCU claims remain unverified; see reconciliation below.|
 
-Both substantive reviews prioritize vendor-stack coexistence over direct framebuffer takeover, chroot before kernel replacement, and boot/recovery characterization before deployment. Neither establishes the display API. Claude's suggestion to install a startup hook early is deferred; Codex's manual-first sequence is adopted. No model approved this synthesis.
+Both substantive reviews prioritize vendor-stack coexistence over direct framebuffer takeover, chroot before kernel replacement, and boot/recovery characterization before deployment. Neither establishes the display API. Claude's suggestion to install a startup hook early is deferred; Codex's manual-first sequence is adopted. Claude/Codex did not re-review this synthesis. Gemini reviewed the initial synthesis as inlined text; the amendments below were reconciled separately and are not model-approved hardware findings.
 
 ## Ranked routes and gates
 
@@ -48,7 +48,7 @@ Both substantive reviews prioritize vendor-stack coexistence over direct framebu
 
 ## Stages, deliverables and acceptance
 
-1. **Read-only display/service/ABI map (next).** Identify processes holding display nodes, likely client protocol/library paths, init/supervisor relations, free resources and startup mechanism. Record exact commands, missing utilities and outcomes in a scrubbed per-unit evidence note. Avoid repeated full inventory. Exit gate: a specific evidenced client path, or an honest unresolved path; never infer availability from file names alone.
+1. **Read-only display/service/ABI map (next).** Identify processes holding display/audio/input/watchdog/vendor nodes, likely client protocol/library paths, init/supervisor relations, free resources and startup mechanism. Promote passive snapshot/resume and watchdog-definition inspection to this stage, before any prototype launch. Read-only records may leave behavior unresolved; if so the pre-launch restoration gate stays closed, not “proven by inspection.” Record exact commands, missing utilities and outcomes in a scrubbed per-unit evidence note. Avoid repeated full inventory. Exit gate: a specific evidenced client path, or an honest unresolved path; never infer availability from file names alone.
 2. **Off-TV prototype specification/build proposal.** Choose a compatible toolkit only after Stage 1. Record retained/replaced component ledger, manual launch/exit design, bounded resource/runtime budget and recovery/stop conditions. No TV copy or execution here. If no usable client path exists, continue interface research rather than terminate vendor services. A new build/tooling scope follows repository controls; don't execute downloaded SDK installers casually.
 3. **Owner-notified, bounded nonpersistent UI test, only after prerequisites.** First establish independent administrative access/escape and a restoration design; don't use destructive testing to prove it. No hooks. Compare panel, existing HDMI2 SDR Filmmaker baseline, AppleTV normal protected playback, audio/mute/volume, input switching, remote/CEC, standby/wake and thermal behavior. Keep HDR untouched initially. Stop immediately on lost control, unexpected power behavior, memory pressure or viewing disruption; do not improvise takeover. Record observed vs untested functions. This stage has **not** run.
 4. **Userland integration, then optional persistence.** Only if it materially advances the owner goal: alternative-userland client prototype with scoped devices/mounts and cleanup. After repeatable manual success, characterize cold boot vs standby/snapshot startup, storage expiry, hook ordering and escape before proposing an opt-in startup hook. Persistent hooks need owner notice and a tested disable path. No guarantee SSH survives compositor/init changes.
@@ -134,3 +134,45 @@ A static BusyBox has no ELF interpreter; establish a representative dynamic vend
 - Exact suffix/PCB/panel assembly, exact running kernel config/source mapping, image verification policy, p38 content/selection validity and independent recovery remain unresolved.
 
 For another TV, reuse the staged method and command intent only. Re-establish identity, permissions, display ownership, ABI, hardware baselines and recovery separately; never transplant partitions, board assumptions, credentials or provisioning. Save observations with timestamps in Atlantic/Reykjavik, commands and output provenance, marking all partial/unavailable checks. No target testing occurred as part of this document/review update.
+
+
+## Gemini content-only follow-up — reconciled amendments
+
+A single additional Gemini Argon high call received the full evidence and this plan inline, with tools expressly prohibited and no permission widening. It produced a substantive critique (exit 0; [raw output](reviews/2026-11-08/gemini-inline.txt), [full prompt](reviews/2026-11-08/gemini-inline-prompt.txt)). No TV actions occurred.
+
+**Adopted as planning improvements, not measured unit facts:**
+
+- Manual launch without a hook does **not** alone prove nonpersistence across standby/snapshot resume. Inspect identified startup/suspend definitions in Stage 1; establish the restoration assumptions before Stage 3. Cmdline snapshot flags alone do not prove which processes are captured or whether AC removal resumes a saved image. Do not power-cycle to investigate under read-only authority.
+- Treat HDMI/audio/input/vendor-device ownership and watchdog dependencies as co-equal with graphics ownership. A fullscreen opaque surface may obstruct video; exact video-plane integration, protocol extensions and input routing require evidence before toolkit selection.
+- Require a designed bounded-runtime/auto-exit mechanism, resource budget and independent administrative escape before launching a prototype. A timer or SSH connection sharing the same kernel can fail under OOM and is not independent boot recovery. Do not adjust OOM policy, scheduling, watchdogs or vendor daemons in this read-only phase.
+- Extend storage checks to inode headroom and `/var`/user mount relationships. Use the discovered compositor's dynamic ELF/loader dependencies rather than assuming BusyBox represents the graphics ABI. Discover actual library/socket paths from the observed process; fixed directory guesses remain only initial probes.
+
+**Not adopted as hardware facts:** Gemini names `surface-manager`, `videooutputd`, `audiooutputd`, a standby MCU, custom Wayland extensions, mandatory video hole-punching, calibration responsibilities/storage, and a narrow DRM shim. These are hypotheses/examples until found on this unit. Its “no public emergency USB loader exists” is stronger than the bounded research supports: **none verified in checked sources** remains the finding. Its asserted CRIU behavior and distribution/kernel minimum versions need verification, and its proposed OOM-score wording is not a validated policy. Bundled U-Boot 2012.07 is a source version, not a measured running bootloader version. No fuse/provisioning/raw-partition reads follow from this critique.
+
+### Supplemental read-only checks (proposed, not run)
+
+If `ps` options are missing, list all process names with parent/memory fields rather than only graphics owners:
+
+```sh
+for p in /proc/[0-9]*; do
+    [ -r "$p/comm" ] || continue
+    printf 'pid=%s comm=' "${p##*/}"
+    cat "$p/comm"
+    grep -E '^(PPid|VmRSS):' "$p/status" 2>/dev/null
+done
+```
+
+In Experiment A's existing FD loop, broaden only its matching expression to:
+
+```sh
+grep -E '^/dev/(dri/[^/]+|fb[0-9]+|mali[^/]*|rtk[^/]*|v4l[^/]*|video[0-9]+|snd/[^/]+|watchdog[0-9]*|input/[^/]+)$'
+```
+
+This reads link targets only; never open watchdog/device nodes. For ABI, replace BusyBox with `/proc/PID/exe` of the discovered compositor and conditionally use `readelf -h -l -d`. No interpreter for a static program is not a failed ABI test. Supplemental capacity checks:
+
+```sh
+df -k /var /home /mnt/lg/user /media /tmp
+df -i /var /home /mnt/lg/user /media /tmp
+```
+
+For socket discovery, inspect the known compositor PID's FD symlinks and correlate only its `socket:[inode]` values with `/proc/net/unix` rows; retain matched paths only, not the whole system socket list. Socket ownership alone is not a usable client protocol. Inspect only identified supervisor/startup definitions for snapshot/standby/respawn dependencies, filtering/redacting before retention. Missing definitions or ambiguous snapshot behavior keep the restoration gate unresolved; no experimental service stop or reboot is authorized.

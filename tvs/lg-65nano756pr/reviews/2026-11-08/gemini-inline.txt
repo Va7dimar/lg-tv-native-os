@@ -1,0 +1,131 @@
+# Independent Planning & Technical Review — LG 65NANO756PR Custom Operating Environment
+
+**Scope & Posture:** Content-only review of the supplied evidence and planning documents. No tools, commands, file reads, or TV actions were executed. AI reviews (Claude, Codex, Gemini, and this review) are analytical opinions, not hardware evidence. All non-read-only TV actions require advance owner notice; any boot/flash/partition modification remains **NO-GO** without a verified exact-target boot route, independent tested recovery, and an explicit owner decision.
+
+---
+
+## 1. Observation vs. Inference Audit
+
+A rigorous plan must separate what has been *measured* on the unit from what is *inferred*:
+
+1. **Production Metadata vs. Boot Signature Enforcement**
+   - *Observation:* `/var/run/nyx/os_info.json` contains `starfish-global-secured` and `encryption_key_type: prodkey`; `/etc/fw_env.config` and `fw_printenv` are absent.
+   - *Inference Correction:* Userspace JSON labels do **not** prove hardware OTP fuse state, whether the Realtek RTD2875 boot ROM / U-Boot (`2012.07`) enforces cryptographic signatures on kernel/rootfs partitions, which boot stages are covered, or failure behavior. The `live-system-inventory` phrasing ("A modified kernel or rootfs would likely be rejected") is an unverified inference; the post-root plan rightly downgrades this to an unmeasured assumption while maintaining a strict planning hold on partition writes.
+2. **Parallel A/B Partition Geometry vs. Verified Recovery**
+   - *Observation:* `p27`–`p37` (Bank A, currently mounted `ro` as rootfs/overlays) and `p38`–`p47` (Bank B) have matching partition sizes on `/dev/mmcblk0` with a vendor-defined (non-GPT) partition layout.
+   - *Inference Correction:* Parallel partition sizes do **not** prove `p38` contains a bootable image, that bootloader fallback logic exists, or that corrupting Bank A fails over to Bank B. Calling this a "genuine, first-party recovery signal" (`live-system-inventory`) overstates the evidence. Without known bank-switching logic and an independent recovery trigger, A/B geometry provides **zero** actionable recovery assurance.
+3. **DRM/GPU & Framebuffer Nodes vs. Usable Graphics Scanout**
+   - *Observation:* Kernel modules `mali_kbase` and `mali_fb` are loaded; `/dev/dri/card0`, `/dev/fb0`, and `/dev/fb1` exist.
+   - *Inference Correction:* Device node presence does **not** prove standard KMS/DRM dumb-buffer support, standard Wayland (`xdg-shell`) compatibility, multi-process EGL/GBM sharing, hardware acceleration availability to non-vendor binaries, or safe scanout coexistence with hardware video planes. On Realtek TV kernels (`4.4.84`), `/dev/dri/card0` is frequently a narrow Mali/vendor shim rather than a generic atomic KMS driver.
+4. **Stock Updates, Factory Reset, and OSS Drops vs. Reinstall/Build Closure**
+   - *Observation:* LG publishes `03.53.45`/`.46` USB update ZIPs (forward-only per `TV_Software_Update_Guide_v3.pdf`) and OSS archives (`webOS 6.0 KLP_1.0`, kernel `4.4.84`, U-Boot `2012.07`, `rtk_kdriver`).
+   - *Inference Correction:* Stock USB packages and factory resets require a working stock userspace and do **not** establish independent brick recovery. Likewise, OSS kernel/bootcode archives lack exact `-723.kcl4tv.20` config/patch confirmation and omit required boot packaging inputs (`flash_image_maker`, `hw_setting`, `Aux_code`).
+
+---
+
+## 2. Ranked Route Assessment
+
+### Rank 1: Fullscreen Stock-Compositor Client Shell (Integration Milestone — *Not* OS Replacement)
+- **Capabilities & Boundary:** Runs a custom fullscreen UI process from writable storage (`p58`/`p59`) as a client of the stock webOS compositor (Luna Surface Manager / `surface-manager`). Retains stock kernel (`4.4.84`), init, `rtk_kdriver`, compositor, `tvservice`, `videooutputd`, `audiooutputd`, and power/thermal daemons. Serves as an integration testbed for UI, remote input, and vendor IPC—explicitly **not** a replacement OS.
+- **Evidence Gaps:**
+  - Exact compositor protocol: webOS uses custom Wayland extensions (`luna-surfacemanager` / `webos-shell`) rather than standard desktop `xdg-shell`.
+  - **HDMI Input / Protected Playback Cutout:** On TV SoCs, HDMI RX (`rtk_kdriver`) renders to a hardware under-plane while the UI compositor renders to an OSD overlay plane. Displaying live HDMI/HDCP video inside or behind a custom shell requires both IPC commands to select/unmute the HDMI pipeline and a transparent alpha cutout / video-sink window registration.
+  - Remote key routing (`IR`/Magic Remote/CEC) and focus capture/release without trapping the user.
+- **Proposed Read-Only Experiments:**
+  - Enumerate active compositor sockets, environment variables (via non-sensitive directory/file checks), and linked client libraries (`libwayland-*`, `libwebos-wayland-*`, `libEGL*`) across `/lib`, `/usr/lib`, and `/overlay/bsppart`.
+  - Inspect public/local Luna bus service definitions (`/usr/share/luna-service2/roles.d` or `/var/run/ls2`) read-only to identify documented IPC endpoints for HDMI input switching, video sink geometry, volume/mute, and standby.
+- **Risks, Reversibility & Gates:**
+  - *Risks:* Focus lock (remote keys unable to exit shell), OOM-killer termination of `tvservice` or `sshd` (only ~1.07 GB visible RAM), opaque OSD plane blocking HDMI video, or unexpected persistence across standby if captured by CRIU/suspend (`p53`/`p54`).
+  - *Reversibility:* Reversible via SSH process termination or cold boot **only if** started manually without persistence hooks and verified not to be frozen into a persistent suspend image.
+  - *Gates:* Complete Stage 1 read-only mapping -> off-TV design with bounded memory/CPU budget and timed/SSH auto-exit failsafe -> **owner notice** before copying binaries or launching any manual UI test.
+
+### Rank 2: Alternative Linux Userland (`chroot` / Container) on Stock Kernel
+- **Capabilities & Boundary:** Runs an independent 32-bit `armv7l` (`armhf`) Linux userland and native application stack from writable ext4 (`p58` `/home` or `p59` `/media`) atop the stock `4.4.84` kernel, bridging to the stock compositor and vendor hardware services via bind-mounted sockets/devices.
+- **Evidence Gaps:**
+  - Kernel `4.4.84` feature compatibility (`CONFIG_NAMESPACES`, `CONFIG_CGROUPS`, `CONFIG_SECCOMP`, `FUSE`, `overlayfs` behaviour) with modern `glibc`/systemd-free distros (e.g., Alpine `armv7` musl vs. Debian `armhf` glibc targeting kernel >= 4.4).
+  - Graphics ABI bridge: whether host proprietary `libEGL.so` / `libGLESv2.so` / `libmali.so` (built with `gcc 8.2.0` / Starfish glibc) can be loaded inside the chroot or require matching host `libc`/loader bind-mounts.
+  - Actual free space, inode headroom, and wear characteristics on `p58` and `p59`.
+- **Proposed Read-Only Experiments:**
+  - Inspect dynamic ELF headers (`PT_INTERP`, `DT_NEEDED`, `.ARM.attributes`, glibc version symbols) on a dynamic vendor binary (e.g., compositor binary or `/usr/bin/luna-send`, not static `/bin/busybox`).
+  - Read `/proc/config.gz` (if present), `/proc/mounts` (redacted), and `df -k` / `df -i` across `/var`, `/home`, `/mnt/lg/user`, and `/media`.
+- **Risks, Reversibility & Gates:**
+  - *Risks:* Stranded bind mounts (`/dev`, `/proc`, `/sys`, `/run`) preventing clean unmount; swap thrashing (`p52` eswap) or OOM pressure crashing stock TV daemons; eMMC wear on `p58`/`p59`.
+  - *Reversibility:* Deleting the directory removes files, but active mounts, leaked processes, or shared socket state are **not** automatically reversible without a verified teardown script and cold reboot.
+  - *Gates:* Stage 1 ABI/resource audit -> off-TV rootfs staging -> **owner notice** before transferring rootfs or mounting/entering `chroot`. Direct DRM/fbdev access remains prohibited under Route 2.
+
+### Rank 3: Custom Compositor / Selective Vendor Userspace Replacement
+- **Capabilities & Boundary:** Replaces the stock webOS UI/compositor (`surface-manager` / WebAppMgr) with an independent display server while retaining kernel `4.4.84`, `rtk_kdriver`, and essential vendor hardware daemons (`tvservice`, `videooutputd`, `audiooutputd`, thermal/standby MCU daemons). Approaches a genuine custom operating environment without touching boot partitions.
+- **Evidence Gaps:**
+  - Display scanout ABI: how `surface-manager` drives `/dev/dri/card0`, `/dev/fb0`, `/dev/fb1`, or `/dev/mali0` (proprietary ioctls vs. standard KMS/fbdev) and how OSD planes composite over the RTD2875 hardware video plane.
+  - Process supervision and watchdog coupling: whether stopping `surface-manager` triggers an init/Upstart/systemd cascade that kills `tvservice`/`audiooutputd` or trips a hardware/software watchdog (`/dev/watchdog*`).
+  - Dependency graph of `tvservice` (PQ calibration loading from `p57` `/mnt/lg/db8`, HDCP negotiation, HDMI EDID/CEC, backlight/local-dimming/thermal control).
+- **Proposed Read-Only Experiments:**
+  - Read supervisor job/unit definitions (`/etc/init/*` or `/lib/systemd/system/*`) for the compositor, `tvservice`, `videooutputd`, `audiooutputd`, and watchdog services to map `OnFailure`/`respawn` rules and IPC dependencies.
+  - Inspect `/proc/PID/fd` and `/proc/PID/maps` of `surface-manager`, `tvservice`, and `videooutputd` to see which `/dev/*` nodes (`mali0`, `fb0`, `dri/card0`, `rtk*`, `v4l*`, `watchdog*`) each holds.
+- **Risks, Reversibility & Gates:**
+  - *Risks:* Black screen, loss of HDMI/HDCP sync, loss of panel PQ/backlight control, improper panel power sequencing, watchdog reboot loops, or loss of SSH access if init cascades.
+  - *Reversibility:* **Unproven** until cold-boot vs. `p53` CRIU snapshot resume is characterized and an out-of-band/headless recovery path (SSH surviving compositor stop + timed auto-restore script) is proven.
+  - *Gates:* **Currently NO-GO.** Requires complete service dependency & display ABI map, proven non-destructive service restart/restore with display dark, and explicit **owner notice and consent**. Never stop vendor services to "see what breaks."
+
+### Rank 4: Long-Term Custom Boot / Kernel / Init Replacement
+- **Capabilities & Boundary:** Full native OS replacement (Architecture A or B from the native design doc) booting a custom rootfs/init and/or rebuilt `4.4.84` kernel + `rtk_kdriver` BSP.
+- **Evidence Gaps:**
+  - Bootloader image verification policy (`secured`/`prodkey` enforcement, fuse state, header signatures) and A/B bank selection storage (`mmcblk0boot0/1`, `rpmb`, or raw partition).
+  - Missing bootcode build inputs (`bin/hw_setting/realtek`, `tools/flash_image_maker`, `Aux_code`) and exact live kernel config/module ABI (`4.4.84-723.kcl4tv.20`).
+  - Independent hardware/bootloader recovery when kernel and userspace cannot boot, plus preservation proof for unit-unique calibration and HDCP/DRM keys (`p57`, factory partitions, `rpmb`).
+- **Proposed Read-Only Experiments:**
+  - Off-TV static audit of the already-acquired OSS archives (`kernel`, `bootcode`, `libkadaptor`, `videooutputd`/`omx-il-rtk`) to map `rtk_kdriver` ioctls and kernel boot arguments (`snapshot resume=/dev/mmcblk0p53`).
+  - Read-only inspection of `/proc/cmdline` (scrubbed of serial/MAC/nduid), `/proc/mtd` or `/proc/partitions`, and sysfs block ro flags (`ro` status of `mmcblk0boot0/1`)—**strictly no raw partition dumps (`dd`) of boot, key, or provisioning partitions**.
+- **Risks, Reversibility & Gates:**
+  - *Risks:* Permanent hard-brick (no public emergency USB loader exists; stock USB updates require a running stock UI and newer version) or permanent loss of factory calibration/HDCP keys.
+  - *Reversibility:* **None established** (`G3-D` and `G3-V` remain **BLOCKED**).
+  - *Gates:* **Hard Deployment NO-GO.** Requires documented legitimate boot acceptance, verified independent recovery (`G3-V`), calibration/provisioning non-impact proof, and an explicit owner decision.
+
+---
+
+## 3. Critique of Synthesized Post-Root Plan (`plan-2026-11-08-post-root.md`)
+
+### A. Technical Mistakes & Experiment Bugs to Fix
+1. **CRIU Snapshot (`p53`) Deferral Flaw (Stage 3 vs. Stage 4):**
+   The plan defers characterizing "cold boot vs standby/snapshot startup" to Stage 4 (before persistent hooks), assuming Stage 3's "manual nonpersistent process" is inherently safe. However, `/proc/cmdline` has `snapshot resume=/dev/mmcblk0p53` and `criu_enabled`. Pressing the remote power button enters standby/suspend rather than rebooting cleanly, and even an AC power cycle may resume from the `p53` snapshot image. Cold-boot vs. standby/CRIU behavior **must** be characterized read-only in Stage 1 before any Stage 3 process is launched.
+2. **Incomplete Overlayfs & Storage Mapping in Experiment C:**
+   `live-system-inventory` shows `/etc`, `/lib`, `/mnt`, `/usr`, `/var` are `overlayfs` mounts backed by `/overlay/bsppart` (`p29`), while writable ext4 partitions are `p57` (`/mnt/lg/db8`, `/var/db`), `p58` (`/var`, `/home`, `/mnt/lg/user`), and `p59` (`/media`). Experiment C only runs `df -k /home /media /tmp`, missing `/overlay/bsppart` library paths, inode limits (`df -i`), and how `p57`/`p58` mounts overlap on `/var`.
+3. **Narrow Socket/Library Paths in Experiment B:**
+   Experiment B only checks `/usr/lib/lib*` and `/run/wayland-*` `/tmp/wayland-*`. On webOS (`starfish`), BSP libraries (`libmali`, `libEGL`, hardware adaptation layers) frequently reside in `/lib` or `/overlay/bsppart/usr/lib`, and Luna Surface Manager often places Wayland sockets inside subdirectories (e.g., `/tmp/xdg` or `/var/run/ls2`). Instead of guessing two paths, discover sockets via `/proc/PID/fd` + `/proc/net/unix` (joined by inode to the compositor PID).
+4. **BusyBox `ps -eo` Fragility & Static `/bin/busybox` ELF Check:**
+   - In Experiment A, if `ps -eo pid,comm` fails on stripped BusyBox, the fallback `/proc` loop only prints processes holding `/dev/dri/*`, `/dev/fb*`, or `/dev/mali*`, leaving init/supervisor, `tvservice`, `audiooutputd`, and watchdog processes invisible. Use a pure `/proc/[0-9]*/comm` and `/proc/[0-9]*/status` (`PPid`, `VmRSS`) loop instead.
+   - In Experiment C, running `readelf -l /bin/busybox | grep interpreter` is wasted effort if BusyBox is static; target `/proc/1/exe` or the discovered compositor `exe` directly.
+5. **Missing HDMI-RX Under-Plane & Audio/TV-Service Discovery:**
+   Stage 1 focuses almost exclusively on graphics nodes (`card0`, `fb0`, `libEGL`) and omits read-only discovery of the processes holding `/dev/rtk*`, `/dev/v4l*`, `/dev/snd/*`, and `/dev/watchdog*`. Without knowing how `tvservice`, `videooutputd`, and `audiooutputd` control the HDMI hardware plane and audio routing, Stage 2 cannot design a shell that preserves HDMI input and protected Apple TV playback.
+
+### B. Missing Risks
+- **Hardware/Software Watchdogs:** Blocking the compositor main loop or Luna bus can trip `/dev/watchdog*` or a supervisor health check, causing sudden reboot loops.
+- **Standby MCU & Panel Power Sequencing:** Realtek TV SoCs rely on an internal standby MCU for IR/CEC wake and T-CON/backlight sequencing. Starving or killing vendor power daemons risks panel power-sequencing glitches or inability to wake via remote.
+- **eMMC & ZRAM/Swap Thrashing:** With ~1.07 GB visible RAM and swap on eMMC (`p52` eswap, `p54` apphib), memory spikes in a prototype UI can trigger kernel OOM-kills against `sshd` (severing the escape hatch) or `tvservice` (dropping HDMI/audio), while wearing eMMC flash.
+- **Factory PQ / Calibration Register Loss:** `tvservice` applies unit-specific panel white-balance, LUT, and Filmmaker SDR settings (`p57` `/mnt/lg/db8`) to hardware registers at runtime.
+
+### C. Recommended Priority Changes
+1. **Promote Standby/CRIU (`p53`) and Watchdog Discovery to Stage 1:** Verify read-only how standby, reboot, and `/dev/watchdog*` behave before any Stage 3 manual UI test.
+2. **Expand Stage 1 to Map RTD2875 Hardware Device Owners (`rtk*`, `snd/*`, `v4l*`) and Luna IPC Services:** Treat HDMI/audio/remote control discovery as co-equal with EGL/Wayland discovery.
+3. **Add an Explicit SSH/Timer Escape Gate to Stage 2/3:** Any Stage 3 manual test must run under a bounded wrapper (e.g., auto-terminating after $N$ seconds unless renewed, with lower OOM score/nice priority than `sshd` and `tvservice`).
+
+### D. Evaluation of Claude and Codex Conclusions
+- **Disagreement with Claude (Concur with Plan's Rejection):** Claude's assertions that a fullscreen client shell "preserves all four [hardware functions] by construction," carries "zero brick risk," and justifies immediate startup hooks or chroot execution are dangerously overconfident. A client shell does *not* preserve HDMI viewing if it draws an opaque surface over the hardware video plane without configuring a video sink cutout, and it is *not* risk-free if it triggers OOM kills of `sshd`/`tvservice` or gets captured into a persistent CRIU resume image (`p53`).
+- **Assessment of Codex (Agree, with Two Extensions):** The plan rightly adopts Codex's manual-first sequencing, memory budgeting, and strict skepticism regarding `prodkey` metadata and A/B partition recovery. However, Codex (and the current synthesis) still under-specifies two TV-specific realities:
+  1. **Manual processes are only non-persistent if CRIU (`p53`) does not snapshot them** during normal remote power-off.
+  2. **HDMI input on `rtk_kdriver` is not a passive background window**—coexistence requires active Luna IPC coordination with `tvservice`/`videooutputd` and compositor hole-punching.
+
+---
+
+## 4. Corrected Stage 1 Read-Only Experiments (Drop-In Refinements)
+
+Replace or augment the proposed Stage 1 read-only snippets with these BusyBox-safe, privacy-preserving checks (run over SSH, output captured off-TV and scrubbed before commit):
+
+1. **Process Tree & Hardware Node Ownership (Broadened beyond `dri`/`fb`):**
+   Scan `/proc/[0-9]*/fd/*` for `^/dev/(dri/|fb|mali|rtk|v4l|video|snd/|watchdog|input/)` and print `pid`, `comm`, `PPid` (from `/proc/PID/status`), and `VmRSS`—never `cmdline` or `environ`.
+2. **Compositor Socket & Library Discovery (Via Inodes, Not Guessed Paths):**
+   For the compositor PID found above, match `socket:[INO]` links in `/proc/PID/fd/*` against `/proc/net/unix` to find exact listening Wayland/LSM socket paths, and inspect `/proc/PID/maps` for all `.so` paths (capturing `/lib`, `/usr/lib`, and `/overlay/bsppart` libraries).
+3. **Dynamic ELF ABI & Storage/Mount Topology:**
+   Run `readelf -h -l -d` on `/proc/PID/exe` (the dynamic compositor binary) rather than static `/bin/busybox`; check `df -k` and `df -i` on `/var`, `/home`, `/mnt/lg/user`, `/media`, and `/tmp`; and inspect `/proc/mounts` (filtering out any sensitive tokens) to document the exact `overlayfs` and `p57`/`p58`/`p59` mount hierarchy.
+4. **CRIU / Standby / Watchdog Service Inspection:**
+   Read-only list `/etc/init/*` or `/lib/systemd/system/*` scripts referencing `criu`, `snapshot`, `p53`, `surface-manager`, `tvservice`, and `watchdog` to establish exact startup, suspend/resume, and respawn behavior before Stage 2 design begins.
