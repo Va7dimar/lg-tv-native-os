@@ -15,3 +15,6 @@ __pycache__/
 *.pem
 client-key*.txt
 secrets/
+
+# Per-TV large inputs
+tvs/*/inputs/
