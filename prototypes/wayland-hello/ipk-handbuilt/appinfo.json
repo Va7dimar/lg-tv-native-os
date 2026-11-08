@@ -1,0 +1,10 @@
+{
+ "id": "org.va7dimar.waylandhello",
+ "version": "0.6.0",
+ "vendor": "va7dimar",
+ "type": "native",
+ "main": "run.sh",
+ "title": "Wayland Hello",
+ "icon": "icon.png",
+ "noSplashOnLaunch": true
+}
