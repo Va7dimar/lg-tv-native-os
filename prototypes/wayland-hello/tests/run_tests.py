@@ -46,10 +46,18 @@ def parser_tests():
     rc, out, _, _ = run(["--parse-only", "--duration", "30", "--size", "1920x1080", "--max-size", "800x600"])
     check("size clamped to max-size", rc == 0 and "size=800x600" in out and "duration_s=30" in out, out)
     rc, out, _, _ = run(["--help"])
-    check("--help exit 0", rc == 0 and "--dry-run" in out, out)
+    check("--help exit 0", rc == 0 and "--dry-run" in out and "--input" in out and "--webos-shell" in out and "--egl" in out, out)
+    rc, out, _, _ = run(["--parse-only", "--input", "--webos-shell", "--egl", "--app-id", "wayland-hello-prototype"])
+    check("v2 flags parse", rc == 0 and "input=1" in out and "webos_shell=1" in out and "egl=1" in out
+          and "app_id=wayland-hello-prototype" in out, out)
+    rc, out, _, _ = run(["--version"])
+    check("version 0.2", rc == 0 and "0.2-prototype" in out, out)
+    for bad in ("", "has space", "../x", "a/b", "A" * 65):
+        rc, _, _, _ = run(["--parse-only", "--app-id", bad])
+        check("reject app-id %r" % bad, rc == 2, "rc=%d" % rc)
 
 
-def with_mock(mock_args, client_args, timeout=40):
+def with_mock(mock_args, client_args, timeout=40, env_extra=None):
     d = tempfile.mkdtemp(prefix="wlh-test-")
     sock, log = os.path.join(d, "wayland-mock"), os.path.join(d, "log.jsonl")
     m = subprocess.Popen([sys.executable, "-I", MOCK, sock, log] + mock_args)
@@ -58,7 +66,10 @@ def with_mock(mock_args, client_args, timeout=40):
             break
         time.sleep(0.05)
     try:
-        r = run(client_args, {"XDG_RUNTIME_DIR": d, "WAYLAND_DISPLAY": "wayland-mock"}, timeout)
+        env = {"XDG_RUNTIME_DIR": d, "WAYLAND_DISPLAY": "wayland-mock"}
+        if env_extra:
+            env.update(env_extra)
+        r = run(client_args, env, timeout)
     finally:
         try:
             m.wait(timeout=3)
@@ -118,9 +129,183 @@ def mock_tests():
     check("no socket -> rc=3", rc == 3, "rc=%d %s" % (rc, err))
 
 
+def build_so(src_text, dest):
+    src = dest + ".c"
+    with open(src, "w") as f:
+        f.write(src_text)
+    p = subprocess.run(["gcc", "-shared", "-fPIC", "-o", dest, src], capture_output=True, text=True, timeout=30)
+    if p.returncode != 0:
+        raise RuntimeError(p.stderr)
+
+
+WEBOS_HDR = r'''
+struct wl_message { const char *name; const char *signature; const void *types; };
+struct wl_interface {
+  const char *name; int version;
+  int method_count; const struct wl_message *methods;
+  int event_count; const struct wl_message *events;
+};
+'''
+
+
+def webos_src(shell, surface):
+    events = [("state_changed", "u"), ("position_changed", "ii"), ("close", ""),
+              ("exposed", "a"), ("state_about_to_change", "u")]
+
+    def arr(name, items):
+        lines = ["static const struct wl_message %s[] = {" % name]
+        for n, s in items:
+            lines.append('  {"%s", "%s", 0},' % (n, s))
+        if not items:
+            lines.append('  {"unused", "", 0},')
+        lines.append("};")
+        return "\n".join(lines)
+
+    return WEBOS_HDR + arr("shell_m", shell) + "\n" + arr("surf_m", surface) + "\n" + arr("surf_e", events) + """
+const struct wl_interface wl_webos_shell_interface = {"wl_webos_shell", 1, %d, shell_m, 0, 0};
+const struct wl_interface wl_webos_shell_surface_interface = {"wl_webos_shell_surface", 1, %d, surf_m, %d, surf_e};
+""" % (max(1, len(shell)), len(surface), len(events))
+
+
+def input_tests():
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "2", "--input-script", "p105,p30"], ["--input", "--duration", "2"])
+    check("input mode rc=0", rc == 0, "rc=%d %s" % (rc, err[-400:]))
+    check("raw keycodes on stdout", "keycode raw=105 state=pressed seat=0" in out and "keycode raw=30 state=pressed seat=0" in out, out)
+    check("keycode log names the evdev assumption", "keycode-log assumption=wl_keyboard_key_is_evdev" in out, out)
+    check("arrow moves square", "input: square x=60 y=100 size=40" in err, err)
+    check("other key recolors", "input: color ff0000" in err, err)
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("pixels show moved green square and red background",
+          pix and pix[-1].get("16,16") == 0xffff0000 and pix[-1].get("80,120") == 0xff00ff00
+          and pix[-1].get("120,120") == 0xffff0000, str(pix))
+    check("two keyboards bound", sum(1 for e in ev if e.get("req") == "get_keyboard") == 2, str(reqs(ev)))
+    check("keymap xkb_v1 logged twice", err.count("format=1 (xkb_v1)") == 2, err)
+    check("keymap prefix logged", "xkb_keymap" in err, err)
+    check("pointer motion logged", "input: pointer motion" in err and "x=10.000" in err and "y=5.000" in err, err)
+    check("modifiers logged", "depressed=0x1" in err, err)
+    check("wl_seat only, no evdev open mentioned as a path", "no evdev device open" in err, err)
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p158"], ["--input", "--duration", "6"])
+    check("BACK exits cleanly", rc == 0 and dt < 4.0, "rc=%d dt=%.2f %s" % (rc, dt, err[-300:]))
+    check("BACK raw code on stdout", "keycode raw=158 state=pressed seat=0" in out, out)
+    check("BACK assumed evdev 158 xkb 166", "assumed_evdev=KEY_BACK" in err and "xkb_keycode=166" in err and "exiting (back-key)" in err, err)
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p1"], ["--input", "--duration", "6"])
+    check("Escape exits", rc == 0 and dt < 4.0 and "exiting (escape)" in err and "keycode raw=1 state=pressed" in out,
+          "rc=%d dt=%.2f" % (rc, dt))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p174"], ["--input", "--duration", "6"])
+    check("EXIT exits", rc == 0 and dt < 4.0 and "exiting (exit-key)" in err and "keycode raw=174 state=pressed" in out
+          and "xkb_keycode=182" in err, "rc=%d dt=%.2f" % (rc, dt))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p461"], ["--input", "--duration", "2"])
+    check("unknown 461 does not exit early", rc == 0 and dt > 1.5, "rc=%d dt=%.2f" % (rc, dt))
+    check("unknown 461 raw on stdout", "keycode raw=461 state=pressed seat=0" in out and "assumed_evdev=unknown" in err, out + err)
+
+    (rc, out, err, dt), ev, _ = with_mock([], ["--input", "--duration", "3"])
+    check("no wl_seat fails closed rc=8", rc == 8, "rc=%d %s" % (rc, err))
+    check("no seat means no surface", ("wl_compositor", "create_surface") not in reqs(ev), str(reqs(ev)))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--webos"], ["--dry-run", "--input", "--webos-shell", "--egl", "--duration", "3"])
+    check("dry-run still binds nothing", rc == 0 and not any(e.get("req") == "bind" for e in ev), str(reqs(ev)))
+    check("dry-run lists seat and webos shell", "interface=wl_seat" in out and "interface=wl_webos_shell" in out, out)
+
+    (rc, out, err, dt), ev, _ = with_mock(["--stall"], ["--input", "--egl", "--webos-shell", "--duration", "2"])
+    check("flags do not disable the deadline", rc != 0 and dt < 5.5, "rc=%d dt=%.2f" % (rc, dt))
+
+
+def webos_tests():
+    ose = webos_src(
+        [("get_system_pip", ""), ("get_shell_surface", "no")],
+        [("set_location_hint", "u"), ("set_state", "u"), ("set_property", "ss"), ("set_key_mask", "u")])
+    shifted = webos_src(
+        [("get_shell_surface", "no")],
+        [("set_location_hint", "u"), ("set_state", "u"), ("set_property", "ss"), ("set_key_mask", "u")])
+    bad = webos_src(
+        [("get_shell_surface", "u")],
+        [("set_state", "u"), ("set_property", "ss")])
+    d_ose, d_shift, d_bad, d_empty = [tempfile.mkdtemp(prefix="wlh-so-") for _ in range(4)]
+    build_so(ose, os.path.join(d_ose, "libwayland-webos-client.so.1"))
+    build_so(shifted, os.path.join(d_shift, "libwayland-webos-client.so.1"))
+    build_so(bad, os.path.join(d_bad, "libwayland-webos-client.so.1"))
+
+    def ops(ev):
+        return [(e.get("iface"), e.get("req"), e.get("args")) for e in ev if str(e.get("iface", "")).startswith("wl_webos")]
+
+    (rc, out, err, dt), ev, _ = with_mock(["--webos"], ["--webos-shell", "--duration", "2"],
+                                          env_extra={"WAYLAND_HELLO_LIB_DIR": d_ose})
+    found = ops(ev)
+    check("webos OSE fixture rc=0", rc == 0, err[-500:])
+    check("get_shell_surface uses runtime opcode 1",
+          any(i == "wl_webos_shell" and r == "op1" for i, r, a in found) and "get_shell_surface=1" in err, str(found))
+    check("set_state fullscreen value 3", any(r == "op1" and a == [3] for i, r, a in found if i.endswith("surface")), str(found))
+    check("appId property sent", any(r == "op2" and a == ["appId", "wayland-hello-prototype"] for i, r, a in found), str(found))
+    check("key mask sent", any(r == "op3" and a == [0xFFFFFFFE] for i, r, a in found), str(found))
+    check("wl_shell not bound in webos mode", not any(e.get("req") == "bind" and e.get("args", [None, None])[1] == "wl_shell" for e in ev), str(reqs(ev)))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--webos"], ["--webos-shell", "--no-fullscreen", "--duration", "2"],
+                                          env_extra={"WAYLAND_HELLO_LIB_DIR": d_ose})
+    found = ops(ev)
+    check("no-fullscreen sends OSE state 0", any(r == "op1" and a == [0] for i, r, a in found if i.endswith("surface")), str(found))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--webos"], ["--webos-shell", "--duration", "2"],
+                                          env_extra={"WAYLAND_HELLO_LIB_DIR": d_shift})
+    found = ops(ev)
+    check("shifted fixture uses opcode 0", rc == 0 and any(i == "wl_webos_shell" and r == "op0" for i, r, a in found)
+          and "get_shell_surface=0" in err, "rc=%d %s %s" % (rc, found, err[-400:]))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--webos"], ["--webos-shell", "--duration", "2"],
+                                          env_extra={"WAYLAND_HELLO_LIB_DIR": d_bad})
+    check("bad signature fails closed", rc == 9 and not any(str(e.get("iface", "")).startswith("wl_webos") and e.get("req") != "bind" for e in ev),
+          "rc=%d %s" % (rc, err[-400:]))
+    check("bad signature sends no webos request", not any(e.get("iface") == "wl_webos_shell" for e in ev), str(reqs(ev)))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--webos"], ["--webos-shell", "--duration", "2"],
+                                          env_extra={"WAYLAND_HELLO_LIB_DIR": d_empty})
+    check("missing webos library fails closed", rc == 9 and "libwayland-webos-client.so.1" in err and "Failing closed" in err, err[-500:])
+    check("missing library sends no bind", not any(e.get("req") == "bind" for e in ev), str(reqs(ev)))
+
+    (rc, out, err, dt), ev, _ = with_mock([], ["--webos-shell", "--duration", "2"])
+    check("absent wl_webos_shell fails closed", rc == 9 and "not advertised" in err, err[-300:])
+
+
+def egl_tests():
+    empty = tempfile.mkdtemp(prefix="wlh-egl-")
+    (rc, out, err, dt), ev, _ = with_mock([], ["--egl", "--duration", "2"], env_extra={"WAYLAND_HELLO_LIB_DIR": empty})
+    check("missing egl libs fall back to shm", rc == 0 and "libwayland-egl.so.1" in err and "falling back to shm" in err, err[-500:])
+    check("shm buffer still created", any(e.get("req") == "create_buffer" for e in ev), str(reqs(ev)))
+    stub = "int wayland_hello_egl_stub;\n"
+    build_so(stub, os.path.join(empty, "libwayland-egl.so.1"))
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p105"], ["--egl", "--input", "--duration", "2"],
+                                          env_extra={"WAYLAND_HELLO_LIB_DIR": empty})
+    check("missing egl symbol is logged and shm input still works",
+          rc == 0 and "missing symbol wl_egl_window_create" in err and "falling back to shm" in err
+          and "keycode raw=105 state=pressed" in out and "input: square x=60" in err, err[-500:])
+
+
+def linkage_tests():
+    blob = open(BIN, "rb").read()
+    for s in (b"/dev/input", b"/dev/fb", b"/dev/dri"):
+        check("binary has no %s" % s.decode(), s not in blob)
+    p = subprocess.run(["readelf", "-d", BIN], capture_output=True, text=True)
+    needed = []
+    for line in p.stdout.splitlines():
+        if "(NEEDED)" in line and "[" in line:
+            needed.append(line.split("[", 1)[1].split("]", 1)[0])
+    check("host NEEDED is libc/libdl/librt only", needed and set(needed) <= {"libc.so.6", "libdl.so.2", "librt.so.1"}, str(needed))
+    t = subprocess.run(["objdump", "-T", BIN], capture_output=True, text=True)
+    symbols = t.stdout
+    check("no link-time wl/egl/gl symbols",
+          " wl_" not in symbols and " egl" not in symbols.lower() and " gl" not in symbols.lower())
+
+
 if __name__ == "__main__":
     parser_tests()
     mock_tests()
+    input_tests()
+    webos_tests()
+    egl_tests()
+    linkage_tests()
     n_fail = sum(1 for _, ok, _ in results if not ok)
     print("\n%d tests, %d failed" % (len(results), n_fail))
     sys.exit(1 if n_fail else 0)

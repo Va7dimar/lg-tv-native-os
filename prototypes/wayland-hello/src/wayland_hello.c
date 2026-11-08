@@ -20,8 +20,13 @@
  *    given a listener; every listener install return value is checked.
  *  - SHM backing is reserved with posix_fallocate() before mmap() so an
  *    exhausted tmpfs fails closed instead of raising SIGBUS on first write.
- *  - Only wl_shell (legacy) is used for a surface. If wl_shell is absent the
- *    client fails closed. It never opens DRM/fbdev and never touches services.
+ *  - Only wl_shell (legacy) is used for a surface unless --webos-shell is
+ *    requested. If the chosen shell is absent, or the webOS interface cannot
+ *    be read back from libwayland-webos-client.so.1, the client fails closed.
+ *    It never opens DRM, fbdev, or evdev nodes and never touches services.
+ *  - --input binds every advertised wl_seat (capped) and prints each raw
+ *    wl_keyboard key code to stdout. It does not open /dev/input. The
+ *    2026-11-08 probe shows those nodes are owned by surface-manager.
  */
 #define _GNU_SOURCE
 #include <dlfcn.h>
@@ -38,9 +43,11 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <stddef.h>
 #include <unistd.h>
+#include <link.h>
 
-#define HELLO_VERSION "0.1-prototype"
+#define HELLO_VERSION "0.2-prototype"
 
 /* ---- limits ------------------------------------------------------------ */
 #define DEFAULT_DURATION_S 10
@@ -50,6 +57,7 @@
 #define MAX_W              1920
 #define MAX_H              1080
 #define MAX_GLOBALS        128
+#define MAX_SEATS          8
 #define GRACE_S            2   /* SIGALRM fires at duration + GRACE_S */
 #define MAX_SHM_BYTES      ((size_t)MAX_W * (size_t)MAX_H * 4u)  /* 8 MiB hard cap */
 
@@ -61,6 +69,8 @@
 #define EX_NOSHELL   5
 #define EX_LIB       6
 #define EX_ALLOC     7
+#define EX_NOSEAT    8
+#define EX_NOWEBOS   9
 #define EX_HARD      124
 
 /* ---- stable libwayland ABI, declared locally -------------------------- */
@@ -93,19 +103,24 @@ static struct {
 	void (*proxy_destroy)(struct wl_proxy *);
 	/* interface objects */
 	const struct wl_interface *i_registry, *i_callback, *i_compositor, *i_shm,
-		*i_shm_pool, *i_buffer, *i_surface, *i_shell, *i_shell_surface;
+		*i_shm_pool, *i_buffer, *i_surface, *i_shell, *i_shell_surface,
+		*i_seat, *i_keyboard, *i_pointer;
 } W;
 
 /* ---- options ----------------------------------------------------------- */
 struct opts {
 	int dry_run;
 	int parse_only;
+	int input;
+	int webos_shell;
+	int egl;
 	int duration_s;
 	int width, height;          /* initial buffer */
 	int max_w, max_h;           /* cap for configure-driven resize */
 	int no_fullscreen;
 	const char *runtime_dir;
 	const char *display_name;
+	const char *app_id;
 	uint32_t color;             /* 0xRRGGBB */
 };
 
@@ -114,11 +129,15 @@ static void usage(FILE *f)
 	fprintf(f,
 "usage: wayland-hello [options]\n"
 "  --dry-run            connect, print registry globals, exit (no surfaces)\n"
+"  --input              bind wl_seat; log keys/pointer; arrows move a square\n"
+"  --webos-shell        wl_webos_shell instead of wl_shell (fail closed)\n"
+"  --egl                try GLES2 via dlopen; shm if the libraries differ\n"
+"  --app-id ID          webOS appId property (default wayland-hello-prototype)\n"
 "  --duration N         total hard time limit in seconds (1..%d, default %d)\n"
 "  --size WxH           initial buffer size (default %dx%d, max %dx%d)\n"
 "  --max-size WxH       cap for compositor-requested sizes (default %dx%d)\n"
 "  --color RRGGBB       base color (default 204080)\n"
-"  --no-fullscreen      use set_toplevel instead of set_fullscreen\n"
+"  --no-fullscreen      wl_shell set_toplevel, or webOS state default\n"
 "  --runtime-dir DIR    override XDG_RUNTIME_DIR (default env, else /tmp/xdg)\n"
 "  --display NAME       override WAYLAND_DISPLAY (default env, else wayland-0)\n"
 "  --parse-only         print parsed configuration and exit (no connect)\n"
@@ -159,6 +178,7 @@ static int parse_opts(int argc, char **argv, struct opts *o)
 	o->width = DEFAULT_W; o->height = DEFAULT_H;
 	o->max_w = MAX_W; o->max_h = MAX_H;
 	o->color = 0x204080;
+	o->app_id = "wayland-hello-prototype";
 	e = getenv("XDG_RUNTIME_DIR");
 	o->runtime_dir = (e && *e) ? e : "/tmp/xdg";
 	e = getenv("WAYLAND_DISPLAY");
@@ -169,6 +189,9 @@ static int parse_opts(int argc, char **argv, struct opts *o)
 		const char *v = (i + 1 < argc) ? argv[i + 1] : NULL;
 		if (!strcmp(a, "--dry-run")) o->dry_run = 1;
 		else if (!strcmp(a, "--parse-only")) o->parse_only = 1;
+		else if (!strcmp(a, "--input")) o->input = 1;
+		else if (!strcmp(a, "--webos-shell")) o->webos_shell = 1;
+		else if (!strcmp(a, "--egl")) o->egl = 1;
 		else if (!strcmp(a, "--no-fullscreen")) o->no_fullscreen = 1;
 		else if (!strcmp(a, "--help") || !strcmp(a, "-h")) { usage(stdout); return 1; }
 		else if (!strcmp(a, "--version")) { printf("wayland-hello %s\n", HELLO_VERSION); return 1; }
@@ -187,6 +210,19 @@ static int parse_opts(int argc, char **argv, struct opts *o)
 				fprintf(stderr, "error: --max-size must be WxH within %dx%d\n", MAX_W, MAX_H); return -1;
 			}
 			i++;
+		} else if (!strcmp(a, "--app-id")) {
+			const char *p;
+			int n = 0;
+			if (!v || !*v) { fprintf(stderr, "error: --app-id must be 1..64 of [A-Za-z0-9._-]\n"); return -1; }
+			for (p = v; *p; p++, n++) {
+				unsigned char c = (unsigned char)*p;
+				if (n >= 64 || !(c == '.' || c == '_' || c == '-' ||
+				    (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) {
+					fprintf(stderr, "error: --app-id must be 1..64 of [A-Za-z0-9._-]\n");
+					return -1;
+				}
+			}
+			o->app_id = v; i++;
 		} else if (!strcmp(a, "--color")) {
 			char *end; unsigned long c;
 			if (!v || strlen(v) != 6) { fprintf(stderr, "error: --color RRGGBB\n"); return -1; }
@@ -287,6 +323,9 @@ static int load_wayland(void)
 	REQ(i_surface, "wl_surface_interface");
 	REQ(i_shell, "wl_shell_interface");
 	REQ(i_shell_surface, "wl_shell_surface_interface");
+	OPT(i_seat, "wl_seat_interface");
+	OPT(i_keyboard, "wl_keyboard_interface");
+	OPT(i_pointer, "wl_pointer_interface");
 	if (!(W.display_prepare_read && W.display_read_events && W.display_cancel_read))
 		W.display_prepare_read = NULL; /* use all-or-nothing */
 	return 0;
@@ -302,7 +341,22 @@ enum { BUFFER_DESTROY = 0 };
 enum { SURFACE_DESTROY = 0, SURFACE_ATTACH = 1, SURFACE_DAMAGE = 2, SURFACE_COMMIT = 6 };
 enum { SHELL_GET_SHELL_SURFACE = 0 };
 enum { SHSURF_PONG = 0, SHSURF_SET_TOPLEVEL = 3, SHSURF_SET_FULLSCREEN = 5, SHSURF_SET_TITLE = 8 };
+enum { SEAT_GET_POINTER = 0, SEAT_GET_KEYBOARD = 1 };
 #define WL_SHM_FORMAT_XRGB8888 1
+/* wl_keyboard.key carries the evdev code (wayland.xml). XKB keycode = evdev + 8.
+ * linux/input-event-codes.h values assumed below. webOS DOM keyCode 461 is a
+ * different namespace and is logged as unknown if it arrives here. */
+#define KEY_ESC_EVDEV  1
+#define KEY_ENTER_EVDEV 28
+#define KEY_UP_EVDEV   103
+#define KEY_LEFT_EVDEV 105
+#define KEY_RIGHT_EVDEV 106
+#define KEY_DOWN_EVDEV 108
+#define KEY_BACK_EVDEV 158
+#define KEY_EXIT_EVDEV 174
+#define KEY_OK_EVDEV   352
+#define SQ_SIZE 40
+#define SQ_STEP 40
 
 /* pre-1.4 constructor pattern: create proxy, then marshal with it as new_id */
 static struct wl_proxy *new_obj(struct wl_proxy *factory, const struct wl_interface *iface)
@@ -321,6 +375,23 @@ struct buf {
 	int busy;
 };
 
+struct seat_slot {
+	int index;
+	uint32_t global_name;
+	uint32_t version;
+	struct wl_proxy *seat, *keyboard, *pointer;
+	char label[64];
+};
+
+enum {
+	REASON_DEADLINE = 0,
+	REASON_SIGNAL,
+	REASON_BACK,
+	REASON_ESC,
+	REASON_EXITKEY,
+	REASON_WEBOS_CLOSE
+};
+
 static struct {
 	struct opts *o;
 	struct wl_display *display;
@@ -328,12 +399,29 @@ static struct {
 	struct global globals[MAX_GLOBALS];
 	int nglobals, globals_truncated;
 	uint32_t compositor_name, shm_name, shell_name;
+	uint32_t webos_name, webos_advertised;
 	struct wl_proxy *compositor, *shm, *shell, *surface, *shell_surface;
+	struct wl_proxy *webos_shell, *webos_shell_surface;
+	const struct wl_interface *webos_shell_iface, *webos_surf_iface;
+	void *webos_dl;
+	int op_get_shell_surface, op_set_state, op_set_property, op_set_key_mask;
+	struct seat_slot seats[MAX_SEATS];
+	int nseats, seats_truncated;
 	int have_xrgb;
-	int want_w, want_h;   /* from configure, clamped; 0 = none */
+	int want_w, want_h;
+	int cur_w, cur_h;
 	int resize_pending;
 	struct buf buf;
-	int protocol_error;
+	int fatal;
+	int quit;
+	int reason;
+	uint32_t bg;
+	int sq_x, sq_y, sq;
+	int color_i;
+	int dirty;
+	int egl_on;
+	float nudge_x, nudge_y;
+	int frame;
 } S;
 
 /* registry listener */
@@ -349,6 +437,20 @@ static void reg_global(void *data, struct wl_proxy *r, uint32_t name, const char
 	if (!strcmp(iface, "wl_compositor") && !S.compositor_name) S.compositor_name = name;
 	else if (!strcmp(iface, "wl_shm") && !S.shm_name) S.shm_name = name;
 	else if (!strcmp(iface, "wl_shell") && !S.shell_name) S.shell_name = name;
+	else if (!strcmp(iface, "wl_webos_shell") && !S.webos_name) {
+		S.webos_name = name; S.webos_advertised = ver;
+	} else if (!strcmp(iface, "wl_seat")) {
+		if (S.nseats < MAX_SEATS) {
+			struct seat_slot *s = &S.seats[S.nseats++];
+			s->index = S.nseats - 1;
+			s->global_name = name;
+			s->version = ver;
+			snprintf(s->label, sizeof s->label, "-");
+		} else if (!S.seats_truncated) {
+			S.seats_truncated = 1;
+			fprintf(stderr, "warn: extra wl_seat ignored (cap %d)\n", MAX_SEATS);
+		}
+	}
 }
 static void reg_global_remove(void *data, struct wl_proxy *r, uint32_t name)
 { (void)data; (void)r; (void)name; }
@@ -364,9 +466,8 @@ static void shm_format(void *data, struct wl_proxy *shm, uint32_t fmt)
 { (void)data; (void)shm; if (fmt == WL_SHM_FORMAT_XRGB8888) S.have_xrgb = 1; }
 static void *shm_listener[] = { (void *)shm_format };
 
-/* buffer release */
-static void buf_release(void *data, struct wl_proxy *b)
-{ (void)b; ((struct buf *)data)->busy = 0; }
+/* buffer release is defined after present(); the listener only needs a declaration */
+static void buf_release(void *data, struct wl_proxy *b);
 static void *buffer_listener[] = { (void *)buf_release };
 
 /* shell surface */
@@ -378,7 +479,7 @@ static void ss_configure(void *data, struct wl_proxy *ss, uint32_t edges, int32_
 	if (w <= 0 || h <= 0) return;           /* 0 = client decides */
 	if (w > S.o->max_w) w = S.o->max_w;      /* bounded allocation */
 	if (h > S.o->max_h) h = S.o->max_h;
-	if (w != S.buf.w || h != S.buf.h) { S.want_w = w; S.want_h = h; S.resize_pending = 1; }
+	if (w != S.cur_w || h != S.cur_h) { S.want_w = w; S.want_h = h; S.resize_pending = 1; }
 	fprintf(stderr, "info: configure %dx%d (clamped)\n", w, h);
 }
 static void ss_popup_done(void *data, struct wl_proxy *ss) { (void)data; (void)ss; }
@@ -500,6 +601,9 @@ static void paint(struct buf *b, uint32_t rgb)
 			uint32_t c = 0xff000000u | rgb;
 			if (((x / 64) + (y / 64)) & 1) c = 0xff000000u | ((rgb >> 1) & 0x7f7f7fu);
 			if (x < 8 || y < 8 || x >= b->w - 8 || y >= b->h - 8) c = 0xffffffffu;
+			if (S.o && S.o->input && S.sq > 0 &&
+			    x >= S.sq_x && y >= S.sq_y && x < S.sq_x + S.sq && y < S.sq_y + S.sq)
+				c = 0xff00ff00u;
 			px[(size_t)y * b->w + x] = c;
 		}
 }
@@ -531,7 +635,8 @@ static int create_buf(struct buf *b, int w, int h)
 		close(fd); b->data = NULL; return EX_ALLOC;
 	}
 	b->size = size; b->w = w; b->h = h;
-	paint(b, S.o->color);   /* safe: backing reserved by posix_fallocate */
+	S.cur_w = w; S.cur_h = h;
+	paint(b, S.bg);   /* safe: backing reserved by posix_fallocate */
 
 	pool = new_obj(S.shm, W.i_shm_pool);
 	if (!pool) { fprintf(stderr, "error: wl_shm_pool proxy allocation failed\n"); close(fd); return EX_ALLOC; }
@@ -565,25 +670,716 @@ static void present(void)
 	S.buf.busy = 1;
 }
 
+static void request_redraw(void)
+{
+	if (!S.buf.buffer || !S.buf.data) return;
+	if (S.buf.busy) { S.dirty = 1; return; }
+	paint(&S.buf, S.bg);
+	present();
+	S.dirty = 0;
+}
+
+/* buffer release — defined above as a listener; redraw if input changed while busy */
+static void buf_release(void *data, struct wl_proxy *b)
+{
+	struct buf *buf = data;
+	(void)b;
+	buf->busy = 0;
+	if (S.dirty && !S.quit && buf->data && buf->buffer) request_redraw();
+}
+
 /* ---- main ------------------------------------------------------------- */
 static void print_config(const struct opts *o)
 {
-	printf("dry_run=%d\nduration_s=%d\nsize=%dx%d\nmax_size=%dx%d\ncolor=%06x\nfullscreen=%d\n"
+	printf("dry_run=%d\ninput=%d\nwebos_shell=%d\negl=%d\napp_id=%s\nduration_s=%d\n"
+	       "size=%dx%d\nmax_size=%dx%d\ncolor=%06x\nfullscreen=%d\n"
 	       "runtime_dir=%s\ndisplay=%s\n",
-	       o->dry_run, o->duration_s, o->width, o->height, o->max_w, o->max_h,
+	       o->dry_run, o->input, o->webos_shell, o->egl, o->app_id,
+	       o->duration_s, o->width, o->height, o->max_w, o->max_h,
 	       (unsigned)o->color, !o->no_fullscreen, o->runtime_dir, o->display_name);
+}
+
+/* ---- input (wl_seat only; never opens /dev/input) ---------------------- */
+static const uint32_t k_palette[] = {
+	0x204080u, 0xff0000u, 0x00aa00u, 0x0000ffu, 0xffaa00u, 0xff00ffu, 0x00ffffu, 0xffffffu
+};
+#define N_PALETTE ((int)(sizeof k_palette / sizeof k_palette[0]))
+
+static void clamp_square(int w, int h)
+{
+	int maxx, maxy;
+	if (S.sq < 8) S.sq = 8;
+	maxx = w - S.sq - 8;
+	maxy = h - S.sq - 8;
+	if (maxx < 8) maxx = 8;
+	if (maxy < 8) maxy = 8;
+	if (S.sq_x < 8) S.sq_x = 8;
+	if (S.sq_y < 8) S.sq_y = 8;
+	if (S.sq_x > maxx) S.sq_x = maxx;
+	if (S.sq_y > maxy) S.sq_y = maxy;
+}
+
+static void nudge_clamp(void)
+{
+	if (S.nudge_x > 0.8f) S.nudge_x = 0.8f;
+	if (S.nudge_x < -0.8f) S.nudge_x = -0.8f;
+	if (S.nudge_y > 0.8f) S.nudge_y = 0.8f;
+	if (S.nudge_y < -0.8f) S.nudge_y = -0.8f;
+}
+
+static void copy_token(const char *in, char *out, size_t n)
+{
+	size_t i;
+	if (!in || !in[0]) { snprintf(out, n, "-"); return; }
+	for (i = 0; in[i] && i + 1 < n; i++) {
+		unsigned char c = (unsigned char)in[i];
+		out[i] = (c > 32 && c < 127) ? (char)c : '.';
+	}
+	out[i] = 0;
+}
+
+static const char *key_name(uint32_t code)
+{
+	switch (code) {
+	case KEY_ESC_EVDEV: return "KEY_ESC";
+	case KEY_ENTER_EVDEV: return "KEY_ENTER";
+	case KEY_UP_EVDEV: return "KEY_UP";
+	case KEY_LEFT_EVDEV: return "KEY_LEFT";
+	case KEY_RIGHT_EVDEV: return "KEY_RIGHT";
+	case KEY_DOWN_EVDEV: return "KEY_DOWN";
+	case KEY_BACK_EVDEV: return "KEY_BACK";
+	case KEY_EXIT_EVDEV: return "KEY_EXIT";
+	case KEY_OK_EVDEV: return "KEY_OK";
+	default: return "unknown";
+	}
+}
+
+static void on_key(struct seat_slot *seat, uint32_t code, uint32_t state, uint32_t serial, uint32_t time)
+{
+	const char *name = key_name(code);
+	const char *st = state == 1 ? "pressed" : (state == 0 ? "released" : "other");
+	char label[64];
+	copy_token(seat->label, label, sizeof label);
+	/* stdout is the mapping log for the first on-TV run. One line, flushed. */
+	printf("keycode raw=%u state=%s seat=%d name=%s\n", code, st, seat->index, label);
+	fflush(stdout);
+	fprintf(stderr, "input: key seat=%d name=%s code=%u xkb_keycode=%u state=%s assumed_evdev=%s serial=%u time=%u\n",
+	        seat->index, label, code, code + 8u, st, name, serial, time);
+	fflush(stderr);
+	if (state != 1) return;
+	if (code == KEY_BACK_EVDEV) { S.quit = 1; S.reason = REASON_BACK; return; }
+	if (code == KEY_ESC_EVDEV) { S.quit = 1; S.reason = REASON_ESC; return; }
+	if (code == KEY_EXIT_EVDEV) { S.quit = 1; S.reason = REASON_EXITKEY; return; }
+	if (code == KEY_LEFT_EVDEV || code == KEY_RIGHT_EVDEV || code == KEY_UP_EVDEV || code == KEY_DOWN_EVDEV) {
+		if (S.egl_on) {
+			if (code == KEY_LEFT_EVDEV) S.nudge_x -= 0.08f;
+			if (code == KEY_RIGHT_EVDEV) S.nudge_x += 0.08f;
+			if (code == KEY_UP_EVDEV) S.nudge_y += 0.08f;
+			if (code == KEY_DOWN_EVDEV) S.nudge_y -= 0.08f;
+			nudge_clamp();
+			fprintf(stderr, "input: nudge %.2f,%.2f\n", S.nudge_x, S.nudge_y);
+		} else if (S.buf.w > 0) {
+			if (code == KEY_LEFT_EVDEV) S.sq_x -= SQ_STEP;
+			if (code == KEY_RIGHT_EVDEV) S.sq_x += SQ_STEP;
+			if (code == KEY_UP_EVDEV) S.sq_y -= SQ_STEP;
+			if (code == KEY_DOWN_EVDEV) S.sq_y += SQ_STEP;
+			clamp_square(S.buf.w, S.buf.h);
+			fprintf(stderr, "input: square x=%d y=%d size=%d\n", S.sq_x, S.sq_y, S.sq);
+			request_redraw();
+		}
+		return;
+	}
+	S.color_i = (S.color_i + 1) % N_PALETTE;
+	if (k_palette[S.color_i] == S.bg) S.color_i = (S.color_i + 1) % N_PALETTE;
+	S.bg = k_palette[S.color_i];
+	fprintf(stderr, "input: color %06x\n", S.bg);
+	if (!S.egl_on) request_redraw();
+}
+
+static void kb_keymap(void *data, struct wl_proxy *kb, uint32_t format, int32_t fd, uint32_t size)
+{
+	struct seat_slot *seat = data;
+	const char *fname = format == 0 ? "no_keymap" : (format == 1 ? "xkb_v1" : "unknown");
+	char prefix[64];
+	(void)kb;
+	prefix[0] = 0;
+	fprintf(stderr, "input: keymap seat=%d format=%u (%s) size=%u\n", seat->index, format, fname, size);
+	if (format == 1 && fd >= 0 && size > 0 && size <= 262144u) {
+		void *p = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+		if (p != MAP_FAILED) {
+			size_t n = size < 48 ? size : 48, i, o = 0;
+			const char *s = p;
+			for (i = 0; i < n && o + 1 < sizeof prefix; i++) {
+				unsigned char c = (unsigned char)s[i];
+				prefix[o++] = (c >= 32 && c < 127) ? (char)c : '.';
+			}
+			prefix[o] = 0;
+			munmap(p, size);
+		} else snprintf(prefix, sizeof prefix, "(unreadable)");
+	} else snprintf(prefix, sizeof prefix, "(not-mapped)");
+	fprintf(stderr, "input: keymap seat=%d prefix=%s\n", seat->index, prefix);
+	fflush(stderr);
+	if (fd >= 0) close(fd);
+}
+
+static void kb_enter(void *data, struct wl_proxy *kb, uint32_t serial, struct wl_proxy *surface, void *keys)
+{
+	struct seat_slot *seat = data;
+	(void)kb; (void)surface; (void)keys;
+	fprintf(stderr, "input: keyboard enter seat=%d name=%s serial=%u\n", seat->index, seat->label, serial);
+	fflush(stderr);
+}
+static void kb_leave(void *data, struct wl_proxy *kb, uint32_t serial, struct wl_proxy *surface)
+{
+	struct seat_slot *seat = data;
+	(void)kb; (void)surface;
+	fprintf(stderr, "input: keyboard leave seat=%d name=%s serial=%u\n", seat->index, seat->label, serial);
+	fflush(stderr);
+}
+static void kb_key(void *data, struct wl_proxy *kb, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
+{
+	(void)kb;
+	on_key(data, key, state, serial, time);
+}
+static void kb_mods(void *data, struct wl_proxy *kb, uint32_t serial, uint32_t dep, uint32_t lat, uint32_t lock, uint32_t group)
+{
+	struct seat_slot *seat = data;
+	(void)kb; (void)serial;
+	fprintf(stderr, "input: modifiers seat=%d depressed=0x%x latched=0x%x locked=0x%x group=%u\n",
+	        seat->index, dep, lat, lock, group);
+	fflush(stderr);
+}
+static void *keyboard_listener[] = {
+	(void *)kb_keymap, (void *)kb_enter, (void *)kb_leave, (void *)kb_key, (void *)kb_mods
+};
+
+static void split_fixed(int32_t v, int *whole, int *milli)
+{
+	int neg = v < 0;
+	int64_t a = neg ? -(int64_t)v : (int64_t)v;
+	*whole = (int)(a / 256);
+	*milli = (int)((a % 256) * 1000 / 256);
+	if (neg) *whole = -*whole;
+}
+
+static void ptr_enter(void *data, struct wl_proxy *p, uint32_t serial, struct wl_proxy *surf, int32_t x, int32_t y)
+{
+	struct seat_slot *seat = data;
+	int xw, xm, yw, ym;
+	(void)p; (void)surf;
+	split_fixed(x, &xw, &xm); split_fixed(y, &yw, &ym);
+	fprintf(stderr, "input: pointer enter seat=%d serial=%u x=%d.%03d y=%d.%03d raw_x=%d raw_y=%d\n",
+	        seat->index, serial, xw, xm, yw, ym, (int)x, (int)y);
+	fflush(stderr);
+}
+static void ptr_leave(void *data, struct wl_proxy *p, uint32_t serial, struct wl_proxy *surf)
+{
+	struct seat_slot *seat = data;
+	(void)p; (void)surf;
+	fprintf(stderr, "input: pointer leave seat=%d serial=%u\n", seat->index, serial);
+}
+static void ptr_motion(void *data, struct wl_proxy *p, uint32_t time, int32_t x, int32_t y)
+{
+	struct seat_slot *seat = data;
+	int xw, xm, yw, ym;
+	(void)p;
+	split_fixed(x, &xw, &xm); split_fixed(y, &yw, &ym);
+	fprintf(stderr, "input: pointer motion seat=%d time=%u x=%d.%03d y=%d.%03d raw_x=%d raw_y=%d\n",
+	        seat->index, time, xw, xm, yw, ym, (int)x, (int)y);
+	fflush(stderr);
+}
+static void ptr_button(void *data, struct wl_proxy *p, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
+{
+	struct seat_slot *seat = data;
+	(void)p;
+	fprintf(stderr, "input: pointer button seat=%d serial=%u time=%u evdev=%u state=%u\n",
+	        seat->index, serial, time, button, state);
+	fflush(stderr);
+}
+static void ptr_axis(void *data, struct wl_proxy *p, uint32_t time, uint32_t axis, int32_t value)
+{
+	struct seat_slot *seat = data;
+	(void)p;
+	fprintf(stderr, "input: pointer axis seat=%d time=%u axis=%u raw=%d\n", seat->index, time, axis, (int)value);
+}
+static void *pointer_listener[] = {
+	(void *)ptr_enter, (void *)ptr_leave, (void *)ptr_motion, (void *)ptr_button, (void *)ptr_axis
+};
+
+static void seat_caps(void *data, struct wl_proxy *seat, uint32_t caps)
+{
+	struct seat_slot *s = data;
+	fprintf(stderr, "input: seat index=%d global=%u name=%s caps=0x%x\n",
+	        s->index, s->global_name, s->label, caps);
+	fflush(stderr);
+	if ((caps & 2u) && !s->keyboard && W.i_keyboard) {
+		struct wl_proxy *kb = new_obj(seat, W.i_keyboard);
+		if (!kb) { fprintf(stderr, "error: wl_keyboard proxy allocation failed\n"); S.fatal = EX_ALLOC; return; }
+		if (LISTEN(kb, keyboard_listener, s) != 0) {
+			W.proxy_destroy(kb);
+			fprintf(stderr, "error: wl_keyboard listener install failed\n");
+			S.fatal = EX_PROTO;
+			return;
+		}
+		s->keyboard = kb;
+		W.proxy_marshal(seat, SEAT_GET_KEYBOARD, kb);
+	} else if (!(caps & 2u) && s->keyboard) {
+		W.proxy_destroy(s->keyboard); s->keyboard = NULL;
+	}
+	if ((caps & 1u) && !s->pointer && W.i_pointer) {
+		struct wl_proxy *pt = new_obj(seat, W.i_pointer);
+		if (!pt) { fprintf(stderr, "error: wl_pointer proxy allocation failed\n"); S.fatal = EX_ALLOC; return; }
+		if (LISTEN(pt, pointer_listener, s) != 0) {
+			W.proxy_destroy(pt);
+			fprintf(stderr, "error: wl_pointer listener install failed\n");
+			S.fatal = EX_PROTO;
+			return;
+		}
+		s->pointer = pt;
+		W.proxy_marshal(seat, SEAT_GET_POINTER, pt);
+	} else if (!(caps & 1u) && s->pointer) {
+		W.proxy_destroy(s->pointer); s->pointer = NULL;
+	}
+}
+
+static void seat_name(void *data, struct wl_proxy *seat, const char *name)
+{
+	struct seat_slot *s = data;
+	(void)seat;
+	copy_token(name, s->label, sizeof s->label);
+	fprintf(stderr, "input: seat index=%d global=%u name=%s\n", s->index, s->global_name, s->label);
+	fflush(stderr);
+}
+static void *seat_listener[] = { (void *)seat_caps, (void *)seat_name };
+
+/* ---- optional libraries (not libwayland-client) ----------------------- */
+static void *dlopen_extra(const char *soname)
+{
+	const char *dir = getenv("WAYLAND_HELLO_LIB_DIR");
+	char path[512];
+	void *h;
+	if (dir && dir[0]) {
+		if (snprintf(path, sizeof path, "%s/%s", dir, soname) >= (int)sizeof path) {
+			fprintf(stderr, "error: dlopen path too long for %s\n", soname);
+			return NULL;
+		}
+		h = dlopen(path, RTLD_NOW | RTLD_LOCAL);
+		if (!h) fprintf(stderr, "error: dlopen %s failed: %s\n", path, dlerror());
+		return h;
+	}
+	h = dlopen(soname, RTLD_NOW | RTLD_LOCAL);
+	if (!h) fprintf(stderr, "error: dlopen %s failed: %s\n", soname, dlerror());
+	return h;
+}
+
+static int method_slot(const struct wl_interface *iface, const char *method, const char *sig_a, const char *sig_b, int required, int *out)
+{
+	int i;
+	*out = -1;
+	if (!iface || iface->method_count < 0 || iface->method_count > 32 || (iface->method_count > 0 && !iface->methods)) {
+		fprintf(stderr, "error: webos interface for %s is not usable\n", method);
+		return -1;
+	}
+	for (i = 0; i < iface->method_count; i++) {
+		const struct wl_message *m = &iface->methods[i];
+		if (!m->name || strcmp(m->name, method) != 0) continue;
+		if (!m->signature || (strcmp(m->signature, sig_a) != 0 && !(sig_b && strcmp(m->signature, sig_b) == 0))) {
+			fprintf(stderr, "error: webos %s signature '%s' is not '%s'%s%s; refusing to send it\n",
+			        method, m->signature ? m->signature : "(null)", sig_a,
+			        sig_b ? " or " : "", sig_b ? sig_b : "");
+			return -1;
+		}
+		*out = i;
+		return 0;
+	}
+	if (!required) return 0;
+	fprintf(stderr, "error: webos method %s is not in the runtime interface\n", method);
+	return -1;
+}
+
+static int resolve_webos(void)
+{
+	const struct wl_interface *shell, *surf;
+	S.webos_dl = dlopen_extra("libwayland-webos-client.so.1");
+	if (!S.webos_dl) {
+		fprintf(stderr, "error: wl_webos_shell is advertised but libwayland-webos-client.so.1 did not load; refusing to guess opcodes. Failing closed.\n");
+		return -1;
+	}
+	shell = dlsym(S.webos_dl, "wl_webos_shell_interface");
+	surf = dlsym(S.webos_dl, "wl_webos_shell_surface_interface");
+	if (!shell || !surf || !shell->name || strcmp(shell->name, "wl_webos_shell") != 0 ||
+	    !surf->name || strcmp(surf->name, "wl_webos_shell_surface") != 0) {
+		fprintf(stderr, "error: runtime webos interfaces missing or renamed; failing closed\n");
+		dlclose(S.webos_dl); S.webos_dl = NULL;
+		return -1;
+	}
+	if (shell->version < 1 || surf->version < 1) {
+		fprintf(stderr, "error: runtime webos interface version < 1; failing closed\n");
+		dlclose(S.webos_dl); S.webos_dl = NULL;
+		return -1;
+	}
+	if (method_slot(shell, "get_shell_surface", "no", "n?o", 1, &S.op_get_shell_surface) ||
+	    method_slot(surf, "set_state", "u", NULL, 1, &S.op_set_state) ||
+	    method_slot(surf, "set_property", "ss", NULL, 1, &S.op_set_property) ||
+	    method_slot(surf, "set_key_mask", "u", NULL, 0, &S.op_set_key_mask)) {
+		dlclose(S.webos_dl); S.webos_dl = NULL;
+		return -1;
+	}
+	S.webos_shell_iface = shell;
+	S.webos_surf_iface = surf;
+	fprintf(stderr, "info: webos runtime shell_version=%d surface_version=%d advertised=%u get_shell_surface=%d set_state=%d set_property=%d set_key_mask=%d\n",
+	        shell->version, surf->version, S.webos_advertised, S.op_get_shell_surface,
+	        S.op_set_state, S.op_set_property, S.op_set_key_mask);
+	return 0;
+}
+
+static void webos_ev_ignore(void *d, struct wl_proxy *p) { (void)d; (void)p; }
+static void webos_ev_close(void *d, struct wl_proxy *p)
+{
+	(void)d; (void)p;
+	fprintf(stderr, "info: wl_webos_shell_surface close\n");
+	S.quit = 1;
+	S.reason = REASON_WEBOS_CLOSE;
+}
+static void *webos_listener[16];
+
+static int install_webos_listener(struct wl_proxy *proxy)
+{
+	int i, n, close_op = -1;
+	const struct wl_interface *iface = S.webos_surf_iface;
+	n = iface->event_count;
+	if (n < 0 || n > 16 || (n > 0 && !iface->events)) {
+		fprintf(stderr, "warn: webos event_count=%d; listener not installed\n", n);
+		return 0;
+	}
+	for (i = 0; i < n; i++) {
+		const struct wl_message *e = &iface->events[i];
+		webos_listener[i] = (void *)webos_ev_ignore;
+		if (e->name && !strcmp(e->name, "close") && (!e->signature || !e->signature[0]))
+			close_op = i;
+	}
+	if (close_op >= 0) webos_listener[close_op] = (void *)webos_ev_close;
+	else fprintf(stderr, "warn: webos close event not found by name\n");
+	if (n > 0 && LISTEN(proxy, webos_listener, NULL) != 0) return -1;
+	fprintf(stderr, "info: webos listener events=%d close_opcode=%d\n", n, close_op);
+	return 0;
+}
+
+/* ---- EGL via dlopen; shm remains if any step fails -------------------- */
+static const float k_tri[24][6] = {
+	{ 0.45000f, 0.00000f, -0.22500f, 0.38971f, -0.22500f, -0.38971f },
+	{ 0.43467f, 0.11647f, -0.31820f, 0.31820f, -0.11647f, -0.43467f },
+	{ 0.38971f, 0.22500f, -0.38971f, 0.22500f, 0.00000f, -0.45000f },
+	{ 0.31820f, 0.31820f, -0.43467f, 0.11647f, 0.11647f, -0.43467f },
+	{ 0.22500f, 0.38971f, -0.45000f, 0.00000f, 0.22500f, -0.38971f },
+	{ 0.11647f, 0.43467f, -0.43467f, -0.11647f, 0.31820f, -0.31820f },
+	{ 0.00000f, 0.45000f, -0.38971f, -0.22500f, 0.38971f, -0.22500f },
+	{ -0.11647f, 0.43467f, -0.31820f, -0.31820f, 0.43467f, -0.11647f },
+	{ -0.22500f, 0.38971f, -0.22500f, -0.38971f, 0.45000f, 0.00000f },
+	{ -0.31820f, 0.31820f, -0.11647f, -0.43467f, 0.43467f, 0.11647f },
+	{ -0.38971f, 0.22500f, 0.00000f, -0.45000f, 0.38971f, 0.22500f },
+	{ -0.43467f, 0.11647f, 0.11647f, -0.43467f, 0.31820f, 0.31820f },
+	{ -0.45000f, 0.00000f, 0.22500f, -0.38971f, 0.22500f, 0.38971f },
+	{ -0.43467f, -0.11647f, 0.31820f, -0.31820f, 0.11647f, 0.43467f },
+	{ -0.38971f, -0.22500f, 0.38971f, -0.22500f, 0.00000f, 0.45000f },
+	{ -0.31820f, -0.31820f, 0.43467f, -0.11647f, -0.11647f, 0.43467f },
+	{ -0.22500f, -0.38971f, 0.45000f, 0.00000f, -0.22500f, 0.38971f },
+	{ -0.11647f, -0.43467f, 0.43467f, 0.11647f, -0.31820f, 0.31820f },
+	{ 0.00000f, -0.45000f, 0.38971f, 0.22500f, -0.38971f, 0.22500f },
+	{ 0.11647f, -0.43467f, 0.31820f, 0.31820f, -0.43467f, 0.11647f },
+	{ 0.22500f, -0.38971f, 0.22500f, 0.38971f, -0.45000f, 0.00000f },
+	{ 0.31820f, -0.31820f, 0.11647f, 0.43467f, -0.43467f, -0.11647f },
+	{ 0.38971f, -0.22500f, 0.00000f, 0.45000f, -0.38971f, -0.22500f },
+	{ 0.43467f, -0.11647f, -0.11647f, 0.43467f, -0.31820f, -0.31820f }
+};
+
+struct egl_api {
+	void *h_wlegl, *h_egl, *h_gles;
+	void *window, *dpy, *cfg, *surf, *ctx;
+	int inited, prog, pos_attr;
+	unsigned vbo;
+	void *(*window_create)(struct wl_proxy *, int, int);
+	void (*window_destroy)(void *);
+	void (*window_resize)(void *, int, int, int, int);
+	void *(*GetDisplay)(void *);
+	unsigned (*Initialize)(void *, int *, int *);
+	unsigned (*ChooseConfig)(void *, const int *, void **, int, int *);
+	void *(*CreateWindowSurface)(void *, void *, void *, const int *);
+	void *(*CreateContext)(void *, void *, void *, const int *);
+	unsigned (*MakeCurrent)(void *, void *, void *, void *);
+	unsigned (*SwapBuffers)(void *, void *);
+	unsigned (*BindAPI)(unsigned);
+	int (*GetError)(void);
+	unsigned (*Terminate)(void *);
+	unsigned (*DestroySurface)(void *, void *);
+	unsigned (*DestroyContext)(void *, void *);
+	void (*ClearColor)(float, float, float, float);
+	void (*Clear)(unsigned);
+	void (*Viewport)(int, int, int, int);
+	unsigned (*CreateShader)(unsigned);
+	void (*ShaderSource)(unsigned, int, const char *const *, const int *);
+	void (*CompileShader)(unsigned);
+	void (*GetShaderiv)(unsigned, unsigned, int *);
+	void (*GetShaderInfoLog)(unsigned, int, int *, char *);
+	void (*DeleteShader)(unsigned);
+	unsigned (*CreateProgram)(void);
+	void (*AttachShader)(unsigned, unsigned);
+	void (*LinkProgram)(unsigned);
+	void (*GetProgramiv)(unsigned, unsigned, int *);
+	void (*UseProgram)(unsigned);
+	void (*GenBuffers)(int, unsigned *);
+	void (*BindBuffer)(unsigned, unsigned);
+	void (*BufferData)(unsigned, ptrdiff_t, const void *, unsigned);
+	int (*GetAttribLocation)(unsigned, const char *);
+	void (*EnableVertexAttribArray)(unsigned);
+	void (*VertexAttribPointer)(unsigned, int, unsigned, unsigned char, int, const void *);
+	void (*DrawArrays)(unsigned, int, int);
+};
+static struct egl_api E;
+
+static void egl_shutdown(void)
+{
+	if (E.MakeCurrent && E.dpy) E.MakeCurrent(E.dpy, NULL, NULL, NULL);
+	if (E.DestroySurface && E.dpy && E.surf) E.DestroySurface(E.dpy, E.surf);
+	if (E.DestroyContext && E.dpy && E.ctx) E.DestroyContext(E.dpy, E.ctx);
+	if (E.window_destroy && E.window) E.window_destroy(E.window);
+	if (E.Terminate && E.dpy && E.inited) E.Terminate(E.dpy);
+	if (E.h_gles) dlclose(E.h_gles);
+	if (E.h_egl) dlclose(E.h_egl);
+	if (E.h_wlegl) dlclose(E.h_wlegl);
+	memset(&E, 0, sizeof E);
+	S.egl_on = 0;
+}
+
+static int egl_sym(void *h, const char *lib, void **dst, const char *name)
+{
+	*dst = dlsym(h, name);
+	if (!*dst) {
+		fprintf(stderr, "egl: missing symbol %s in %s\n", name, lib);
+		return -1;
+	}
+	return 0;
+}
+
+static int egl_float_abi_ok(void *handle, const char *soname)
+{
+#if defined(__arm__) && !defined(__ARM_PCS_VFP)
+	struct link_map *map = NULL;
+	unsigned char hdr[64];
+	int fd, n;
+	uint32_t flags;
+	if (dlinfo(handle, 2 /* RTLD_DI_LINKMAP */, &map) != 0 || !map || !map->l_name || !map->l_name[0]) {
+		fprintf(stderr, "egl: %s: cannot resolve loaded path; not calling\n", soname);
+		return -1;
+	}
+	fd = open(map->l_name, O_RDONLY | O_CLOEXEC);
+	if (fd < 0) {
+		fprintf(stderr, "egl: %s: open %s failed: %s; not calling\n", soname, map->l_name, strerror(errno));
+		return -1;
+	}
+	n = read(fd, hdr, sizeof hdr);
+	close(fd);
+	if (n < 52 || hdr[0] != 0x7f || hdr[1] != 'E' || hdr[2] != 'L' || hdr[3] != 'F' || hdr[4] != 1) {
+		fprintf(stderr, "egl: %s is not ELF32; soft-float client will not call it\n", soname);
+		return -1;
+	}
+	flags = (uint32_t)hdr[36] | ((uint32_t)hdr[37] << 8) | ((uint32_t)hdr[38] << 16) | ((uint32_t)hdr[39] << 24);
+	fprintf(stderr, "egl: %s e_flags=0x%08x\n", soname, flags);
+	if (flags & 0x400u) {
+		fprintf(stderr, "egl: %s has the hard-float ABI flag; not calling\n", soname);
+		return -1;
+	}
+	if ((flags & 0x200u) == 0) {
+		fprintf(stderr, "egl: %s has no soft-float ABI flag; not calling\n", soname);
+		return -1;
+	}
+	return 0;
+#else
+	(void)handle;
+	fprintf(stderr, "egl: %s float-ABI check skipped (this binary is not ARM soft-float)\n", soname);
+	return 0;
+#endif
+}
+
+static int egl_shader(unsigned kind, const char *src)
+{
+	unsigned sh;
+	int ok = 0;
+	const char *p = src;
+	sh = E.CreateShader(kind);
+	E.ShaderSource(sh, 1, &p, NULL);
+	E.CompileShader(sh);
+	E.GetShaderiv(sh, 0x8B81 /* GL_COMPILE_STATUS */, &ok);
+	if (!ok) {
+		char log[256];
+		log[0] = 0;
+		E.GetShaderInfoLog(sh, (int)sizeof log, NULL, log);
+		fprintf(stderr, "egl: shader compile failed: %s\n", log);
+		E.DeleteShader(sh);
+		return 0;
+	}
+	E.AttachShader(E.prog, sh);
+	E.DeleteShader(sh);
+	return 1;
+}
+
+static int egl_init(int w, int h)
+{
+	static const int cfg_attr[] = {
+		0x3033, 0x0004, 0x3040, 0x0004, 0x3024, 8, 0x3023, 8, 0x3022, 8, 0x3021, 8, 0x3038
+	};
+	static const int ctx_attr[] = { 0x3098, 2, 0x3038 };
+	static const char *vs = "attribute vec2 pos;\nvoid main(){ gl_Position=vec4(pos,0.0,1.0); }\n";
+	static const char *fs = "precision mediump float;\nvoid main(){ gl_FragColor=vec4(1.0,1.0,1.0,1.0); }\n";
+	int ncfg = 0, maj = 0, min = 0, linked = 0;
+	void *cfg = NULL;
+#define NEED(h, lib, field, name) do { if (egl_sym((h), (lib), (void **)&E.field, (name))) return -1; } while (0)
+	memset(&E, 0, sizeof E);
+	E.h_wlegl = dlopen_extra("libwayland-egl.so.1");
+	if (!E.h_wlegl) return -1;
+	if (egl_float_abi_ok(E.h_wlegl, "libwayland-egl.so.1")) return -1;
+	NEED(E.h_wlegl, "libwayland-egl.so.1", window_create, "wl_egl_window_create");
+	NEED(E.h_wlegl, "libwayland-egl.so.1", window_destroy, "wl_egl_window_destroy");
+	NEED(E.h_wlegl, "libwayland-egl.so.1", window_resize, "wl_egl_window_resize");
+	E.h_egl = dlopen_extra("libEGL.so.1");
+	if (!E.h_egl) return -1;
+	if (egl_float_abi_ok(E.h_egl, "libEGL.so.1")) return -1;
+	NEED(E.h_egl, "libEGL.so.1", GetDisplay, "eglGetDisplay");
+	NEED(E.h_egl, "libEGL.so.1", Initialize, "eglInitialize");
+	NEED(E.h_egl, "libEGL.so.1", ChooseConfig, "eglChooseConfig");
+	NEED(E.h_egl, "libEGL.so.1", CreateWindowSurface, "eglCreateWindowSurface");
+	NEED(E.h_egl, "libEGL.so.1", CreateContext, "eglCreateContext");
+	NEED(E.h_egl, "libEGL.so.1", MakeCurrent, "eglMakeCurrent");
+	NEED(E.h_egl, "libEGL.so.1", SwapBuffers, "eglSwapBuffers");
+	NEED(E.h_egl, "libEGL.so.1", BindAPI, "eglBindAPI");
+	NEED(E.h_egl, "libEGL.so.1", GetError, "eglGetError");
+	NEED(E.h_egl, "libEGL.so.1", Terminate, "eglTerminate");
+	NEED(E.h_egl, "libEGL.so.1", DestroySurface, "eglDestroySurface");
+	NEED(E.h_egl, "libEGL.so.1", DestroyContext, "eglDestroyContext");
+	E.h_gles = dlopen_extra("libGLESv2.so.2");
+	if (!E.h_gles) return -1;
+	if (egl_float_abi_ok(E.h_gles, "libGLESv2.so.2")) return -1;
+	NEED(E.h_gles, "libGLESv2.so.2", ClearColor, "glClearColor");
+	NEED(E.h_gles, "libGLESv2.so.2", Clear, "glClear");
+	NEED(E.h_gles, "libGLESv2.so.2", Viewport, "glViewport");
+	NEED(E.h_gles, "libGLESv2.so.2", CreateShader, "glCreateShader");
+	NEED(E.h_gles, "libGLESv2.so.2", ShaderSource, "glShaderSource");
+	NEED(E.h_gles, "libGLESv2.so.2", CompileShader, "glCompileShader");
+	NEED(E.h_gles, "libGLESv2.so.2", GetShaderiv, "glGetShaderiv");
+	NEED(E.h_gles, "libGLESv2.so.2", GetShaderInfoLog, "glGetShaderInfoLog");
+	NEED(E.h_gles, "libGLESv2.so.2", DeleteShader, "glDeleteShader");
+	NEED(E.h_gles, "libGLESv2.so.2", CreateProgram, "glCreateProgram");
+	NEED(E.h_gles, "libGLESv2.so.2", AttachShader, "glAttachShader");
+	NEED(E.h_gles, "libGLESv2.so.2", LinkProgram, "glLinkProgram");
+	NEED(E.h_gles, "libGLESv2.so.2", GetProgramiv, "glGetProgramiv");
+	NEED(E.h_gles, "libGLESv2.so.2", UseProgram, "glUseProgram");
+	NEED(E.h_gles, "libGLESv2.so.2", GenBuffers, "glGenBuffers");
+	NEED(E.h_gles, "libGLESv2.so.2", BindBuffer, "glBindBuffer");
+	NEED(E.h_gles, "libGLESv2.so.2", BufferData, "glBufferData");
+	NEED(E.h_gles, "libGLESv2.so.2", GetAttribLocation, "glGetAttribLocation");
+	NEED(E.h_gles, "libGLESv2.so.2", EnableVertexAttribArray, "glEnableVertexAttribArray");
+	NEED(E.h_gles, "libGLESv2.so.2", VertexAttribPointer, "glVertexAttribPointer");
+	NEED(E.h_gles, "libGLESv2.so.2", DrawArrays, "glDrawArrays");
+#undef NEED
+	E.dpy = E.GetDisplay(S.display);
+	if (!E.dpy || !E.Initialize(E.dpy, &maj, &min)) {
+		fprintf(stderr, "egl: eglGetDisplay/eglInitialize failed (0x%x)\n", E.GetError());
+		return -1;
+	}
+	E.inited = 1;
+	if (!E.BindAPI(0x30A0) || !E.ChooseConfig(E.dpy, cfg_attr, &cfg, 1, &ncfg) || ncfg < 1) {
+		fprintf(stderr, "egl: no GLES2 window config (0x%x)\n", E.GetError());
+		return -1;
+	}
+	E.cfg = cfg;
+	E.window = E.window_create(S.surface, w, h);
+	if (!E.window) { fprintf(stderr, "egl: wl_egl_window_create failed\n"); return -1; }
+	E.surf = E.CreateWindowSurface(E.dpy, E.cfg, E.window, NULL);
+	E.ctx = E.CreateContext(E.dpy, E.cfg, NULL, ctx_attr);
+	if (!E.surf || !E.ctx || !E.MakeCurrent(E.dpy, E.surf, E.surf, E.ctx)) {
+		fprintf(stderr, "egl: context/surface failed (0x%x)\n", E.GetError());
+		return -1;
+	}
+	E.prog = (int)E.CreateProgram();
+	if (!egl_shader(0x8B31, vs) || !egl_shader(0x8B30, fs)) return -1;
+	E.LinkProgram((unsigned)E.prog);
+	E.GetProgramiv((unsigned)E.prog, 0x8B82, &linked);
+	if (!linked) { fprintf(stderr, "egl: program link failed\n"); return -1; }
+	E.pos_attr = E.GetAttribLocation((unsigned)E.prog, "pos");
+	E.GenBuffers(1, &E.vbo);
+	E.Viewport(0, 0, w, h);
+	S.cur_w = w; S.cur_h = h;
+	fprintf(stderr, "info: egl GLES2 ready %dx%d (clear + rotating triangle)\n", w, h);
+	return 0;
+}
+
+static void egl_draw(void)
+{
+	float v[6];
+	float r, g, b;
+	int i, step;
+	if (!S.egl_on) return;
+	r = (float)((S.bg >> 16) & 255) / 255.0f;
+	g = (float)((S.bg >> 8) & 255) / 255.0f;
+	b = (float)(S.bg & 255) / 255.0f;
+	E.ClearColor(r, g, b, 1.0f);
+	E.Clear(0x00004000);
+	step = S.frame % 24;
+	S.frame++;
+	for (i = 0; i < 6; i++) v[i] = k_tri[step][i] + ((i & 1) ? S.nudge_y : S.nudge_x);
+	E.UseProgram((unsigned)E.prog);
+	E.BindBuffer(0x8892, E.vbo);
+	E.BufferData(0x8892, (ptrdiff_t)sizeof v, v, 0x88E4);
+	if (E.pos_attr >= 0) {
+		E.EnableVertexAttribArray((unsigned)E.pos_attr);
+		E.VertexAttribPointer((unsigned)E.pos_attr, 2, 0x1406, 0, 0, (const void *)0);
+	}
+	E.DrawArrays(0x0004, 0, 3);
+	if (!E.SwapBuffers(E.dpy, E.surf)) {
+		fprintf(stderr, "egl: eglSwapBuffers failed (0x%x); dropping EGL and using shm\n", E.GetError());
+		egl_shutdown();
+		if (!S.buf.buffer) {
+			int brc = create_buf(&S.buf, S.cur_w > 0 ? S.cur_w : S.o->width, S.cur_h > 0 ? S.cur_h : S.o->height);
+			if (brc != 0) S.fatal = brc;
+			else present();
+		}
+	}
+}
+
+static const char *reason_text(void)
+{
+	if (S.reason == REASON_BACK) return "back-key";
+	if (S.reason == REASON_ESC) return "escape";
+	if (S.reason == REASON_EXITKEY) return "exit-key";
+	if (S.reason == REASON_WEBOS_CLOSE) return "webos-close";
+	if (S.reason == REASON_SIGNAL || g_stop) return "signal";
+	return "deadline";
 }
 
 static void cleanup(void)
 {
+	int i;
+	egl_shutdown();
 	if (S.buf.buffer || S.buf.data) destroy_buf(&S.buf);
 	if (S.shell_surface) W.proxy_destroy(S.shell_surface);
-	if (S.surface) { W.proxy_marshal(S.surface, SURFACE_DESTROY); W.proxy_destroy(S.surface); }
+	if (S.webos_shell_surface && W.proxy_destroy) W.proxy_destroy(S.webos_shell_surface);
+	for (i = 0; i < S.nseats; i++) {
+		if (S.seats[i].keyboard) W.proxy_destroy(S.seats[i].keyboard);
+		if (S.seats[i].pointer) W.proxy_destroy(S.seats[i].pointer);
+		if (S.seats[i].seat) W.proxy_destroy(S.seats[i].seat);
+	}
+	if (S.surface && W.proxy_marshal) {
+		W.proxy_marshal(S.surface, SURFACE_DESTROY);
+		W.proxy_destroy(S.surface);
+	}
+	if (S.webos_shell && W.proxy_destroy) W.proxy_destroy(S.webos_shell);
 	if (S.shell) W.proxy_destroy(S.shell);
 	if (S.shm) W.proxy_destroy(S.shm);
 	if (S.compositor) W.proxy_destroy(S.compositor);
 	if (S.registry) W.proxy_destroy(S.registry);
-	if (S.display) { W.display_flush(S.display); W.display_disconnect(S.display); }
+	if (S.display && W.display_flush) { W.display_flush(S.display); W.display_disconnect(S.display); }
+	S.display = NULL;
+	if (S.webos_dl) { dlclose(S.webos_dl); S.webos_dl = NULL; }
 }
 
 /* controlled failure helpers: report, release everything, return exit code */
@@ -601,17 +1397,40 @@ static int fail_listener(const char *what)
 	return EX_PROTO;
 }
 
+static int bind_seats(void)
+{
+	int i;
+	for (i = 0; i < S.nseats; i++) {
+		struct seat_slot *s = &S.seats[i];
+		uint32_t bv = s->version ? s->version : 1;
+		if (bv > 3) bv = 3;
+		s->seat = new_obj(S.registry, W.i_seat);
+		if (!s->seat) return fail_alloc("wl_seat");
+		if (LISTEN(s->seat, seat_listener, s) != 0) return fail_listener("wl_seat");
+		W.proxy_marshal(S.registry, REGISTRY_BIND, s->global_name, W.i_seat->name, bv, s->seat);
+		fprintf(stderr, "info: bind wl_seat index=%d global=%u advertised=%u bind=%u\n",
+		        s->index, s->global_name, s->version, bv);
+	}
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	struct opts o;
 	struct sigaction sa;
 	int rc, i;
 
+	setvbuf(stdout, NULL, _IOLBF, 0);
+	setvbuf(stderr, NULL, _IOLBF, 0);
 	rc = parse_opts(argc, argv, &o);
 	if (rc > 0) return EX_OK;
 	if (rc < 0) return EX_USAGE;
 	if (o.parse_only) { print_config(&o); return EX_OK; }
 	S.o = &o;
+	S.bg = o.color;
+	S.sq = SQ_SIZE;
+	S.sq_x = 100;
+	S.sq_y = 100;
 
 	/* 1. Hard exit armed BEFORE anything touches the compositor. */
 	memset(&sa, 0, sizeof sa);
@@ -626,11 +1445,15 @@ int main(int argc, char **argv)
 	g_deadline = now_ms() + (int64_t)o.duration_s * 1000;
 
 	if (load_wayland() < 0) return EX_LIB;
+	if (o.input && (!W.i_seat || !W.i_keyboard || !W.i_pointer)) {
+		fprintf(stderr, "error: libwayland-client is missing wl_seat, wl_keyboard or wl_pointer\n");
+		return EX_LIB;
+	}
 
 	/* libwayland 1.x only resolves a relative name against XDG_RUNTIME_DIR. */
 	if (setenv("XDG_RUNTIME_DIR", o.runtime_dir, 1) < 0) return EX_CONNECT;
-	fprintf(stderr, "info: connecting to %s/%s (deadline %ds, hard exit %ds)\n",
-	        o.runtime_dir, o.display_name, o.duration_s, o.duration_s + GRACE_S);
+	fprintf(stderr, "info: wayland-hello %s connecting to %s/%s (deadline %ds, hard exit %ds)\n",
+	        HELLO_VERSION, o.runtime_dir, o.display_name, o.duration_s, o.duration_s + GRACE_S);
 	/* NOTE: wl_display_connect() on a unix socket is a local connect(); a
 	 * listening-but-stalled peer cannot block it beyond the SIGALRM bound. */
 	S.display = W.display_connect(o.display_name);
@@ -650,7 +1473,17 @@ int main(int argc, char **argv)
 
 	if (o.dry_run) { printf("dry-run: no surfaces created\n"); cleanup(); return EX_OK; }
 
-	if (!S.shell_name) {
+	if (o.input && S.nseats == 0) {
+		fprintf(stderr, "error: --input requires wl_seat; none advertised; failing closed\n");
+		cleanup(); return EX_NOSEAT;
+	}
+	if (o.webos_shell) {
+		if (!S.webos_name) {
+			fprintf(stderr, "error: --webos-shell requested but wl_webos_shell was not advertised; failing closed\n");
+			cleanup(); return EX_NOWEBOS;
+		}
+		if (resolve_webos() < 0) { cleanup(); return EX_NOWEBOS; }
+	} else if (!S.shell_name) {
 		fprintf(stderr, "error: wl_shell not advertised; failing closed (no xdg-shell, no DRM fallback)\n");
 		cleanup(); return EX_NOSHELL;
 	}
@@ -658,12 +1491,17 @@ int main(int argc, char **argv)
 		fprintf(stderr, "error: wl_compositor/wl_shm missing; failing closed\n");
 		cleanup(); return EX_PROTO;
 	}
+	if (o.input) {
+		fprintf(stderr, "info: input via wl_seat only (no evdev device open)\n");
+		printf("keycode-log assumption=wl_keyboard_key_is_evdev back=%u esc=%u exit=%u ok=%u enter=%u\n",
+		       (unsigned)KEY_BACK_EVDEV, (unsigned)KEY_ESC_EVDEV, (unsigned)KEY_EXIT_EVDEV,
+		       (unsigned)KEY_OK_EVDEV, (unsigned)KEY_ENTER_EVDEV);
+		fflush(stdout);
+	}
 
-	/* Bind everything at version 1 (lowest assumptions).
-	 * Rule for every constructor below: allocate the proxy, NULL-check it,
-	 * install its listener (if any) and check the return value, and only
-	 * THEN marshal the request that names it as new_id. A failure before
-	 * marshal means nothing referencing that object was sent. */
+	/* Bind compositor/shm at version 1. Seat bind is capped at version 3 so
+	 * repeat_info (keyboard since 4) is not delivered. webOS opcodes come
+	 * only from the runtime interface, resolved above. */
 	S.compositor = new_obj(S.registry, W.i_compositor);
 	if (!S.compositor) return fail_alloc("wl_compositor");
 	W.proxy_marshal(S.registry, REGISTRY_BIND, S.compositor_name, W.i_compositor->name, 1u, S.compositor);
@@ -673,51 +1511,104 @@ int main(int argc, char **argv)
 	if (LISTEN(S.shm, shm_listener, NULL) != 0) return fail_listener("wl_shm");
 	W.proxy_marshal(S.registry, REGISTRY_BIND, S.shm_name, W.i_shm->name, 1u, S.shm);
 
-	S.shell = new_obj(S.registry, W.i_shell);
-	if (!S.shell) return fail_alloc("wl_shell");
-	W.proxy_marshal(S.registry, REGISTRY_BIND, S.shell_name, W.i_shell->name, 1u, S.shell);
+	if (!o.webos_shell) {
+		S.shell = new_obj(S.registry, W.i_shell);
+		if (!S.shell) return fail_alloc("wl_shell");
+		W.proxy_marshal(S.registry, REGISTRY_BIND, S.shell_name, W.i_shell->name, 1u, S.shell);
+	} else {
+		uint32_t bv = S.webos_advertised;
+		if (bv > (uint32_t)S.webos_shell_iface->version) bv = (uint32_t)S.webos_shell_iface->version;
+		if (bv < 1) { fprintf(stderr, "error: wl_webos_shell version 0; failing closed\n"); cleanup(); return EX_NOWEBOS; }
+		S.webos_shell = new_obj(S.registry, S.webos_shell_iface);
+		if (!S.webos_shell) return fail_alloc("wl_webos_shell");
+		W.proxy_marshal(S.registry, REGISTRY_BIND, S.webos_name, S.webos_shell_iface->name, bv, S.webos_shell);
+		fprintf(stderr, "info: bind wl_webos_shell advertised=%u bind=%u\n", S.webos_advertised, bv);
+	}
+	if (o.input) {
+		rc = bind_seats();
+		if (rc != 0) return rc;
+	}
 
-	if (roundtrip_bounded() < 0) { report_display_error(); cleanup(); return EX_PROTO; }
-	if (!S.have_xrgb)  /* XRGB8888 is mandatory per protocol; warn only */
+	if (roundtrip_bounded() < 0 || S.fatal) {
+		report_display_error(); cleanup(); return S.fatal ? S.fatal : EX_PROTO;
+	}
+	if (!S.have_xrgb)
 		fprintf(stderr, "warn: compositor did not announce XRGB8888 (mandatory format); continuing\n");
 
 	S.surface = new_obj(S.compositor, W.i_surface);
 	if (!S.surface) return fail_alloc("wl_surface");
 	W.proxy_marshal(S.compositor, COMPOSITOR_CREATE_SURFACE, S.surface);
 
-	S.shell_surface = new_obj(S.shell, W.i_shell_surface);
-	if (!S.shell_surface) return fail_alloc("wl_shell_surface");
-	if (LISTEN(S.shell_surface, shell_surface_listener, NULL) != 0) return fail_listener("wl_shell_surface");
-	W.proxy_marshal(S.shell, SHELL_GET_SHELL_SURFACE, S.shell_surface, S.surface);
-	W.proxy_marshal(S.shell_surface, SHSURF_SET_TITLE, "wayland-hello");
-	if (o.no_fullscreen) W.proxy_marshal(S.shell_surface, SHSURF_SET_TOPLEVEL);
-	else W.proxy_marshal(S.shell_surface, SHSURF_SET_FULLSCREEN, 0u /*default*/, 0u, (struct wl_proxy *)NULL);
+	if (o.webos_shell) {
+		uint32_t st = o.no_fullscreen ? 0u : 3u;
+		S.webos_shell_surface = new_obj(S.webos_shell, S.webos_surf_iface);
+		if (!S.webos_shell_surface) return fail_alloc("wl_webos_shell_surface");
+		if (install_webos_listener(S.webos_shell_surface) != 0) return fail_listener("wl_webos_shell_surface");
+		W.proxy_marshal(S.webos_shell, (uint32_t)S.op_get_shell_surface, S.webos_shell_surface, S.surface);
+		W.proxy_marshal(S.webos_shell_surface, (uint32_t)S.op_set_state, st);
+		W.proxy_marshal(S.webos_shell_surface, (uint32_t)S.op_set_property, "appId", o.app_id);
+		fprintf(stderr, "info: webos set_state opcode=%d value=%u (OSE enum fullscreen=3 default=0; numeric value is not in the runtime interface)\n",
+		        S.op_set_state, st);
+		fprintf(stderr, "info: webos set_property opcode=%d name=appId value=%s\n", S.op_set_property, o.app_id);
+		if (S.op_set_key_mask >= 0) {
+			/* OSE webos_key default 0xFFFFFFF8 omits home|back|exit. OR back|exit. */
+			uint32_t mask = 0xFFFFFFF8u | 2u | 4u;
+			W.proxy_marshal(S.webos_shell_surface, (uint32_t)S.op_set_key_mask, mask);
+			fprintf(stderr, "info: webos set_key_mask opcode=%d value=0x%x (OSE bits back=2 exit=4; navigation bits already in default)\n",
+			        S.op_set_key_mask, mask);
+		} else fprintf(stderr, "info: webos set_key_mask not in runtime interface; not sent\n");
+	} else {
+		S.shell_surface = new_obj(S.shell, W.i_shell_surface);
+		if (!S.shell_surface) return fail_alloc("wl_shell_surface");
+		if (LISTEN(S.shell_surface, shell_surface_listener, NULL) != 0) return fail_listener("wl_shell_surface");
+		W.proxy_marshal(S.shell, SHELL_GET_SHELL_SURFACE, S.shell_surface, S.surface);
+		W.proxy_marshal(S.shell_surface, SHSURF_SET_TITLE, "wayland-hello");
+		if (o.no_fullscreen) W.proxy_marshal(S.shell_surface, SHSURF_SET_TOPLEVEL);
+		else W.proxy_marshal(S.shell_surface, SHSURF_SET_FULLSCREEN, 0u, 0u, (struct wl_proxy *)NULL);
+	}
 
-	rc = create_buf(&S.buf, o.width, o.height);
-	if (rc != 0) { cleanup(); return rc; }
-	present();
-	fprintf(stderr, "info: surface committed %dx%d; running until deadline\n", S.buf.w, S.buf.h);
-
-	rc = EX_OK;
-	while (!g_stop) {
-		int ms = remaining_ms();
-		if (ms == 0) break;
-		if (pump_once(ms > 100 ? 100 : ms) < 0) {
-			fprintf(stderr, "error: connection lost\n"); report_display_error(); rc = EX_PROTO; break;
-		}
-		if (S.resize_pending) {
-			S.resize_pending = 0;
-			/* old buffer may still be held; we destroy it (client-side) and
-			 * allocate a new bounded one. Only one buffer ever allocated. */
-			destroy_buf(&S.buf);
-			{
-				int brc = create_buf(&S.buf, S.want_w, S.want_h);
-				if (brc != 0) { rc = brc; break; }
-			}
-			present();
+	if (o.egl) {
+		if (egl_init(o.width, o.height) == 0) S.egl_on = 1;
+		else {
+			fprintf(stderr, "info: egl unavailable; falling back to shm\n");
+			egl_shutdown();
 		}
 	}
-	fprintf(stderr, "info: exiting (%s)\n", g_stop ? "signal" : "deadline");
+	if (!S.egl_on) {
+		clamp_square(o.width, o.height);
+		rc = create_buf(&S.buf, o.width, o.height);
+		if (rc != 0) { cleanup(); return rc; }
+		present();
+		fprintf(stderr, "info: surface committed %dx%d; running until deadline\n", S.buf.w, S.buf.h);
+	}
+
+	rc = EX_OK;
+	while (!g_stop && !S.quit && !S.fatal) {
+		int ms = remaining_ms();
+		int slice = S.egl_on ? 16 : 100;
+		if (ms == 0) break;
+		if (pump_once(ms > slice ? slice : ms) < 0) {
+			fprintf(stderr, "error: connection lost\n"); report_display_error(); rc = EX_PROTO; break;
+		}
+		if (S.fatal) { rc = S.fatal; break; }
+		if (S.resize_pending) {
+			S.resize_pending = 0;
+			if (S.egl_on && E.window_resize) {
+				E.window_resize(E.window, S.want_w, S.want_h, 0, 0);
+				E.Viewport(0, 0, S.want_w, S.want_h);
+				S.cur_w = S.want_w; S.cur_h = S.want_h;
+			} else if (!S.egl_on) {
+				destroy_buf(&S.buf);
+				clamp_square(S.want_w, S.want_h);
+				rc = create_buf(&S.buf, S.want_w, S.want_h);
+				if (rc != 0) break;
+				present();
+			}
+		}
+		if (S.egl_on) egl_draw();
+	}
+	if (S.fatal && rc == EX_OK) rc = S.fatal;
+	fprintf(stderr, "info: exiting (%s)\n", reason_text());
 	cleanup();
 	return rc;
 }

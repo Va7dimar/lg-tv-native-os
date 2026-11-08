@@ -67,3 +67,33 @@ Record the outputs here, including any failure. Things that could go wrong and n
 - QEMU 7.2.0 static user mode segfaults (139) on **even a trivial hello-world** built with the same toolchain,
   so the crash is an emulator/old-glibc issue, not this app. Emulated runtime remains untested.
 - No Weston test, and nothing copied to or run on the TV.
+
+## 2026-11-08: wayland-hello 0.2 (input, webOS shell, EGL)
+
+Host `make test`: **97 tests, 0 failed** (gcc, mock compositor). The new cases cover
+wl_seat keyboard/pointer events, stdout `keycode raw=` lines, BACK (evdev 158) /
+Escape (1) / EXIT (174) clean exit, unknown code 461 staying until the deadline,
+two seats, SHM pixels, webOS opcodes taken from a fixture `wl_interface` (OSE
+order and a shifted opcode), signature and missing-library fail-closed (exit 9),
+and EGL dlopen fallback to SHM.
+
+SDK: openlgtv `buildroot-nc4` tag `2026.08-webos`, asset
+`arm-webos-linux-gnueabi_sdk-buildroot-x86_64.tar.gz`. GitHub asset digest and the
+pin in `scripts/fetch_openlgtv_sdk.py` are both
+`sha256:2230a6351e5cce6fcb9d4fdcb4697335f223995401ef969c81744aaeb14c5344`.
+The file hash matched. The toolchain was unpacked under `build-cache/` (gitignored)
+and is not committed. `make sdk-abi` passed.
+
+`abi/wayland-hello-v2-ABI-REPORT.txt`: ELF32 ARM, `e_flags 0x5000200` (EABI5,
+soft-float), no `Tag_ABI_VFP_args: VFP registers`, max `GLIBC_2.4`, interpreter
+`/lib/ld-linux.so.3`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`. `librt` is
+allowed because this SDK's glibc 2.12 still exports `clock_gettime` from librt
+at `GLIBC_2.4`. The v1 report failed the checker only on that allowlist; 0.2
+updates the checker and passes. `Tag_FP_arch: VFPv3` is present, as it was on
+the v1 binary; the calling-convention flag is still soft-float.
+
+`third_party/webos-wayland-extensions/protocol/webos-shell.xml` is the OSE file
+at commit `4b243378b451bd139466c242ae1e58753fea0fbf` (git blob
+`cb3cabcef35810be06d881f373a62d67afa79ccd`). Opcodes are resolved at runtime from
+`libwayland-webos-client.so.1`. No 0.2 binary was copied to or run on the TV.
+Input still comes only from `wl_seat`; the client does not open evdev nodes.

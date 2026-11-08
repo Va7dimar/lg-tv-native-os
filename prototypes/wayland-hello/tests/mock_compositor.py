@@ -9,7 +9,7 @@ wl_shell_surface.configure / ping. Modes:
 Usage: mock_compositor.py SOCKET_PATH LOGFILE [--no-shell] [--stall]
        [--configure WxH] [--once]
 """
-import json, os, socket, struct, sys, array
+import json, mmap, os, socket, struct, sys, array, tempfile
 
 # request signatures we care about: (interface, opcode) -> (name, sig)
 # sig chars: u/i uint/int, s string, o object, n new_id(typed), N new_id(untyped bind: s,u,n), h fd, ? nullable prefix
@@ -34,6 +34,9 @@ REQ = {
     ("wl_shell_surface", 3): ("set_toplevel", "", None),
     ("wl_shell_surface", 5): ("set_fullscreen", "uu?o", None),
     ("wl_shell_surface", 8): ("set_title", "s", None),
+    ("wl_seat", 0): ("get_pointer", "n", "wl_pointer"),
+    ("wl_seat", 1): ("get_keyboard", "n", "wl_keyboard"),
+    ("wl_seat", 2): ("get_touch", "n", "wl_touch"),
 }
 
 
@@ -57,6 +60,18 @@ class Client:
         if not args.get("no_shell"):
             self.globals.append((4, "wl_shell", 1))
         self.globals.append((5, "zz_test_interface_unconfirmed", 1))
+        for i in range(args.get("seats") or 0):
+            self.globals.append((10 + i, "wl_seat", 3))
+        if args.get("webos"):
+            self.globals.append((30, "wl_webos_shell", 1))
+        self.script = args.get("script") or []
+        self.keyboards = []
+        self.surface_id = 0
+        self.buffer_id = 0
+        self.mem = None
+        self.last_buf = None
+        self.did_input = False
+        self.keymap = b'xkb_keymap {\n\txkb_keycodes "(evdev)";\n};\n'
 
     def send(self, data):
         self.c.sendall(data)
@@ -94,8 +109,76 @@ class Client:
             nullable = False
         return out
 
+    def send_fds(self, data, fds):
+        self.c.sendmsg([data], [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array("i", fds).tobytes())])
+
+    def send_keymap(self, kid):
+        f = tempfile.NamedTemporaryFile(prefix="wlh-keymap-", delete=False)
+        f.write(self.keymap)
+        f.close()
+        fd = os.open(f.name, os.O_RDONLY)
+        os.unlink(f.name)
+        payload = struct.pack("<II", 1, len(self.keymap))
+        self.send_fds(msg(kid, 0, payload), [fd])
+        os.close(fd)
+        self.send(msg(kid, 4, struct.pack("<IIIII", 7, 1, 0, 0, 0)))
+
+    def on_commit(self):
+        if self.buffer_id:
+            self.send(msg(self.buffer_id, 0, b""))  # wl_buffer.release
+        if self.did_input:
+            return
+        self.did_input = True
+        if not self.surface_id:
+            return
+        for kid in self.keyboards:
+            self.send(msg(kid, 1, struct.pack("<III", 7, self.surface_id, 0)))  # enter, empty keys
+        serial = 1
+        for kind, code in self.script:
+            if not self.keyboards:
+                self.emit(event="script_dropped")
+                return
+            state = 1 if kind == "p" else 0
+            self.send(msg(self.keyboards[0], 3, struct.pack("<IIII", serial, 1, code, state)))
+            serial += 1
+
+    def sample_pixels(self):
+        if not self.mem or not self.last_buf:
+            return
+        pts = {}
+        w, h, stride, off = self.last_buf
+        for x, y in ((16, 16), (80, 120), (120, 120)):
+            if 0 <= x < w and 0 <= y < h:
+                o = off + y * stride + x * 4
+                if 0 <= o <= len(self.mem) - 4:
+                    pts["%d,%d" % (x, y)] = struct.unpack_from("<I", self.mem, o)[0]
+        if pts:
+            self.emit(event="pixels", **pts)
+
+    def handle_webos_shell(self, obj, op, payload):
+        if len(payload) >= 8:
+            nid, surf = struct.unpack_from("<II", payload)
+            self.objs[nid] = "wl_webos_shell_surface"
+            self.emit(iface="wl_webos_shell", obj=obj, req="op%d" % op, args=[nid, surf])
+        else:
+            self.emit(iface="wl_webos_shell", obj=obj, req="op%d" % op, args=[len(payload)])
+
+    def handle_webos_surface(self, obj, op, payload):
+        if len(payload) == 4:
+            self.emit(iface="wl_webos_shell_surface", obj=obj, req="op%d" % op, args=[struct.unpack("<I", payload)[0]])
+        elif len(payload) > 4:
+            self.emit(iface="wl_webos_shell_surface", obj=obj, req="op%d" % op, args=self.parse_args("ss", payload))
+        else:
+            self.emit(iface="wl_webos_shell_surface", obj=obj, req="op%d" % op, args=[])
+
     def handle(self, obj, op, payload):
         iface = self.objs.get(obj, "?")
+        if iface == "wl_webos_shell":
+            self.handle_webos_shell(obj, op, payload)
+            return
+        if iface == "wl_webos_shell_surface":
+            self.handle_webos_surface(obj, op, payload)
+            return
         name, sig, newtype = REQ.get((iface, op), ("op%d" % op, "", None))
         args = self.parse_args(sig, payload) if sig else []
         self.emit(iface=iface, obj=obj, req=name, args=[a for a in args])
@@ -106,9 +189,19 @@ class Client:
             self.objs[nid] = biface
             if biface == "wl_shm":
                 self.send(msg(nid, 0, struct.pack("<I", 0)) + msg(nid, 0, struct.pack("<I", 1)))
+            elif biface == "wl_seat":
+                self.send(msg(nid, 0, struct.pack("<I", 3)))
+                self.send(msg(nid, 1, pack_str("seat-%d" % nid)))
             return
         if newtype is not None:
             self.objs[args[0]] = newtype
+            if newtype == "wl_surface":
+                self.surface_id = args[0]
+            elif newtype == "wl_keyboard":
+                self.keyboards.append(args[0])
+                self.send_keymap(args[0])
+            elif newtype == "wl_pointer":
+                self.send(msg(args[0], 2, struct.pack("<Iii", 10, 2560, 1280)))
         if self.args.get("stall"):
             return
         if (iface, name) == ("wl_display", "sync"):
@@ -124,7 +217,15 @@ class Client:
             if fd >= 0:
                 st = os.fstat(fd)
                 self.emit(event="pool_fd", size=st.st_size, declared=args[2])
+                if self.mem is not None:
+                    self.mem.close()
+                self.mem = mmap.mmap(fd, st.st_size, mmap.MAP_SHARED, mmap.PROT_READ)
                 os.close(fd)
+        elif (iface, name) == ("wl_shm_pool", "create_buffer"):
+            self.buffer_id = args[0]
+            self.last_buf = (args[2], args[3], args[4], args[1])
+        elif (iface, name) == ("wl_surface", "commit"):
+            self.on_commit()
         elif (iface, name) == ("wl_shell_surface", "set_fullscreen"):
             ss = obj
             self.send(msg(ss, 0, struct.pack("<I", 77)))  # ping
@@ -140,6 +241,7 @@ class Client:
             except OSError:
                 return
             if not data:
+                self.sample_pixels()
                 self.emit(event="disconnect"); return
             self.buf += data
             while len(self.buf) >= 8:
@@ -154,7 +256,15 @@ class Client:
 def main():
     a = sys.argv[1:]
     path, logp = a[0], a[1]
-    args = {"no_shell": "--no-shell" in a, "stall": "--stall" in a}
+    args = {"no_shell": "--no-shell" in a, "stall": "--stall" in a, "webos": "--webos" in a}
+    if "--seats" in a:
+        args["seats"] = int(a[a.index("--seats") + 1])
+    if "--input-script" in a:
+        script = []
+        for part in a[a.index("--input-script") + 1].split(","):
+            if part:
+                script.append((part[0], int(part[1:])))
+        args["script"] = script
     if "--configure" in a:
         w, h = a[a.index("--configure") + 1].split("x"); args["configure"] = (int(w), int(h))
     try:
