@@ -1,0 +1,22 @@
+The supplied packet supports these concrete **filename/size leads**, without establishing file contents:
+
+| Exact recorded path | Size (bytes) | Lead from name only |
+|---|---:|---|
+| `./post-relocate-setup.sh` | 949 | SDK relocation setup |
+| `./environment-setup-ca9v1-starfishmllib32-linux-gnueabi` | 4,321 | Named target/toolchain environment |
+| `./site-config-ca9v1-starfishmllib32-linux-gnueabi` | 13,611 | Build configuration |
+| `./version-ca9v1-starfishmllib32-linux-gnueabi` | 125 | Potential version information; value unknown |
+| `./sysroots/x86_64-starfishsdk-linux` | 0 (directory) | Host sysroot naming |
+| `./sysroots/x86_64-starfishsdk-linux/environment-setup.d/icecc-env.sh` | 2,170 | icecc integration |
+| `./sysroots/x86_64-starfishsdk-linux/environment-setup.d/cmake.sh` | 185 | CMake integration |
+| `./sysroots/x86_64-starfishsdk-linux/environment-setup.d/openssl.sh` | 69 | OpenSSL integration |
+
+The one completed attempt produced a **partial SDK inventory** and failed with exit code 1. It reports **96 observed headers versus 88 emitted member records**; the packet does not establish which headers explain the eight-count difference. Neither tar EOF nor integrity EOF was reached. Selected bytes were zero; member payloads were unselected and unevaluated, and symlinks were recorded without following them.
+
+All three full-input size/SHA-256 pins verified: `/input/sdk` — **166,821,312 bytes**; `/input/native` — **8,017,931 bytes**; `/input/target` — **323,786,694 bytes**. Native and target inventory processing was skipped. Pin verification establishes agreement with supplied pins, not successful archive parsing or content validity.
+
+Source availability, build instructions, compiler identity/version, API availability, actual ABI, SDK version—including any **20190307** relationship—and licensing remain unproved. No license lead appears in the emitted records; this partial inventory cannot establish license-file absence. Target-like strings do not establish an actual TV SoC or compatibility.
+
+The strict UTF-8 error reports byte `0xc4` at position `99` with “unexpected end of data.” That position is within the decoder’s failing input, not an established archive offset. A GNU/PAX long-name or link substitution interacting with a fixed-header UTF-8 boundary is **only a hypothesis**. The failing field and cause are undocumented here; corruption is unproved, and no bad-archive verdict follows.
+
+For parent coordination, the minimum proposed investigation is a **synthetic-only tooling test**: can an otherwise valid GNU/PAX fixture whose name or link crosses a fixed-header UTF-8 boundary reproduce this failure before extended-name substitution? Record the failing field, substitution order, and header/member counts. This is a proposal only, with no SDK rerun or further selection authorized or performed.

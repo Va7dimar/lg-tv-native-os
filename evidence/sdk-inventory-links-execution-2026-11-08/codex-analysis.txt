@@ -1,0 +1,72 @@
+The November candidate is useful for a future comparison with the required **20190307 ca9v1 Starfish guides**, but metadata establishes neither equivalence nor hard incompatibility.
+
+Only these generated files were read:
+
+- [members.jsonl](/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-links-PENDING-REVIEW/members.jsonl): **25,581,194 bytes**, JSONL; citations below use its 1-based line ordinals.
+- [manifest.json](/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-links-PENDING-REVIEW/manifest.json): **4,085 bytes**, JSON object, abbreviated **M**.
+- [launcher-result.json](/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-links-PENDING-REVIEW/launcher-result.json): **2,782 bytes**, JSON object, abbreviated **L**.
+
+No member contents, link destinations, other files, network, or SDK execution were accessed. Nothing was written.
+
+For exact member paths below, concatenate these literal prefixes:
+
+`H = sysroots/x86_64-starfishsdk-linux/`  
+`T = sysroots/ca9v1-starfishmllib32-linux-gnueabi/`
+
+**Version and layout ledger**
+
+| Metadata evidence | Supported hint and limit |
+|---|---|
+| sdk, `Husr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0`, directory, 0 bytes, line 4938; corresponding AArch64 directory, line 5465 | **GCC 8.2.0** is a meaningful version-directory hint, not actual binary `--version` output or authenticity proof. |
+| sdk, `Husr/bin/arm-starfish-linux-gnueabi/arm-starfish-linux-gnueabi-gcc`, regular, 1,046,976 bytes, line 4281 | Nominal ARM GNU EABI compiler prefix. |
+| sdk, `Husr/bin/arm-starfish-linux-gnueabi/arm-starfish-linux-gnueabi-ld`, regular, 1,748,664 bytes, line 4284 | Linker presence by name; **binutils version unknown**. |
+| sdk, `Hlib/libc-2.28.so`, regular, 2,206,496 bytes, line 9390; target, `lib/libc-2.28.so`, regular, 16,433,176 bytes, line 18846 | **glibc 2.28** naming hint; contents and runtime identity unverified. |
+| target, `lib/ld-linux.so.3`, symlink, 0 bytes → `ld-2.28.so`, line 19180; sdk, `Tlib64/ld-linux-aarch64.so.1`, symlink, 0 bytes → `ld-2.28.so`, line 9454 | Loader **2.28** naming hints; nominal ARM/AArch64 layouts. |
+| sdk, `Hetc/ssl/openssl.cnf`, symlink, 0 bytes → `/opt/starfish-sdk-x86_64/5.0.0-20191125/sysroots/x86_64-starfishsdk-linux/etc/ssl/openssl.cnf.openssl`, line 270 | Direct naming evidence for **5.0.0-20191125**, consistent with the supplied November header label. |
+| sdk/target `usr/include/linux/version.h`, detailed below | Header version **unknown**: no numerical kernel-header version established from names. |
+
+The SDK separates nominal x86_64 host tools under `H` from the ca9v1/multilib target under `T`, including `lib` and `lib64`. The separate `native` input contains host dependency tools, headers, libraries, and provider markers; `target` contains dependency headers/libraries, provider markers, debug/source-path entries, and tests.
+
+`ca9v1`, `mllib32`, `arm`, `aarch64`, `x86_64`, and `gnueabi` describe nominal intended architectures/ABI arrangements. They do not physically verify TV CPU, bitness, floating-point ABI, or binary format. Alternative musl-named compiler aliases also exist, so alias spelling alone cannot identify libc selection.
+
+The separately known LG kernel baseline **4.4.84** remains external context. No measured kernel ABI—or even a `4.4…` header-version hint—was established here. November-versus-March naming warrants comparison, not a compatibility verdict.
+
+**Future plaintext comparison candidates — not selected or read**
+
+All are indexed **regular files**, with empty link targets. Paths use the exact prefix expansion above.
+
+| Input | Exact member path | Bytes | JSONL line |
+|---|---|---:|---:|
+| sdk | `version-ca9v1-starfishmllib32-linux-gnueabi` | 125 | 5 |
+| sdk | `environment-setup-ca9v1-starfishmllib32-linux-gnueabi` | 4,321 | 3 |
+| sdk | `site-config-ca9v1-starfishmllib32-linux-gnueabi` | 13,611 | 4 |
+| sdk | `Tusr/include/linux/version.h` | 97 | 11618 |
+| target | `usr/include/linux/version.h` | 97 | 22079 |
+| sdk | `Tusr/include/features.h` | 15,721 | 10826 |
+| target | `usr/include/features.h` | 15,721 | 19434 |
+| sdk | `Husr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0/include-fixed/README` | 750 | 5342 |
+| native | `usr/share/gettext/intl/VERSION` | 42 | 18238 |
+| native | `usr/share/gettext/intl/COPYING.LIB` | 26,545 | 18281 |
+| target | `sysroot-providers/lib32-linux-libc-headers` | 24 | 19202 |
+| target | `sysroot-providers/lib32-glibc` | 11 | 19292 |
+| target | `usr/share/icu/62.1/LICENSE` | 21,000 | 66742 |
+
+A future plan could cap this at **13 exact regular members, 32 KiB/member, 128 KiB total**; indexed total **98,065 bytes**. Treat shell files strictly as text. No SDK release/package manifest was identified by manifest-bearing filenames; CMake manifest utilities are not release manifests. The indexed `.pc` counts—native **9**, target **186**—do not establish package versions.
+
+**Coverage and links**
+
+| Input | Emitted records | Regular / directory | Symlinks: absolute / relative | Hardlinks | Nested flags |
+|---|---:|---:|---:|---:|---:|
+| sdk | 18,194 | 16,584 / 857 | 35 / 701 | 17 | 0 |
+| native | 637 | 553 / 70 | 0 / 14 | 0 | 1 |
+| target | 48,049 | 43,298 / 2,845 | 21 / 865 | 1,020 | 109 |
+
+Relative symlink targets lexically escaping their input archive root: **0 per input**. This calculation did not resolve link chains. All **56 absolute symlinks** remain unfollowed/nonextractable. All **1,037 hardlinks** have relative metadata targets; none lexically escape archive root. Nested flags remain **unexpanded**.
+
+M reports **73,838 observed members** versus **66,880 emitted records**: difference **6,958**, composition unspecified. Per-input observed-header counts are absent; emitted counts above must not substitute for them.
+
+M reports decoded **2,136,002,560**, logical regular **2,078,148,221**, metadata **12,781,920** bytes; all three full pins verified; selected bytes **0**; all records unselected/nonextractable; tar/integrity EOF true for every input. SDK XZ slice: **[10820, 166821312)**; shell prefix not executed. EOF success does not identify an XZ check algorithm; the stated `CHECK_NONE` residual remains.
+
+Limits remain 200k headers, 100MB metadata, 4GiB logical and decoded each, 120s wall, 1GiB **AS, not RSS**, 256MiB LZMA, and 10GiB observed free-space floor; `noexec=false`. L records success, exit 0, **13.706s**, distinct from the supplied **13.804s** outer timing.
+
+Prior Chromium 200k, adaptation 64MiB, SDK UTF-8, and unsafe-link **PARTIAL** histories remain immutable. This successful controlled phase proves neither complete LG BSP coverage nor boot/recovery. The next evidence gap is actual bounded plaintext comparison against the March requirements.

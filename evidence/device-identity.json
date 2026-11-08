@@ -1,0 +1,42 @@
+{
+  "recorded_at": "2026-11-08 04:17 Atlantic/Reykjavik",
+  "gate": "G1-record only; G1-target BLOCKED",
+  "model": {
+    "value": "65NANO756PR",
+    "confidence": "live confirmed by earlier worker",
+    "source": "device-facts.md: ordinary system/getSystemInfo, 2026-11-08 03:37 Atlantic/Reykjavik; no new TV call"
+  },
+  "salesSuffix": {
+    "value": null,
+    "status": "unknown"
+  },
+  "installedSoftware": {
+    "value": null,
+    "status": "unknown; earlier firmware-info call401, not retried"
+  },
+  "webOSBuild": {
+    "value": null,
+    "status": "unknown; webOS6 is product generation only"
+  },
+  "boardAssembly": {
+    "value": null,
+    "status": "unknown; seller IDs are candidates only"
+  },
+  "pcbRevision": {
+    "value": null,
+    "status": "unknown"
+  },
+  "panelVariant": {
+    "value": null,
+    "status": "unknown"
+  },
+  "SoC": {
+    "value": null,
+    "status": "unknown; no inference from RTK/UD15D labels"
+  },
+  "sensitiveIdentifiers": "Serial/MAC/network identifiers intentionally excluded",
+  "newTVAuthorization": false,
+  "source_configuration_evidence": "evidence/source-configuration-closure.json",
+  "source_configuration_limit": "RTD2875/B3/B7/k6lsourcelabelsNOTmeasuredunitSoC/board;unknownfieldsunchanged",
+  "authorization_note": "HistoricalnewTVAuthorizationfieldappliestoearlierrecord;latestownerpermissionscoordinatedbyparent,thisresearchworkerperformsnoTVactions."
+}

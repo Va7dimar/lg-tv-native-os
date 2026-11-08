@@ -1,0 +1,15 @@
+{
+  "scope": "owner t71\u2013t74 ongoingoffTVresearch;subscription-ledanalysis",
+  "packets": {
+    "analysis-prompt.txt": "16972f895a5ea739dcb6ee4d57d492795f91a5cff97dd4b63b873234f7ff7853",
+    "codex-prompt.txt": "433e04648ea45d074d8542589c9f2fa24002586903110860f85816037a4bfcb7",
+    "gemini-prompt.txt": "d98be3b96cb3429926c882a776d17de33ccb04fc70d3d5c074c48611d98d68f4",
+    "closure-prompt.txt": "9cca5225525ee8c68e07e69de2e7676009f7aae789d9642fef4dc391db03bdcd"
+  },
+  "source_evidence": "evidence/source-configuration-closure.json",
+  "verification": "evidence/configuration-closure-verification.json",
+  "model_metadata": "individualoutcome.jsonfiles",
+  "parent_continuation": "handoff/adaptation-sdk-next-work.md",
+  "ready_to_boot": false,
+  "ready_for_more_off_tv_research": true
+}

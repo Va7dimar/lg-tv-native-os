@@ -1,0 +1,8 @@
+# Generated-metadata analysis reconciliation
+2026-11-08T13:17:01.919462+00:00 Atlantic/Reykjavik. OneprimarysubscribedCodexgpt-6.1-sol/high read-onlycall,37.426s,exit0/substantive,norefusal/fallback/reset. Requestedmodel/effortexplicit;JSONstreamnoindependentservingmodelID. Prompt/raw/events/run+usagepreserved. No tool/originalarchive/memberpayload access.
+
+Verifiedagainstgenerated269-recordindex:environment/site/versionmembernames+4321/13611/125B;hostx86_64sysrootandicecc/cmake/opensslhooks. No compiler executable orGCC/binutils/glibcversion identified in admittedprefix;not evidenceofabsencefromrest. CertificatepackagingdoesnotestablishSDKlicensing. TargetstylelabelnotactualTVhardwareorABI.
+
+All3pinsverifiedBEFOREparse,SDKpartial,native/targetparseSKIPPED,0selected,tar/integrityEOFfalse.289headercountervs269emittedrecords20differencecompositionnotinferred. UnsafeoffendinglinkNOTemitted;don'tidentifylastsuccessfulrecordasculprit. The model'sdateexpansionof20190307isnotindependentlyverifiedreleasedate—retainliteralversionlabel. No corruption/maliciousness/compatibilityverdict.
+
+Immediategap:exactescapedrejectedmember/type/target+reasonwithboundeddianostics. Anyfuturemetadata-onlylinkrecord-not-followpolicymustbeexplicitlycontracted/tested/reviewedfirst;notautomaticretry/budgetreset/bypass. No implementationchangeinthisphase. Actualcompiler/version/API/ABI/licensingtextandMarchcompatibilitystillunread.

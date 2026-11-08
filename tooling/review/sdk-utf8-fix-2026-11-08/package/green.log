@@ -1,0 +1,14 @@
+$ python3 -B -m unittest discover -s tooling/tests -p test_sdk_utf8_boundary.py -v
+test_extended_paths_links_duplicates_and_types_fail_closed (test_sdk_utf8_boundary.UTF8BoundaryTests.test_extended_paths_links_duplicates_and_types_fail_closed) ... ok
+test_gnu_split_utf8_name_and_link_roundtrip (test_sdk_utf8_boundary.UTF8BoundaryTests.test_gnu_split_utf8_name_and_link_roundtrip) ... ok
+test_original_byte_budget_and_hidden_headers (test_sdk_utf8_boundary.UTF8BoundaryTests.test_original_byte_budget_and_hidden_headers) ... ok
+test_pax_unicode_and_ustar_baselines (test_sdk_utf8_boundary.UTF8BoundaryTests.test_pax_unicode_and_ustar_baselines) ... ok
+test_regular_multibyte_metadata_charges_unchanged (test_sdk_utf8_boundary.UTF8BoundaryTests.test_regular_multibyte_metadata_charges_unchanged) ... ok
+test_unresolved_invalid_utf8_fails_closed (test_sdk_utf8_boundary.UTF8BoundaryTests.test_unresolved_invalid_utf8_fails_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.253s
+
+OK
+
+EXIT=0

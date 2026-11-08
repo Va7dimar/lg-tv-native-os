@@ -1,0 +1,163 @@
+{
+  "recorded_at_Atlantic_Reykjavik": "2026-11-08T12:59:32.793729+00:00",
+  "status": "partial",
+  "launcher_status": "failed",
+  "exit_code": 1,
+  "started_Atlantic_Reykjavik": "2026-11-08T07:09:20.045681+00:00",
+  "elapsed_seconds": 0.767,
+  "error": "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc4 in position 99: unexpected end of data",
+  "manifest": "sdk-candidates/20191125/inspection-metadata-PENDING-REVIEW/manifest.json",
+  "generated_member_records": 88,
+  "record_types": {
+    "directory": 8,
+    "regular": 21,
+    "symlink": 59
+  },
+  "totals": {
+    "decoded_bytes": 634072,
+    "logical_regular_bytes": 555335,
+    "members": 96,
+    "metadata_bytes": 24143,
+    "selected_bytes": 0
+  },
+  "all_pins_verified_before_parse": true,
+  "full_hash_bytes": 498625937,
+  "pin_verifications": [
+    {
+      "bytes_hashed": 166821312,
+      "descriptor_stat": {
+        "ctime_ns": 1794118243876724238,
+        "device": 65040,
+        "inode": 449083,
+        "link_count": 1,
+        "mtime_ns": 1794118243872724224,
+        "size": 166821312
+      },
+      "expected_sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+      "expected_size": 166821312,
+      "label": "sdk",
+      "path": "/input/sdk",
+      "slice_end": 166821312,
+      "slice_start": 10820,
+      "verified": true
+    },
+    {
+      "bytes_hashed": 8017931,
+      "descriptor_stat": {
+        "ctime_ns": 1794118240416711777,
+        "device": 65040,
+        "inode": 449080,
+        "link_count": 1,
+        "mtime_ns": 1794118240412711762,
+        "size": 8017931
+      },
+      "expected_sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+      "expected_size": 8017931,
+      "label": "native",
+      "path": "/input/native",
+      "slice_end": 8017931,
+      "slice_start": 0,
+      "verified": true
+    },
+    {
+      "bytes_hashed": 323786694,
+      "descriptor_stat": {
+        "ctime_ns": 1794118250600748455,
+        "device": 65040,
+        "inode": 449085,
+        "link_count": 1,
+        "mtime_ns": 1794118250592748427,
+        "size": 323786694
+      },
+      "expected_sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+      "expected_size": 323786694,
+      "label": "target",
+      "path": "/input/target",
+      "slice_end": 323786694,
+      "slice_start": 0,
+      "verified": true
+    }
+  ],
+  "skipped_inputs": [
+    "native",
+    "target"
+  ],
+  "decoder_observations": [
+    {
+      "compressed_bytes_consumed": null,
+      "compressed_bytes_read": 196608,
+      "decoded_bytes": 634072,
+      "integrity_eof": false,
+      "label": "sdk",
+      "max_decoder_chunk": 65536,
+      "path": "/input/sdk",
+      "sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+      "size": 166821312,
+      "slice_end": 166821312,
+      "slice_start": 10820,
+      "tar_eof": false
+    }
+  ],
+  "limits": {
+    "decoded_bytes": 4294967296,
+    "logical_bytes": 4294967296,
+    "lzma_memlimit": 268435456,
+    "members": 200000,
+    "metadata_bytes": 100000000
+  },
+  "controls": {
+    "allocation_backstop": "Mandatory launcher AS/wall limits; tarfile extended-header allocations precede some semantic checks",
+    "disk_floor_bytes": 10737418240,
+    "disk_reserved": false,
+    "enforced_address_space_bytes": 1073741824,
+    "extraction_implemented": false,
+    "hard_rss_limit": false,
+    "metadata_definition": "Observed header strings + padded extension bodies + resolved name/link/PAX UTF8; conservative repeated charging",
+    "noexec": false,
+    "raw_name_definition": "Maintained parser decoded name before canonicalization, after PAX/GNU substitution",
+    "required_launcher_address_space_bytes": 1073741824,
+    "selected_member_policy_bytes": 16777216,
+    "selected_total_policy_bytes": 67108864
+  },
+  "source_payload_text_selected": false,
+  "raw_inputs_reopened_by_this_integration": false,
+  "proven_leads_filename_only": [
+    {
+      "path": "post-relocate-setup.sh",
+      "bytes": 949
+    },
+    {
+      "path": "environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+      "bytes": 4321
+    },
+    {
+      "path": "site-config-ca9v1-starfishmllib32-linux-gnueabi",
+      "bytes": 13611
+    },
+    {
+      "path": "version-ca9v1-starfishmllib32-linux-gnueabi",
+      "bytes": 125
+    },
+    {
+      "path": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/icecc-env.sh",
+      "bytes": 2170
+    },
+    {
+      "path": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/openssl.sh",
+      "bytes": 69
+    },
+    {
+      "path": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/cmake.sh",
+      "bytes": 185
+    }
+  ],
+  "compatibility": "unknown: compiler/API/ABI/sysroot/version/license/March20190307 equivalence not established",
+  "failure_interpretation": "StrictUTF8 policy failure; failingfield/archiveoffset/corruption NOTestablished. GNU/PAXfixed-header boundary is synthetic-reproducer hypothesis only.",
+  "reruns": 0,
+  "prior_histories_preserved": [
+    "Chromium200000memberPARTIAL",
+    "adaptation64MiBselectionPARTIAL"
+  ],
+  "owner_resume": "t77u continue after t75u pause; existingoffTVscope; no newownercheckpoint",
+  "next": "Synthetic-only UTF8 GNU/PAX reproducer+reviewed narrowfix; parentindependentreview before anynew actualSDKprocessing; neverreuseoldoutput."
+}

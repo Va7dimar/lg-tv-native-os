@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-11-08T05:43:13.028343+00:00",
+  "literal_command_sha256": "d40686fb2d51964980ef50300cdab9530433b86c71adae520ed39d43af211476",
+  "lexer_only_no_execution": true,
+  "exact_inputs": [
+    "/workspace/lg-tv/source-catalog/inspection-core-two-PENDING-REVIEW/staged/kernel-1.0.0-711..4.tar.gz",
+    "/workspace/lg-tv/source-catalog/inspection-core-two-PENDING-REVIEW/staged/bootcode-1.0.0-1099.7.tar.gz"
+  ],
+  "exact_selectors": [
+    "linux-4.4.3/README_HowToMake.txt",
+    "bootcode/README_Make_Boot.txt",
+    "bootcode/README-bootcode.txt"
+  ],
+  "output_absent": true,
+  "mapping_quotes_match_selected_files": true,
+  "archive_reads_in_preparation": false
+}

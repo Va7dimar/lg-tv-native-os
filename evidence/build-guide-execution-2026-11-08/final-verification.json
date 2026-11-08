@@ -1,0 +1,15 @@
+{
+  "verified_at": "2026-11-08T05:53:34.492831+00:00",
+  "timezone": "Atlantic/Reykjavik",
+  "exact_run_exit": 0,
+  "elapsed_seconds": 6.089,
+  "input_pins_match_recorded_inventory": true,
+  "selected_three_files_size_hash_and_fulltext_match": true,
+  "both_tools_unchanged": true,
+  "old_all_three_still_partial_at200000": true,
+  "no_original_archive_read_in_verification": true,
+  "all_three_review_processes_completed": true,
+  "page": "published12editbatch;firstfailedbatchwrotenothing",
+  "phase_scope_exhausted": true,
+  "disk_available_bytes_observed": 117481340928
+}

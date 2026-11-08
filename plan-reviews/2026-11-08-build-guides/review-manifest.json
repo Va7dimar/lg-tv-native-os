@@ -1,0 +1,90 @@
+{
+  "recorded_at": "2026-11-08T05:46:50.763426+00:00",
+  "timezone": "Atlantic/Reykjavik",
+  "packet_sha256": "50ec89bac6c9fb1ab2f9ce4750bc1f95d55ccb608524eef2560be3d769481dd2",
+  "command_sha256": "d40686fb2d51964980ef50300cdab9530433b86c71adae520ed39d43af211476",
+  "scope_sha256_after_reconciliation": "9ad832b76c3a5294b75f2ee6b5011196096a79dd045c45049d1695c1e1d5dad6",
+  "reviews": [
+    {
+      "reviewer": "opus",
+      "requested_model": "claude-opus-5-5",
+      "requested_effort": "high",
+      "timeout_seconds": 180,
+      "started_at": "2026-11-08T05:42:49.078970+00:00",
+      "prompt": "review-prompt.txt",
+      "command_nonsecret": [
+        "claude",
+        "-p",
+        "<self-contained review-prompt.txt>",
+        "--model",
+        "claude-opus-5-5",
+        "--effort",
+        "high",
+        "--output-format",
+        "json"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 60.41,
+      "reported_models": [
+        "claude-opus-5-5",
+        "claude-opus-4-8"
+      ],
+      "reported_safety_stops": 2,
+      "reported_subagents_spawned": 0,
+      "response_status": "documentary answer returned;not refusal;not exclusive5.5 coverage",
+      "reported_is_error": false,
+      "model_discrepancy": "Requested5.5high;modelUsage reports5.5AND4.8. No operator fallback/retry/model switch;CLI internal reason unknown."
+    },
+    {
+      "reviewer": "codex",
+      "requested_model": "current default gpt-6.1-sol expected; actual header authoritative",
+      "requested_effort": "high",
+      "timeout_seconds": 180,
+      "started_at": "2026-11-08T05:43:49.489022+00:00",
+      "prompt": "review-prompt.txt",
+      "command_nonsecret": [
+        "codex",
+        "exec",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "read-only",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-o",
+        "/workspace/lg-tv/plan-reviews/2026-11-08-build-guides/codex-answer.txt"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 38.541,
+      "reported_model": "gpt-6.1-sol",
+      "reported_effort": "high",
+      "response_status": "documentary answer returned;not refusal"
+    },
+    {
+      "reviewer": "gemini",
+      "requested_model": "gemini-4-argon-high",
+      "requested_effort": "model high tier",
+      "timeout_seconds": 240,
+      "started_at": "2026-11-08T05:44:28.030055+00:00",
+      "prompt": "review-prompt.txt",
+      "command_nonsecret": [
+        "agy",
+        "-p",
+        "<self-contained review-prompt.txt>",
+        "--model",
+        "gemini-4-argon-high"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 62.774,
+      "reported_model": null,
+      "reported_model_note": "CLI invoked --model gemini-4-argon-high;stdout does not independently identify actual model",
+      "response_status": "documentary answer returned;not refusal"
+    }
+  ],
+  "new_source_processing_performed": false,
+  "page_changed": false,
+  "independent_literal_command_review": "parent handoff pending",
+  "guide_processing_status": "NOT RUN"
+}

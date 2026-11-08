@@ -1,0 +1,23 @@
+test_bounded_archive_inventory (unittest.loader._FailedTest.test_bounded_archive_inventory) ... ERROR
+
+======================================================================
+ERROR: test_bounded_archive_inventory (unittest.loader._FailedTest.test_bounded_archive_inventory)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_bounded_archive_inventory
+Traceback (most recent call last):
+  File "/usr/lib/python3.13/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.13/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 23, in <module>
+    import bounded_archive_inventory as bai  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'bounded_archive_inventory'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)
+EXIT:1

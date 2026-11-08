@@ -1,0 +1,601 @@
+{
+  "status": "SDKmetadataall3OK;Chromium/adaptation/oldSDKpartialsimmutable;completeLG_BSP/unit/build/bootunproved",
+  "recorded_at": "2026-11-08T13:34:18.275035+00:00",
+  "inventory_status": "partial:aggregate member cap",
+  "entries": [
+    {
+      "archive": "webOS 6.0 KLP_1.0_2.tar.gz",
+      "member": "soc/libkadaptor-1.0.0-908.3.tar.gz",
+      "member_bytes": 123840909,
+      "member_sha256": "46e7e652bc8f6fc9a57ade3baca9b1300a9e8c1bdc4bcde3cb7675116184bf25",
+      "evidence_level": "Pinned one-level staged copy verified BEFORE inner parsing; PARTIAL inner listing and admitted selected plaintext",
+      "nested": true,
+      "source_or_BSP_coverage": "Generated register maps/API declarations and listed prebuilt TEE/DRM components; referenced implementation/config trees absent ONLY from admitted prefix, unread tail unknown; NOT complete functional driver/BSP coverage",
+      "buildability": "not established",
+      "inspection_evidence": "evidence/adaptation-inspection.json",
+      "inspection_status": "partial"
+    },
+    {
+      "archive": "webOS 6.0 KLP_1.0_2.tar.gz",
+      "member": "soc/r_8812_wifi_driver.tar.gz",
+      "member_bytes": 79725513,
+      "member_sha256": "4fa16013269ed5104024d62c2acc636f0ed868d0540bd87527359bd15de13e94",
+      "evidence_level": "actual outer-member metadata and payload hash, NOT nested content",
+      "nested": true,
+      "source_or_BSP_coverage": "unknown; nested inspection excluded",
+      "buildability": "not established"
+    },
+    {
+      "archive": "webOS 6.0 KLP_1.0_2.tar.gz",
+      "member": "soc/gstreamer-1.0.0-2089.tar.gz",
+      "member_bytes": 136115594,
+      "member_sha256": "5b32c597ce45dd5601427ed704e11fcc06f809f8de6e4e6928e4bd5b1eae1675",
+      "evidence_level": "actual outer-member metadata and payload hash, NOT nested content",
+      "nested": true,
+      "source_or_BSP_coverage": "unknown; nested inspection excluded",
+      "buildability": "not established"
+    },
+    {
+      "archive": "webOS 6.0 KLP_1.0_2.tar.gz",
+      "member": "soc/kernel-1.0.0-711..4.tar.gz",
+      "member_bytes": 170350960,
+      "member_sha256": "110f08578519954be3113108ca461d4190d387c3cbb6e50d648274c9dcaf9962",
+      "evidence_level": "actual complete one-level inner index plus admitted selected plaintext",
+      "nested": true,
+      "source_or_BSP_coverage": "vendor kernel+rtk_kdriver or bootcode/U-Boot source confirmed; complete BSP unresolved",
+      "buildability": "not established",
+      "inspection_evidence": "evidence/kernel-bootcode-inspection.json"
+    },
+    {
+      "archive": "webOS 6.0 KLP_1.0_2.tar.gz",
+      "member": "soc/bootcode-1.0.0-1099.7.tar.gz",
+      "member_bytes": 12014324,
+      "member_sha256": "b88f252cf9ae4f4535e015959916cd87067f0e6cf551ef0f189cdc2f4365e23e",
+      "evidence_level": "actual complete one-level inner index plus admitted selected plaintext",
+      "nested": true,
+      "source_or_BSP_coverage": "vendor kernel+rtk_kdriver or bootcode/U-Boot source confirmed; complete BSP unresolved",
+      "buildability": "not established",
+      "inspection_evidence": "evidence/kernel-bootcode-inspection.json"
+    }
+  ],
+  "actual_unit_mapping": "unknown",
+  "boot_acceptance": "unverified",
+  "recovery": "unverified",
+  "selected_source_text_read": true,
+  "metadata_analysis_at": "2026-11-08 05:02 Atlantic/Reykjavik",
+  "package_leads": "evidence/package-leads.json",
+  "capability_clusters_filename_only": {
+    "graphics/UI/input filename leads": 10,
+    "media/audio/video filename leads": 20,
+    "radio/network filename leads": 17,
+    "other upstream package names (purpose not established here)": 62,
+    "runtime/boot-userspace/system filename leads": 14,
+    "build/development/observability filename leads (NOT a target SDK)": 9,
+    "kernel/boot/hardware-adaptation filename leads": 3
+  },
+  "notice_reconciliation": {
+    "kdriver": "Kernel drivers/rtk_kdriver inspected separately; libkadaptor now PARTIALLY inspected: generated OP-TEE/rbus declarations/register maps and prebuilt packaging, not equivalent to complete functional kdriver/HAL support.",
+    "kernel": "ActualtopMakefilebase4.4.84,emptyEXTRAVERSION;now-readguidecomponentnamekernel-1.0.0-711.kalaupapa.4.tar.gz corroboratescomponentlabel,butnotlivefullkernelversion or actualunitmapping.",
+    "bootcode": "Actual U-Boot Makefile2012.07 and LG_TOOLCHAIN_PATH-dependent source; not installedversion/bootacceptance/recovery.",
+    "toolchain": "common/libtool and QtCreator names are development leads, glibc is a runtime-library name; no dedicated GCC/crosscompiler SDK or outer build/config/README document identified in complete lists. None proves compiler/config absent INSIDE packages."
+  },
+  "outer_offsets_available": false,
+  "source_coverage_gate": "NOT PASSED: kernel/boot/config/build-guide candidates and PARTIAL adaptation evidence; full implementation/licensing, SDK ABI/version, exact unit, packaging, boot/recovery unresolved.",
+  "targeted_core_two": {
+    "status": "ok",
+    "evidence": "evidence/kernel-bootcode-inspection.json",
+    "phase_path": "source-catalog/inspection-core-two-PENDING-REVIEW",
+    "members": 64180,
+    "selected_files": 4802,
+    "elapsed_seconds": 11.368
+  },
+  "build_guide_followup": {
+    "status": "ok",
+    "evidence": "evidence/build-guide-inspection.json",
+    "exact_selected_count": 3,
+    "selected_bytes": 3442,
+    "aggregate_members": 64174,
+    "elapsed_seconds": 6.089,
+    "newfacts": "SDK5.0.0-20190307 installer name,kernelRTK2875/tv006 config,bootPRJB3_A1R41/B7_A1R62,documentedoutputnames;not actualunitmapping",
+    "scope_exhausted": true,
+    "reviews": "plan-reviews/2026-11-08-build-guide-findings/review-manifest.json"
+  },
+  "build_dependencies": "evidence/build-dependency-ledger.json",
+  "configuration_closure": {
+    "evidence": "evidence/source-configuration-closure.json",
+    "project_phase": "ok3files23455B",
+    "generator_phase": "ok3files11588B",
+    "actual_unit_mapped": false,
+    "source_public_sdk_lead": "evidence/public-sdk-2026-11-08/sdk-lead.json",
+    "missing_dirs_in_boot_package": [
+      "bin/hw_setting/realtek",
+      "tools/flash_image_maker",
+      "Aux_code",
+      "Aux_code_2nd"
+    ]
+  },
+  "sdk_static_assessment": {
+    "manifest": "evidence/public-sdk-2026-11-08/acquisition-manifest.json",
+    "header": "evidence/public-sdk-2026-11-08/sdk-header-findings.json",
+    "payload_inventory": "all3metadataOK,0selected/installed",
+    "compatibility": "unknown",
+    "download_bytes": 498625937,
+    "payload_evidence": "evidence/sdk-inventory-links-inspection.json"
+  },
+  "adaptation_inspection": {
+    "status": "partial",
+    "ok": false,
+    "exit_code": 1,
+    "error": "max_selected_combined_bytes exceeded",
+    "execution_start_Atlantic_Reykjavik": "2026-11-08 06:30:12",
+    "execution_end_Atlantic_Reykjavik": "2026-11-08 06:30:16",
+    "elapsed_seconds": 4.104,
+    "inner_members_recorded": 1434,
+    "selected_files": 796,
+    "selected_text_bytes": 65599808,
+    "selected_cap_bytes": 67108864,
+    "selected_rbus_headers": 391,
+    "next_unselected_member_bytes": 1717085,
+    "would_be_selected_bytes": 67316893,
+    "copied": {
+      "member": "soc/libkadaptor-1.0.0-908.3.tar.gz",
+      "path": "staged/libkadaptor-1.0.0-908.3.tar.gz",
+      "bytes": 123840909,
+      "sha256": "46e7e652bc8f6fc9a57ade3baca9b1300a9e8c1bdc4bcde3cb7675116184bf25",
+      "verified_before_inner": true,
+      "independent_file_hash_match": true
+    },
+    "totals_from_phase": {
+      "member_count": 1440,
+      "pathname_bytes": 119106,
+      "expanded_bytes": 879980114,
+      "outer_decoded_bytes": 522047300,
+      "binary_copy_bytes": 123840909,
+      "selected_text_bytes": 65599808,
+      "admitted_compressed_bytes": 635786803
+    },
+    "audit": "handoff/adaptation-result.md",
+    "evidence": "evidence/adaptation-inspection.json",
+    "raw_output": "source-catalog/inspection-adaptation-PENDING-REVIEW",
+    "retry_resume_raise_or_more_selection": false,
+    "coverage_scope": "Admitted prefix only; unread tail unknown. No complete package/BSP/licensing inference.",
+    "timing_caveat": "Review document label06:35 is later than observed run06:30; preserve discrepancy, do not substitute it for actual run clock.",
+    "resources": {
+      "wall_seconds": 120,
+      "address_space_bytes": 1073741824,
+      "address_space_not_RSS": true,
+      "selected_total_bytes": 67108864,
+      "observed_disk_before_bytes": 116787204096,
+      "observed_disk_after_bytes": 116594716672,
+      "disk_floor_bytes": 10737418240,
+      "disk_reserved": false,
+      "noexec_output_demonstrated": false,
+      "outer_decoded_counter": "logical regular payload, not TAR headers/padding"
+    },
+    "actual_limits_from_generated_phase": {
+      "wall_seconds": 120,
+      "address_space_bytes": 1073741824,
+      "max_members": 200000,
+      "max_pathname_bytes": 100000000,
+      "max_phase_expanded_bytes": 4294967296,
+      "max_outer_compressed_bytes": 536870912,
+      "max_outer_decoded_bytes": 671088640,
+      "max_binary_each_bytes": 134217728,
+      "max_binary_combined_bytes": 134217728,
+      "max_admitted_compressed_bytes": 1073741824,
+      "max_selected_text_member_bytes": 16777216,
+      "max_selected_combined_bytes": 67108864,
+      "min_free_disk_bytes": 10737418240
+    }
+  },
+  "sdk_tooling_status": "Metadata-onlylinkpolicyindependentPASS;actualall3inventoryOK,73838headers/66880records/0selected. NoSDKtextselector/installation/build.",
+  "sdk_payload_inventory": {
+    "recorded_at_Atlantic_Reykjavik": "2026-11-08T12:59:32.793729+00:00",
+    "status": "partial",
+    "launcher_status": "failed",
+    "exit_code": 1,
+    "started_Atlantic_Reykjavik": "2026-11-08T07:09:20.045681+00:00",
+    "elapsed_seconds": 0.767,
+    "error": "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc4 in position 99: unexpected end of data",
+    "manifest": "sdk-candidates/20191125/inspection-metadata-PENDING-REVIEW/manifest.json",
+    "generated_member_records": 88,
+    "record_types": {
+      "directory": 8,
+      "regular": 21,
+      "symlink": 59
+    },
+    "totals": {
+      "decoded_bytes": 634072,
+      "logical_regular_bytes": 555335,
+      "members": 96,
+      "metadata_bytes": 24143,
+      "selected_bytes": 0
+    },
+    "all_pins_verified_before_parse": true,
+    "full_hash_bytes": 498625937,
+    "pin_verifications": [
+      {
+        "bytes_hashed": 166821312,
+        "descriptor_stat": {
+          "ctime_ns": 1794118243876724238,
+          "device": 65040,
+          "inode": 449083,
+          "link_count": 1,
+          "mtime_ns": 1794118243872724224,
+          "size": 166821312
+        },
+        "expected_sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+        "expected_size": 166821312,
+        "label": "sdk",
+        "path": "/input/sdk",
+        "slice_end": 166821312,
+        "slice_start": 10820,
+        "verified": true
+      },
+      {
+        "bytes_hashed": 8017931,
+        "descriptor_stat": {
+          "ctime_ns": 1794118240416711777,
+          "device": 65040,
+          "inode": 449080,
+          "link_count": 1,
+          "mtime_ns": 1794118240412711762,
+          "size": 8017931
+        },
+        "expected_sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+        "expected_size": 8017931,
+        "label": "native",
+        "path": "/input/native",
+        "slice_end": 8017931,
+        "slice_start": 0,
+        "verified": true
+      },
+      {
+        "bytes_hashed": 323786694,
+        "descriptor_stat": {
+          "ctime_ns": 1794118250600748455,
+          "device": 65040,
+          "inode": 449085,
+          "link_count": 1,
+          "mtime_ns": 1794118250592748427,
+          "size": 323786694
+        },
+        "expected_sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+        "expected_size": 323786694,
+        "label": "target",
+        "path": "/input/target",
+        "slice_end": 323786694,
+        "slice_start": 0,
+        "verified": true
+      }
+    ],
+    "skipped_inputs": [
+      "native",
+      "target"
+    ],
+    "decoder_observations": [
+      {
+        "compressed_bytes_consumed": null,
+        "compressed_bytes_read": 196608,
+        "decoded_bytes": 634072,
+        "integrity_eof": false,
+        "label": "sdk",
+        "max_decoder_chunk": 65536,
+        "path": "/input/sdk",
+        "sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+        "size": 166821312,
+        "slice_end": 166821312,
+        "slice_start": 10820,
+        "tar_eof": false
+      }
+    ],
+    "limits": {
+      "decoded_bytes": 4294967296,
+      "logical_bytes": 4294967296,
+      "lzma_memlimit": 268435456,
+      "members": 200000,
+      "metadata_bytes": 100000000
+    },
+    "controls": {
+      "allocation_backstop": "Mandatory launcher AS/wall limits; tarfile extended-header allocations precede some semantic checks",
+      "disk_floor_bytes": 10737418240,
+      "disk_reserved": false,
+      "enforced_address_space_bytes": 1073741824,
+      "extraction_implemented": false,
+      "hard_rss_limit": false,
+      "metadata_definition": "Observed header strings + padded extension bodies + resolved name/link/PAX UTF8; conservative repeated charging",
+      "noexec": false,
+      "raw_name_definition": "Maintained parser decoded name before canonicalization, after PAX/GNU substitution",
+      "required_launcher_address_space_bytes": 1073741824,
+      "selected_member_policy_bytes": 16777216,
+      "selected_total_policy_bytes": 67108864
+    },
+    "source_payload_text_selected": false,
+    "raw_inputs_reopened_by_this_integration": false,
+    "proven_leads_filename_only": [
+      {
+        "path": "post-relocate-setup.sh",
+        "bytes": 949
+      },
+      {
+        "path": "environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+        "bytes": 4321
+      },
+      {
+        "path": "site-config-ca9v1-starfishmllib32-linux-gnueabi",
+        "bytes": 13611
+      },
+      {
+        "path": "version-ca9v1-starfishmllib32-linux-gnueabi",
+        "bytes": 125
+      },
+      {
+        "path": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/icecc-env.sh",
+        "bytes": 2170
+      },
+      {
+        "path": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/openssl.sh",
+        "bytes": 69
+      },
+      {
+        "path": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/cmake.sh",
+        "bytes": 185
+      }
+    ],
+    "compatibility": "unknown: compiler/API/ABI/sysroot/version/license/March20190307 equivalence not established",
+    "failure_interpretation": "StrictUTF8 policy failure; failingfield/archiveoffset/corruption NOTestablished. GNU/PAXfixed-header boundary is synthetic-reproducer hypothesis only.",
+    "reruns": 0,
+    "prior_histories_preserved": [
+      "Chromium200000memberPARTIAL",
+      "adaptation64MiBselectionPARTIAL"
+    ],
+    "owner_resume": "t77u continue after t75u pause; existingoffTVscope; no newownercheckpoint",
+    "next": "Synthetic-only UTF8 GNU/PAX reproducer+reviewed narrowfix; parentindependentreview before anynew actualSDKprocessing; neverreuseoldoutput."
+  },
+  "sdk_utf8_fix_candidate": {
+    "status": "independentSPEC/QUALITYPASS;realhandedoffphaseexecutedonceandpartialunsafe-linkpolicy",
+    "reader_sha256": "e70f683abf7597f16d54f15c1f7e86d10be873dda9b0c6f95d881000c7047ba4",
+    "launcher_sha256_unchanged": "2a6638e3439748a6dc4fb7237a03c3d05521685746df5315683c861acab9ca52",
+    "review_package": "tooling/review/sdk-utf8-fix-2026-11-08/package/HOST-VERIFICATION-ADDENDUM.md",
+    "host_synthetic_methods_passed": 41,
+    "host_skips": 0,
+    "actual_SDK_cause": "unknown; syntheticGNUfixedUTF8boundaryproved",
+    "owner_resume": "t77u continue; no routine ownercheck-in",
+    "recorded_at_Atlantic_Reykjavik": "2026-11-08T13:05:58.148599+00:00"
+  },
+  "sdk_latest_payload_inventory": {
+    "recorded_at_Atlantic_Reykjavik": "2026-11-08T13:31:40.388008+00:00",
+    "status": "ok:complete metadata-only all3inputinventory",
+    "execution": {
+      "started_Atlantic_Reykjavik": "2026-11-08T13:30:17.591554+00:00",
+      "command": [
+        "/bin/bash",
+        "/workspace/lg-tv/evidence/sdk-inventory-links-execution-2026-11-08/exact-command.txt"
+      ],
+      "sole_literal_command_change": "freshoutputdirectory",
+      "invocation_count": 1,
+      "exit_code": 0,
+      "elapsed_seconds": 13.804,
+      "finished_Atlantic_Reykjavik": "2026-11-08T13:30:31.395508+00:00"
+    },
+    "worker_status": "ok",
+    "launcher_ok": true,
+    "review": "tooling/review/sdk-link-metadata-independent-review.md",
+    "full_hash_bytes": 498625937,
+    "pin_verifications": [
+      {
+        "bytes_hashed": 166821312,
+        "descriptor_stat": {
+          "ctime_ns": 1794118243876724238,
+          "device": 65040,
+          "inode": 449083,
+          "link_count": 1,
+          "mtime_ns": 1794118243872724224,
+          "size": 166821312
+        },
+        "expected_sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+        "expected_size": 166821312,
+        "label": "sdk",
+        "path": "/input/sdk",
+        "slice_end": 166821312,
+        "slice_start": 10820,
+        "verified": true
+      },
+      {
+        "bytes_hashed": 8017931,
+        "descriptor_stat": {
+          "ctime_ns": 1794118240416711777,
+          "device": 65040,
+          "inode": 449080,
+          "link_count": 1,
+          "mtime_ns": 1794118240412711762,
+          "size": 8017931
+        },
+        "expected_sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+        "expected_size": 8017931,
+        "label": "native",
+        "path": "/input/native",
+        "slice_end": 8017931,
+        "slice_start": 0,
+        "verified": true
+      },
+      {
+        "bytes_hashed": 323786694,
+        "descriptor_stat": {
+          "ctime_ns": 1794118250600748455,
+          "device": 65040,
+          "inode": 449085,
+          "link_count": 1,
+          "mtime_ns": 1794118250592748427,
+          "size": 323786694
+        },
+        "expected_sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+        "expected_size": 323786694,
+        "label": "target",
+        "path": "/input/target",
+        "slice_end": 323786694,
+        "slice_start": 0,
+        "verified": true
+      }
+    ],
+    "inputs": [
+      {
+        "compressed_bytes_consumed": 166810492,
+        "compressed_bytes_read": 166810492,
+        "compressed_counter_definition": "Read counts include read-ahead; consumed is exact at compression EOF, otherwise unknown/null",
+        "decoded_bytes": 891217920,
+        "decoded_zero_tail_bytes": 7680,
+        "integrity_eof": true,
+        "label": "sdk",
+        "max_decoder_chunk": 65536,
+        "path": "/input/sdk",
+        "sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+        "size": 166821312,
+        "slice_end": 166821312,
+        "slice_start": 10820,
+        "tar_eof": true,
+        "tar_eof_offset": 891210240
+      },
+      {
+        "compressed_bytes_consumed": 8017931,
+        "compressed_bytes_read": 8017931,
+        "compressed_counter_definition": "Read counts include read-ahead; consumed is exact at compression EOF, otherwise unknown/null",
+        "decoded_bytes": 16148480,
+        "decoded_zero_tail_bytes": 6656,
+        "integrity_eof": true,
+        "label": "native",
+        "max_decoder_chunk": 65536,
+        "path": "/input/native",
+        "sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+        "size": 8017931,
+        "slice_end": 8017931,
+        "slice_start": 0,
+        "tar_eof": true,
+        "tar_eof_offset": 16141824
+      },
+      {
+        "compressed_bytes_consumed": 323786694,
+        "compressed_bytes_read": 323786694,
+        "compressed_counter_definition": "Read counts include read-ahead; consumed is exact at compression EOF, otherwise unknown/null",
+        "decoded_bytes": 1228636160,
+        "decoded_zero_tail_bytes": 8704,
+        "integrity_eof": true,
+        "label": "target",
+        "max_decoder_chunk": 65536,
+        "path": "/input/target",
+        "sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+        "size": 323786694,
+        "slice_end": 323786694,
+        "slice_start": 0,
+        "tar_eof": true,
+        "tar_eof_offset": 1228627456
+      }
+    ],
+    "totals": {
+      "decoded_bytes": 2136002560,
+      "logical_regular_bytes": 2078148221,
+      "members": 73838,
+      "metadata_bytes": 12781920,
+      "selected_bytes": 0
+    },
+    "emitted_records": 66880,
+    "by_input": {
+      "sdk": {
+        "emitted_records": 18194,
+        "types": {
+          "directory": 857,
+          "regular": 16584,
+          "symlink": 736,
+          "hardlink": 17
+        },
+        "link_classifications": {
+          "relative": 718,
+          "absolute": 35
+        },
+        "nested_archive_flags": 0
+      },
+      "native": {
+        "emitted_records": 637,
+        "types": {
+          "directory": 70,
+          "regular": 553,
+          "symlink": 14
+        },
+        "link_classifications": {
+          "relative": 14
+        },
+        "nested_archive_flags": 1
+      },
+      "target": {
+        "emitted_records": 48049,
+        "types": {
+          "directory": 2845,
+          "regular": 43298,
+          "symlink": 886,
+          "hardlink": 1020
+        },
+        "link_classifications": {
+          "relative": 1885,
+          "absolute": 21
+        },
+        "nested_archive_flags": 109
+      }
+    },
+    "limits": {
+      "decoded_bytes": 4294967296,
+      "logical_bytes": 4294967296,
+      "lzma_memlimit": 268435456,
+      "members": 200000,
+      "metadata_bytes": 100000000
+    },
+    "controls": {
+      "allocation_backstop": "Mandatory launcher AS/wall limits; tarfile extended-header allocations precede some semantic checks",
+      "disk_floor_bytes": 10737418240,
+      "disk_reserved": false,
+      "enforced_address_space_bytes": 1073741824,
+      "extraction_implemented": false,
+      "hard_rss_limit": false,
+      "metadata_definition": "Observed header strings + padded extension bodies + resolved name/link/PAX UTF8; conservative repeated charging",
+      "noexec": false,
+      "raw_name_definition": "Maintained parser decoded name before canonicalization, after PAX/GNU substitution",
+      "required_launcher_address_space_bytes": 1073741824,
+      "selected_member_policy_bytes": 16777216,
+      "selected_total_policy_bytes": 67108864
+    },
+    "rejected_links": [],
+    "skipped_inputs": [],
+    "contents_selected_or_extracted": false,
+    "no_member_source_binary_or_installer_executed": true,
+    "nested_archive_expansion": false,
+    "source_payload_not_semantically_inspected": "Decoderstreamedpayloadsforboundedmetadata+EOF;0selected,notclaimingnobytesdecompressed",
+    "actual_unit_mapping": "unknown",
+    "SDK_March20190307compatibility": "unknown pendingactualadmittedmanifest/environment/headertext",
+    "prior_outcomes_preserved": [
+      "firstSDKUTF8partial",
+      "secondSDKlinkpolicyPartial",
+      "Chromium200kpartial",
+      "adaptation64MiBpartial"
+    ],
+    "raw_output": "sdk-candidates/20191125/inspection-metadata-links-PENDING-REVIEW",
+    "execution_audit": "evidence/sdk-inventory-links-execution-2026-11-08",
+    "XZ_checksum_algorithm": "notrecorded;priorCHECK_NONElabelresidualunchanged",
+    "next": "Boundedselectedplaintextinspectionfeature/planforindexedSDKversion/environment/manifests/headers;parentcoordination+review,noautomaticselection/build.",
+    "metadata_version_hints": {
+      "GCC": "8.2.0(versiondirectorylabel)",
+      "glibc": "2.28(libc/loaderfilenames)",
+      "binutils": "unknown;ARMldfilenamepresent",
+      "kernel_headers": "unknown;version.h97Bindexed",
+      "nominal_layout": "x86_64host + ca9v1/mllib32target ARM/AArch64lib/lib64",
+      "SDK_date": "5.0.0-20191125absoluteSSLlink+headerlabel,notverifiedrelease/compatibility"
+    },
+    "metadata_leads": "evidence/sdk-inventory-links-execution-2026-11-08/verified-metadata-leads.json",
+    "analysis_reconciliation": "evidence/sdk-inventory-links-execution-2026-11-08/reconciliation.md",
+    "next_text_plan": "handoff/sdk-selected-text-next-plan.json",
+    "future_exact_text_indexed_bytes": 50478
+  },
+  "sdk_payload_inventory_history": [
+    "evidence/sdk-inventory-inspection.json",
+    "evidence/sdk-inventory-utf8-inspection.json",
+    "evidence/sdk-inventory-links-inspection.json"
+  ]
+}

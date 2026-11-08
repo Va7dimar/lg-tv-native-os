@@ -1,0 +1,5 @@
+python3 /workspace/lg-tv/tooling/isolate_targeted_phase.py \
+  --outer "/workspace/lg-tv/source-catalog/archives/webOS 6.0 KLP_1.0_2.tar.gz" \
+  --output-dir /workspace/lg-tv/source-catalog/inspection-core-two-PENDING-REVIEW \
+  --expected-outer-bytes 511945894 \
+  --expected-outer-sha256 95894dd81e2bb32fd1ced1eb119698f2e1464e6b9b5b5879ea51528d7d5e8832

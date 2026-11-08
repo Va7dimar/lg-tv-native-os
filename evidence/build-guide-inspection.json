@@ -1,0 +1,135 @@
+{
+  "status": "actual guide inspectionOK;build/boot/recoveryunproved",
+  "guides": [
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "compressed_input_sha256": "110f08578519954be3113108ca461d4190d387c3cbb6e50d648274c9dcaf9962",
+      "inner_path": "linux-4.4.3/README_HowToMake.txt",
+      "selected_path": "source-catalog/inspection-build-guides-2026-11-08/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/README_HowToMake.txt",
+      "bytes": 1217,
+      "sha256": "2c2227082b356f3cd40a93b718489a3d68d6e33424f86004cbf6166cc0b034a7",
+      "text": "#========================================\r\n# How to compile the Linux kernel/rtk_driver/common\r\n#========================================\r\n\r\n#----------------------------------------\r\n@@. Elements in the package\r\n#----------------------------------------\r\n+ kernel-1.0.0-711.kalaupapa.4.tar.gz\r\n- README_HowToMake.txt : describe how to compile source codes using toolchain\r\n\r\n#----------------------------------------\r\n@@. The order to compile codes\r\n#----------------------------------------\r\n1)./starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20190307.sh\r\n- Enter target directory for SDK (default: /opt/starfish-sdk-x86_64/5.0.0-20190307): /HOME/USERNAME/TOOLCHAIN\r\n- You are about to install the SDK to \"DIRECTORY\". Proceed[Y/n]? y\r\n- You need remember you toolchain install path.\r\n2) export toolchain PATH:\r\n- PATH=/HOME/USERNAME/TOOLCHAIN/sysroots/x86_64-starfishsdk-linux/usr/bin/arm-starfish-linux:$PATH\r\n3) make config and make\r\n- make realtek/config.develop.rtd2875.tv006.emmc.old_defconfig\r\n- CROSS_COMPILE=arm-starfish-linux- make KALLSYMS_EXTRA_PASS=1\r\n\r\n#----------------------------------------\r\n@@. Output path and file\r\n#----------------------------------------\r\n- .:\r\n-- vmlinux.bin : linux binary file\r\n",
+      "line_count": 28
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "compressed_input_sha256": "b88f252cf9ae4f4535e015959916cd87067f0e6cf551ef0f189cdc2f4365e23e",
+      "inner_path": "bootcode/README_Make_Boot.txt",
+      "selected_path": "source-catalog/inspection-build-guides-2026-11-08/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/README_Make_Boot.txt",
+      "bytes": 1149,
+      "sha256": "b0cb2f0ba58ec6c369776724b432e2b44553145351856baab541c47bfe9fb354",
+      "text": "INTRODUCTION\n===============================================================================\nSource code path:\ndownload source with below path:\t\t\t\t\t\ncheckout wall.lge.com/bsp/realtek/boot to \n\tboot/\n\n\nHOW TO SET TOOLCHAIN\n===============================================================================\nFor 64bit toolchain\n1. Get toolchain file\n2. Run toolchain script and remember your install SDK path.\n\t$ ./starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20190307.sh\n\twebOS TV SDK installer version 5.0.0-20190307\n\t=============================================\n\tEnter target directory for SDK (default: /opt/starfish-sdk-x86_64/5.0.0-20190307): .\n\tYou are about to install the SDK to \"/opt/starfish-sdk-x86_64/5.0.0-20190307\". Proceed[Y/n]? Y\n\tExtracting SDK..........................done\n\tSetting it up...done\n\tSDK has been successfully set up and is ready to be used.\n\t\n\t\nHOW TO BUILD\n===============================================================================\nFor 64bit toolchain\n1. Setup toolchain path\n\texport LG_TOOLCHAIN_PATH=/opt/starfish-sdk-x86_64/5.0.0-20190307\n2. Build Boot\n\t- make -C bin PRJ=B3_A1R41 \n\tor\n\t- make -C bin PRJ=B7_A1R62\n\n",
+      "line_count": 33
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "compressed_input_sha256": "b88f252cf9ae4f4535e015959916cd87067f0e6cf551ef0f189cdc2f4365e23e",
+      "inner_path": "bootcode/README-bootcode.txt",
+      "selected_path": "source-catalog/inspection-build-guides-2026-11-08/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/README-bootcode.txt",
+      "bytes": 1076,
+      "sha256": "e42fad809ed711810d51bb3d41f0d2b513e404ee0af3e582f94f4a9b11d3fb65",
+      "text": "#========================================\r\n# How to compile the bootcode\r\n#========================================\r\n\r\n#----------------------------------------\r\n@@. Elements in the package\r\n#----------------------------------------\r\n+ bootcode-1.0.0-1099.kalaupapa.7.tar.gz\r\n- README : describe how to compile source codes using toolchain\r\n\r\n#----------------------------------------\r\n@@. The order to compile codes\r\n#----------------------------------------\r\n1)./starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20190307.sh\r\n- Enter target directory for SDK (default: /opt/starfish-sdk-x86_64/5.0.0-20190307): /HOME/USERNAME/TOOLCHAIN\r\n- You are about to install the SDK to \"DIRECTORY\". Proceed[Y/n]? y\r\n- You need remember you toolchain install path.\r\n2) export toolchain PATH:\r\n- export LG_TOOLCHAIN_PATH=/HOME/USERNAME/TOOLCHAIN\r\n3) make config and make\r\n- make -C bin PRJ=B3_A1R41 \r\nor\r\n- make -C bin PRJ=B7_A1R62\r\n\r\n#----------------------------------------\r\n@@. Output path and file\r\n#----------------------------------------\r\n- bin/tmp:\r\n-- u-boot.bin : bootcode binary file",
+      "line_count": 29
+    }
+  ],
+  "input_pins_checked_before_analysis": true,
+  "inventory": "source-catalog/inspection-build-guides-2026-11-08/inventory.json",
+  "execution": "evidence/build-guide-execution-2026-11-08",
+  "totals": {
+    "member_count": 64174,
+    "pathname_bytes": 2961727,
+    "expanded_bytes": 984765350,
+    "selected_text_bytes": 3442
+  },
+  "sdk_installer_exact_basename_matches_in_core_two_indexes": [],
+  "scope_exhausted": true,
+  "no_source_execution": true,
+  "reviews": {
+    "path": "plan-reviews/2026-11-08-build-guide-findings",
+    "outcomes": [
+      {
+        "requested_model": "claude-opus-5-5",
+        "requested_effort": "high",
+        "timeout_seconds": 180,
+        "started_at": "2026-11-08T05:48:59.323397+00:00",
+        "prompt": "review-prompt.txt",
+        "command": [
+          "claude",
+          "-p",
+          "<review-prompt.txt>",
+          "--model",
+          "claude-opus-5-5",
+          "--effort",
+          "high",
+          "--output-format",
+          "json"
+        ],
+        "exit_code": 0,
+        "timed_out": false,
+        "elapsed_seconds": 50.209,
+        "reported_models": [
+          "claude-opus-5-5",
+          "claude-opus-4-8"
+        ],
+        "reported_safety_stops": 2,
+        "reported_is_error": false,
+        "response_status": "substantive documentary review returned,no refusal;not exclusive5.5coverage",
+        "operator_fallback": false
+      },
+      {
+        "requested_model": "default expectedgpt-6.1-sol",
+        "requested_effort": "high",
+        "timeout_seconds": 180,
+        "started_at": "2026-11-08T05:49:49.533174+00:00",
+        "prompt": "review-prompt.txt",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "--sandbox",
+          "read-only",
+          "-c",
+          "model_reasoning_effort=\"high\"",
+          "-o",
+          "/workspace/lg-tv/plan-reviews/2026-11-08-build-guide-findings/codex-answer.txt",
+          "<review-prompt.txt>"
+        ],
+        "exit_code": 0,
+        "timed_out": false,
+        "elapsed_seconds": 27.635,
+        "reported_model": "gpt-6.1-sol",
+        "reported_effort": "high",
+        "response_status": "substantive documentary review returned,no refusal"
+      },
+      {
+        "requested_model": "gemini-4-argon-high",
+        "requested_effort": "high tier",
+        "timeout_seconds": 240,
+        "started_at": "2026-11-08T05:50:17.168272+00:00",
+        "prompt": "review-prompt.txt",
+        "command": [
+          "agy",
+          "-p",
+          "<review-prompt.txt>",
+          "--model",
+          "gemini-4-argon-high"
+        ],
+        "exit_code": 0,
+        "timed_out": false,
+        "elapsed_seconds": 55.367,
+        "reported_model": null,
+        "reported_model_note": "requested --modelgemini-4-argon-high;no independentmodelidentifier inoutput",
+        "response_status": "substantive documentary review returned,no refusal"
+      }
+    ],
+    "reconciliation": "plan-reviews/2026-11-08-build-guide-findings/reconciliation.md"
+  },
+  "review_corrections": [
+    "135totalpackages minus2coretwo =133uninspected,not135remaining",
+    "Installertranscript . versus /opt discrepancy not installerbehaviorverification",
+    "Prefix/platformdifferences unresolved,not provedincompatible",
+    "Recoveryunverified,not provedunrecoverable"
+  ],
+  "recorded_at": "2026-11-08T05:52:16.351180+00:00",
+  "postphase_disk_free_bytes": 117485625344
+}

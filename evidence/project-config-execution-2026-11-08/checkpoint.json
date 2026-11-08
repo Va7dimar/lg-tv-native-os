@@ -1,0 +1,19 @@
+{
+  "authority": "owner t71u\u2013t73u ongoing OFF-TV research;no per-file owner reapproval needed",
+  "purpose": "resolve already-documented PRJ includes and project_config,not resume Chromium or failed inventory",
+  "time": "2026-11-08T05:57:02.837520+00:00",
+  "expected_input_sha256": "b88f252cf9ae4f4535e015959916cd87067f0e6cf551ef0f189cdc2f4365e23e",
+  "selected_expected": {
+    "bootcode/bin/B3_A1R41.inc": 7987,
+    "bootcode/bin/B7_A1R62.inc": 8004,
+    "bootcode/src/include/project_config.h": 7464
+  },
+  "selected_expected_total": 23455,
+  "selected_cap_policy": 67108864,
+  "tool_sha256": {
+    "bounded_archive_inventory.py": "ee7870b95a6603fae3c38d5a9908da559c598fd29a7b69ba7c2b9a369473ae2c",
+    "isolate_inventory.py": "eb289faf86523479944275918a2777cf23c429d2b96dd1a8822a2ead2f371915"
+  },
+  "output_fresh": true,
+  "no_tv_actions_or_source_execution": true
+}

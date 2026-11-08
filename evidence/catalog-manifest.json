@@ -1,0 +1,58 @@
+{
+  "recorded_at": "2026-11-08T04:24:23.867263+00:00",
+  "timezone": "Atlantic/Reykjavik",
+  "catalog_url": "https://opensource.lge.com/product/list?keyword=65NANO756PR",
+  "model": "65NANO756PR",
+  "software_catalog_label": "webOS6.0 KLP1.0",
+  "release_sequence": 510320,
+  "browser_catalog_checked_at": "2026-11-08T04:23:27+00:00",
+  "browser_provenance": "Parent-reported official public UI normal download clicks; display names matched downloaded names; UI supplied no sizes/direct URLs. No hidden endpoints used.",
+  "browser_evidence_screenshot": "file:///cursor/stores/user/grok-bot/agents/546b488f-b6ad-49fb-9b08-ac7c5a634274/assets/208fcb54e56a03c118faec02721fe0210d46d80ea5b7c390ff091337f197e0cd.png",
+  "archives": [
+    {
+      "filename": "webOS 6.0 KLP_1.0_1.tar.gz",
+      "path": "/workspace/lg-tv/source-catalog/archives/webOS 6.0 KLP_1.0_1.tar.gz",
+      "bytes": 3270734309,
+      "sha256": "2bef84ebee68a860e9729ad5504ae6bf29b18b5fff9c12df0167e68613569970",
+      "regular_file": true,
+      "stable_during_hash": true,
+      "hash_seconds": 5.184
+    },
+    {
+      "filename": "webOS 6.0 KLP_1.0_2.tar.gz",
+      "path": "/workspace/lg-tv/source-catalog/archives/webOS 6.0 KLP_1.0_2.tar.gz",
+      "bytes": 511945894,
+      "sha256": "95894dd81e2bb32fd1ced1eb119698f2e1464e6b9b5b5879ea51528d7d5e8832",
+      "regular_file": true,
+      "stable_during_hash": true,
+      "hash_seconds": 0.553
+    },
+    {
+      "filename": "webOS 6.0 KLP_1.0_3.tar.gz",
+      "path": "/workspace/lg-tv/source-catalog/archives/webOS 6.0 KLP_1.0_3.tar.gz",
+      "bytes": 1777722146,
+      "sha256": "f37ca9716820849e37b946bdd5d91d52b51c765a95dc0b309203470015b6fa1c",
+      "regular_file": true,
+      "stable_during_hash": true,
+      "hash_seconds": 1.963
+    }
+  ],
+  "notice": {
+    "filename": "OSSNotice-3253_webOS 6.0 KLP_1.0_210204.html",
+    "path": "/workspace/lg-tv/source-catalog/OSSNotice-3253_webOS 6.0 KLP_1.0_210204.html",
+    "bytes": 5562232,
+    "sha256": "3e7a13e14f6cd328c9b5483c25c416e735da67dc5cd08131b61804a9b06fbf8f",
+    "regular_file": true,
+    "stable_during_hash": true,
+    "hash_seconds": 0.011
+  },
+  "total_archive_bytes": 5560402349,
+  "available_disk_bytes": 117975126016,
+  "disk_reserve_minimum_bytes": 10737418240,
+  "disk_reserve_check": "PASS at recorded time, not a reservation",
+  "verification_limit": "Complete browser-reported bytes, regular filesystem files, stable streaming SHA256 only. No official checksum supplied; no gzip/tar/content/integrity test. Hashes are local reproducibility fingerprints, not authentication or proof of valid archives.",
+  "archive_content_read": false,
+  "pre_read_checkpoint": "FAIL; semantic reader controls not demonstrated",
+  "E1_status": "PARTIAL: public acquisition and opaque-byte hashing complete; inventory/selected text blocked",
+  "E_tooling_approval": false
+}

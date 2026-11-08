@@ -1,0 +1,58 @@
+{
+  "recorded_at": "2026-11-08T06:11:21.132893+00:00",
+  "timezone": "Atlantic/Reykjavik",
+  "python": "3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]",
+  "maintained_file_utility": "file command absent(exit127);notinstalled;explicitlyallowedboundedPythonprefixreadusedinstead",
+  "assets": [
+    {
+      "name": "native_sysroot_dependencies.tar.gz",
+      "source_sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+      "source_bytes": 8017931,
+      "prefix_bytes_read": 262144,
+      "prefix_cap_bytes": 262144,
+      "prefix_sha256": "b8c0aedf763a9e808151192309b20c49e097308d8fcc5e53ee57a6cac3b38ea8",
+      "prefix_path": "evidence/public-sdk-2026-11-08/prefix-assessment/native_sysroot_dependencies.tar.gz.prefix.bin",
+      "first32_hex": "1f8b08004bc0e45d0003ec3dfd73db36b2fdb5fc2bf0944c69f789faf0877ce7",
+      "no_decompression_or_payload_parser_used": true,
+      "observed_signature": "gzipmagic1f8b08;notintegrityvalidated"
+    },
+    {
+      "name": "starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh",
+      "source_sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+      "source_bytes": 166821312,
+      "prefix_bytes_read": 262144,
+      "prefix_cap_bytes": 262144,
+      "prefix_sha256": "8a76461f9dfd8ebb0f32b23545834291a59b3385249eeeaff161ce9474ee7c54",
+      "prefix_path": "evidence/public-sdk-2026-11-08/prefix-assessment/starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh.prefix.bin",
+      "first32_hex": "23212f62696e2f73680a0a5b202d7a202224454e56434c45414e454422205d20",
+      "no_decompression_or_payload_parser_used": true,
+      "observed_signature": "shebangtextprefix",
+      "literal_marker_matches": [
+        {
+          "byte_start": 10812,
+          "byte_after_line": 10820,
+          "literal": "MARKER:\n"
+        }
+      ],
+      "literal_marker_next_bytes_hex": "fd377a585a000004e6d6b44604c0b68b",
+      "marker_offset_is_observed_not_executed": true,
+      "header_path": "evidence/public-sdk-2026-11-08/prefix-assessment/starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh.header.txt",
+      "header_sha256": "16f25f603c54a796a5c69d65ed085cc63c73f5962fa8ed5fc65e6b54f65cf07e",
+      "header_lines": 358
+    },
+    {
+      "name": "target_sysroot_dependencies.tar.gz",
+      "source_sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+      "source_bytes": 323786694,
+      "prefix_bytes_read": 262144,
+      "prefix_cap_bytes": 262144,
+      "prefix_sha256": "e6fa1ff8d483022650bb209ce5da75033fda5a9d1fdc5fdc1d3560a766ca7b8b",
+      "prefix_path": "evidence/public-sdk-2026-11-08/prefix-assessment/target_sysroot_dependencies.tar.gz.prefix.bin",
+      "first32_hex": "1f8b080020bc9a630003ec5cfb531b49929e5fa5bfa24ecc067842024920646b",
+      "no_decompression_or_payload_parser_used": true,
+      "observed_signature": "gzipmagic1f8b08;notintegrityvalidated"
+    }
+  ],
+  "shell_or_installer_executed": false,
+  "archive_payload_parsed": false
+}

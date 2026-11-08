@@ -1,0 +1,92 @@
+[
+  {
+    "name": "symlink_metadata_no_follow",
+    "passed": true,
+    "detail": {
+      "classes": [
+        "absolute",
+        "out_of_tree",
+        "relative",
+        "relative"
+      ],
+      "n": 12
+    }
+  },
+  {
+    "name": "hardlink_fail_closed_skips_later",
+    "passed": true,
+    "detail": [
+      "absolute",
+      "out_of_tree"
+    ]
+  },
+  {
+    "name": "unsafe_names_and_malformed_targets_fail_closed",
+    "passed": true,
+    "detail": {
+      "n": 8
+    }
+  },
+  {
+    "name": "diagnostics_bounded_and_not_in_error",
+    "passed": true,
+    "detail": {
+      "name_orig": 8003,
+      "target_orig": 4001,
+      "error_len": 34
+    }
+  },
+  {
+    "name": "full_charge_before_reject_not_truncated_diag",
+    "passed": true,
+    "detail": 362
+  },
+  {
+    "name": "rejected_links_capped_at_4",
+    "passed": true,
+    "detail": 4
+  },
+  {
+    "name": "link_safe_still_rejects_unsafe",
+    "passed": true,
+    "detail": "ok"
+  },
+  {
+    "name": "invalid_utf8_symlink_target_fail_closed",
+    "passed": true,
+    "detail": "invalid UTF8 metadata"
+  },
+  {
+    "name": "gnu_long_absolute_symlink_recorded",
+    "passed": true,
+    "detail": "/aaaaaaaaaaaaaaaaaaa"
+  },
+  {
+    "name": "assertion_updates_match_preserved_nine_failures",
+    "passed": true,
+    "detail": 9
+  },
+  {
+    "name": "hashes_and_prior_reviews",
+    "passed": true,
+    "detail": {
+      "reader": true,
+      "launcher": true,
+      "link_tests": true,
+      "phase_tests": true,
+      "utf8_tests": true,
+      "fd_tests": true,
+      "stdio_tests": true,
+      "review_utf8": true,
+      "review_stdio": true,
+      "review_fd": true,
+      "review_v1": true,
+      "before_reader": true
+    }
+  },
+  {
+    "name": "no_extractor_or_resolve_in_source",
+    "passed": true,
+    "detail": "ok"
+  }
+]

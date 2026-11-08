@@ -1,0 +1,24 @@
+{
+  "rc": 0,
+  "stdout": "{\"launch_ok\": true, \"error\": null}\n",
+  "stderr": "",
+  "audit": {
+    "0": {
+      "target": "/tmp/fd0-52821edf/workspace/lg-tv/sdk-candidates/20191125/assets/starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh",
+      "writable": true,
+      "parent": "[Errno 20] Not a directory: '..'"
+    },
+    "1": {
+      "target": "/tmp/fd0-52821edf/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-PENDING-REVIEW/launcher-stdout.txt",
+      "writable": true,
+      "parent": "[Errno 20] Not a directory: '..'"
+    },
+    "2": {
+      "target": "/tmp/fd0-52821edf/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-PENDING-REVIEW/launcher-stderr.txt",
+      "writable": true,
+      "parent": "[Errno 20] Not a directory: '..'"
+    }
+  },
+  "synthetic_base": "/tmp/fd0-52821edf/workspace/lg-tv/sdk-candidates/20191125",
+  "note": "synthetic tree mirroring production path depth; no real sdk-candidates assets"
+}

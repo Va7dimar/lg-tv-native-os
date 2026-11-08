@@ -1,0 +1,25 @@
+UTC 2026-11-08T06:22:05.066016+00:00
+COMMAND ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'tooling/tests', '-p', 'test_sdk_inventory_phase.py', '-v']
+test_sdk_inventory_phase (unittest.loader._FailedTest.test_sdk_inventory_phase) ... ERROR
+
+======================================================================
+ERROR: test_sdk_inventory_phase (unittest.loader._FailedTest.test_sdk_inventory_phase)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_sdk_inventory_phase
+Traceback (most recent call last):
+  File "/usr/lib/python3.13/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/usr/lib/python3.13/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 19, in <module>
+    import sdk_inventory_phase as sdk
+ModuleNotFoundError: No module named 'sdk_inventory_phase'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)
+
+EXIT 1

@@ -1,0 +1,22 @@
+### 1. Named March SDK (`20190307`) vs. Public November CX SDK (`20191125`)
+* **Named March SDK (`20190307`):** Known source guides require `starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20190307.sh` with kernel prefix `arm-starfish-linux-`, boot prefix `arm-starfish-linux-gnueabi-`, and an ARM/lib32 sysroot. Its absence in a bounded search (two web queries and one X query) reflects search limits and **does not prove unavailability**.
+* **Public November CX SDK (`20191125`):** The release at `https://github.com/lgstreamer/starfish-sdk-x86_64/releases/tag/04.40.20` lists a later build: `starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh` (166,821,312 B), `native_sysroot_dependencies.tar.gz` (8,017,931 B), and `target_sysroot_dependencies.tar.gz` (323,786,694 B), with `digest: null` and assets not downloaded. It sources `/opt/starfish-sdk-x86_64/5.0.0-20191125/environment-setup-ca9v1-starfishmllib32-linux-gnueabi`.
+
+### 2. Community Author Claims vs. LG Authority
+* **Community Claims:** The `lgstreamer` README is an unverified third-party statement claiming the toolchain *"is being used by LG to compile their webOS based firmware"* and *"was obtained through a legal inquiry at https://opensource.lge.com/inquiry, and extracted from the `MR_firmware.zip` archive that can itself be found in the `webOS 5.0 JO 2.0` archive downloadable [here](http://opensource.lge.com/product/list?page=&ctgr=005&subCtgr=006&keyword=OLED65CX5LB)."* The author hedges: *"This should be the exact same toolchain as the one LG used to compile version `04.40.20` of their LG OLED##CX### smart TVs firmware."*
+* **LG Authority Gap:** Third-party GitHub uploads with `digest: null` are not authoritative LG distributions and lack a cryptographic chain of custody back to `opensource.lge.com`.
+
+### 3. Official App SDK vs. Firmware Cross-Compiler
+* **Official LG App SDK:** `https://webostv.developer.lge.com/develop/tools/sdk-introduction` states *"the following tools support app development"*: **webOS CLI** (to create/install/launch web apps; upgraded in 2024 with old tools deprecated), **webOS Studio**, **Simulator**, and **Beanviser**.
+* **Firmware Compiler Distinction:** LG's developer portal only covers user-space webOS app tooling; it does **not** identify or supply the `starfish` C/C++ kernel/bootloader/system cross-compiler (`arm-starfish-linux-*`).
+
+### 4. Missing Compatibility Proof
+No inference is made regarding target TV unit identity or binary bootability. Even if `20191125` matches `OLED65CX5LB` (`OLED##CX###`) firmware `04.40.20` (`webOS 5.0 JO 2.0`), it is **not proof** for a NANO unit or the release requiring `20190307`. Missing evidence includes:
+1. Cryptographic digests linking the undownloaded `04.40.20` GitHub assets (`digest: null`) to an authentic LG archive.
+2. Authoritative LG documentation mapping a specific NANO model/firmware to either `20190307` or `20191125`.
+3. Proof that GCC, binutils, glibc, kernel headers, and the `ca9v1-starfishmllib32` sysroot in `20191125` are ABI-identical to `20190307` across `arm-starfish-linux-` and `arm-starfish-linux-gnueabi-` targets.
+
+### 5. Concrete Off-TV Documentary Next Steps
+* **Compare Guide Metadata:** Cross-check the known source guides' text for exact compiler version numbers, sysroot paths, and `arm-starfish-linux-` / `arm-starfish-linux-gnueabi-` variables against `5.0.0-20191125/environment-setup-ca9v1-starfishmllib32-linux-gnueabi`.
+* **Verify Open-Source Inquiry Records:** Review written LG open-source compliance documentation (`https://opensource.lge.com/inquiry` / product list records) to confirm whether the NANO release shares the `webOS 5.0 JO 2.0` (`MR_firmware.zip`) package or specifies `20190307` separately from `OLED65CX5LB` (`04.40.20`).
+* **Log Provenance Gate:** Record missing hashes (`digest: null`) and the `20190307` vs. `20191125` date gap as unresolved documentary blockers before relying on the community release.

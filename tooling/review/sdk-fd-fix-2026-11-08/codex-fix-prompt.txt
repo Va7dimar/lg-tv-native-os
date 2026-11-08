@@ -1,0 +1,28 @@
+You are PRIMARY subscribed Codex gpt-6.1-sol HIGH for this narrow NONREPO SDK launcher FD-containment fix. Owner t71 autonomousOFFTV+t74subscriptionpriority, parent actual fixhandoff. No new userquestion. No security bypass, --full-auto, source/installer/compiler execution, downloads/builds/TVactions. Do not read/hash/parse ANY real archive/SDK asset, no SDK-candidates/source-catalog content access or broadworkspace search. Productioncommand remainsUNEXECUTED. Do not alter decoder/parser policies, caps, symlinkpolicy or othertools/libkadaptor/CORETWO.
+
+READONLY input allowlist:
+/workspace/lg-tv/tooling/review/sdk-inventory-independent-review.md
+/workspace/lg-tv/tooling/review/probes-sdk-inventory-2026-11-08/probe-inherited-fds.json
+/workspace/lg-tv/tooling/sdk_inventory_phase.py
+/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py
+/workspace/lg-tv/tooling/tests/test_sdk_fd_boundary.py
+/workspace/lg-tv/tooling/review/sdk-fd-fix-2026-11-08/ (all current evidence/V1 snapshots)
+/workspace/lg-tv/tooling/sdk-implementation-report.md
+Runtime stdlib APIs/help allowed, no account/credential files. Existing CLI auth handled internally normally.
+
+WRITE allowlist:
+/workspace/lg-tv/tooling/isolate_sdk_inventory.py (minimal bootstrap/FD lifecycle delta)
+/workspace/lg-tv/tooling/tests/test_sdk_fd_boundary.py (only necessary newregression refinements)
+NEW SDK-fix docs/logs/reviewpackage under /workspace/lg-tv/tooling/review/sdk-fd-fix-2026-11-08/; preserve all existingRED/V1/review artifacts. No otherproduction/test/config changes. You can append SDK-specificfixaudit to tooling/sdk-implementation-report.md, not rewrite oldreview.
+
+Independent verdict SPECFAIL/QUALITYPASS. pass_fds leaks host output directory+3inputFDs beyond bwrap binds. RCE in parser could os.open('..',dir_fd=hostoutputfd) walkhostparent and reopen procfd inputs O_WRONLY despiteROmount. Mustfix by closing unusedHOSTdescriptors AFTER bindsetup BEFORE any reader imports/untrusted processing, openoutput freshat/output. No descriptors beyondstdio inherited to reader; normal output/inputs subsequently opened inside sandbox are legitimate and must not be described as absent. Cover arbitraryHIGHFDs, not3–7/3–64 only: RLIMIT_NOFILE64 doesn't invalidate inheritedFD256/257. Maintained APIs/establishedFD lifecycle, failclosed ifcleanup can'tbecompleted, no shell/customdecoder/securityweakening. Parent not prescribing method; do not merelyusecloserange(3,64).
+
+TDD is ALREADY established BEFORE production edits by orchestrator's newhostregressiontests. V1 production preserved under review/sdk-fd-fix-2026-11-08/v1/,hashesv1-hashes.json. READ02-host-focused-RED.txt:2tests,2expectedASSERTIONfailures; realhostsyntheticbwrap normalfds3–6 andhigh256/257 confirmed leaks, hostparentmarker reached,inputreopenswrite=True. Initial01RED inadvertently also discovered27importedlegacytests (allpassed); testharness fixed toimportmodule anddocleanups;02focusedRED is cleanrealbehaviorfailure. Red-probeJSONs preserved underred-evidence/ and allfixtures synthetic. Test observes exactlybeforeimport sdk_inventory_phase; it modifies generated bootstrap string ONLY in test to insert auditbeforethatimport; actual production bindsetup/cleanup is exercised. No source/SDK assets involved. No productionfix yet.
+
+Implement minimal fix now; mayextend regression to assert parentwalk from legitimatelyopened/output stayssandbox-only (hostmarker inaccessible), inheritedfdnumbers areEBADF prior new opens, and reopenedROinput procFDcannotbewritten. Keepprobes nonsensitive and synthetic. Currentnormal/high tests assert inherited=[] atbefore-reader-import snapshot, nowparentwalk=[],writable_reopens=[],ROpath=True,homehidden=True andsuccessfulreal3syntheticinputinventory. They intentionally ignore ONLYtransient /proc listing FD alreadyclosed,notall descriptors. Add newbehavior tests FIRST and RED ifexpanding fixbehavior; don'tchangeassertions tohidebug.
+
+Run only SDKtargetedtests, NOTfullproject suite. Codexworkspace sandboxhistorically cannot bwrap NETLINK_ROUTE EPERM; preserveblocked/skips honestly, do not weaken sandbox or bypasspermissions. Parent explicitly permits unchangedtestexecutionvia ordinary boxShell in actualhostruntime afteryoufinish (orchestratorwilldoit), so doNOTclaimhostsuccessfromnestedskip. A barebootstrap subprocess synthetic test may exercisecleanupwithoutbwrapunderCodex and doesn'treplaceactualhostproof. No repeatednetwork ormodel/refusalfallback.
+
+Productionreader sdk_inventory_phase.py MUSTstaybyteidentical c04fe95faf8346741d18de8cdef4814beb520d47d079d7f1a702997ca026fd7f. V1launcher488e34d3470403206c0974cc82cdd36f7a6078619aaabf0bda390e3ea040f7f0. XZCHECK_NONEintegritylabel and absolutesysrootlinkfailclosed nonblockingissues areNOTfixscope; recordhonestremaininglimits without changingdecoder/symlinkbehavior. NoactualSDKfullhash exceptfutureapprovedrealphase.
+
+Deliverconcise minimaldiffvsV1,wholecurrentfiles,hashes,actualtargetedlogcounts/nestedskips,fixmatrixandresiduals; NEWFIXreport file. Exactproductioncommand unchanged,stillunexecuted; newhashneedsparentindependentre-review. Preserveoldreviewpackage34hashes/earlierfailures immutable. Primarytaskbudget~8min. Don'trunotherproviders/crossreviews parenthandlesindependentre-review. Finalreplyscope/testcounts/files/hash/nestedruntimecaveat.

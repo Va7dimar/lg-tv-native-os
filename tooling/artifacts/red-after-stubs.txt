@@ -1,0 +1,541 @@
+test_absolute_unix_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_absolute_unix_rejected) ... FAIL
+test_absolute_windows_drive_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_absolute_windows_drive_rejected) ... FAIL
+test_backslash_and_slash_same_canonical (test_bounded_archive_inventory.CanonicalizeTests.test_backslash_and_slash_same_canonical) ... FAIL
+test_dotdot_inside_tree_normalized (test_bounded_archive_inventory.CanonicalizeTests.test_dotdot_inside_tree_normalized) ... FAIL
+test_double_slash_and_dot_collapsed (test_bounded_archive_inventory.CanonicalizeTests.test_double_slash_and_dot_collapsed) ... FAIL
+test_empty_after_normalize_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_empty_after_normalize_rejected) ... FAIL
+test_nested_parent_escape_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_nested_parent_escape_rejected) ... FAIL
+test_nul_in_name_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_nul_in_name_rejected) ... FAIL
+test_parent_escape_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_parent_escape_rejected) ... FAIL
+test_safe_relative_path (test_bounded_archive_inventory.CanonicalizeTests.test_safe_relative_path) ... ok
+test_unc_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_unc_rejected) ... FAIL
+test_absolute_and_parent_members_rejected (test_bounded_archive_inventory.InventoryBehaviorTests.test_absolute_and_parent_members_rejected) ... FAIL
+test_backslash_collision_is_duplicate (test_bounded_archive_inventory.InventoryBehaviorTests.test_backslash_collision_is_duplicate) ... ERROR
+test_cli_does_not_open_missing_fixture_named_like_catalog (test_bounded_archive_inventory.InventoryBehaviorTests.test_cli_does_not_open_missing_fixture_named_like_catalog) ... ok
+test_cli_rejects_raised_maximum (test_bounded_archive_inventory.InventoryBehaviorTests.test_cli_rejects_raised_maximum) ... FAIL
+test_device_and_fifo_rejected (test_bounded_archive_inventory.InventoryBehaviorTests.test_device_and_fifo_rejected) ... ERROR
+test_disk_reserve_failure (test_bounded_archive_inventory.InventoryBehaviorTests.test_disk_reserve_failure) ... ERROR
+test_duplicate_canonical_paths_fail (test_bounded_archive_inventory.InventoryBehaviorTests.test_duplicate_canonical_paths_fail) ... FAIL
+test_duplicate_input_paths_rejected (test_bounded_archive_inventory.InventoryBehaviorTests.test_duplicate_input_paths_rejected) ... FAIL
+test_existing_output_collision (test_bounded_archive_inventory.InventoryBehaviorTests.test_existing_output_collision) ... FAIL
+test_expansion_limit_counts_logical_size (test_bounded_archive_inventory.InventoryBehaviorTests.test_expansion_limit_counts_logical_size) ... FAIL
+test_gnu_longname_inventoryable (test_bounded_archive_inventory.InventoryBehaviorTests.test_gnu_longname_inventoryable) ... FAIL
+test_happy_path_writes_json_and_markdown (test_bounded_archive_inventory.InventoryBehaviorTests.test_happy_path_writes_json_and_markdown) ... FAIL
+test_hardlink_not_dereferenced (test_bounded_archive_inventory.InventoryBehaviorTests.test_hardlink_not_dereferenced) ... FAIL
+test_malformed_gzip_fails_closed (test_bounded_archive_inventory.InventoryBehaviorTests.test_malformed_gzip_fails_closed) ... ERROR
+test_malformed_pax_fails_closed (test_bounded_archive_inventory.InventoryBehaviorTests.test_malformed_pax_fails_closed) ... ERROR
+test_member_count_limit_marks_partial (test_bounded_archive_inventory.InventoryBehaviorTests.test_member_count_limit_marks_partial) ... FAIL
+test_nested_archive_not_expanded (test_bounded_archive_inventory.InventoryBehaviorTests.test_nested_archive_not_expanded) ... FAIL
+test_nul_rejected_as_plaintext (test_bounded_archive_inventory.InventoryBehaviorTests.test_nul_rejected_as_plaintext) ... ERROR
+test_pathname_bytes_limit_marks_partial (test_bounded_archive_inventory.InventoryBehaviorTests.test_pathname_bytes_limit_marks_partial) ... FAIL
+test_safe_symlink_recorded_not_followed (test_bounded_archive_inventory.InventoryBehaviorTests.test_safe_symlink_recorded_not_followed) ... FAIL
+test_same_basename_inputs_rejected (test_bounded_archive_inventory.InventoryBehaviorTests.test_same_basename_inputs_rejected) ... FAIL
+test_selected_oversize_not_written (test_bounded_archive_inventory.InventoryBehaviorTests.test_selected_oversize_not_written) ... ERROR
+test_selected_plaintext_written_contained (test_bounded_archive_inventory.InventoryBehaviorTests.test_selected_plaintext_written_contained) ... FAIL
+test_sparse_logical_size_counts_toward_expansion (test_bounded_archive_inventory.InventoryBehaviorTests.test_sparse_logical_size_counts_toward_expansion) ... FAIL
+test_stdout_is_bounded (test_bounded_archive_inventory.InventoryBehaviorTests.test_stdout_is_bounded) ... FAIL
+test_symlink_input_rejected (test_bounded_archive_inventory.InventoryBehaviorTests.test_symlink_input_rejected) ... FAIL
+test_truncated_gzip_fails_closed (test_bounded_archive_inventory.InventoryBehaviorTests.test_truncated_gzip_fails_closed) ... FAIL
+test_unsafe_symlink_fails_closed (test_bounded_archive_inventory.InventoryBehaviorTests.test_unsafe_symlink_fails_closed) ... ERROR
+test_command_uses_timeout_prlimit_unshare_and_explicit_binds (test_bounded_archive_inventory.IsolationCommandTests.test_command_uses_timeout_prlimit_unshare_and_explicit_binds) ... ERROR
+test_isolation_integration_hides_home_and_writes_inventory (test_bounded_archive_inventory.IsolationCommandTests.test_isolation_integration_hides_home_and_writes_inventory) ... FAIL
+test_defaults_match_hard_ceilings (test_bounded_archive_inventory.LimitsTests.test_defaults_match_hard_ceilings) ... ERROR
+test_hard_maxima_cannot_be_raised (test_bounded_archive_inventory.LimitsTests.test_hard_maxima_cannot_be_raised) ... FAIL
+test_lower_limits_allowed_for_tests (test_bounded_archive_inventory.LimitsTests.test_lower_limits_allowed_for_tests) ... ok
+test_absolute_symlink_unsafe (test_bounded_archive_inventory.LinkPolicyTests.test_absolute_symlink_unsafe) ... FAIL
+test_escape_symlink_relative_to_parent (test_bounded_archive_inventory.LinkPolicyTests.test_escape_symlink_relative_to_parent) ... FAIL
+test_hardlink_uses_same_policy (test_bounded_archive_inventory.LinkPolicyTests.test_hardlink_uses_same_policy) ... ok
+test_safe_relative_symlink (test_bounded_archive_inventory.LinkPolicyTests.test_safe_relative_symlink) ... FAIL
+
+======================================================================
+ERROR: test_backslash_collision_is_duplicate (test_bounded_archive_inventory.InventoryBehaviorTests.test_backslash_collision_is_duplicate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 331, in test_backslash_collision_is_duplicate
+    payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 548, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 539, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/bai-test-av8teik5/out/inventory.json'
+
+======================================================================
+ERROR: test_device_and_fifo_rejected (test_bounded_archive_inventory.InventoryBehaviorTests.test_device_and_fifo_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 359, in test_device_and_fifo_rejected
+    payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 548, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 539, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/bai-test-qny42kad/out/inventory.json'
+
+======================================================================
+ERROR: test_disk_reserve_failure (test_bounded_archive_inventory.InventoryBehaviorTests.test_disk_reserve_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 510, in test_disk_reserve_failure
+    orig = bai.shutil.disk_usage
+           ^^^^^^^^^^
+AttributeError: module 'bounded_archive_inventory' has no attribute 'shutil'
+
+======================================================================
+ERROR: test_malformed_gzip_fails_closed (test_bounded_archive_inventory.InventoryBehaviorTests.test_malformed_gzip_fails_closed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 430, in test_malformed_gzip_fails_closed
+    payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 548, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 539, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/bai-test-ypcwmsih/out/inventory.json'
+
+======================================================================
+ERROR: test_malformed_pax_fails_closed (test_bounded_archive_inventory.InventoryBehaviorTests.test_malformed_pax_fails_closed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 456, in test_malformed_pax_fails_closed
+    payload_json = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 548, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 539, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/bai-test-a8i4e_od/out/inventory.json'
+
+======================================================================
+ERROR: test_nul_rejected_as_plaintext (test_bounded_archive_inventory.InventoryBehaviorTests.test_nul_rejected_as_plaintext)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 251, in test_nul_rejected_as_plaintext
+    payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 548, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 539, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/bai-test-v0oj4xa8/out/inventory.json'
+
+======================================================================
+ERROR: test_selected_oversize_not_written (test_bounded_archive_inventory.InventoryBehaviorTests.test_selected_oversize_not_written)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 239, in test_selected_oversize_not_written
+    payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 548, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 539, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/bai-test-pqldq0j9/out/inventory.json'
+
+======================================================================
+ERROR: test_unsafe_symlink_fails_closed (test_bounded_archive_inventory.InventoryBehaviorTests.test_unsafe_symlink_fails_closed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 392, in test_unsafe_symlink_fails_closed
+    payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 548, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 539, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/bai-test-g9merbun/out/inventory.json'
+
+======================================================================
+ERROR: test_command_uses_timeout_prlimit_unshare_and_explicit_binds (test_bounded_archive_inventory.IsolationCommandTests.test_command_uses_timeout_prlimit_unshare_and_explicit_binds)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 607, in test_command_uses_timeout_prlimit_unshare_and_explicit_binds
+    self.assertEqual(cmd[0], "timeout")
+                     ~~~^^^
+IndexError: list index out of range
+
+======================================================================
+ERROR: test_defaults_match_hard_ceilings (test_bounded_archive_inventory.LimitsTests.test_defaults_match_hard_ceilings)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 63, in test_defaults_match_hard_ceilings
+    self.assertEqual(lim.max_members, 200_000)
+                     ^^^^^^^^^^^^^^^
+AttributeError: 'Limits' object has no attribute 'max_members'
+
+======================================================================
+FAIL: test_absolute_unix_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_absolute_unix_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 101, in test_absolute_unix_rejected
+    self.assertIsNone(canon)
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: '/etc/passwd' is not None
+
+======================================================================
+FAIL: test_absolute_windows_drive_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_absolute_windows_drive_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 106, in test_absolute_windows_drive_rejected
+    self.assertIsNone(canon)
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 'C:\\Windows\\system32' is not None
+
+======================================================================
+FAIL: test_backslash_and_slash_same_canonical (test_bounded_archive_inventory.CanonicalizeTests.test_backslash_and_slash_same_canonical)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 134, in test_backslash_and_slash_same_canonical
+    self.assertEqual(a, b)
+    ~~~~~~~~~~~~~~~~^^^^^^
+AssertionError: 'a\\b\\c' != 'a/b/c'
+- a\b\c
++ a/b/c
+
+
+======================================================================
+FAIL: test_dotdot_inside_tree_normalized (test_bounded_archive_inventory.CanonicalizeTests.test_dotdot_inside_tree_normalized)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 126, in test_dotdot_inside_tree_normalized
+    self.assertEqual(canon, "bar")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+AssertionError: 'foo/../bar' != 'bar'
+- foo/../bar
++ bar
+
+
+======================================================================
+FAIL: test_double_slash_and_dot_collapsed (test_bounded_archive_inventory.CanonicalizeTests.test_double_slash_and_dot_collapsed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 139, in test_double_slash_and_dot_collapsed
+    self.assertEqual(canon, "a/b/c")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: 'a//./b/./c' != 'a/b/c'
+- a//./b/./c
++ a/b/c
+
+
+======================================================================
+FAIL: test_empty_after_normalize_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_empty_after_normalize_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 149, in test_empty_after_normalize_rejected
+    self.assertIsNone(canon)
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: './.' is not None
+
+======================================================================
+FAIL: test_nested_parent_escape_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_nested_parent_escape_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 121, in test_nested_parent_escape_rejected
+    self.assertIsNone(canon)
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 'foo/../../etc/passwd' is not None
+
+======================================================================
+FAIL: test_nul_in_name_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_nul_in_name_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 144, in test_nul_in_name_rejected
+    self.assertIsNone(canon)
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 'foo\x00bar' is not None
+
+======================================================================
+FAIL: test_parent_escape_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_parent_escape_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 116, in test_parent_escape_rejected
+    self.assertIsNone(canon)
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: '../etc/passwd' is not None
+
+======================================================================
+FAIL: test_unc_rejected (test_bounded_archive_inventory.CanonicalizeTests.test_unc_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 111, in test_unc_rejected
+    self.assertIsNone(canon)
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: '\\\\server\\share\\file' is not None
+
+======================================================================
+FAIL: test_absolute_and_parent_members_rejected (test_bounded_archive_inventory.InventoryBehaviorTests.test_absolute_and_parent_members_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 344, in test_absolute_and_parent_members_rejected
+    self.assertEqual(result.status, "failed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'not-implemented' != 'failed'
+- not-implemented
++ failed
+
+
+======================================================================
+FAIL: test_cli_rejects_raised_maximum (test_bounded_archive_inventory.InventoryBehaviorTests.test_cli_rejects_raised_maximum)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 556, in test_cli_rejects_raised_maximum
+    self.assertEqual(rc, 2)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_duplicate_canonical_paths_fail (test_bounded_archive_inventory.InventoryBehaviorTests.test_duplicate_canonical_paths_fail)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 317, in test_duplicate_canonical_paths_fail
+    self.assertEqual(result.status, "failed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'not-implemented' != 'failed'
+- not-implemented
++ failed
+
+
+======================================================================
+FAIL: test_duplicate_input_paths_rejected (test_bounded_archive_inventory.InventoryBehaviorTests.test_duplicate_input_paths_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 476, in test_duplicate_input_paths_rejected
+    with self.assertRaises(bai.InputCollisionError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: InputCollisionError not raised
+
+======================================================================
+FAIL: test_existing_output_collision (test_bounded_archive_inventory.InventoryBehaviorTests.test_existing_output_collision)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 471, in test_existing_output_collision
+    with self.assertRaises(bai.OutputCollisionError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: OutputCollisionError not raised
+
+======================================================================
+FAIL: test_expansion_limit_counts_logical_size (test_bounded_archive_inventory.InventoryBehaviorTests.test_expansion_limit_counts_logical_size)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 287, in test_expansion_limit_counts_logical_size
+    self.assertEqual(result.status, "partial")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'not-implemented' != 'partial'
+- not-implemented
++ partial
+
+
+======================================================================
+FAIL: test_gnu_longname_inventoryable (test_bounded_archive_inventory.InventoryBehaviorTests.test_gnu_longname_inventoryable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 463, in test_gnu_longname_inventoryable
+    self.assertTrue(result.ok)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_happy_path_writes_json_and_markdown (test_bounded_archive_inventory.InventoryBehaviorTests.test_happy_path_writes_json_and_markdown)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 207, in test_happy_path_writes_json_and_markdown
+    self.assertTrue(result.ok)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_hardlink_not_dereferenced (test_bounded_archive_inventory.InventoryBehaviorTests.test_hardlink_not_dereferenced)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 408, in test_hardlink_not_dereferenced
+    self.assertTrue(result.ok)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_member_count_limit_marks_partial (test_bounded_archive_inventory.InventoryBehaviorTests.test_member_count_limit_marks_partial)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 261, in test_member_count_limit_marks_partial
+    self.assertEqual(result.status, "partial")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'not-implemented' != 'partial'
+- not-implemented
++ partial
+
+
+======================================================================
+FAIL: test_nested_archive_not_expanded (test_bounded_archive_inventory.InventoryBehaviorTests.test_nested_archive_not_expanded)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 537, in test_nested_archive_not_expanded
+    self.assertTrue(result.ok)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_pathname_bytes_limit_marks_partial (test_bounded_archive_inventory.InventoryBehaviorTests.test_pathname_bytes_limit_marks_partial)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 275, in test_pathname_bytes_limit_marks_partial
+    self.assertEqual(result.status, "partial")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'not-implemented' != 'partial'
+- not-implemented
++ partial
+
+
+======================================================================
+FAIL: test_safe_symlink_recorded_not_followed (test_bounded_archive_inventory.InventoryBehaviorTests.test_safe_symlink_recorded_not_followed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 375, in test_safe_symlink_recorded_not_followed
+    self.assertTrue(result.ok)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_same_basename_inputs_rejected (test_bounded_archive_inventory.InventoryBehaviorTests.test_same_basename_inputs_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 490, in test_same_basename_inputs_rejected
+    with self.assertRaises(bai.InputCollisionError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: InputCollisionError not raised
+
+======================================================================
+FAIL: test_selected_plaintext_written_contained (test_bounded_archive_inventory.InventoryBehaviorTests.test_selected_plaintext_written_contained)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 223, in test_selected_plaintext_written_contained
+    self.assertTrue(result.ok)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_sparse_logical_size_counts_toward_expansion (test_bounded_archive_inventory.InventoryBehaviorTests.test_sparse_logical_size_counts_toward_expansion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 297, in test_sparse_logical_size_counts_toward_expansion
+    self.assertGreaterEqual(bai.logical_member_size(info), 10_000)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than or equal to 10000
+
+======================================================================
+FAIL: test_stdout_is_bounded (test_bounded_archive_inventory.InventoryBehaviorTests.test_stdout_is_bounded)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 569, in test_stdout_is_bounded
+    self.assertEqual(rc, 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_symlink_input_rejected (test_bounded_archive_inventory.InventoryBehaviorTests.test_symlink_input_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 501, in test_symlink_input_rejected
+    with self.assertRaises(bai.InputError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: InputError not raised
+
+======================================================================
+FAIL: test_truncated_gzip_fails_closed (test_bounded_archive_inventory.InventoryBehaviorTests.test_truncated_gzip_fails_closed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 421, in test_truncated_gzip_fails_closed
+    self.assertIn(result.status, {"failed", "partial"})
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'not-implemented' not found in {'partial', 'failed'}
+
+======================================================================
+FAIL: test_isolation_integration_hides_home_and_writes_inventory (test_bounded_archive_inventory.IsolationCommandTests.test_isolation_integration_hides_home_and_writes_inventory)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 637, in test_isolation_integration_hides_home_and_writes_inventory
+    self.assertEqual(rc, 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 99 != 0
+
+======================================================================
+FAIL: test_hard_maxima_cannot_be_raised (test_bounded_archive_inventory.LimitsTests.test_hard_maxima_cannot_be_raised)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 73, in test_hard_maxima_cannot_be_raised
+    with self.assertRaises(bai.LimitError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: LimitError not raised
+
+======================================================================
+FAIL: test_absolute_symlink_unsafe (test_bounded_archive_inventory.LinkPolicyTests.test_absolute_symlink_unsafe)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 156, in test_absolute_symlink_unsafe
+    self.assertFalse(safe)
+    ~~~~~~~~~~~~~~~~^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_escape_symlink_relative_to_parent (test_bounded_archive_inventory.LinkPolicyTests.test_escape_symlink_relative_to_parent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 162, in test_escape_symlink_relative_to_parent
+    self.assertFalse(safe)
+    ~~~~~~~~~~~~~~~~^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_safe_relative_symlink (test_bounded_archive_inventory.LinkPolicyTests.test_safe_relative_symlink)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py", line 168, in test_safe_relative_symlink
+    self.assertEqual(resolved, "sibling")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '../sibling' != 'sibling'
+- ../sibling
+? ---
++ sibling
+
+
+----------------------------------------------------------------------
+Ran 48 tests in 0.028s
+
+FAILED (failures=34, errors=10)
+EXIT:1

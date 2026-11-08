@@ -1,0 +1,14 @@
+{
+  "verified_at": "2026-11-08T05:21:16.237533+00:00",
+  "timezone": "Atlantic/Reykjavik",
+  "phase_status": "ok",
+  "exit_code": 0,
+  "selected_files": 4802,
+  "quote_ranges_verified": 25,
+  "production_three_sha_match": true,
+  "prior_inventory_still_partial": true,
+  "original_archives_reread_by_verification": false,
+  "selected_text_and_generated_metadata_only": true,
+  "page_update": "17-edit batch published successfully; final historical-label clarification follows",
+  "tests": "Prior independent review and85-test result are historical artifacts,not rerun here."
+}

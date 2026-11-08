@@ -1,0 +1,480 @@
+{
+  "recorded_at": "2026-11-08T05:20:01.229430+00:00",
+  "timezone": "Atlantic/Reykjavik",
+  "status": "CORE TWO INSPECTION OK; FULL OS/BUILD/BOOT/RECOVERY UNPROVEN",
+  "phase_path": "source-catalog/inspection-core-two-PENDING-REVIEW",
+  "run_audit": "evidence/core-two-execution-2026-11-08",
+  "phase_version": "1.0.0",
+  "exit_code": 0,
+  "elapsed_seconds": 11.368,
+  "previous_all_three_inventory": "PARTIAL at aggregate200000;unchanged;not resumed or reset",
+  "original_provenance": "evidence/catalog-manifest.json",
+  "catalog_url": "https://opensource.lge.com/product/list?keyword=65NANO756PR",
+  "outer": {
+    "file": "webOS 6.0 KLP_1.0_2.tar.gz",
+    "bytes": 511945894,
+    "sha256": "95894dd81e2bb32fd1ced1eb119698f2e1464e6b9b5b5879ea51528d7d5e8832",
+    "verification": "verified inside the single phase; no separate original rehash"
+  },
+  "copied": [
+    {
+      "member": "soc/kernel-1.0.0-711..4.tar.gz",
+      "path": "staged/kernel-1.0.0-711..4.tar.gz",
+      "bytes": 170350960,
+      "sha256": "110f08578519954be3113108ca461d4190d387c3cbb6e50d648274c9dcaf9962",
+      "verified_before_inner": true
+    },
+    {
+      "member": "soc/bootcode-1.0.0-1099.7.tar.gz",
+      "path": "staged/bootcode-1.0.0-1099.7.tar.gz",
+      "bytes": 12014324,
+      "sha256": "b88f252cf9ae4f4535e015959916cd87067f0e6cf551ef0f189cdc2f4365e23e",
+      "verified_before_inner": true
+    }
+  ],
+  "limits": {
+    "max_members": 200000,
+    "max_pathname_bytes": 100000000,
+    "max_selected_text_member_bytes": 16777216,
+    "max_selected_combined_bytes": 67108864,
+    "min_free_disk_bytes": 10737418240,
+    "max_outer_compressed_bytes": 536870912,
+    "max_binary_each_bytes": 209715200,
+    "max_binary_combined_bytes": 335544320,
+    "max_admitted_compressed_bytes": 1073741824,
+    "max_outer_decoded_bytes": 671088640,
+    "max_phase_expanded_bytes": 4294967296,
+    "wall_seconds": 120,
+    "address_space_bytes": 1073741824,
+    "max_stdout_bytes": 65536
+  },
+  "totals": {
+    "member_count": 64180,
+    "pathname_bytes": 2961886,
+    "expanded_bytes": 1701645860,
+    "selected_text_bytes": 12467926,
+    "outer_decoded_bytes": 522047300,
+    "binary_copy_bytes": 182365284,
+    "admitted_compressed_bytes": 694311178
+  },
+  "packages": [
+    {
+      "filename": "kernel-1.0.0-711..4.tar.gz",
+      "status": "ok",
+      "members": 61088,
+      "selected": 4498,
+      "decisions": {
+        "accepted": 61059,
+        "recorded_not_followed": 29
+      }
+    },
+    {
+      "filename": "bootcode-1.0.0-1099.7.tar.gz",
+      "status": "ok",
+      "members": 3086,
+      "selected": 304,
+      "decisions": {
+        "accepted": 3085,
+        "recorded_not_followed": 1
+      }
+    }
+  ],
+  "selected_total": 4802,
+  "findings": [
+    {
+      "id": "K1",
+      "finding": "Bundled kernel top Makefile declares Linux4.4.84 although directory is named linux-4.4.3.",
+      "certainty": "direct admitted source text or indexed metadata; NOT live hardware",
+      "limit": "EXTRAVERSION is empty here; full notice suffix and running-kernel version are not established.",
+      "citations": [
+        {
+          "inner_path": "linux-4.4.3/Makefile",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/Makefile",
+          "bytes": 57250,
+          "sha256": "92f1690a977d2e3bad752991f1a94ff85f9648dbba891c24f51c4e6bba2887e7",
+          "line_quotes": [
+            {
+              "start": 1,
+              "end": 5,
+              "text": "VERSION = 4\nPATCHLEVEL = 4\nSUBLEVEL = 84\nEXTRAVERSION =\nNAME = Blurry Fish Butt"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "K2",
+      "finding": "Vendor RTK modifications default SUBARCH to arm if ARCH unset; commented compiler paths mention LG115x,ASDK and Starfish.",
+      "certainty": "direct admitted source text or indexed metadata; NOT live hardware",
+      "limit": "Comments are not a supplied compiler, tested build recipe or identification of installed CPU.",
+      "citations": [
+        {
+          "inner_path": "linux-4.4.3/Makefile",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/Makefile",
+          "bytes": 57250,
+          "sha256": "92f1690a977d2e3bad752991f1a94ff85f9648dbba891c24f51c4e6bba2887e7",
+          "line_quotes": [
+            {
+              "start": 235,
+              "end": 240,
+              "text": "# RTK_patch: default use arch/arm\nifeq ($(ARCH),)\nSUBARCH\t:= arm\nelse\nSUBARCH\t:= $(ARCH)\nendif"
+            },
+            {
+              "start": 262,
+              "end": 272,
+              "text": "ARCH\t\t?= $(SUBARCH)\n# RTK_patch: change toolchain path\n#CROSS_COMPILE\t?= $(CONFIG_CROSS_COMPILE:\"%\"=%)\n#CROSS_COMPILE\t?= ../../system/tmp/toolchain/asdk-4.9.2-a53-EL-3.10-g2.19-a32n-141121/bin/asdk-linux-\n#CROSS_COMPILE\t?= ../../system/tmp/toolchain/arm-lg115x-linux-gnueabi-4.8-2014.08-1-i686/bin/arm-linux-\n#CROSS_COMPILE\t?= /usr/local/arm-lg115x-linux-gnueabi-4.8-2014.08-1-i686/bin/arm-linux-\n\nifeq ($(ARCH),arm64)\n#CROSS_COMPILE\t:= ../../system/tmp/toolchain/asdk64-4.9.2-a53-EL-3.10-g2.19-a32n-141121/bin/asdk64-linux-\n#CROSS_COMPILE   := ../../system/tmp/toolchain/starfish-sdk-x86_64_4.5.0-20180321/sysroots/x86_64-starfishsdk-linux/usr/bin/aarch64-starfish-linux/aarch64-starfish-linux-\nendif"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "K3",
+      "finding": "Both ARM RTK2875/tv006 and ARM64 RTK287O/tv006 development defconfigs are present. ARM64 config names aarch64-starfish-linux-. LG1K configurations also occur in index.",
+      "certainty": "direct admitted source text or indexed metadata; NOT live hardware",
+      "limit": "Multiple platform candidates, not selection of this TV board or its live config. The .old_defconfig name matters.",
+      "citations": [
+        {
+          "inner_path": "linux-4.4.3/arch/arm/configs/realtek/config.develop.rtd2875.tv006.emmc.old_defconfig",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm/configs/realtek/config.develop.rtd2875.tv006.emmc.old_defconfig",
+          "bytes": 10177,
+          "sha256": "fe85a3e1c39165889d293f6bc9338e79e1267d7ec3cb07272f1d05e2de698676",
+          "line_quotes": [
+            {
+              "start": 45,
+              "end": 45,
+              "text": "CONFIG_ARCH_RTK2875=y"
+            },
+            {
+              "start": 118,
+              "end": 118,
+              "text": "CONFIG_CUSTOMER_TV006=y"
+            }
+          ]
+        },
+        {
+          "inner_path": "linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.old_defconfig",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.old_defconfig",
+          "bytes": 9775,
+          "sha256": "5ff806370033f1accd43d08a113c344d768eabc981e509cf9030680671dff50e",
+          "line_quotes": [
+            {
+              "start": 3,
+              "end": 3,
+              "text": "CONFIG_CROSS_COMPILE=\"aarch64-starfish-linux-\""
+            },
+            {
+              "start": 42,
+              "end": 42,
+              "text": "CONFIG_ARCH_RTK287O=y"
+            },
+            {
+              "start": 116,
+              "end": 116,
+              "text": "CONFIG_CUSTOMER_TV006=y"
+            },
+            {
+              "start": 373,
+              "end": 374,
+              "text": "CONFIG_KDRIVER_USE_NEW_COMMON=y\nCONFIG_RTK_KDRIVER_SUPPORT=y"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "K4",
+      "finding": "Actual kernel index includes drivers/rtk_kdriver and conditional build integration, including HDMI RX,scaler,audio HW,CEC,IR and thermal driver paths.",
+      "certainty": "direct admitted source text or indexed metadata; NOT live hardware",
+      "limit": "Metadata presence and Makefile integration do not prove implementations complete, enabled for this TV, buildable, licensable as a whole, or working HDMI/HDCP/panel/audio. Source .c bodies generally not admitted/read.",
+      "citations": [
+        {
+          "inner_path": "linux-4.4.3/drivers/Makefile",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/drivers/Makefile",
+          "bytes": 5278,
+          "sha256": "467a8d7d6945d5e2cc704a8663fe24c2f4b2f74c29264ffa9d3682303d3c68ff",
+          "line_quotes": [
+            {
+              "start": 179,
+              "end": 184,
+              "text": "ifdef CONFIG_LG_BUILTIN_KDRIVER\n#obj-y\t\t\t\t+= lg_kdriver/core/\nendif\n\nobj-$(CONFIG_RTK_KDRIVER)       += rtk_kdriver/\nobj-$(CONFIG_TEE)               += tee/"
+            }
+          ]
+        },
+        {
+          "inner_path": "linux-4.4.3/drivers/rtk_kdriver/Makefile",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/drivers/rtk_kdriver/Makefile",
+          "bytes": 6821,
+          "sha256": "42b86eb1b21a2a682a8688cac3a6bd2fcaa1d0504532fd71a8858e164acd1a8b",
+          "line_quotes": [
+            {
+              "start": 100,
+              "end": 106,
+              "text": "obj-$(CONFIG_RTK_KDRV_SMARTCARD) += smartcard/\n\n# CEC\nobj-$(CONFIG_RTK_KDRV_CEC) += rtk_cec/\n\n# DDC\nobj-$(CONFIG_RTK_KDRV_DDC) += ddc/"
+            },
+            {
+              "start": 139,
+              "end": 142,
+              "text": "obj-$(CONFIG_RTK_KDRV_WATCHDOG) += rtk_watchdog.o\n\n# Thermal Sensor\nobj-$(CONFIG_RTK_KDRV_THERMAL_SENSOR) += thermal/"
+            },
+            {
+              "start": 167,
+              "end": 170,
+              "text": "obj-$(CONFIG_RTK_KDRV_IR) += ir/\n\n#IRTX Driver\nobj-$(CONFIG_RTK_KDRV_IRTX) += irtx/"
+            },
+            {
+              "start": 189,
+              "end": 196,
+              "text": "# SCALER\nobj-$(CONFIG_SUPPORT_SCALER) += tvscalercontrol/\n\n# HDMI RX\nobj-$(CONFIG_RTK_HDMI_RX) += tvscalercontrol/hdmirx/\n\n# LG BOARD\nobj-$(CONFIG_RTK_KDRV_LG_BOARD) += rtk_lg_board.o"
+            },
+            {
+              "start": 217,
+              "end": 218,
+              "text": "# Audio HW Driver\nobj-$(CONFIG_RTK_KDRV_AUDIO_HW) += audio_hw/"
+            },
+            {
+              "start": 262,
+              "end": 268,
+              "text": "obj-$(CONFIG_RTK_KDRV_AUDIO) += audio/\nobj-$(CONFIG_RTK_KDRV_VDEC) += vdec/\nobj-$(CONFIG_RTK_KDRV_VUTILS) += vutils/\nobj-$(CONFIG_RTK_KDRV_V4L2_VCODEC) += v4l2_vcodec/\n\nobj-$(CONFIG_RTK_KDRV_TEEPROXY) += teeproxy/\nobj-$(CONFIG_RTK_KDRV_DVO) += directvo/"
+            }
+          ]
+        },
+        {
+          "inner_path": "linux-4.4.3/drivers/rtk_kdriver/Kconfig",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/drivers/rtk_kdriver/Kconfig",
+          "bytes": 10890,
+          "sha256": "19aa6aa6a6f5e9431e86c0a2b253737d289e20e42e01c9637eb38e4f8ed2c9e2",
+          "line_quotes": [
+            {
+              "start": 25,
+              "end": 29,
+              "text": "#SCALER\nsource \"drivers/rtk_kdriver/tvscalercontrol/Kconfig\"\n\n#HDMI RX\nsource \"drivers/rtk_kdriver/tvscalercontrol/hdmirx/Kconfig\""
+            },
+            {
+              "start": 60,
+              "end": 71,
+              "text": "config RTK_KDRV_RPC\n\tbool \"Use RPC to communicate with Audio & Video.\"\n\tdefault y\n\thelp\n\t  Use RPC mechanism\n\n# AVCPU\nconfig RTK_KDRV_AVCPU\n\tbool \"AVCPU Driver\"\n\tdefault n\n\thelp\n\t  Driver used to control Audio & Video cpu."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B1",
+      "finding": "Bootcode contains U-Boot top Makefile identifying2012.07 and an LG toolchain-dependent bootcode build file.",
+      "certainty": "direct admitted source text or indexed metadata; NOT live hardware",
+      "limit": "Bundled source version is not the installed bootloader version, complete boot firmware or custom-image acceptance.",
+      "citations": [
+        {
+          "inner_path": "bootcode/uboot/Makefile",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/uboot/Makefile",
+          "bytes": 34004,
+          "sha256": "27623ea8faaf185b341f8d30e280af5f5bbbe03b076932ae90d2849e90f270e0",
+          "line_quotes": [
+            {
+              "start": 24,
+              "end": 27,
+              "text": "VERSION = 2012\nPATCHLEVEL = 07\nSUBLEVEL =\nEXTRAVERSION ="
+            },
+            {
+              "start": 182,
+              "end": 194,
+              "text": "ARCH = arm\nexport\tARCH CPU BOARD VENDOR SOC\n\n\n#########################################################################\n# Build MIPS Image Related Setting\n\nMIPS_BOOTLOAD_LIB_NAME\t\t= libbootload.a\nMIPS_BOOTLOAD_LIB_DIR\t\t= $(TOPDIR)/../bsp/core/image/src/app\nMIPS_BOOTLOAD_LIB_PATH\t\t= $(MIPS_BOOTLOAD_LIB_DIR)/$(MIPS_BOOTLOAD_LIB_NAME)\n\n\nCFLAGS += --sysroot=$(TOOLCHAIN_READY)/sysroots/ca9v1-starfishmllib32-linux-gnueabi"
+            }
+          ]
+        },
+        {
+          "inner_path": "bootcode/bin/makefile",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bin/makefile",
+          "bytes": 14558,
+          "sha256": "c6b4ee5d5e9886d8b232a8b4714dd2e1f85b548e24260c1ef60cfe1b01888b1a",
+          "line_quotes": [
+            {
+              "start": 1,
+              "end": 1,
+              "text": "include $(PRJ).inc"
+            },
+            {
+              "start": 21,
+              "end": 35,
+              "text": "# Note: This is LG Git. we use lg toolchain even in generic board here. \n# because We assume everyone use this bootcode is for LG project. If you need to use rtk toolchain,please change by yourself.\nTOOL_DIR      ?= $(LG_TOOLCHAIN_PATH)/sysroots/x86_64-starfishsdk-linux/usr/bin/arm-starfish-linux-gnueabi\nTARGET        ?= arm-starfish-linux-gnueabi\nTOOL_BIN      ?= $(TOOL_DIR)\n\n# Below patch is used to prevent the verify failture problem of JenkinsMK2.\n# If we branch the codebase to LGE Git, we should remove below patch first.\nTOOLCHAIN_READY = $(LG_TOOLCHAIN_PATH)\n\nexport TOOLCHAIN_READY\n\n\nTARGET_CPU    = arm\nCROSS_COMPILE = $(TARGET)-"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B2",
+      "finding": "Bootcode/bin/makefile hardcodes PLATFORM_CHIP/NAME=k6l and revision A0; tv006 board files and B3_A1R41.inc/B7_A1R62.inc are indexed.",
+      "certainty": "direct admitted source text or indexed metadata; NOT live hardware",
+      "limit": "k6l,A0,tv006,B3/B7 are source labels, NOT verified TV hardware/chassis/SoC. Project .inc files were not selected, so active selection is unresolved.",
+      "citations": [
+        {
+          "inner_path": "bootcode/bin/makefile",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bin/makefile",
+          "bytes": 14558,
+          "sha256": "c6b4ee5d5e9886d8b232a8b4714dd2e1f85b548e24260c1ef60cfe1b01888b1a",
+          "line_quotes": [
+            {
+              "start": 37,
+              "end": 51,
+              "text": "# common SOC platform defination\n#\n#PROJECT_NAME=GP4-L9\nPLATFORM_CHIP=k6l\nPLATFORM_NAME=k6l\nPLATFORM=$(PLATFORM_NAME)\nPLATFORM_ALLOW=\"k6l:\"\nUSE_CITRIX_SERVER=YES\n\n# current SOC platform definition\n#\nPLATFORM_CHIP_VER=k6l\nPLATFORM_CHIP_REV=A0\n\nUSE_EMMC=\"YES\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "L1",
+      "finding": "Actual selected COPYING files identify GPLv2 kernel terms and U-Boot GPLv2/later-exception wording.",
+      "certainty": "direct admitted source text or indexed metadata; NOT live hardware",
+      "limit": "Not a complete per-file license audit, a grant over missing binaries or a warranty of buildability.",
+      "citations": [
+        {
+          "inner_path": "linux-4.4.3/COPYING",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/COPYING",
+          "bytes": 18693,
+          "sha256": "af8067302947c01fd9eee72befa54c7e3ef8a48fecde7fd71277f2290b2bf0f7",
+          "line_quotes": [
+            {
+              "start": 2,
+              "end": 11,
+              "text": "   NOTE! This copyright does *not* cover user programs that use kernel\n services by normal system calls - this is merely considered normal use\n of the kernel, and does *not* fall under the heading of \"derived work\".\n Also note that the GPL below is copyrighted by the Free Software\n Foundation, but the instance of code that it refers to (the Linux\n kernel) is copyrighted by me and others who actually wrote it.\n\n Also note that the only valid version of the GPL as far as the kernel\n is concerned is _this_ particular version of the license (ie v2, not\n v2.2 or v3.x or whatever), unless explicitly otherwise stated."
+            }
+          ]
+        },
+        {
+          "inner_path": "bootcode/uboot/COPYING",
+          "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/uboot/COPYING",
+          "bytes": 16398,
+          "sha256": "73e8f71e4179f55824f57a003cbe815caa157e7e42219029a7814bfd95d627e1",
+          "line_quotes": [
+            {
+              "start": 1,
+              "end": 7,
+              "text": "  U-Boot is Free Software.  It is copyrighted by Wolfgang Denk and\nmany others who contributed code (see the actual source code for\ndetails).  You can redistribute U-Boot and/or modify it under the\nterms of version 2 of the GNU General Public License as published by\nthe Free Software Foundation.  Most of it can also be distributed,\nat your option, under any later version of the GNU General Public\nLicense -- see individual files for exceptions."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "indexed_driver_coverage": [
+    {
+      "path": "linux-4.4.3/drivers/rtk_kdriver/tvscalercontrol/hdmirx",
+      "indexed_members": 77,
+      "c_filename_count": 34,
+      "selected_count": 5,
+      "basis": "index filenames only; counts overlap (HDMI inside scaler)"
+    },
+    {
+      "path": "linux-4.4.3/drivers/rtk_kdriver/tvscalercontrol",
+      "indexed_members": 497,
+      "c_filename_count": 183,
+      "selected_count": 31,
+      "basis": "index filenames only; counts overlap (HDMI inside scaler)"
+    },
+    {
+      "path": "linux-4.4.3/drivers/rtk_kdriver/audio",
+      "indexed_members": 38,
+      "c_filename_count": 24,
+      "selected_count": 2,
+      "basis": "index filenames only; counts overlap (HDMI inside scaler)"
+    },
+    {
+      "path": "linux-4.4.3/drivers/rtk_kdriver/audio_hw",
+      "indexed_members": 30,
+      "c_filename_count": 13,
+      "selected_count": 2,
+      "basis": "index filenames only; counts overlap (HDMI inside scaler)"
+    },
+    {
+      "path": "linux-4.4.3/drivers/rtk_kdriver/rtk_cec",
+      "indexed_members": 15,
+      "c_filename_count": 5,
+      "selected_count": 2,
+      "basis": "index filenames only; counts overlap (HDMI inside scaler)"
+    },
+    {
+      "path": "linux-4.4.3/drivers/rtk_kdriver/ir",
+      "indexed_members": 52,
+      "c_filename_count": 24,
+      "selected_count": 3,
+      "basis": "index filenames only; counts overlap (HDMI inside scaler)"
+    },
+    {
+      "path": "linux-4.4.3/drivers/rtk_kdriver/thermal",
+      "indexed_members": 9,
+      "c_filename_count": 4,
+      "selected_count": 2,
+      "basis": "index filenames only; counts overlap (HDMI inside scaler)"
+    }
+  ],
+  "kdriver_index": {
+    "entries_including_root": 2763,
+    "regular_files": 2548,
+    "c_filenames": 784,
+    "not_read_as_source_bodies": true
+  },
+  "identified_but_unread_guides": [
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/README_HowToMake.txt",
+      "bytes": 1217,
+      "selected": false,
+      "contents": "NOT READ; filename/size only",
+      "sha256": null
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/README_Make_Boot.txt",
+      "bytes": 1149,
+      "selected": false,
+      "contents": "NOT READ; filename/size only",
+      "sha256": null
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/README-bootcode.txt",
+      "bytes": 1076,
+      "selected": false,
+      "contents": "NOT READ; filename/size only",
+      "sha256": null
+    }
+  ],
+  "exact_model_matches_in_selected_text": 0,
+  "model_search_limit": "65NANO756PR case-insensitive in admitted selected text only, not all source bodies",
+  "controls": {
+    "isolation_entrypoint": "isolate_targeted_phase.py",
+    "isolation_required_for_untrusted_inputs": true,
+    "parser_allocates_extended_headers_before_semantic_limits": true,
+    "allocation_backstop": "prlimit address-space and timeout wall via isolate_targeted_phase.py; semantic caps do not contain tarfile.next() PAX/GNU allocations",
+    "disk_reserve_check": "observed free bytes before phase and before writes; not a filesystem reservation",
+    "in_process_wall_check": "single phase deadline covering hash, staging, and both inners; no per-package reset",
+    "noexec_output_demonstrated": false,
+    "selected_file_mode": "0644",
+    "selected_mode_is_not_noexec_mount": true,
+    "tool_never_executes_archive_content": true,
+    "libkadaptor_in_scope": false,
+    "chromium_rescan": false
+  },
+  "isolation": {
+    "home_box_visible": false,
+    "root_ssh_visible": false,
+    "cursor_visible": false,
+    "sandbox_net_ns": "net:[4026532216]",
+    "noexec_output_demonstrated": false
+  },
+  "postphase_disk_free_bytes": 117542842368,
+  "peak_memory_or_RSS_measured": false,
+  "next_missing_proof": [
+    "Read three named build guides through separately reviewed/approved bounded selection; no current reread permission inferred.",
+    "Exact suffix/live firmware/actual board/SoC/panel source mapping remains unknown.",
+    "Obtain lawful compatible compiler/sysroot/build inputs and complete dependency/license coverage; no build authorized.",
+    "Document manufacturer-authorized exact-target boot acceptance and independent recovery,restore inputs,logging,unique calibration/provisioning preservation.",
+    "Demonstrate panel/HDMI input/protected AppleTV/audio/remote/power/thermal only in separately approved later target tests."
+  ],
+  "no_target_actions": true,
+  "no_further_nesting": true,
+  "libkadaptor_included": false
+}

@@ -1,0 +1,39 @@
+{
+  "requested_model": "gpt-6.1-sol",
+  "requested_effort": "high",
+  "started_Atlantic_Reykjavik": "2026-11-08T06:49:04.910281+00:00",
+  "command": [
+    "codex",
+    "exec",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "--json",
+    "-o",
+    "/workspace/lg-tv/tooling/review/sdk-fd-fix-2026-11-08/codex-fix-final.txt",
+    "-"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 187.74,
+  "finished_Atlantic_Reykjavik": "2026-11-08T06:52:12.650446+00:00",
+  "reported_model": "No independent model identifier exposed by JSON event stream; explicitly requested gpt-6.1-sol",
+  "turn_completed": [
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 335249,
+        "cached_input_tokens": 309888,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 8518,
+        "reasoning_output_tokens": 2893
+      }
+    }
+  ],
+  "refusal": false,
+  "operator_fallback": false,
+  "resets": false
+}

@@ -1,0 +1,131 @@
+[
+  {
+    "name": "gnu_split_roundtrip_both_codecs",
+    "passed": true,
+    "detail": {
+      "gz:aaaaaaaa:": {
+        "members": 2,
+        "ok": true
+      },
+      "gz:sym:aaaaaaaa": {
+        "members": 2,
+        "ok": true
+      },
+      "gz:aaaaaaaa:aaaaaaaa": {
+        "members": 3,
+        "ok": true
+      },
+      "xz:aaaaaaaa:": {
+        "members": 2,
+        "ok": true
+      },
+      "xz:sym:aaaaaaaa": {
+        "members": 2,
+        "ok": true
+      },
+      "xz:aaaaaaaa:aaaaaaaa": {
+        "members": 3,
+        "ok": true
+      }
+    }
+  },
+  {
+    "name": "unresolved_invalid_utf8_fails_closed",
+    "passed": true,
+    "detail": {
+      "n": 12,
+      "errors": [
+        "InventoryError",
+        "UnicodeDecodeError"
+      ]
+    }
+  },
+  {
+    "name": "extended_unsafe_still_inventoryerror",
+    "passed": true,
+    "detail": {
+      "n": 74
+    }
+  },
+  {
+    "name": "policy_uses_final_not_discarded_raw_traversal_bytes",
+    "passed": true,
+    "detail": {
+      "len": 120
+    }
+  },
+  {
+    "name": "final_gnu_traversal_rejected",
+    "passed": true,
+    "detail": {
+      "err": "InventoryError",
+      "msg": "unsafe parent path"
+    }
+  },
+  {
+    "name": "raw_invalid_uname_rejected_despite_pax",
+    "passed": true,
+    "detail": {
+      "err": "InventoryError",
+      "msg": "invalid UTF8 metadata",
+      "file_hdr": 1024
+    }
+  },
+  {
+    "name": "pax_valid_path_replaces_truncated_raw_name",
+    "passed": true,
+    "detail": "good-final.txt"
+  },
+  {
+    "name": "ustar_malformed_prefix_fails_closed",
+    "passed": true,
+    "detail": {
+      "err": "InventoryError",
+      "msg": "invalid UTF8 metadata"
+    }
+  },
+  {
+    "name": "exact_gnu_metadata_budget",
+    "passed": true,
+    "detail": {
+      "expected": 1466,
+      "got": 1466
+    }
+  },
+  {
+    "name": "regular_multibyte_charge",
+    "passed": true,
+    "detail": 8
+  },
+  {
+    "name": "json_roundtrip_no_surrogates",
+    "passed": true,
+    "detail": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u0100-suffix"
+  },
+  {
+    "name": "nul_termination_is_preexisting_nts_semantics",
+    "passed": true,
+    "detail": "ok"
+  },
+  {
+    "name": "hashes_and_prior_reviews",
+    "passed": true,
+    "detail": {
+      "reader": true,
+      "launcher": true,
+      "utf8_tests": true,
+      "fd_tests": true,
+      "stdio_tests": true,
+      "orig_tests": true,
+      "review_v1": true,
+      "review_fd": true,
+      "review_stdio": true,
+      "before_reader": true
+    }
+  },
+  {
+    "name": "source_order_surrogate_then_strict_then_policy",
+    "passed": true,
+    "detail": "ok"
+  }
+]

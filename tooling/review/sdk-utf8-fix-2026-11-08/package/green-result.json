@@ -1,0 +1,15 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tooling/tests",
+    "-p",
+    "test_sdk_utf8_boundary.py",
+    "-v"
+  ],
+  "exit": 0
+}

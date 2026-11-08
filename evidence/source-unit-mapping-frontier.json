@@ -1,0 +1,130 @@
+{
+  "status": "source candidates only; physical identity not resolved",
+  "citations": [
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm/Kconfig",
+      "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm/Kconfig",
+      "sha256": "63bd530ffcade51614faa2286b45210aac9cfb18a06974a20f216a2ce332f844",
+      "quotes": [
+        {
+          "start": 512,
+          "end": 514,
+          "text": "config ARCH_LG1K\n\tbool \"LGE Ltd LG1xxx-based boards\"\n\tdepends on MMU"
+        },
+        {
+          "start": 550,
+          "end": 551,
+          "text": "\thelp\n\t  This enables support for the LG Electronics Ltd LG1xxx-based boards."
+        },
+        {
+          "start": 789,
+          "end": 792,
+          "text": "config ARCH_RTK2875\n        bool \"Realtek 2875 boards\"\n        select SYS_HAS_EARLY_PRINTK\n        select CPU_SUPPORTS_32BIT_KERNEL"
+        },
+        {
+          "start": 1012,
+          "end": 1025,
+          "text": "menu \"Customer\"\nchoice\n\tprompt \"Customer Build\"\n\tdefault CUSTOMER_TV001\n\nconfig CUSTOMER_TV001\n\tbool \"tv001\"\n\thelp\n\t  build for tv001.\n\nconfig CUSTOMER_TV006\n\tbool \"tv006\"\n\thelp\n\t  build for tv006."
+        }
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm/configs/lg1k_defconfig",
+      "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm/configs/lg1k_defconfig",
+      "sha256": "723b6109cc1c01d4326c63497269eb090d88fb06e249094ee1fe65407386da73",
+      "quotes": [
+        {
+          "start": 1,
+          "end": 1,
+          "text": "CONFIG_CROSS_COMPILE=\"arm-lg115x-linux-gnueabi-\""
+        },
+        {
+          "start": 43,
+          "end": 43,
+          "text": "CONFIG_ARCH_LG1K=y"
+        }
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm64/configs/lg1k_defconfig",
+      "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm64/configs/lg1k_defconfig",
+      "sha256": "6077598f95e90568520847aef639921c798f243978074a9de56955b19d51335d",
+      "quotes": [
+        {
+          "start": 1,
+          "end": 1,
+          "text": "CONFIG_CROSS_COMPILE=\"aarch64-linux-gnu-\""
+        },
+        {
+          "start": 44,
+          "end": 46,
+          "text": "CONFIG_ARCH_LG1K=y\nCONFIG_ARM64_SECTION_BITS_27=y\nCONFIG_NR_CPUS=4"
+        },
+        {
+          "start": 63,
+          "end": 63,
+          "text": "CONFIG_CROSS_COMPILE_ARM32=\"arm-lg115x-linux-gnueabi-\""
+        }
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.old_defconfig",
+      "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.old_defconfig",
+      "sha256": "5ff806370033f1accd43d08a113c344d768eabc981e509cf9030680671dff50e",
+      "quotes": [
+        {
+          "start": 3,
+          "end": 3,
+          "text": "CONFIG_CROSS_COMPILE=\"aarch64-starfish-linux-\""
+        },
+        {
+          "start": 42,
+          "end": 42,
+          "text": "CONFIG_ARCH_RTK287O=y"
+        },
+        {
+          "start": 116,
+          "end": 116,
+          "text": "CONFIG_CUSTOMER_TV006=y"
+        }
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bin/makefile",
+      "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bin/makefile",
+      "sha256": "c6b4ee5d5e9886d8b232a8b4714dd2e1f85b548e24260c1ef60cfe1b01888b1a",
+      "quotes": [
+        {
+          "start": 1,
+          "end": 1,
+          "text": "include $(PRJ).inc"
+        },
+        {
+          "start": 21,
+          "end": 24,
+          "text": "# Note: This is LG Git. we use lg toolchain even in generic board here. \n# because We assume everyone use this bootcode is for LG project. If you need to use rtk toolchain,please change by yourself.\nTOOL_DIR      ?= $(LG_TOOLCHAIN_PATH)/sysroots/x86_64-starfishsdk-linux/usr/bin/arm-starfish-linux-gnueabi\nTARGET        ?= arm-starfish-linux-gnueabi"
+        },
+        {
+          "start": 37,
+          "end": 51,
+          "text": "# common SOC platform defination\n#\n#PROJECT_NAME=GP4-L9\nPLATFORM_CHIP=k6l\nPLATFORM_NAME=k6l\nPLATFORM=$(PLATFORM_NAME)\nPLATFORM_ALLOW=\"k6l:\"\nUSE_CITRIX_SERVER=YES\n\n# current SOC platform definition\n#\nPLATFORM_CHIP_VER=k6l\nPLATFORM_CHIP_REV=A0\n\nUSE_EMMC=\"YES\""
+        }
+      ]
+    }
+  ],
+  "normal_menu": "All Settings \u2192 General \u2192 Devices \u2192 TV Management \u2192 TV Information; All Settings \u2192 Support \u2192 Software Update (view only)",
+  "menu_limit": "Official model-linked manual route,not claim currently displayed menus or board/SoC shown",
+  "identity_needed": [
+    "full product suffix",
+    "installed software/webOS build",
+    "existing lawful service paperwork or externally visible label/parts history if available; redact serial/MAC",
+    "authoritative exact suffix+revision/panel\u2192board/SoC+source release mapping"
+  ],
+  "no_opening_assumed": true,
+  "source_proves_actual_unit_soc": false
+}

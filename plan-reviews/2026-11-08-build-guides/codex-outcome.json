@@ -1,0 +1,25 @@
+{
+  "reviewer": "codex",
+  "requested_model": "current default gpt-6.1-sol expected; actual header authoritative",
+  "requested_effort": "high",
+  "timeout_seconds": 180,
+  "started_at": "2026-11-08T05:43:49.489022+00:00",
+  "prompt": "review-prompt.txt",
+  "command_nonsecret": [
+    "codex",
+    "exec",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-o",
+    "/workspace/lg-tv/plan-reviews/2026-11-08-build-guides/codex-answer.txt"
+  ],
+  "exit_code": 0,
+  "timed_out": false,
+  "elapsed_seconds": 38.541,
+  "reported_model": "gpt-6.1-sol",
+  "reported_effort": "high",
+  "response_status": "documentary answer returned;not refusal"
+}

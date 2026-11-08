@@ -1,0 +1,39 @@
+{
+  "recorded_at": "2026-11-08T06:38:33.234968+00:00",
+  "status": "Documentary candidates only; no owner architecture decision; internal TV OS target retained",
+  "evidence": [
+    "evidence/adaptation-inspection.json",
+    "evidence/kernel-bootcode-inspection.json",
+    "evidence/source-configuration-closure.json",
+    "evidence/build-dependency-ledger.json"
+  ],
+  "candidates": [
+    {
+      "candidate": "A: vendor kernel/modules + new userspace (A-H may retain enumerated hardware services)",
+      "retained": "Existing vendor kernel/modules and explicitly enumerated compatible/lawfully supplied firmware/hardware/TEE services if needed; no assumption these are obtainable or callable.",
+      "replaced": "Init/system manager,application framework/compositor/UI and new userspace as agreed; not merely stocklauncher. Kernel NOTreplaced.",
+      "source_implication": "Partial libkadaptor declarations/register maps cannot substitute for retained working services/ABI. Existing kernel source includes driver candidates; measured installed matching version/ABI and alternate-userspace boot not established."
+    },
+    {
+      "candidate": "B: rebuilt kernel/BSP + new userspace",
+      "retained": "Only explicitly enumerated lawful firmware/vendor hardware services required by design; same-version versus newer-kernel branches differ.",
+      "replaced": "Kernel/BSP build plus new userspace/integration; possible driver ports require evidence.",
+      "source_implication": "Kernel/driver source candidates exist, but packaging/hardware-setting/aux gaps and partial adaptation implementation/licensing constrain full rebuild. SDK compatibility/config-to-unit mapping unresolved. New kernel has additional ABI/driver proof burden."
+    },
+    {
+      "candidate": "C: independent hardware port",
+      "retained": "Any essential vendor microcode/firmware/hardware services would need explicit disclosure/rights/compatibility; do not assume a fully vendor-free result.",
+      "replaced": "New kernel/hardware integration and userspace,depending on frozen component contract.",
+      "source_implication": "Register maps aid documentary leads but are not complete behavioral specifications/drivers,calibration or safe panel/power/thermal knowledge. Exact-board documentation/boot/recovery insufficient."
+    }
+  ],
+  "shared_missing_proof": [
+    "exact unit/board/panel mapping",
+    "lawful compatible required component supply",
+    "full dependency/config/packaging closure",
+    "documented legitimate boot acceptance",
+    "independent recovery and unique calibration/provisioning preservation",
+    "protected AppleTV HDMI/audio,remote/CEC,panel/backlight,power/watchdog/thermal safety"
+  ],
+  "prohibitions": "No source execution/build/TV action,DRM/TEE key bypass or silent externalbox/launcher substitution."
+}

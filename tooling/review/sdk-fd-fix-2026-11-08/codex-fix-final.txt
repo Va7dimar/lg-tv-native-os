@@ -1,0 +1,11 @@
+Implemented the minimal bootstrap fix: close all inherited FDs above stdio, including high FDs, verify closure, and fail closed before reader import. Output still opens freshly at `/output`.
+
+- Changed only the launcher and FD regression tests.
+- Targeted tests: **34 total, 31 passed, 3 blocked skips** (`NETLINK_ROUTE EPERM`). Host containment still needs parent verification and independent re-review.
+- Reader remains byte-identical. Production command unchanged and **unexecuted**.
+- Existing review/RED/V1 artifacts preserved.
+
+New launcher SHA-256:
+`35b6dd2c2187df8e6e9a5774befa63f2217e89b62c3f149747815d1952084771`
+
+[Fix report and matrix](/workspace/lg-tv/tooling/review/sdk-fd-fix-2026-11-08/07-FD-FIX-REPORT.md) · [Minimal V1 diff](/workspace/lg-tv/tooling/review/sdk-fd-fix-2026-11-08/05-launcher-vs-V1.diff) · [Package hashes](/workspace/lg-tv/tooling/review/sdk-fd-fix-2026-11-08/SHA256SUMS-FIX.txt)

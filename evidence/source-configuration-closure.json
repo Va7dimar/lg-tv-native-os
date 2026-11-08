@@ -1,0 +1,514 @@
+{
+  "recorded_at": "2026-11-08T06:06:19.532050+00:00",
+  "timezone": "Atlantic/Reykjavik",
+  "authority": "t71u/t72u/t73u ongoingoffTVresearch;t74u subscriptionfirstanalysis;supersedesper-fileownerpauses",
+  "unitfacts_changed": false,
+  "no_tv_actions": true,
+  "no_source_execution_or_builds": true,
+  "findings": [
+    {
+      "id": "P1",
+      "fact": "Both documented PRJs explicitly configure RTD2875;B3usesBGA_27x27/TV006_27x27,B7usesBGA/TV006. DDRprofilefilenamesdiffer.",
+      "limit": "Sourceprojectconfiguration,notphysicalunitidentityoractualDDRgeometry."
+    },
+    {
+      "id": "P2",
+      "fact": "Bundledproject_config.h matches B7-distinguishingpackage/board/DDRlist;Makefile regeneratesfromPRJinc.",
+      "limit": "Alignmentnotprooflastactivebuild,generationhistory,productionselectionordeployment."
+    },
+    {
+      "id": "P3",
+      "fact": "ARM U-Boot build options coexistwithATF/arm64auxoptions;configured64bitkerneljumpFALSE.",
+      "limit": "DoesnotidentifyactualCPUcapabilities/livebootpolicy. k6lbuildlabelneednotcontradictRTD2875projectlabels."
+    },
+    {
+      "id": "P4",
+      "fact": "Core/customerlibraryproductionMakefilesand13embeddedcore.imginputsarepresentinindex;include/rbus367filespresent.",
+      "limit": "Do not label generated libraries or matchingembeddedblobnames as missing merely becauseoutputbasenameabsent;no build/run validation."
+    },
+    {
+      "id": "P5",
+      "fact": "DefaultdocumentedprjroutebuildsU-Boot;Makefilecompletionnamesuboot/u-boot.bin,whereguidebin/tmpdiffers. Separateflash_image route referencesmissinginthispackage directories.",
+      "limit": "RawU-Bootbuildcandidateisnotcompleteflashablefirmware/systemimage;mayneedsupplyfromelsewhere\u2014notimpossibleclaim."
+    },
+    {
+      "id": "P6",
+      "fact": "bin/hw_setting/realtek,tools/flash_image_maker,Aux_code,Aux_code_2nd havezeroentriesincompletebootcodeindex.",
+      "limit": "Missingfromthisinspectedpackageonly,notallLGsources/publicresources. DifferentprebuiltATF.binfilenamespresent;notrebuildclosure."
+    },
+    {
+      "id": "P7",
+      "fact": "BothsourcePRJssetOTPsecurebootTRUE,rescuesourceNULL,AC-onUSBupdateDisable.",
+      "limit": "Sourceflagsnotlivefuse/securitystateorretailrecoverycapability;nochanges/bypass/keycontentreading."
+    },
+    {
+      "id": "P8",
+      "fact": "Publiccommunitylistslater20191125StarfishSDK+sysrootassets,498625937Btotal;exactMarchSDKnotresolved.",
+      "limit": "Communityprovenanceclaim,notLGauthority;compatibility/license/manifest/inputclosureunverified. NoSDKdownload/install."
+    }
+  ],
+  "citations": [
+    {
+      "label": "B3_A1R41.inc",
+      "selected_path": "source-catalog/inspection-project-config-2026-11-08/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bin/B3_A1R41.inc",
+      "sha256": "4263d4c6a4a06874d4277edbb78df3e90c931a309a4a7074a49cdc3e34444849",
+      "bytes": 7987,
+      "quotes": [
+        {
+          "start": 7,
+          "end": 19,
+          "text": "Config_Chip_Version = Ver_A\n\n##Package type [ BGA | BGA_27x27 ]\nConfig_Package_type = BGA_27x27\n\n##Board Name [ TV006 | TV006_27x27]\nConfig_Board = TV006_27x27\n\n##Bootcode type [RELEASE|DEBUG]\nConfig_Boot_Type = RELEASE\n\n## DDR SIZE config [OTP|FIXED]\nConfig_Dram_SIZE = FIXED"
+        },
+        {
+          "start": 27,
+          "end": 35,
+          "text": "Config_Boot_Flash_Type_is = EMMC\n\n# ********************************************************************\n# EMMC TIMING MODE (for uboot)\n# ********************************************************************\n# flag                      value\n# ********************************************************************\n##Boot Flash Type is [ HS400 | HS200 | NORMAL ]\nConfig_emmc_timing_is = HS400"
+        },
+        {
+          "start": 48,
+          "end": 61,
+          "text": "##Target Board [ RTD2875 ]\nConfig_Target_Board = RTD2875\n\n##Target Board [ REALCHIP | FPGA ]\nConfig_IC_is = REALCHIP\n\n# ********************************************************************\n# Config\n# ********************************************************************\n# flag                      value\n# ********************************************************************\nConfig_Aux_Code_Image_File = \"Aux_code_uni.img\"\nConfig_Aux_Code_2nd_Image_File = \"Aux_code_2nd.img\"\nConfig_Extra_image_File_list =  B27_ddr4_4G4G4G4G_d1_2GB_V1 B27_ddr4_4G4G4G4G_d2_2GB_V1"
+        },
+        {
+          "start": 97,
+          "end": 99,
+          "text": "Config_DTE_Bootcode_Config_Value = realtek_tv006\nConfig_DTE_Bootcode_Board_name_Value = tv006\nConfig_DTE_Bootcode_SOC_Value = realtek"
+        },
+        {
+          "start": 115,
+          "end": 130,
+          "text": "##Rescue Switch [ FLASH | USB | NULL ]\nRescue_Source =\tNULL\n##Rescue_Flash_Source =\t\t[S | K]\nRescue_Flash_Source =\t\tS\n#Rescue_File_Name =\t\tvmlinux.rescue.realtek.bin\nRescue_File_Name =\t\tvmlinux.rescue.realtek.bin.lzma\nRescue_K_File_Name =\t\tvmlinux.rescue.realtek.k.bin\n\n# ********************************************************************\n# Config\n# ********************************************************************\n# flag                      value\n# ********************************************************************\n##Usb update when AC ON feature [ Enable | Disable ]\nConfig_AC_on_Usb_Update_image = Disable\nConfig_AC_on_Usb_Update_dvrboot = Disable"
+        },
+        {
+          "start": 145,
+          "end": 146,
+          "text": "##OTP Secure Boot [ TRUE | FALSE ]\nConfig_OTP_Secure_Boot = TRUE"
+        },
+        {
+          "start": 189,
+          "end": 193,
+          "text": "##[ TRUE | FALSE]\nConfig_Jump_64Bit_Kernel = FALSE\n\n##Config Boot ATF [ TRUE | FALSE ]\nConfig_Boot_ATF = TRUE"
+        }
+      ]
+    },
+    {
+      "label": "B7_A1R62.inc",
+      "selected_path": "source-catalog/inspection-project-config-2026-11-08/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bin/B7_A1R62.inc",
+      "sha256": "ffd6cdebc5e35300a084c82da92c9d1b3d0027a28f26bbf520473985438f5074",
+      "bytes": 8004,
+      "quotes": [
+        {
+          "start": 7,
+          "end": 19,
+          "text": "Config_Chip_Version = Ver_A\n\n##Package type [ BGA | BGA_27x27 ]\nConfig_Package_type = BGA\n\n##Board Name [ TV006 | TV006_27x27]\nConfig_Board = TV006\n\n##Bootcode type [RELEASE|DEBUG]\nConfig_Boot_Type = RELEASE\n\n## DDR SIZE config [OTP|FIXED]\nConfig_Dram_SIZE = FIXED"
+        },
+        {
+          "start": 27,
+          "end": 35,
+          "text": "Config_Boot_Flash_Type_is = EMMC\n\n# ********************************************************************\n# EMMC TIMING MODE (for uboot)\n# ********************************************************************\n# flag                      value\n# ********************************************************************\n##Boot Flash Type is [ HS400 | HS200 | NORMAL ]\nConfig_emmc_timing_is = HS400"
+        },
+        {
+          "start": 48,
+          "end": 61,
+          "text": "##Target Board [ RTD2875 ]\nConfig_Target_Board = RTD2875\n\n##Target Board [ REALCHIP | FPGA ]\nConfig_IC_is = REALCHIP\n\n# ********************************************************************\n# Config\n# ********************************************************************\n# flag                      value\n# ********************************************************************\nConfig_Aux_Code_Image_File = \"Aux_code_uni.img\"\nConfig_Aux_Code_2nd_Image_File = \"Aux_code_2nd.img\"\nConfig_Extra_image_File_list = B22_ddr3_4G4G4G_d1_1_5GB_V1 B22_ddr3_4G4G4G_d2_1_5GB_V1 B23_ddr4_4G4G4G_d1_1_5GB_V1"
+        },
+        {
+          "start": 97,
+          "end": 99,
+          "text": "Config_DTE_Bootcode_Config_Value = realtek_tv006\nConfig_DTE_Bootcode_Board_name_Value = tv006\nConfig_DTE_Bootcode_SOC_Value = realtek"
+        },
+        {
+          "start": 115,
+          "end": 130,
+          "text": "##Rescue Switch [ FLASH | USB | NULL ]\nRescue_Source =\tNULL\n##Rescue_Flash_Source =\t\t[S | K]\nRescue_Flash_Source =\t\tS\n#Rescue_File_Name =\t\tvmlinux.rescue.realtek.bin\n#Rescue_File_Name =\t\tvmlinux.rescue.realtek.bin.lzma\n#Rescue_K_File_Name =\t\tvmlinux.rescue.realtek.k.bin\n\n# ********************************************************************\n# Config\n# ********************************************************************\n# flag                      value\n# ********************************************************************\n##Usb update when AC ON feature [ Enable | Disable ]\nConfig_AC_on_Usb_Update_image = Disable\nConfig_AC_on_Usb_Update_dvrboot = Disable"
+        },
+        {
+          "start": 145,
+          "end": 146,
+          "text": "##OTP Secure Boot [ TRUE | FALSE ]\nConfig_OTP_Secure_Boot = TRUE"
+        },
+        {
+          "start": 189,
+          "end": 193,
+          "text": "##[ TRUE | FALSE]\nConfig_Jump_64Bit_Kernel = FALSE\n\n##Config Boot ATF [ TRUE | FALSE ]\nConfig_Boot_ATF = TRUE"
+        }
+      ]
+    },
+    {
+      "label": "headeralignmentnotactualactivebuild",
+      "selected_path": "source-catalog/inspection-project-config-2026-11-08/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/src/include/project_config.h",
+      "sha256": "f51c18229ae5f242f6734c406eb7bbfb0a8e67dab09500b8a7f458b8a0d3e416",
+      "bytes": 7464,
+      "quotes": [
+        {
+          "start": 17,
+          "end": 21,
+          "text": "#define Config_Chip_Version_Ver_A\n#define Config_Package_type_BGA\n#define Config_Board_TV006\n#define Config_Boot_Type_RELEASE\n#define Config_Dram_SIZE_FIXED"
+        },
+        {
+          "start": 43,
+          "end": 52,
+          "text": "#define Config_Target_Board_RTD2875\n#define Config_IC_is_REALCHIP\n//********************************************************************\n//Config\n//********************************************************************\n//flag                      value\n//********************************************************************\n#define Config_Aux_Code_Image_File\t\t\t\"Aux_code_uni___img\"\n#define Config_Aux_Code_2nd_Image_File\t\t\t\"Aux_code_2nd___img\"\n#define Config_Extra_image_File_list\t\t\tB22_ddr3_4G4G4G_d1_1_5GB_V1 B22_ddr3_4G4G4G_d2_1_5GB_V1 B23_ddr4_4G4G4G_d1_1_5GB_V1"
+        },
+        {
+          "start": 93,
+          "end": 101,
+          "text": "#define Rescue_Source_\tNULL\n#define Rescue_Flash_Source_\t\tS\n//********************************************************************\n//Config\n//********************************************************************\n//flag                      value\n//********************************************************************\n#define Config_AC_on_Usb_Update_image_Disable\n#define Config_AC_on_Usb_Update_dvrboot_Disable"
+        },
+        {
+          "start": 113,
+          "end": 113,
+          "text": "#define Config_OTP_Secure_Boot_TRUE"
+        },
+        {
+          "start": 147,
+          "end": 151,
+          "text": "#define Config_Jump_64Bit_Kernel_FALSE\n#define Config_Boot_ATF_TRUE\n\n#endif //#ifndef EXTERN_PARAM_H\t\n#define Config_Panel_"
+        }
+      ]
+    },
+    {
+      "label": "buildrouteandinputdirs",
+      "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bin/makefile",
+      "sha256": "c6b4ee5d5e9886d8b232a8b4714dd2e1f85b548e24260c1ef60cfe1b01888b1a",
+      "bytes": 14558,
+      "quotes": [
+        {
+          "start": 21,
+          "end": 35,
+          "text": "# Note: This is LG Git. we use lg toolchain even in generic board here. \n# because We assume everyone use this bootcode is for LG project. If you need to use rtk toolchain,please change by yourself.\nTOOL_DIR      ?= $(LG_TOOLCHAIN_PATH)/sysroots/x86_64-starfishsdk-linux/usr/bin/arm-starfish-linux-gnueabi\nTARGET        ?= arm-starfish-linux-gnueabi\nTOOL_BIN      ?= $(TOOL_DIR)\n\n# Below patch is used to prevent the verify failture problem of JenkinsMK2.\n# If we branch the codebase to LGE Git, we should remove below patch first.\nTOOLCHAIN_READY = $(LG_TOOLCHAIN_PATH)\n\nexport TOOLCHAIN_READY\n\n\nTARGET_CPU    = arm\nCROSS_COMPILE = $(TARGET)-"
+        },
+        {
+          "start": 104,
+          "end": 121,
+          "text": "BIN_DIR          = $(TOP_DIR)/bin\nIMAGE_DIR        = $(BIN_DIR)/image\nLINK_DIR         = $(BIN_DIR)/link\nOBJ_DIR          = $(BIN_DIR)/obj\nTMP_DIR          = $(BIN_DIR)/tmp\nHW_SETTING_DIR   = $(BIN_DIR)/hw_setting\nHW_SETTING_DIR_TARGET = $(BIN_DIR)/hw_setting/realtek\n\nSRC_DIR          = $(TOP_DIR)/src\nINCLUDE_DIR      = $(SRC_DIR)/include\nU_BOOT_DIR       = $(TOP_DIR)/uboot\nK_BOOT_DIR       = $(TOP_DIR)/kboot\nAUX_CODE_UNI_DIR = $(TOP_DIR)/Aux_code\nAUX_CODE_2ND_DIR = $(TOP_DIR)/Aux_code_2nd\nTOOLS_DIR        = $(TOP_DIR)/tools\n\nCONFIGCONV_DIR              = $(TOOLS_DIR)/configconv\nFLASH_IMAGE_MAKER_DIR       = $(TOOLS_DIR)/flash_image_maker"
+        },
+        {
+          "start": 139,
+          "end": 158,
+          "text": "BUILD_HW_SETTING_64 = 0\nifeq ($(Config_Boot_ATF), TRUE)\n\tAUX_CODE_UNI_TARGET_EXT = _arm64_atf\n\tBUILD_HW_SETTING_64 = 1\nendif\n\nBUILD_R64=0\nAU_CODE_INFO=\"Aux code universal version\"\nifeq ($(Config_Boot_ATF), TRUE)\n\tBUILD_R64=0\n\tDEFINE_AUXCODE_OPTS += \"arm64=1\"\n\tDEFINE_AUXCODE_OPTS += \"CONFIG_BOOT_ATF=TRUE\"\n\tAU_CODE_INFO += \"(atf_arm64)\"\nendif\n\nifeq ($(GCC_VERSION), GCC8)\n\t\tDEFINE_AUXCODE_OPTS += \"LGE_GCC8=TRUE\"\nelse\n\t\t#DEFINE_AUXCODE_OPTS += \"LGE_GCC8=FALSE\"\nendif"
+        },
+        {
+          "start": 237,
+          "end": 241,
+          "text": "# DTE Bootcode default config\nConfig_DTE_Bootcode_ARCH_Value    = arm\nConfig_DTE_Bootcode_CPU_Value     = armv7\nConfig_DTE_Bootcode_Vendor_Value  = realtek\nConfig_DTE_Bootcode_Options_Value ="
+        },
+        {
+          "start": 264,
+          "end": 279,
+          "text": "prj: clean checkfile key configconv uboot build_done\n\n.PHONY: tool_setting hw_setting uboot otp key\n\nclean:\n\t$(RM) $(OBJ_DIR)/* $(TMP_DIR)/* dvrboot.exe.bin rescue.exe.bin dvrboot.rescue.exe.bin pgm_otp.bin bootloader.tar $(IMAGE_DIR)/$(Config_DTE_Bootcode_Image_File)\n\ncheckfile:\n\nconfigconv: key\n\t$(PERL) $(SCRIPT_DIR)/$(CONFIGCONV_SCRIPT) \\\n\t\t$(INCLUDE_DIR)/project_config.h \\\n\t\t$(BIN_DIR)/$(PRJ).inc\n\t@echo \"#define Config_Panel_$(Config_Panel)\" >> $(INCLUDE_DIR)/project_config.h\n\nkey: checkfile"
+        },
+        {
+          "start": 291,
+          "end": 305,
+          "text": "uboot:\n\t$(CD) $(TOP_DIR); \\\n\t\t./genlink_realtek.sh; \\\n\t$(CD) $(U_BOOT_DIR); \\\n\t\trm -f include/config.mk; \\\n\t\tmake distclean; \\\n\t\techo \"$(Config_DTE_Bootcode_Config_Value) $(Config_DTE_Bootcode_ARCH_Value) $(Config_DTE_Bootcode_CPU_Value) $(Config_DTE_Bootcode_Board_name_Value) $(Config_DTE_Bootcode_Vendor_Value) $(Config_DTE_Bootcode_SOC_Value) $(Config_DTE_Bootcode_Options_Value)\" > boards.cfg; \\\n\t\tmake $(Config_DTE_Bootcode_Config_Value) r64=$(BUILD_R64)\n\n\t$(CD) $(TMP_DIR); \\\n\t\t$(CP) $(U_BOOT_BIN) $(U_BOOT_TARGET); \\\n\t\t$(CP) $(U_BOOT_ELF) $(U_BOOT_ELF_TARGET); \\\n\t\t$(CP) $(U_BOOT_MAP) $(U_BOOT_DIS) $(U_BOOT_SREC) ./; \\\n\t\t$(CP) $(U_BOOT_TARGET) $(IMAGE_DIR)/$(Config_DTE_Bootcode_Image_File) ; \\\n\t\t$(CP) $(U_BOOT_ELF_TARGET) $(IMAGE_DIR)/$(Config_DTE_Bootcode_Image_File)_elf"
+        },
+        {
+          "start": 352,
+          "end": 376,
+          "text": "flash_image: hw_setting check_size aux_code aux_code_2nd\nifneq ($(strip $(Rescue_Source)), NULL)\n\t$(CD) $(FLASH_IMAGE_MAKER_DIR); \\\n\tmake PRJ=$(PRJ) clean; \\\n\tmake PRJ=$(PRJ) output=rescue b2a; \\\n\tmake PRJ=$(PRJ) output=rescue dvrboot; \\\n\t$(CP) -vf dvrboot.exe.bin $(TOP_DIR)/bin/rescue.exe.bin\n\t$(CD) $(FLASH_IMAGE_MAKER_DIR); \\\n\tmake PRJ=$(PRJ) clean; \\\n\tmake PRJ=$(PRJ) b2a; \\\n\tmake PRJ=$(PRJ) dvrboot; \\\n\t$(CP) -vf dvrboot.exe.bin $(TOP_DIR)/bin/dvrboot.rescue.exe.bin\nendif\n\t$(CD) $(FLASH_IMAGE_MAKER_DIR); \\\n\tmake PRJ=$(PRJ) clean; \\\n\tmake PRJ=$(PRJ) output=bootcode b2a; \\\n\tmake PRJ=$(PRJ) output=bootcode dvrboot; \\\n\tmake PRJ=$(PRJ) package; \\\n\t$(CP) -vf dvrboot.exe.bin $(TOP_DIR)/bin/dvrboot.exe.bin; \\\n\t$(CP) -vf bootloader.tar $(TOP_DIR)/bin/bootloader.tar\n\notp: flash_image\n\nhw_setting:\n\tcd $(HW_SETTING_DIR)/realtek;make extra_image ENABLE_ARM64=1 HW_CONFIG_LIST='$(Config_Extra_image_File_list)' "
+        },
+        {
+          "start": 384,
+          "end": 395,
+          "text": "build_done:\n\t@echo \"Build done!!!\"\n\t@echo \"\"\n\t@echo \"===========================================================================\"\n\t@echo \"\"\n\t@echo \"         Project config : $(PRJ)\"\n\t@echo \"\"\n\t@echo \"===========================================================================\"\n\t@echo \"\"\n\t@echo \"   output => uboot/u-boot.bin\"\n\t@echo \"\"\n\t@echo \"   Build date:  $(shell date)\""
+        }
+      ]
+    },
+    {
+      "label": "includedcorelibraryrulesandembeddedblobs",
+      "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/core/Makefile",
+      "sha256": "6241bbd81aebfc81bf246486d441950b5c1e0be815eceb5fa07250b7cccc9b0c",
+      "bytes": 3025,
+      "quotes": [
+        {
+          "start": 13,
+          "end": 60,
+          "text": "LIB\t= $(obj)librt_core.a\n\n# core lib\nCOBJS-y += src/lib/rtlib_cmd.o\nCOBJS-y += src/lib/rtlib_bdinfo.o\nCOBJS-y += src/lib/rtlib_coproc.o\nCOBJS-$(CONFIG_CMD_DSSINFO) += src/lib/rtlib_dssinfo.o\n\n# core command\nCOBJS-y += cmd/cmd_rtboot.o\nCOBJS-y += cmd/cmd_rtmmc.o\nCOBJS-$(CONFIG_CMD_DSSINFO) += cmd/cmd_rtdssinfo.o\nCOBJS-y += cmd/cmd_rtbootlogo.o\nCOBJS-y += cmd/cmd_rtsplit.o\n\n# core api\nCOBJS-y += src/api/rtapi_rtboot.o\nCOBJS-y += src/api/rtapi_rtmmc.o\nCOBJS-y += src/api/rtapi_board.o\nCOBJS-y += src/api/rtapi_main.o\nCOBJS-y += src/api/rtapi_bootlogo.o\n\n# core drivers\n\nCOBJS\t:= $(sort $(COBJS-y))\nXCOBJS\t:= $(sort $(XCOBJS-y))\nSRCS\t:= $(COBJS:.o=.c) $(XCOBJS:.o=.c)\nOBJS\t:= $(addprefix $(obj),$(COBJS))\nXOBJS\t:= $(addprefix $(obj),$(XCOBJS))\n\nCPPFLAGS += -I..\n\nall:\t$(LIB) $(XOBJS) \n\tmake -C $(MIPS_BOOTLOAD_LIB_DIR)\nifeq ($(MIPS_BOOTLOAD_IMAGE_ENABLE),y)\n\t\t$(LD) $(LDFLAGS) -r -o $(MIPS_BOOTLOAD_LIB_DIR)/$(MIPS_BOOTLOAD_LIB_NAME) $(MIPS_BOOTLOAD_LIB_DIR)/bootload.o\n\t\t$(OBJCOPY) --add-section .av_reset=$(MIPS_BOOTLOAD_IMAGE_PATH)/av_reset.img $(MIPS_BOOTLOAD_LIB_PATH)\n\t$(OBJCOPY) --add-section .v_entry=$(MIPS_BOOTLOAD_IMAGE_PATH)/v_entry.img $(MIPS_BOOTLOAD_LIB_PATH)\n\t\t$(OBJCOPY) --add-section .v_entry_qc=$(MIPS_BOOTLOAD_IMAGE_PATH)/v_entry_qc.img $(MIPS_BOOTLOAD_LIB_PATH)\n\t\t$(OBJCOPY) --add-section .v_ddr_cal=$(MIPS_BOOTLOAD_IMAGE_PATH)/v_ddr_cal.img $(MIPS_BOOTLOAD_LIB_PATH)\n\t\t$(OBJCOPY) --add-section .v_ddr_cal_c=$(MIPS_BOOTLOAD_IMAGE_PATH)/v_ddr_cal_c.img $(MIPS_BOOTLOAD_LIB_PATH)\n\t\t$(OBJCOPY) --add-section .exc_redirect=$(MIPS_BOOTLOAD_IMAGE_PATH)/exc_redirect.img $(MIPS_BOOTLOAD_LIB_PATH)\n\t\t$(OBJCOPY) --add-section .exc_dispatch=$(MIPS_BOOTLOAD_IMAGE_PATH)/exc_dispatch.img $(MIPS_BOOTLOAD_LIB_PATH)\n\t\t$(OBJCOPY) --add-section .isrvideoimg=$(MIPS_BOOTLOAD_IMAGE_PATH)/isr_video.img $(MIPS_BOOTLOAD_LIB_PATH)\n\t\t$(OBJCOPY) --add-section .rosbootvectorimg=$(MIPS_BOOTLOAD_IMAGE_PATH)/ros_bootvector.img $(MIPS_BOOTLOAD_LIB_PATH)\n\t\t$(OBJCOPY) --add-section .a_entry=$(MIPS_BOOTLOAD_IMAGE_PATH)/a_entry.img $(MIPS_BOOTLOAD_LIB_PATH)\n\t\t$(OBJCOPY) --add-section .a_entry_qc=$(MIPS_BOOTLOAD_IMAGE_PATH)/a_entry_qc.img $(MIPS_BOOTLOAD_LIB_PATH)\n\t\t$(OBJCOPY) --add-section .a_entry_polling_0xa000000e=$(MIPS_BOOTLOAD_IMAGE_PATH)/a_entry_polling_0xa000000e.img $(MIPS_BOOTLOAD_LIB_PATH)"
+        }
+      ]
+    },
+    {
+      "label": "includedcustomerlibraryrules",
+      "selected_path": "source-catalog/inspection-core-two-PENDING-REVIEW/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/customer/Makefile",
+      "sha256": "fccd04fb2b913416f6cef0a079f3cdc4bebee1c09986ecaadf7e4091e3786305",
+      "bytes": 2777,
+      "quotes": [
+        {
+          "start": 26,
+          "end": 64,
+          "text": "LIB\t= $(obj)lib_customer.o\n\n# customer command\nCOBJS-y += cmd/cmd_lg/cmd_partinfo.o\nCOBJS-y += cmd/cmd_lg/cmd_misc.o\nCOBJS-y += cmd/cmd_lg/cmd_cp2ram.o\nCOBJS-y += cmd/cmd_lg/cmd_polltimer.o\nCOBJS-y += cmd/cmd_lg/cmd_setboot.o\nCOBJS-y += cmd/cmd_lg/cmd_unlz4.o\nCOBJS-y += cmd/cmd_lg/cmd_swu.o\nCOBJS-$(CONFIG_RTK_WOV_ENABLE) += cmd/cmd_lg/cmd_wov.o\nCOBJS-y += cmd/cmd_lg/cmd_swum.o\nCOBJS-y += cmd/cmd_lg/cmd_nvm.o\nCOBJS-y += cmd/cmd_lg/cmd_micom.o\nCOBJS-y += cmd/cmd_lg/cmd_emmc.o\n\nCOBJS-y += src/lz4.o\nCOBJS-$(CONFIG_SYS_SUPPORT_MULTICORE) += src/smp.o\nCOBJS-$(CONFIG_SYS_SUPPORT_MULTICORE) += src/sched.o\nCOBJS-$(CONFIG_SYS_SUPPORT_MULTICORE) += src/sync.o\nCOBJS-y += src/CusSystem.o\nCOBJS-y += src/CusCmnio.o\nCOBJS-y += src/CusDevice.o\nCOBJS-y += src/CusUpgradeUI.o\nCOBJS-y += src/lg_bootdb.o\n\nCOBJS-y += cmd/cmd_lg/cmd_cacheinfo.o\nCOBJS-y += cmd/cmd_lg/cmd_minfo.o\nCOBJS-y += cmd/cmd_lg/cmd_mmu.o\nCOBJS-y += cmd/cmd_lg/cmd_verify.o\nCOBJS-y += cmd/cmd_lg/cmd_gpio.o\nCOBJS-y += cmd/cmd_lg/cmd_setlayout.o\nCOBJS-y += cmd/cmd_lg/cmd_loglevel.o\nCOBJS-y += cmd/cmd_lg/cmd_rtdlog.o\nCOBJS-y += cmd/cmd_lg/cmd_resume.o\nCOBJS-y += cmd/cmd_lg/cmd_snaplog.o\nCOBJS-$(CONFIG_SYS_SUPPORT_MULTICORE) += cmd/cmd_lg/cmd_thread.o\nCOBJS-y += cmd/cmd_lg/cmd_splash.o\nCOBJS-y += cmd/cmd_lg/cmd_standalone.o"
+        }
+      ]
+    },
+    {
+      "label": "buildtimesymlinkgeneratorreadnotrun",
+      "selected_path": "source-catalog/inspection-build-closure-2026-11-08/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/genlink_realtek.sh",
+      "sha256": "ac1a0c1d00229dc66477447e58e67eff5bcb4fb35391e4496810b4d6d1efe22d",
+      "bytes": 1108,
+      "quotes": [
+        {
+          "start": 1,
+          "end": 32,
+          "text": "#!/bin/sh\n\n# force remove symbolic link\nrm -f ./uboot/board/realtek\nrm -f ./uboot/arch/arm/cpu/armv7/realtek\nrm -f ./uboot/arch/arm/include/asm/arch-realtek\nrm -f ./uboot/lib/rtk\nrm -rf ./uboot/include/rtk\nrm -f ./uboot/common/rtk\nrm -f ./uboot/drivers/rtk\n\nmkdir ./uboot/include/rtk\n# add symbolic link for bsp\necho \"Generate link for board   ... realtek\"\nln -fs ../../bsp/board/realtek/ ./uboot/board/realtek\n\necho \"Generate link for arch    ... realtek\"\nln -fs ../../../../../bsp/arch/realtek/ ./uboot/arch/arm/cpu/armv7/realtek\nln -fs ../../../../../bsp/arch/include/arch-realtek/ ./uboot/arch/arm/include/asm/arch-realtek\n\necho \"Generate link for lib     ... rtk\"\nln -fs ../../bsp/core/src/lib/ ./uboot/lib/rtk\nls bsp/core/include/* | xargs -I FILES ln -sf ../../../FILES ./uboot/include/rtk/\n\necho \"Generate link for common  ... rtk\"\nln -fs ../../bsp/core/cmd ./uboot/common/rtk\n\necho \"Generate link for drivers  ... rtk\"\nln -fs ../../bsp/core/src/drivers ./uboot/drivers/rtk\n\necho \"Generate link for customer  ... rtk\"\nls customer/include/* | xargs -I FILES ln -sf ../../../FILES ./uboot/include/rtk/"
+        }
+      ]
+    },
+    {
+      "label": "configconverterreadnotrun",
+      "selected_path": "source-catalog/inspection-build-closure-2026-11-08/selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/tools/script/configconv.pl",
+      "sha256": "edce14ba3b91ea47d2ba8f61e9f459ea72ca0e0da38314a4ad32356303aa8dac",
+      "bytes": 6387,
+      "quotes": [
+        {
+          "start": 36,
+          "end": 61,
+          "text": "($ARGV[1] =~ /.*inc\\b/) || die \"error!! input file is not a config file\\n\";\n($ARGV[0] =~ /.*h\\b/) || die \"error!! output file is not a header file\\n\";\n\n#open include config file and output \n\nprint \"Config convert to header file \\n\\n\";\n\n\nopen (CONFIG_FILE1, \"$ARGV[1]\");\nprint \"Input Config File     : \"  . substr( $ARGV[1], rindex($ARGV[1], \"/\") + 1) . \"\\n\";\n\nif(defined $ARGV[2])\n{\n\topen (CONFIG_FILE10, \"$ARGV[2]\");\n\tprint \"Input RSA Info File : \"  . substr( $ARGV[2], rindex($ARGV[2], \"/\") + 1) . \"\\n\";\n}\n\nif(defined $ARGV[3])\n{\n\topen (CONFIG_FILE11, \"$ARGV[3]\");\n\tprint \"Input RSA R2 Info File : \"  . substr( $ARGV[3], rindex($ARGV[3], \"/\") + 1) . \"\\n\";\n}\n\nopen (HEADER_FILE, \">$ARGV[0]\");\nprint \"Output Header File    : \"  . substr( $ARGV[0], rindex($ARGV[0], \"/\") + 1) . \"\\n\";\n"
+        },
+        {
+          "start": 76,
+          "end": 130,
+          "text": "\t\tprint HEADER_FILE;\n\t}\n\n\t# Board, Config and USB_OTG setup segment\n\tif ((/^Board/) || (/^Config/)|| (/^USB_OTG/))\n\t{\n\t\tif (/^Board_DRAM_Block/)\n\t\t{\n\t\t\t($tmp1, $tmp2, $dram_block) = split(/ +/);\n\t\t\tchomp($dram_block);\n\t\t}\n\t\t\n\t\tif (/^Board_DRAM_Number/)\n\t\t{\n\t\t\t($tmp1, $tmp2, $dram_number) = split(/ +/);\n\t\t\tchomp($dram_number);\n\t\t}\n\t\t\n\t\tif (/^Config_HDMI/)\n\t\t{\n\t\t\ts/ *= */\t\t\t/; # replace with three TAB space\n\t\t}\n\n\t\tif (/^Config_Secure_Uart/)\n\t\t{\n\t\t\ts/ *= */\t\t\t/; # replace with three TAB space\n\t\t}\n\n\t\tif (/\\./)\n\t\t{\n\t\t\ts/\\./___/;\t# replace \".\" with \"___\"\n\t\t}\n\t\t\n\t\tif ((/Size/) || (/Number/) || (/Block/) || (/Value/) || (/_File/i) || (/Offset/i))\n\t\t{\n\t\t\ts/ *= */\t\t\t/; # replace with three TAB space\n\t\t}\n\t\telse\n\t\t{\n\t\t\ts/ *= */_/;\n\t\t}\n\n\t\tprint HEADER_FILE \"#define \" . $_;\n\n\n\t\tif (($dram_number != 0) && ($dram_block != 0))\n\t\t{\n\t\t\t$dram_size = $dram_block * $dram_number;\t\t\t\n\t\t\tprint HEADER_FILE \"#define Board_DRAM_Size\t\t\t\t$dram_size\\n\";\n\t\t\t\n\t\t\t$dram_number = ($dram_block = 0);\n\t\t}\n\t\t\n\t\tif (/Config_OTP_Secure_Boot_TRUE/)\n\t\t{"
+        }
+      ]
+    }
+  ],
+  "directory_presence": [
+    {
+      "path": "bootcode/bin/hw_setting/realtek",
+      "members": 0,
+      "regular_files": 0,
+      "evidence": "complete3086memberbootcodeindex;noextraarchiveparse"
+    },
+    {
+      "path": "bootcode/tools/flash_image_maker",
+      "members": 0,
+      "regular_files": 0,
+      "evidence": "complete3086memberbootcodeindex;noextraarchiveparse"
+    },
+    {
+      "path": "bootcode/Aux_code",
+      "members": 0,
+      "regular_files": 0,
+      "evidence": "complete3086memberbootcodeindex;noextraarchiveparse"
+    },
+    {
+      "path": "bootcode/Aux_code_2nd",
+      "members": 0,
+      "regular_files": 0,
+      "evidence": "complete3086memberbootcodeindex;noextraarchiveparse"
+    },
+    {
+      "path": "bootcode/bsp/core/image",
+      "members": 32,
+      "regular_files": 29,
+      "evidence": "complete3086memberbootcodeindex;noextraarchiveparse"
+    },
+    {
+      "path": "bootcode/bsp/core/image/src/app",
+      "members": 3,
+      "regular_files": 2,
+      "evidence": "complete3086memberbootcodeindex;noextraarchiveparse"
+    },
+    {
+      "path": "bootcode/include/rbus",
+      "members": 369,
+      "regular_files": 367,
+      "evidence": "complete3086memberbootcodeindex;noextraarchiveparse"
+    }
+  ],
+  "embedded_blobs_metadata_only": [
+    {
+      "path": "bootcode/bsp/core/image/v_entry_qc.img",
+      "bytes": 296,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/exc_redirect.img",
+      "bytes": 68,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/a_entry_polling_0xa000000e.img",
+      "bytes": 168,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/exc_redirect_opt.img",
+      "bytes": 16,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/ros_bootvector.img",
+      "bytes": 64,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/av_reset.img",
+      "bytes": 96,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/v_ddr_cal_c.img",
+      "bytes": 68,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/isr_video.img",
+      "bytes": 536,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/a_entry.img",
+      "bytes": 440,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/v_entry.img",
+      "bytes": 432,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/exc_dispatch.img",
+      "bytes": 96,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/v_ddr_cal.img",
+      "bytes": 192,
+      "sha256": null,
+      "contents_read": false
+    },
+    {
+      "path": "bootcode/bsp/core/image/a_entry_qc.img",
+      "bytes": 276,
+      "sha256": null,
+      "contents_read": false
+    }
+  ],
+  "sdk_public_lead": "evidence/public-sdk-2026-11-08/sdk-lead.json",
+  "phase_results": [
+    {
+      "path": "source-catalog/inspection-project-config-2026-11-08",
+      "exit_code": 0,
+      "elapsed_seconds": 0.513,
+      "members": 3086,
+      "selected_bytes": 23455
+    },
+    {
+      "path": "source-catalog/inspection-build-closure-2026-11-08",
+      "exit_code": 0,
+      "elapsed_seconds": 0.547,
+      "members": 3086,
+      "selected_bytes": 11588
+    }
+  ],
+  "reviews": [
+    {
+      "requested_model": "claude-opus-5-5",
+      "effort": "high",
+      "started_at": "2026-11-08T05:58:51.445875+00:00",
+      "timeout_seconds": 240,
+      "command": [
+        "claude",
+        "-p",
+        "<savedselfcontainedprompt>",
+        "--model",
+        "claude-opus-5-5",
+        "--effort",
+        "high",
+        "--output-format",
+        "json"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 128.446,
+      "reported_models": [
+        "claude-opus-5-5",
+        "claude-opus-4-8"
+      ],
+      "safety_stops": 2,
+      "is_error": false,
+      "response_status": "substantiveanalysis,noexplicitrefusal"
+    },
+    {
+      "requested_model": "defaultgpt-6.1-sol",
+      "effort": "high",
+      "started_at": "2026-11-08T06:00:59.893004+00:00",
+      "timeout_seconds": 180,
+      "command": [
+        "codex",
+        "exec",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "read-only",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-o",
+        "/workspace/lg-tv/plan-reviews/2026-11-08-project-sdk/codex-answer.txt",
+        "<savedselfcontainedprompt>"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 57.068,
+      "reported_model": "gpt-6.1-sol",
+      "reported_effort": "high",
+      "response_status": "substantiveindependentfactcheck"
+    },
+    {
+      "requested_model": "gemini-4-argon-high",
+      "effort": "high tier",
+      "started_at": "2026-11-08T06:01:56.961645+00:00",
+      "timeout_seconds": 210,
+      "command": [
+        "agy",
+        "-p",
+        "<savedselfcontainedprompt>",
+        "--model",
+        "gemini-4-argon-high"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 64.086,
+      "reported_model": null,
+      "requested_model_only_verified": true,
+      "response_status": "substantivepublicSDKassessment"
+    },
+    {
+      "requested_model": "claude-opus-5-5",
+      "effort": "high",
+      "started_at": "2026-11-08T06:04:01.913697+00:00",
+      "timeout_seconds": 180,
+      "prompt": "closure-prompt.txt",
+      "exit_code": 0,
+      "timed_out": false,
+      "elapsed_seconds": 64.639,
+      "reported_models": [
+        "claude-opus-5-5"
+      ],
+      "safety_stops": 0,
+      "is_error": false,
+      "response_status": "substantiveanalysis,noexplicitrefusal"
+    }
+  ],
+  "original_chromium_scan": "PARTIALat200000unchanged",
+  "remaining": [
+    "SDKmatching/validatedcompatiblecompiler+sysrootmanifestandsupply",
+    "Projectrelease\u2192actualunitboard/SoC/panel/firmwaremapping",
+    "FullsystemBSP/hardware-service/licensingcoverage;libkadaptoruninspected",
+    "Completepackaging/aux/hardware-settingbuildinputs",
+    "Documentedlegitimatecustomboot/install+independentrecovery/preservation/logging"
+  ],
+  "autonomy": "ContinueboundedoffTVlearningwithoutper-fileapproval;coordinateproductiontoolchangesorviewingimpactwithparent;writesneedknownmethod/informeddecision."
+}

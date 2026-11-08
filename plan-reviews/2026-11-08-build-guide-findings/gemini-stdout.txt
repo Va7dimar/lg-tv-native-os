@@ -1,0 +1,20 @@
+### 1. Documented Directions vs. Supply, Build, and Boot Proof
+The three admitted guides (`3,442 B` total, post-validated under the `1,217 B/member` cap from SHA-pinned archives) are untrusted documentary data, not execution permission or build/boot proof:
+- **No Supply Proof (D1, D6):** Referencing `starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20190307.sh` and internal host `wall.lge.com/bsp/realtek/boot` does not prove lawful toolchain availability or source closure. The SDK installer is absent from the complete kernel/bootcode inner indexes (135 sibling packages remain uninspected; the three-archive Chromium scan remains `PARTIAL`).
+- **No Build or Boot Proof (D2–D5):** Unverified `make` lines and raw output names (`vmlinux.bin`, `bin/tmp/u-boot.bin`) do not prove dependency completeness, reproducible compilation, cryptographic signing/packaging, or safe internal OS replacement on hardware.
+
+### 2. Material Errors and Contradictions
+- **Kernel Version Path Mismatch:** The guide path `linux-4.4.3/README_HowToMake.txt` contradicts the staged CORE TWO top `Makefile` (`Linux 4.4.84`, empty `EXTRAVERSION`).
+- **Archive Filename Discrepancy:** Both `README_HowToMake.txt` (line 8) and `README-bootcode.txt` (line 8) include `.kalaupapa.` in the package names (`kernel-1.0.0-711.kalaupapa.4.tar.gz`, `bootcode-1.0.0-1099.kalaupapa.7.tar.gz`), whereas the outer staged archive names omit `kalaupapa` (`kernel-1.0.0-711..4.tar.gz`, `bootcode-1.0.0-1099.7.tar.gz`).
+- **Toolchain Prefix & Architecture Ambiguity (D4):** The kernel guide specifies `CROSS_COMPILE=arm-starfish-linux-` (line 22), contradicting `bootcode/bin/makefile`'s default `arm-starfish-linux-gnueabi-`. Additionally, `README_Make_Boot.txt` (lines 11, 26) labels the instructions `"For 64bit toolchain"`, which describes the `x86_64` host SDK (`x86_64-starfishsdk-linux`), whereas target indicators (`ca9v1`, `ARCH=arm`, `ca9v1-starfishmllib32`) are 32-bit ARM—contrasting with mixed ARM/ARM64 defconfigs in the kernel tree.
+- **Platform & Project Contradictions (D2, D3):** `bootcode/bin/makefile` hardcodes `k6l/A0`, whereas the boot guides require an unexplained choice between `PRJ=B3_A1R41` and `PRJ=B7_A1R62`, and the kernel guide specifies a single Realtek config (`realtek/config.develop.rtd2875.tv006.emmc.old_defconfig`).
+- **Installer Transcript & Layout Mismatch (D6):** `README_Make_Boot.txt` (lines 17–18) shows user input `.` yet echoes the default `/opt/starfish-sdk-x86_64/5.0.0-20190307` path, and specifies checking out to `boot/` rather than the staged `bootcode/` hierarchy.
+
+### 3. Generic vs. Target-Specific Claims
+Catalog-to-archive SHA provenance proves only what LG bundled in a shared compliance release, **not** the physical hardware inside a specific `LG65NANO756PR`. The kernel source contains multiple ARM/ARM64 RTK and LG1K defconfigs alongside RTK driver paths. Boilerplate README references to `rtd2875.tv006.emmc.old_defconfig` (explicitly marked `develop` and `old_defconfig`), `kalaupapa`, `k6l/A0`, or `B3_A1R41`/`B7_A1R62` are generic BSP examples, not evidence of the physical unit's actual SoC, board, panel, regional suffix, or firmware.
+
+### 4. Exact Next Evidence Gaps
+1. **Physical Hardware Identity:** Verified suffix, mainboard/SoC (`rtd2875` vs. `k6l`/LG1K; 32-bit vs. 64-bit), panel, and running firmware of the target `LG65NANO756PR`.
+2. **Unread Boot Includes (D3):** Authorized read-only inspection of `B3_A1R41.inc` and `B7_A1R62.inc` to determine target SoC mappings, `k6l/A0` overrides, and compiler prefixes.
+3. **SDK Supply & Manifest (D1, D4):** Read-only index search across the remaining 135 nested archives for the `starfish-sdk` installer and verification of its compiler/sysroot manifest and licensing.
+4. **Source Closure & Boot Security (D5, D6):** Verification that staged sources are complete without internal `wall.lge.com` checkouts, plus documentation of hardware secure-boot, signing, and partition acceptance requirements beyond raw `vmlinux.bin`/`u-boot.bin`.

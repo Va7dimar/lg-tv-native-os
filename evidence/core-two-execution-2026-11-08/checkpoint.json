@@ -1,0 +1,25 @@
+{
+  "started_at": "2026-11-08T05:17:16.957567+00:00",
+  "review_pass_at": "2026-11-08 05:16 Atlantic/Reykjavik",
+  "authority": "owner t68u Continue plus explicit parent CORE TWO real-inspection handoff; not reviewer permission",
+  "production_sha256": {
+    "targeted_core_two_phase.py": "4b030684120c6366ffcaefcd9181f7b6d695ba2cdc46148d3318fe40f65992ce",
+    "isolate_targeted_phase.py": "1cc90673cf34fc9e1fdb8ea535caa82b358ba4561169dec4e89c076fd4953ffb",
+    "bounded_archive_inventory.py": "ee7870b95a6603fae3c38d5a9908da559c598fd29a7b69ba7c2b9a369473ae2c"
+  },
+  "command": [
+    "python3",
+    "/workspace/lg-tv/tooling/isolate_targeted_phase.py",
+    "--outer",
+    "/workspace/lg-tv/source-catalog/archives/webOS 6.0 KLP_1.0_2.tar.gz",
+    "--output-dir",
+    "/workspace/lg-tv/source-catalog/inspection-core-two-PENDING-REVIEW",
+    "--expected-outer-bytes",
+    "511945894",
+    "--expected-outer-sha256",
+    "95894dd81e2bb32fd1ced1eb119698f2e1464e6b9b5b5879ea51528d7d5e8832"
+  ],
+  "output_absent_before": true,
+  "symlink_ancestors": false,
+  "residuals": "outer_decoded measures logical regular payload,not tarheaders/padding;1GiBASnotRSS;noexecfalse;PAXallocationAS/wallbackstop;diskobservednotreserved;correctpins+freshoutput mitigate reviewed nonblocking issues"
+}

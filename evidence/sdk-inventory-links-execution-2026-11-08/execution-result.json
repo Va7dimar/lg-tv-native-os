@@ -1,0 +1,12 @@
+{
+  "started_Atlantic_Reykjavik": "2026-11-08T13:30:17.591554+00:00",
+  "command": [
+    "/bin/bash",
+    "/workspace/lg-tv/evidence/sdk-inventory-links-execution-2026-11-08/exact-command.txt"
+  ],
+  "sole_literal_command_change": "freshoutputdirectory",
+  "invocation_count": 1,
+  "exit_code": 0,
+  "elapsed_seconds": 13.804,
+  "finished_Atlantic_Reykjavik": "2026-11-08T13:30:31.395508+00:00"
+}

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ko">
+	
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>LG Open Source</title>
+		<meta property="og:title" content="LG Open Source">
+		<meta property="og:site_name" content="LG Open Source">
+		<meta property="og:type" content="website">
+		<meta property="og:url" content="https://opensource.lge.com/">
+		<meta property="og:image" content="https://opensource.lge.com/images/layout/commonOgMeta.png">
+		<meta http-equiv="Pragma" content="no-cache">                <!-- HTTP 1.0 -->
+		<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"> <!-- HTTP 1.1 -->
+		<meta http-equiv="Expires" content="0">                      <!-- 프록시 서버용 -->
+		<link rel="shortcut icon" href="/images/layout/favicon.ico" type="image/x-icon">
+		<link rel="stylesheet" href="/css/base.css" />
+		<link rel="stylesheet" href="/css/slick.css" />
+		<link rel="stylesheet" href="/css/aos.css" />
+		<link rel="stylesheet" href="/css/layout.css" />
+		<link rel="stylesheet" href="/css/template.css" />
+		<link rel="stylesheet" href="/css/sub.css" />
+		<link rel="stylesheet" href="/css/main.css" />
+<!--		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/stylesheets/jquery.tocify.min.css" integrity="sha512-oh+MEoabFNlFC7fGiIcNjodnGu+jllQY98+K3HeoAQGyvHblNNrlKhl8wL4CPzvnMdNf2aroADQhjHxuaGCC4A==" crossorigin="anonymous" referrerpolicy="no-referrer" /> -->
+	</head>
+
+
+	<body oncontextmenu="return false;">
+		
+		<!-- <script src="/js/jquery-1.11.3.min.js"></script> -->
+		<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+		<script src="/js/slick.js"></script>
+		<script src="/js/aos.js"></script>
+		<script src="/js/script.js"></script>
+		<script src="/js/util.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.3.0/jquery.form.min.js" integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn" crossorigin="anonymous"></script>
+		<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" integrity="sha512-MmdBVZj8VMd7kbchsQ1w3BiRpmk5SpL4AdsnskA2IQEkEoV/2hQnb4NpCaq3BILglhK95AqT818/Yl9HtJ0eew==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+		<script src="/js/jquery.toc.min.js"></script>
+		<script type="text/javascript">
+			var spinner = {
+					show: function(){
+						$(".spinnerContainer").show();
+						$("#spinner").show();
+					},
+					hide: function(){
+						$("#spinner").hide();
+						$(".spinnerContainer").hide();
+					}
+			}
+		</script>
+		<!-- Google tag (gtag.js) -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-2BKJ9RKSY1"></script>
+		<script>
+		  window.dataLayer = window.dataLayer || [];
+		  function gtag(){dataLayer.push(arguments);}
+		  gtag('js', new Date());
+		
+		  /* gtag('config', 'G-2BKJ9RKSY1', {page_path: window.location.pathname}); */
+		  gtag('config', 'G-2BKJ9RKSY1');
+		</script>
+		<script src="https://www.google.com/recaptcha/api.js?render=6LeXw5ojAAAAAPa8mvQMPvk5lZlRrL691waU-3oU"></script>
+	
+		
+	 <div id="header_wrap">
+		<header id="header">
+			<h1><a href="/"><img src="/images/layout/lg_logo.svg" alt="LG Open Source Homepage" /></a></h1>
+			<button class="btn_gnb"><img src="/images/layout/btn_gnb_open.png" alt="GNB" /></button>
+			<nav id="gnb">
+				<ul class="g_menu">
+					<li><a href="/about">ABOUT</a></li>
+					<li><a href="/project">PROJECT</a></li>
+					<li class="deps2"><a href="/product">PRODUCT</a><button class="btn_deps_menu">Open</button>
+						<ul class="col7">
+							<li class="deps3">
+								<a href="/product/list?ctgr=014">Appliances</a><button class="btn_deps_menu">Open</button>
+								<ul>
+									<li>
+										<a href="/product/list?ctgr=014&amp;subCtgr=019" 
+											alt="Air Conditioner">Air Conditioner</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=014&amp;subCtgr=020" 
+											alt="Common">Common</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=014&amp;subCtgr=017" 
+											alt="Cooking Machine">Cooking Machine</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=014&amp;subCtgr=014" 
+											alt="IoT Hub &amp; Things">IoT Hub &amp; Things</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=014&amp;subCtgr=015" 
+											alt="Refrigerator">Refrigerator</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=014&amp;subCtgr=013" 
+											alt="Robot">Robot</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=014&amp;subCtgr=018" 
+											alt="Vacuum Cleaner">Vacuum Cleaner</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=014&amp;subCtgr=016" 
+											alt="Washing Machine">Washing Machine</a>
+									</li>
+								</ul>
+							</li>
+							<li class="deps3">
+								<a href="/product/list?ctgr=005">TV/AV</a><button class="btn_deps_menu">Open</button>
+								<ul>
+									<li>
+										<a href="/product/list?ctgr=005&amp;subCtgr=012" 
+											alt="AV">AV</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=005&amp;subCtgr=009" 
+											alt="Monitor/Signage">Monitor/Signage</a>
+									</li>
+									<li>
+										
+									</li>
+									<li>
+										<a href="/product/list?ctgr=005&amp;subCtgr=008" 
+											alt="Projector">Projector</a>
+									</li>
+									<li>
+										
+									</li>
+									<li>
+										<a href="/product/list?ctgr=005&amp;subCtgr=006" 
+											alt="TV">TV</a>
+									</li>
+								</ul>
+							</li>
+							<li class="deps3">
+								<a href="/product/list?ctgr=020">IT</a><button class="btn_deps_menu">Open</button>
+								<ul>
+									<li>
+										
+									</li>
+									<li>
+										<a href="/product/list?ctgr=020&amp;subCtgr=021" 
+											alt="PC &amp; Laptop">PC &amp; Laptop</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=020&amp;subCtgr=023" 
+											alt="PC Peripheral">PC Peripheral</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=020&amp;subCtgr=024" 
+											alt="Tablet">Tablet</a>
+									</li>
+								</ul>
+							</li>
+							<li class="deps3">
+								<a href="/product/list?ctgr=024">B2B</a><button class="btn_deps_menu">Open</button>
+								<ul>
+									<li>
+										
+									</li>
+									<li>
+										<a href="/product/list?ctgr=024&amp;subCtgr=027" 
+											alt="Energy">Energy</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=024&amp;subCtgr=051" 
+											alt="Vehicle Component">Vehicle Component</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=024&amp;subCtgr=175" 
+											alt="Appliances">Appliances</a>
+									</li>
+								</ul>
+							</li>
+							<li class="deps3">
+								<a href="/product/list?ctgr=111">ETC</a><button class="btn_deps_menu">Open</button>
+								<ul>
+									<li>
+										<a href="/product/list?ctgr=111&amp;subCtgr=115" 
+											alt="Beauty">Beauty</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=111&amp;subCtgr=112" 
+											alt="Common">Common</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=111&amp;subCtgr=002" 
+											alt="Mobile">Mobile</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=111&amp;subCtgr=114" 
+											alt="SDK">SDK</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=111&amp;subCtgr=116" 
+											alt="Smart Accessory">Smart Accessory</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=111&amp;subCtgr=113" 
+											alt="Etc">Etc</a>
+									</li>
+								</ul>
+							</li>
+							<li class="deps3">
+								<a href="/product/list?ctgr=300">SignatureKitchenSuite</a><button class="btn_deps_menu">Open</button>
+								<ul>
+									<li>
+										<a href="/product/list?ctgr=300&amp;subCtgr=301" 
+											alt="Common">Common</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=300&amp;subCtgr=302" 
+											alt="Cooktop">Cooktop</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=300&amp;subCtgr=303" 
+											alt="Dishwasher">Dishwasher</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=300&amp;subCtgr=304" 
+											alt="Hood">Hood</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=300&amp;subCtgr=305" 
+											alt="Microwaves">Microwaves</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=300&amp;subCtgr=306" 
+											alt="Refrigerator">Refrigerator</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=300&amp;subCtgr=307" 
+											alt="Range">Range</a>
+									</li>
+									<li>
+										<a href="/product/list?ctgr=300&amp;subCtgr=308" 
+											alt="Wall Oven">Wall Oven</a>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li class="deps2">
+						<a href="/guide">GUIDE</a><button class="btn_deps_menu">Open</button>
+						<ul>
+							<li class="deps3">
+								<a href="/guide/7" >Introduction</a>
+								
+							</li>
+							<li class="deps3">
+								<a href="/guide/8" >Organization</a>
+								
+							</li>
+							<li class="deps3">
+								<a href="/guide/9" >Policy</a>
+								
+							</li>
+							<li class="deps3">
+								<a href="/guide/10" >Process</a><button type="button" class="btn_deps_menu">Open</button>
+								<ul>
+									<li class="deps4">
+										<a href="/guide/26">OSC Process</a>
+										<!-- 
+										<button type="button" class="btn_deps_menu" th:if="${not #lists.isEmpty(depth2.childList)}">Open</button>
+										<ul th:if="${not #lists.isEmpty(depth2.childList)}">
+											<li class="deps5" th:each="depth3 : ${depth2.childList}">
+												<a th:href="@{/guide/}+${depth3.postSeq}" th:text="${depth3.postTitle}"></a><button type="button" class="btn_deps_menu" th:if="${not #lists.isEmpty(depth3.childList)}">Open</button>
+												<ul th:if="${not #lists.isEmpty(depth3.childList)}">
+													<li class="deps6" th:each="depth4 : ${depth3.childList}">
+													<a th:href="@{/guide/}+${depth4.postSeq}" th:text="${depth4.postTitle}"></a>
+												</ul>
+											</li>
+										</ul>
+										 -->
+									</li>
+									<li class="deps4">
+										<a href="/guide/15">Release/Contribution Process</a>
+										<!-- 
+										<button type="button" class="btn_deps_menu" th:if="${not #lists.isEmpty(depth2.childList)}">Open</button>
+										<ul th:if="${not #lists.isEmpty(depth2.childList)}">
+											<li class="deps5" th:each="depth3 : ${depth2.childList}">
+												<a th:href="@{/guide/}+${depth3.postSeq}" th:text="${depth3.postTitle}"></a><button type="button" class="btn_deps_menu" th:if="${not #lists.isEmpty(depth3.childList)}">Open</button>
+												<ul th:if="${not #lists.isEmpty(depth3.childList)}">
+													<li class="deps6" th:each="depth4 : ${depth3.childList}">
+													<a th:href="@{/guide/}+${depth4.postSeq}" th:text="${depth4.postTitle}"></a>
+												</ul>
+											</li>
+										</ul>
+										 -->
+									</li>
+								</ul>
+							</li>
+							<li class="deps3">
+								<a href="/guide/16" >Education</a>
+								
+							</li>
+							<li class="deps3">
+								<a href="/guide/17" >Tool</a>
+								
+							</li>
+						</ul>
+					</li>
+					<li><a href="/blog">BLOG</a></li>
+					<li><a href="/inquiry">INQUIRY</a></li>
+				</ul>
+				<ul class="g_language">
+					
+					<li><a href="javascript:;" onclick="util.changeLang('ko')">KO</a></li>
+					<li><a href="javascript:;" onclick="util.changeLang('en')" class="active">EN</a></li>
+				</ul>
+				<button class="btn_close"><img src="../images/layout/btn_gnb_close.png" alt="" /></button>
+			</nav>
+		</header>
+		<div class="bg_gnb"></div>
+		<div class="spinnerContainer" style="display:none;"><div id="spinner"></div></div>
+	</div>
+	
+
+		
+		<hr />
+		
+		<div id="container">
+			
+	<div id="sub_visual" class="product">
+		<section class="sub_content">
+			<h1>PRODUCT</h1>
+			
+			<form id="search_form" method="GET" autocomplete="off" action="/product/list">
+			<input type="hidden" name="page" value="">
+			<input type="hidden" id="ctgr" name="ctgr" value="">
+			<input type="hidden" id="subCtgr" name="subCtgr" value="">
+			<fieldset class="search_form">
+				<legend>검색 폼</legend>
+				<p>
+					<input type="text" placeholder="Enter your search parameters" style="padding: 0px 30px 1px 195px;" id="keyword" name="keyword" value="65NANO756PR"/>
+					<button type="button" class="btn_search" onclick="fn.goPage();"><img src="/images/sub/btn_visual_search.png" alt="Search" /></button>
+					<select style="position: absolute;top: 14px;line-height:20px;left: 60px;height:23px;z-index: 2; border: 0px; padding: 0px 45px 5px 5px;" id="schType" name="schType">
+						<option value="">ALL</option>
+						<option value="1">Model</option>
+						<option value="2">Description</option>
+					</select>
+				</p>
+			</fieldset>
+			</form>
+		</section>
+	</div>
+	<div id="product_result">
+		
+	<a id="a_download_link" href="" download style="display: none;"></a>
+	</div>
+	<form id="form_download" action="/download/releaseFile" method="POST">
+	</form>
+	<script>
+		initGNB(3); //1뎁스 활성화 번째
+		
+		$('#search_form').on('keyup keypress', function(e) {
+			var keyCode = e.keyCode || e.which;
+			if (keyCode === 13) {fn.goPage();return false;}
+		});
+
+		$(document).ready(function() {
+			fn.loadData();
+		});
+		
+		var fn = {
+				goPage : function(pageNum) {
+					$("#search_form input[name='page']").val(pageNum);
+					$("#search_form").submit();
+				},
+				loadData : function() {
+					spinner.hide();
+					spinner.show();
+					$("#search_form").ajaxSubmit({
+						url: "/product/list-data",
+						success: function(res) {
+							spinner.hide();
+							$("#product_result").replaceWith(res);
+						},
+						error: function(res) {
+							spinner.hide();
+							console.log(res);
+						}
+					});
+				},
+				download: function(osSeq, modelName, fileType, fileIdx, filename) {
+					$("#form_download").empty();
+		            $("<input>").attr({name: "osSeq",type: "hidden",value: osSeq}).appendTo("#form_download");
+		            $("<input>").attr({name: "fileType",type: "hidden",value: fileType}).appendTo("#form_download");
+		            $("<input>").attr({name: "fileIdx",type: "hidden",value: fileIdx}).appendTo("#form_download");
+		            $("<input>").attr({name: "modelName",type: "hidden",value: modelName}).appendTo("#form_download");
+		            
+		            //$("#form_download").submit().empty();
+		            $("#form_download").ajaxSubmit({
+						url: "/download/releaseFileDownloadUrl",
+						success: function(res) {
+							spinner.hide();
+							if(res.success) {
+								$("#a_download_link").attr('href', res.data);
+								$("#a_download_link")[0].click();
+							} else {
+								alert("Sorry, a temporary error has occurred. Please try again later.");
+							}
+						},
+						error: function(res) {
+							spinner.hide();
+							//console.log(res);
+							alert("Sorry, a temporary error has occurred. Please try again later.");
+						}
+					});
+				},
+			};
+	</script>
+	
+		</div>
+		
+		<hr />
+		
+		
+	<!-- footer_wrap -->
+	<div class="footer_wrap">
+		<footer id="footer">
+			<h2><a href="/"><img src="/images/layout/lg_logo.svg" alt="LG Open Source Homepage" /></a></h2>
+			<ul class="site_terms">
+				<li><a href="/terms">Terms of Use</a></li>
+				<li><a href="/privacy">Privacy Policy</a></li>
+			</ul>
+			<ul class="sns">
+				<li><a href="https://github.com/lge-oss" target="_blank" title="Follow on GitHub"><img src="/images/layout/ico_sns_github.png" alt="GitHub" /></a></li>
+				<li><a href="https://www.youtube.com/channel/UCGCKQQvHh6pgjwHmZtKi8Hw" target="_blank" title="Follow on YouTube"><img src="/images/layout/ico_sns_youtube.png" alt="Youtube" /></a></li>
+			</ul>
+			<p class="copyright">Copyright (c) 2020 LG Electronics</p>
+		</footer>
+	</div>
+	<!-- //footer_wrap -->
+
+    </body>
+</html>

@@ -1,0 +1,31 @@
+test_core_two_pins_exact_targets_and_excludes_libkadaptor (lg-tv.tooling.tests.test_targeted_core_two_phase.AllowlistPinTests.test_core_two_pins_exact_targets_and_excludes_libkadaptor) ... ok
+test_phase_limits_cannot_be_raised (lg-tv.tooling.tests.test_targeted_core_two_phase.AllowlistPinTests.test_phase_limits_cannot_be_raised) ... ok
+test_evidence_names_accepted (lg-tv.tooling.tests.test_targeted_core_two_phase.EvidenceNameTests.test_evidence_names_accepted) ... ok
+test_non_evidence_names_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.EvidenceNameTests.test_non_evidence_names_rejected) ... ok
+test_isolation_command_is_narrow (lg-tv.tooling.tests.test_targeted_core_two_phase.IsolationTests.test_isolation_command_is_narrow) ... ok
+test_isolation_integration (lg-tv.tooling.tests.test_targeted_core_two_phase.IsolationTests.test_isolation_integration) ... ok
+test_absolute_and_parent_paths_fail_closed (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_absolute_and_parent_paths_fail_closed) ... ok
+test_combined_binary_budget (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_combined_binary_budget) ... ok
+test_disk_reserve_failure (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_disk_reserve_failure) ... ok
+test_duplicate_target_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_duplicate_target_rejected) ... ok
+test_exact_copy_selects_evidence_allows_nul_in_binary_only (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_exact_copy_selects_evidence_allows_nul_in_binary_only) ... ok
+test_global_deadline_does_not_reset (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_global_deadline_does_not_reset) ... ok
+test_inner_nested_archive_not_expanded (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_inner_nested_archive_not_expanded) ... ok
+test_member_budget_does_not_reset_for_inner (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_member_budget_does_not_reset_for_inner) ... ok
+test_missing_target_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_missing_target_rejected) ... ok
+test_outer_decoded_budget_is_shared (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_outer_decoded_budget_is_shared) ... ok
+test_oversize_binary_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_oversize_binary_rejected) ... ok
+test_sparse_inner_logical_size_counts_toward_phase_expanded (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_sparse_inner_logical_size_counts_toward_phase_expanded) ... ok
+test_symlink_target_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_symlink_target_rejected) ... ok
+test_tests_do_not_point_at_catalog_archives (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_tests_do_not_point_at_catalog_archives) ... ok
+test_unallowlisted_libkadaptor_is_not_copied (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_unallowlisted_libkadaptor_is_not_copied) ... ok
+test_wrong_hash_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_wrong_hash_rejected) ... ok
+test_wrong_outer_hash_never_reads_members (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_wrong_outer_hash_never_reads_members) ... ok
+test_wrong_size_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_wrong_size_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.142s
+
+OK
+{"status":"ok","ok":true,"phase":"/output/phase.json"}
+EXIT:0

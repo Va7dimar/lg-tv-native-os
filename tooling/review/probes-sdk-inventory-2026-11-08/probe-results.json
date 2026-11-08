@@ -1,0 +1,322 @@
+[
+  {
+    "name": "happy_three_streams_metadata_only",
+    "passed": true,
+    "detail": {
+      "ok": true,
+      "totals": {
+        "decoded_bytes": 30720,
+        "logical_regular_bytes": 15,
+        "members": 3,
+        "metadata_bytes": 6,
+        "selected_bytes": 0
+      },
+      "extraction": false,
+      "n_rows": 3
+    }
+  },
+  {
+    "name": "all_pins_before_any_parser",
+    "passed": true,
+    "detail": {
+      "ok": false,
+      "error": "InventoryError: input pin mismatch",
+      "parser_calls": 0
+    }
+  },
+  {
+    "name": "marker_mismatch_no_decode",
+    "passed": true,
+    "detail": "InventoryError: slice marker mismatch"
+  },
+  {
+    "name": "concat_trailing_trunc_both_codecs",
+    "passed": true,
+    "detail": {
+      "xz_concat": {
+        "ok": false,
+        "error": "InventoryError: compressed trailing/concatenated bytes",
+        "n_inputs": 1
+      },
+      "xz_junk": {
+        "ok": false,
+        "error": "InventoryError: compressed trailing/concatenated bytes",
+        "n_inputs": 1
+      },
+      "xz_zero_tail": {
+        "ok": false,
+        "error": "InventoryError: compressed trailing/concatenated bytes",
+        "n_inputs": 1
+      },
+      "gz_concat": {
+        "ok": false,
+        "error": "InventoryError: compressed trailing/concatenated bytes",
+        "n_inputs": 2
+      },
+      "gz_junk": {
+        "ok": false,
+        "error": "InventoryError: compressed trailing/concatenated bytes",
+        "n_inputs": 2
+      },
+      "gz_zero_tail": {
+        "ok": false,
+        "error": "InventoryError: compressed trailing/concatenated bytes",
+        "n_inputs": 2
+      },
+      "xz_trunc": {
+        "ok": false,
+        "error": "InventoryError: truncated compressed stream",
+        "n_inputs": 1
+      },
+      "gz_trunc": {
+        "ok": false,
+        "error": "InventoryError: truncated compressed stream",
+        "n_inputs": 2
+      }
+    }
+  },
+  {
+    "name": "nonzero_tail_rejected_zero_padding_ok",
+    "passed": true,
+    "detail": {
+      "nonzero": "InventoryError: nonzero decoded trailing tar data",
+      "padding_ok": true,
+      "short": "InventoryError: invalid tar header: empty header"
+    }
+  },
+  {
+    "name": "invalid_later_header_not_masked_as_eof",
+    "passed": true,
+    "detail": "InventoryError: invalid tar header: invalid header"
+  },
+  {
+    "name": "lzma_memlimit_fails_closed",
+    "passed": true,
+    "detail": "LZMAError: Memory usage limit exceeded"
+  },
+  {
+    "name": "unbounded_read_forbidden_and_decode_charged_including_lookahead",
+    "passed": true,
+    "detail": {
+      "unbounded_rejected": true,
+      "charged": 10240,
+      "tell": 1,
+      "max_chunk": 10240
+    }
+  },
+  {
+    "name": "shared_independent_logical_and_decoded_caps",
+    "passed": true,
+    "detail": {
+      "members": {
+        "error": "InventoryError: limit exceeded: members",
+        "total": 3
+      },
+      "logical_regular_bytes": {
+        "error": "InventoryError: limit exceeded: logical_regular_bytes",
+        "total": 15
+      },
+      "decoded_bytes": {
+        "error": "InventoryError: limit exceeded: decoded_bytes",
+        "total": 30720
+      },
+      "exact_caps_ok": true
+    }
+  },
+  {
+    "name": "first_failure_skips_remaining_after_all_pins",
+    "passed": true,
+    "detail": {
+      "error": "InventoryError: truncated compressed stream",
+      "skipped": [
+        "native",
+        "target"
+      ],
+      "verified": [
+        true,
+        true,
+        true
+      ]
+    }
+  },
+  {
+    "name": "unsafe_symlink_escape_fails",
+    "passed": true,
+    "detail": "InventoryError: unsafe link escape"
+  },
+  {
+    "name": "production_pins_and_closed_cli",
+    "passed": true,
+    "detail": {
+      "pins_ok": true,
+      "cli": {
+        "--select": "rejected",
+        "--max-members": "rejected",
+        "--offset": "rejected",
+        "--expected-hash": "rejected",
+        "--test-spec": "rejected",
+        "--synthetic-fixture-mode": "rejected",
+        "wrong_path": "production input path must equal immutable sdk path"
+      }
+    }
+  },
+  {
+    "name": "limits_cannot_be_raised",
+    "passed": true,
+    "detail": {
+      "raised": false
+    }
+  },
+  {
+    "name": "cpython_313_hook_api_matches",
+    "passed": true,
+    "detail": {
+      "version": "3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]",
+      "frombuf": "(buf, encoding, errors, *, dircheck=True)"
+    }
+  },
+  {
+    "name": "isolation_command_shape",
+    "passed": true,
+    "detail": {
+      "note": "initial fail was substring(root) in joined command; official/correct check is list membership so the parent directory is not itself bound",
+      "ok": true,
+      "cmd": [
+        "/usr/bin/timeout",
+        "--signal=TERM",
+        "--kill-after=1s",
+        "117",
+        "/usr/bin/prlimit",
+        "--as=1073741824",
+        "--cpu=120",
+        "--core=0",
+        "--nofile=64",
+        "--fsize=1073741824",
+        "--",
+        "/usr/bin/bwrap",
+        "--unshare-all",
+        "--die-with-parent",
+        "--new-session",
+        "--clearenv",
+        "--setenv",
+        "LANG",
+        "C.UTF-8",
+        "--setenv",
+        "PYTHONDONTWRITEBYTECODE",
+        "1",
+        "--dir",
+        "/usr",
+        "--dir",
+        "/usr/bin",
+        "--dir",
+        "/usr/lib",
+        "--ro-bind",
+        "/usr/bin/python3.13",
+        "/usr/bin/python3.13",
+        "--ro-bind",
+        "/usr/lib/python3.13",
+        "/usr/lib/python3.13",
+        "--ro-bind",
+        "/usr/lib/x86_64-linux-gnu",
+        "/usr/lib/x86_64-linux-gnu",
+        "--ro-bind",
+        "/usr/lib64",
+        "/usr/lib64",
+        "--symlink",
+        "usr/lib",
+        "/lib",
+        "--symlink",
+        "usr/lib64",
+        "/lib64",
+        "--proc",
+        "/proc",
+        "--remount-ro",
+        "/proc",
+        "--dev",
+        "/dev",
+        "--remount-ro",
+        "/dev",
+        "--dir",
+        "/tmp",
+        "--dir",
+        "/input",
+        "--dir",
+        "/tool",
+        "--ro-bind",
+        "/workspace/lg-tv/tooling/sdk_inventory_phase.py",
+        "/tool/sdk_inventory_phase.py",
+        "--ro-bind",
+        "/tmp/sdk-iso-check-vlnzfk1p/f0",
+        "/input/sdk",
+        "--ro-bind",
+        "/tmp/sdk-iso-check-vlnzfk1p/f1",
+        "/input/native",
+        "--ro-bind",
+        "/tmp/sdk-iso-check-vlnzfk1p/f2",
+        "/input/target",
+        "--bind",
+        "/proc/self/fd/99",
+        "/output",
+        "--chdir",
+        "/output",
+        "--remount-ro",
+        "/",
+        "--",
+        "/usr/bin/python3",
+        "-I",
+        "/tool/probe.py"
+      ]
+    },
+    "corrected": true
+  },
+  {
+    "name": "atomic_manifest_never_overwrites",
+    "passed": true,
+    "detail": {
+      "ok": false
+    }
+  },
+  {
+    "name": "fresh_output_rejects_existing_and_dangling",
+    "passed": true,
+    "detail": {
+      "existing": "[Errno 17] File exists: 'existing-out'",
+      "dangling": "[Errno 17] File exists: 'dangling-out'"
+    }
+  },
+  {
+    "name": "mutation_after_pin_detected",
+    "passed": true,
+    "detail": "InventoryError: input mutation after parsing"
+  },
+  {
+    "name": "deadline_covers_pins",
+    "passed": true,
+    "detail": "InventoryError: deadline exceeded"
+  },
+  {
+    "name": "integrity_after_tar_eof_detected",
+    "passed": true,
+    "detail": {
+      "error": "LZMAError: Corrupt input data",
+      "integrity_eof": false
+    }
+  },
+  {
+    "name": "nested_archive_flagged_not_expanded",
+    "passed": true,
+    "detail": {
+      "ok": true,
+      "has_secret": false,
+      "snippet": "{\"input\":\"sdk\",\"raw_name\":\"README/nested.tar.gz\",\"canonical_name\":\"README/nested.tar.gz\",\"type\":\"regular\",\"size\":10240,\"link_target\":\"\",\"pax_headers\":{},\"decision\":\"recorded\",\"reasons\":[\"metadata_only\"],\"selected\":false,\"nested_archive\":true}\n{\"input\":\"sdk\",\"raw_name\":\"a\",\"canonical_name\":\"a\",\"type\""
+    }
+  },
+  {
+    "name": "direct_worker_invocation_disabled",
+    "passed": true,
+    "detail": {
+      "rc": 2,
+      "stderr": "Use isolate_sdk_inventory.py; direct production worker invocation is disabled.\n"
+    }
+  }
+]

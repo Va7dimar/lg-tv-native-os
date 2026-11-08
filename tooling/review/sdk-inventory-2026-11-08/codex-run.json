@@ -1,0 +1,39 @@
+{
+  "requested_model": "current Codex default (expected gpt-6.1-sol)",
+  "requested_effort": "high",
+  "started": "2026-11-08T06:20:11.288518+00:00",
+  "command": [
+    "codex",
+    "exec",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "--json",
+    "-o",
+    "/workspace/lg-tv/tooling/review/sdk-inventory-2026-11-08/codex-final.txt",
+    "-"
+  ],
+  "real_sdk_processing_authorized": false,
+  "exit_code": 0,
+  "elapsed_seconds": 650.39,
+  "finished": "2026-11-08T06:31:01.678644+00:00",
+  "reported_model": "not independently exposed by this codex --json event stream; used configured default expected gpt-6.1-sol",
+  "cli_version": "codex-cli 0.166.0",
+  "turn_completed": [
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 946973,
+        "cached_input_tokens": 919168,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 29508,
+        "reasoning_output_tokens": 8029
+      }
+    }
+  ],
+  "refusal": false,
+  "fallback": false,
+  "resets": false
+}

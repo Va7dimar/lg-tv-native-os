@@ -1,0 +1,10 @@
+{
+  "verified_at": "2026-11-08T05:48:09.814993+00:00",
+  "both_input_pins_match": true,
+  "both_archive_statuses_ok": true,
+  "aggregate_members": 64174,
+  "exact_selected_paths_and_sizes_match": true,
+  "selected_total_bytes": 3442,
+  "scope_exhausted": true,
+  "postvalidated_not_intrinsic_total_cap": true
+}

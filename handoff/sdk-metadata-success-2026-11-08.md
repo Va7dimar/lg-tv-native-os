@@ -1,0 +1,10 @@
+# SDK all-three metadata inventory SUCCESS — next bounded text gap
+2026-11-08T13:35:13.327220+00:00 Atlantic/Reykjavik
+
+Exactreviewedall3commandoncewithONLYfreshoutputchanged;13:30:17–13:30:31 Atlantic/Reykjavik,exit0/13.804s. Bothworker/launcherOK,all3pinsverifiedBEFOREparse,alltar+decoderEOFtrue.73838observedheaders/66880emittedrecords;decoded2136002560B/logical2078148221B/metadata12781920B,0selected. Samecaps;noautomaticretry/sourceexecution/build/TVactions. PriorSDKUTF8+unsafe-link/Chromium/adaptationpartialsimmutable.
+
+VerifiedfilenamehintsGCC8.2.0directory+ARMcompiler,glibc2.28libc/loadernames;nominalx86_64host+ca9v1/mllib32ARM/AArch64layout,notunitfacts. Binutilsversionunknown;97Blinux/version.hnumericversionunknown. Date-label20191125vsrequired20190307compatibilityUNKNOWN.56absoluteSYMLINKsmetadataonlynonextractable/unfollowed;0outoftreeclassified,1037relativehardlinks;110archive-likeflagsunexpanded. NoSDKinstalled/executed.
+
+Exactcommand/checkpoint/logs/verifiedpath+size+ordinalleads/subscribedanalysis+reconciliation: evidence/sdk-inventory-links-execution-2026-11-08/. Raw generated outputs: sdk-candidates/20191125/inspection-metadata-links-PENDING-REVIEW/ (see exact filenames in normalized inspection evidence). Normalizedevidence/sdk-inventory-links-inspection.json/.md. SamePage/ledger/reproductionupdated. CodexSol/high115.63sprimarygeneratedJSONanalysis;servingIDunattested;alljobsdone.
+
+Nextparentcoordination:handoff/sdk-selected-text-next-plan.json lists10EXACTregularmembers50478B total(version/env/site/features.h/linux/version.h/provider/GCCREADME),proposed32KiB/member64KiBtotal. SDKreadercurrentlyMETADATAONLY,no textselector: narrowfeature TDD+independentreview neededbeforeactualread,newfreshoutput,existingphasecontrolsnotreset/raised. Noownerperfilequestion. Parentcanimplement/reviewunderongoingoffTVauthoritythenhandoffactualselection;thisworkerhasNOTcreatedfeatureorreadmembers. PreserveSDKcommunityprovenance,licensing/ABI/sourceBSP/unit/boot/recoverygaps.

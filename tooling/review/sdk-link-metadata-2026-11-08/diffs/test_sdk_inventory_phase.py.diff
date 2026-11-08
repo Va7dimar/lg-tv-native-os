@@ -1,0 +1,18 @@
+--- before/test_sdk_inventory_phase.py
++++ tooling/tests/test_sdk_inventory_phase.py
+@@ -198,8 +198,13 @@
+             self.assertTrue(all(r['decision'] == 'recorded_not_followed' for r in links))
+             self.assertGreater(doc['totals']['metadata_bytes'], sum(len(r['raw_name']) for r in rows))
+         sy.linkname = '../../escape'
+-        doc, _ = self.run_phase(self.specs(tar_bytes([sy])))
+-        self.assertFalse(doc['ok'])
++        # Explicit metadata-only contract now records escaping SYMLINK targets.
++        doc, out = self.run_phase(self.specs(tar_bytes([sy])))
++        self.assertTrue(doc['ok'], doc)
++        rows = [json.loads(x) for x in (out / 'members.jsonl').read_text().splitlines()]
++        self.assertTrue(all(r['link_target_classification'] == 'out_of_tree' and
++                            r['decision'] == 'recorded_not_followed_nonextractable' and
++                            not r['extractable'] and not r['selected'] for r in rows))
+ 
+     def test_lzma_memory_limit_and_bounded_decoder(self):
+         specs = self.specs(transforms={0: lambda _: lzma.compress(tar_bytes(),

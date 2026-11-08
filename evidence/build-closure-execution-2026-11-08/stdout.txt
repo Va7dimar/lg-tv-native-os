@@ -1,0 +1,1 @@
+{"status":"ok","ok":true,"inventory":"/output/inventory.json","markdown":"/output/inventory.md"}

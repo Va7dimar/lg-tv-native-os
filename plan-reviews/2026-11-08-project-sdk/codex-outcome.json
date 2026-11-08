@@ -1,0 +1,24 @@
+{
+  "requested_model": "defaultgpt-6.1-sol",
+  "effort": "high",
+  "started_at": "2026-11-08T06:00:59.893004+00:00",
+  "timeout_seconds": 180,
+  "command": [
+    "codex",
+    "exec",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "-o",
+    "/workspace/lg-tv/plan-reviews/2026-11-08-project-sdk/codex-answer.txt",
+    "<savedselfcontainedprompt>"
+  ],
+  "exit_code": 0,
+  "timed_out": false,
+  "elapsed_seconds": 57.068,
+  "reported_model": "gpt-6.1-sol",
+  "reported_effort": "high",
+  "response_status": "substantiveindependentfactcheck"
+}

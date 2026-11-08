@@ -1,0 +1,287 @@
+--- /workspace/lg-tv/tooling/isolate_targeted_phase.py	2026-11-08 05:11:13.024964600 +0000
++++ /workspace/lg-tv/tooling/isolate_adaptation_phase.py	2026-11-08 06:19:28.934615265 +0000
+@@ -1,187 +1,121 @@
+-"""Launch the CORE TWO phase under timeout, prlimit, and bwrap."""
+-
++"""Narrow timeout/prlimit/bwrap launcher for the pinned adaptation phase."""
+ from __future__ import annotations
+ 
+ import json
+ import os
++from pathlib import Path
+ import subprocess
+ import sys
+-from pathlib import Path
+ 
+ import bounded_archive_inventory as bai
+-import targeted_core_two_phase as tcp
++import adaptation_libkadaptor_phase as ap
+ 
+ 
+-def build_isolation_command(
+-    outer,
+-    output_dir,
+-    wall_seconds: int = 120,
+-    address_space_bytes: int = 1073741824,
+-    forwarded_args=None,
+-    tool_path=None,
+-    helper_path=None,
+-) -> list[str]:
+-    if wall_seconds > bai.HARD_MAX_WALL_SECONDS:
+-        raise tcp.PhaseLimitError("wall_seconds exceeds hard maximum")
+-    if address_space_bytes > bai.HARD_MAX_ADDRESS_SPACE_BYTES:
+-        raise tcp.PhaseLimitError("address_space_bytes exceeds hard maximum")
+-    outer_path = Path(outer)
+-    fd, _st = bai.open_regular_nofollow(outer_path)
++def build_isolation_command(outer, output_dir, *, synthetic_fixture_mode=None,
++                            wall_seconds=120, address_space_bytes=1073741824):
++    limits = ap.PhaseLimits(wall_seconds=wall_seconds, address_space_bytes=address_space_bytes)
++    outer = Path(outer).absolute()
++    fd, _ = bai.open_regular_nofollow(outer)
+     os.close(fd)
+-    outer_path = outer_path.resolve()
+-    output_dir = Path(output_dir).resolve()
+-    tool_path = Path(tool_path or Path(__file__).with_name("targeted_core_two_phase.py")).resolve()
+-    helper_path = Path(helper_path or Path(__file__).with_name("bounded_archive_inventory.py")).resolve()
+-    forwarded_args = list(forwarded_args or [])
+-    dest_name = outer_path.name
++    output = Path(output_dir).absolute()
++    if output.is_symlink():
++        raise ap.PhaseError("symlink output directory rejected")
++    tool_dir = Path(__file__).resolve().parent
+     cmd = [
+-        "timeout",
+-        "--kill-after=5s",
+-        str(wall_seconds),
+-        "prlimit",
+-        f"--as={address_space_bytes}",
+-        f"--cpu={wall_seconds}",
+-        "--core=0",
+-        "--nofile=64",
+-        "--",
+-        "bwrap",
+-        "--unshare-all",
+-        "--die-with-parent",
+-        "--new-session",
+-        "--clearenv",
+-        "--setenv",
+-        "PATH",
+-        "/usr/bin:/bin",
+-        "--setenv",
+-        "LANG",
+-        "C",
+-        "--setenv",
+-        "PYTHONDONTWRITEBYTECODE",
+-        "1",
+-        "--setenv",
+-        "PYTHONPATH",
+-        "/tool",
+-        "--ro-bind",
+-        "/usr",
+-        "/usr",
+-        "--symlink",
+-        "usr/bin",
+-        "/bin",
+-        "--symlink",
+-        "usr/lib",
+-        "/lib",
+-        "--symlink",
+-        "usr/lib64",
+-        "/lib64",
+-        "--proc",
+-        "/proc",
+-        "--dev",
+-        "/dev",
+-        "--tmpfs",
+-        "/tmp",
+-        "--dir",
+-        "/input",
+-        "--dir",
+-        "/tool",
+-        "--ro-bind",
+-        str(tool_path),
+-        "/tool/targeted_core_two_phase.py",
+-        "--ro-bind",
+-        str(helper_path),
+-        "/tool/bounded_archive_inventory.py",
+-        "--ro-bind",
+-        str(outer_path),
+-        f"/input/{dest_name}",
+-        "--bind",
+-        str(output_dir),
+-        "/output",
+-        "--chdir",
+-        "/output",
+-        "--",
+-        "python3",
+-        "/tool/targeted_core_two_phase.py",
+-        "--outer",
+-        f"/input/{dest_name}",
+-        "--output-dir",
+-        "/output",
++        "timeout", "--kill-after=5s", str(limits.wall_seconds), "prlimit",
++        f"--as={limits.address_space_bytes}", f"--cpu={limits.wall_seconds}",
++        "--core=0", "--nofile=64", "--", "bwrap",
++        "--unshare-all", "--die-with-parent", "--new-session", "--clearenv",
++        "--setenv", "PATH", "/usr/bin:/bin", "--setenv", "LANG", "C",
++        "--setenv", "PYTHONDONTWRITEBYTECODE", "1", "--setenv", "PYTHONPATH", "/tool",
++        "--ro-bind", "/usr", "/usr",
++        "--symlink", "usr/bin", "/bin", "--symlink", "usr/lib", "/lib",
++        "--symlink", "usr/lib64", "/lib64",
++        "--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp",
++        "--dir", "/input", "--dir", "/tool",
++        "--ro-bind", str(tool_dir / "adaptation_libkadaptor_phase.py"), "/tool/adaptation_libkadaptor_phase.py",
++        "--ro-bind", str(tool_dir / "bounded_archive_inventory.py"), "/tool/bounded_archive_inventory.py",
++        "--ro-bind", str(outer), f"/input/{outer.name}",
++        "--bind", str(output.resolve()), "/output", "--chdir", "/output",
+     ]
+-    cmd += forwarded_args
++    if synthetic_fixture_mode is not None:
++        fixture = Path(synthetic_fixture_mode).absolute()
++        ap.load_synthetic_spec(fixture)  # Reject retargeting before launching.
++        cmd += ["--ro-bind", str(fixture), "/input/synthetic-spec.json"]
++    cmd += ["--", "python3", "/tool/adaptation_libkadaptor_phase.py",
++            "--outer", f"/input/{outer.name}", "--output-dir", "/output"]
++    if synthetic_fixture_mode is not None:
++        cmd += ["--synthetic-fixture-mode", "/input/synthetic-spec.json"]
+     return cmd
+ 
+ 
+-def main(argv: list[str] | None = None) -> int:
+-    argv = list(sys.argv[1:] if argv is None else argv)
+-    parser = tcp.build_arg_parser()
++def _namespace():
+     try:
+-        args = parser.parse_args(argv)
+-    except SystemExit as exc:
+-        return exc.code if isinstance(exc.code, int) else 2
++        return os.readlink("/proc/self/ns/net")
++    except OSError:
++        return None
++
++
++def _write_log(output, name, data):
++    free = ap.shutil.disk_usage(output).free
++    if free < bai.HARD_MIN_FREE_DISK_BYTES:
++        raise ap.PhaseError(f"disk free {free} below 10GiB floor before launcher write")
++    bai.atomic_write_bytes(bai.contained_path(output, name), data)
++
++
++def main(argv=None):
+     try:
+-        limits = tcp.limits_from_args(args)
+-    except tcp.PhaseLimitError as exc:
+-        print(str(exc), file=sys.stderr)
+-        return 2
+-    output_dir = Path(args.output_dir)
+-    output_dir.mkdir(parents=True, exist_ok=True)
+-    forwarded: list[str] = [
+-        "--expected-outer-bytes",
+-        str(args.expected_outer_bytes),
+-        "--expected-outer-sha256",
+-        args.expected_outer_sha256,
+-    ]
+-    if args.allow_test_spec:
+-        forwarded.append("--allow-test-spec")
+-        for item in args.test_target:
+-            forwarded += ["--test-target", item]
+-    if args.min_free_disk_bytes is not None:
+-        forwarded += ["--min-free-disk-bytes", str(args.min_free_disk_bytes)]
+-    if args.wall_seconds is not None:
+-        forwarded += ["--wall-seconds", str(args.wall_seconds)]
++        args = ap.build_arg_parser().parse_args(argv)
++    except SystemExit as exc:
++        return exc.code
++    output = Path(args.output_dir).absolute()
++    held = []
+     try:
+-        cmd = build_isolation_command(
+-            args.outer,
+-            output_dir,
+-            wall_seconds=limits.wall_seconds,
+-            address_space_bytes=limits.address_space_bytes,
+-            forwarded_args=forwarded,
+-        )
+-    except (tcp.PhaseLimitError, bai.InputError) as exc:
++        if output.is_symlink():
++            raise ap.PhaseError("symlink output directory rejected")
++        output.mkdir(parents=True, exist_ok=True)
++        # Build rejects input symlinks. Hold O_NOFOLLOW descriptors through bwrap
++        # setup so a subsequent path replacement cannot redirect the input bind.
++        cmd = build_isolation_command(args.outer, output,
++                                      synthetic_fixture_mode=args.synthetic_fixture_mode)
++        sources = [Path(args.outer).absolute()]
++        if args.synthetic_fixture_mode:
++            sources.append(Path(args.synthetic_fixture_mode).absolute())
++        for source in sources:
++            fd, _ = bai.open_regular_nofollow(source)
++            held.append(fd)
++            for index, value in enumerate(cmd):
++                if value == "--ro-bind" and cmd[index + 1] == str(source):
++                    cmd[index + 1] = f"/proc/self/fd/{fd}"
++        host_ns = _namespace()
++        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, pass_fds=tuple(held))
++        _write_log(output, "launcher-stdout.txt", proc.stdout[:bai.HARD_MAX_STDOUT_BYTES])
++        _write_log(output, "launcher-stderr.txt", proc.stderr[:256 * 1024])
++        document = {}
++        path = bai.contained_path(output, "phase.json")
++        if path.is_file():
++            fd, st = bai.open_regular_nofollow(path)
++            with os.fdopen(fd, "rb") as src:
++                if st.st_size <= 64 * 1024 * 1024:
++                    document = json.load(src)
++        result = dict(exit_code=proc.returncode, command=cmd,
++                      unshare_all=True, share_net=False, noexec_output_demonstrated=False,
++                      host_net_ns=host_ns,
++                      sandbox_net_ns=document.get("isolation_observation", {}).get("sandbox_net_ns"),
++                      timeout_wall_seconds=120, prlimit_as_bytes=1073741824)
++        _write_log(output, "launcher-result.json", (json.dumps(result, indent=2) + "\n").encode())
++        if proc.stdout:
++            sys.stdout.buffer.write(proc.stdout[:bai.HARD_MAX_STDOUT_BYTES])
++        if proc.stderr:
++            sys.stderr.buffer.write(proc.stderr[:256 * 1024])
++        return proc.returncode
++    except (ap.PhaseError, bai.InputError, bai.PathEscapeError, OSError, ValueError) as exc:
++        ap.record_failed_phase(output, str(exc))
+         print(str(exc), file=sys.stderr)
+         return 2
+-
+-    host_net = None
+-    try:
+-        host_net = os.readlink("/proc/self/ns/net")
+-    except OSError:
+-        host_net = None
+-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+-    (output_dir / "launcher-stdout.txt").write_bytes(proc.stdout[: limits.max_stdout_bytes])
+-    (output_dir / "launcher-stderr.txt").write_bytes(proc.stderr[: 256 * 1024])
+-    sandbox_net = None
+-    phase_path = output_dir / "phase.json"
+-    if phase_path.is_file():
+-        try:
+-            document = json.loads(phase_path.read_text(encoding="utf-8"))
+-            sandbox_net = (document.get("isolation_observation") or {}).get("sandbox_net_ns")
+-        except (OSError, json.JSONDecodeError):
+-            sandbox_net = None
+-    result = {
+-        "unshare_all": "--unshare-all" in cmd,
+-        "share_net": "--share-net" in cmd,
+-        "noexec_output_demonstrated": False,
+-        "exit_code": proc.returncode,
+-        "host_net_ns": host_net,
+-        "sandbox_net_ns": sandbox_net,
+-        "timeout_wall_seconds": limits.wall_seconds,
+-        "prlimit_as_bytes": limits.address_space_bytes,
+-        "command": cmd,
+-    }
+-    tmp = output_dir / f".launcher-result.json.tmp.{os.getpid()}"
+-    tmp.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+-    os.replace(tmp, output_dir / "launcher-result.json")
+-    if proc.stdout:
+-        sys.stdout.buffer.write(proc.stdout[: limits.max_stdout_bytes])
+-    return proc.returncode
++    finally:
++        for fd in held:
++            os.close(fd)
+ 
+ 
+ if __name__ == "__main__":

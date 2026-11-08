@@ -1,0 +1,39 @@
+{
+  "requested_model": "gpt-6.1-sol",
+  "effort": "high",
+  "started_Atlantic_Reykjavik": "2026-11-08T13:17:52.588013+00:00",
+  "command": [
+    "codex",
+    "exec",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "--json",
+    "-o",
+    "/workspace/lg-tv/tooling/review/sdk-link-metadata-2026-11-08/codex-final.txt",
+    "-"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 290.609,
+  "finished_Atlantic_Reykjavik": "2026-11-08T13:22:43.197480+00:00",
+  "reported_model": "NoindependentmodelidentifierinJSONevents;explicitlyrequestedgpt-6.1-sol/high",
+  "refusal": false,
+  "fallback": false,
+  "resets": false,
+  "turn_completed": [
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 662787,
+        "cached_input_tokens": 615680,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 11206,
+        "reasoning_output_tokens": 2681
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+# Actual all-three SDK metadata inventory — SUCCESS, not installed
+2026-11-08T13:34:18.275035+00:00 Atlantic/Reykjavik.13:30:17.592–13:30:31.396,exit0,13.804souter/13.706slauncher. ExactreviewedcommandchangedONLYtofresh `inspection-metadata-links-PENDING-REVIEW`. IndependentreviewSPEC/QUALITYPASSwastechnicalgate;owner t77u/t71–74researchscope+parenthandoffauthority. No retries/capraise/sourceexecution/build/TVactions;prioroutputsuntouched.
+
+## Proven metadata coverage
+ALL3fullpins498625937BverifiedBEFOREparse. Worker+launcheroktrue;all3tarEOFandreaderreporteddecoderintegrityEOFtrue.73838observedheaders/66880emittedrecords,12781920metadataB,2078148221logicalregularB,2136002560full decodedB,0selected/extractionunimplemented. SDK18194records,native637,target48049.56absoluteSYMLINKsrecordednonextractableunfollowed,0out_of_tree;1037relativeHARDLINKsmetadataonly;110archive-like/compressedfilenameflagsNOTexpandedorvalidatedasnestedarchives. ExactXZcheckalgorithmnotrecorded;existingCHECK_NONElabelresidualretained.
+
+## Concrete version/layout HINTS, not executed proof
+GCC8.2.0versiondirectoryandARMcompiler/linkernames;host+targetlibc-2.28.so andld-2.28.so filenames(glibc2.28hint). Nominalx86_64hostandca9v1/mllib32ARM+AArch64lib/lib64layout. BinutilsversionUNKNOWN;linux/version.h97Bindexedbutkernel-headernumericversionUNKNOWN. SDK5.0.0-20191125absoluteSSLsymlinkagreesheaderdate-label;notauthenticatedrelease. Noactualbinary --version,ELF/API/ABI/licenseor20190307equivalenceproof. Communitycandidateusefulforcomparison,notdisqualifiedbydatealone.
+
+Exactpaths/sizes/JSONLordinals:`evidence/sdk-inventory-links-execution-2026-11-08/verified-metadata-leads.json`;fullsubscribedanalysisandgroundedreconciliationinthesamefolder. Rawindex/pins/EOF/counters:`sdk-candidates/20191125/inspection-metadata-links-PENDING-REVIEW/`;normalizedrecord:`evidence/sdk-inventory-links-inspection.json`.
+
+Same200kheaders/100MBmetadata/separate4GiBlogical+decoded/120swall/1GiBASnotRSS/256MiBLZMA/10GiBobservedfloor,noexecfalse. Countersbounddecompressedregularpayloads+headers/padding/drain;metadataonlydoesnotmeannobytesdecompressed. No membercontents selected orinterpretedascode. Currentreadercecbb2ac06755100d414852b91dccf8527b05321b34a96da3e0eda86b59c16c1,launcherunchanged2a6638e3439748a6dc4fb7237a03c3d05521685746df5315683c861acab9ca52.
+
+## Next evidence gap
+Version/env/site/header/providerTEXTneededforMarch20190307compilerprefix/API/ABI/kernelheaderscomparison. Tenindexedexactregularmembers50478Bproposedfutureplan32KiB/member64KiBtotal:`handoff/sdk-selected-text-next-plan.json`. CurrentSDKreaderhasNOtextselector;parentcoordinatesnarrowtested/reviewedfeature/planbeforeactualread. Noper-fileownerquestion,installer/compiler/sourceexecutionorTVaction. FullLG_BSP,missingpackaging/auxinputs,exactunitconfig,legitimateboot/recovery/calibrationpreservationremainunproved. OldChromium200k/adaptation64MiB/SDKUTF8/SDKunsafe-linkpartialsunchanged;successofthisnewcontrolledphaseisnotcompletionofthosehistories.

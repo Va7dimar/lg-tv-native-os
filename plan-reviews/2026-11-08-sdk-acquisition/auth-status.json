@@ -1,0 +1,11 @@
+{
+  "checked_at": "2026-11-08T06:11:47.220969+00:00",
+  "claude": {
+    "loggedIn": true,
+    "method": "claude.ai",
+    "subscriptionType": "max"
+  },
+  "codex": "Logged in using ChatGPT",
+  "agy_requested_model_listed": true,
+  "credentials_copied": false
+}

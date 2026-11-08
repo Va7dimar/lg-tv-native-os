@@ -1,0 +1,399 @@
+[
+  {
+    "jsonl_ordinal": 3,
+    "input": "sdk",
+    "raw_name": "./environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+    "canonical_name": "environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+    "type": "regular",
+    "size": 4321,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 4,
+    "input": "sdk",
+    "raw_name": "./site-config-ca9v1-starfishmllib32-linux-gnueabi",
+    "canonical_name": "site-config-ca9v1-starfishmllib32-linux-gnueabi",
+    "type": "regular",
+    "size": 13611,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 5,
+    "input": "sdk",
+    "raw_name": "./version-ca9v1-starfishmllib32-linux-gnueabi",
+    "canonical_name": "version-ca9v1-starfishmllib32-linux-gnueabi",
+    "type": "regular",
+    "size": 125,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 270,
+    "input": "sdk",
+    "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/openssl.cnf",
+    "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/openssl.cnf",
+    "type": "symlink",
+    "size": 0,
+    "link_target": "/opt/starfish-sdk-x86_64/5.0.0-20191125/sysroots/x86_64-starfishsdk-linux/etc/ssl/openssl.cnf.openssl",
+    "pax_headers": {},
+    "decision": "recorded_not_followed_nonextractable",
+    "link_target_classification": "absolute",
+    "extractable": false,
+    "reasons": [
+      "metadata_only",
+      "absolute_target"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 4281,
+    "input": "sdk",
+    "raw_name": "./sysroots/x86_64-starfishsdk-linux/usr/bin/arm-starfish-linux-gnueabi/arm-starfish-linux-gnueabi-gcc",
+    "canonical_name": "sysroots/x86_64-starfishsdk-linux/usr/bin/arm-starfish-linux-gnueabi/arm-starfish-linux-gnueabi-gcc",
+    "type": "regular",
+    "size": 1046976,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 4284,
+    "input": "sdk",
+    "raw_name": "./sysroots/x86_64-starfishsdk-linux/usr/bin/arm-starfish-linux-gnueabi/arm-starfish-linux-gnueabi-ld",
+    "canonical_name": "sysroots/x86_64-starfishsdk-linux/usr/bin/arm-starfish-linux-gnueabi/arm-starfish-linux-gnueabi-ld",
+    "type": "regular",
+    "size": 1748664,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 4938,
+    "input": "sdk",
+    "raw_name": "./sysroots/x86_64-starfishsdk-linux/usr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0",
+    "canonical_name": "sysroots/x86_64-starfishsdk-linux/usr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0",
+    "type": "directory",
+    "size": 0,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 5342,
+    "input": "sdk",
+    "raw_name": "./sysroots/x86_64-starfishsdk-linux/usr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0/include-fixed/README",
+    "canonical_name": "sysroots/x86_64-starfishsdk-linux/usr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0/include-fixed/README",
+    "type": "regular",
+    "size": 750,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 5465,
+    "input": "sdk",
+    "raw_name": "./sysroots/x86_64-starfishsdk-linux/usr/lib/aarch64-starfish-linux/gcc/aarch64-starfish-linux/8.2.0",
+    "canonical_name": "sysroots/x86_64-starfishsdk-linux/usr/lib/aarch64-starfish-linux/gcc/aarch64-starfish-linux/8.2.0",
+    "type": "directory",
+    "size": 0,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 9390,
+    "input": "sdk",
+    "raw_name": "./sysroots/x86_64-starfishsdk-linux/lib/libc-2.28.so",
+    "canonical_name": "sysroots/x86_64-starfishsdk-linux/lib/libc-2.28.so",
+    "type": "regular",
+    "size": 2206496,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 9454,
+    "input": "sdk",
+    "raw_name": "./sysroots/ca9v1-starfishmllib32-linux-gnueabi/lib64/ld-linux-aarch64.so.1",
+    "canonical_name": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/lib64/ld-linux-aarch64.so.1",
+    "type": "symlink",
+    "size": 0,
+    "link_target": "ld-2.28.so",
+    "pax_headers": {},
+    "decision": "recorded_not_followed",
+    "link_target_classification": "relative",
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 10826,
+    "input": "sdk",
+    "raw_name": "./sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/features.h",
+    "canonical_name": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/features.h",
+    "type": "regular",
+    "size": 15721,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 11618,
+    "input": "sdk",
+    "raw_name": "./sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/linux/version.h",
+    "canonical_name": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/linux/version.h",
+    "type": "regular",
+    "size": 97,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 18238,
+    "input": "native",
+    "raw_name": "usr/share/gettext/intl/VERSION",
+    "canonical_name": "usr/share/gettext/intl/VERSION",
+    "type": "regular",
+    "size": 42,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 18281,
+    "input": "native",
+    "raw_name": "usr/share/gettext/intl/COPYING.LIB",
+    "canonical_name": "usr/share/gettext/intl/COPYING.LIB",
+    "type": "regular",
+    "size": 26545,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 18846,
+    "input": "target",
+    "raw_name": "lib/libc-2.28.so",
+    "canonical_name": "lib/libc-2.28.so",
+    "type": "regular",
+    "size": 16433176,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 19180,
+    "input": "target",
+    "raw_name": "lib/ld-linux.so.3",
+    "canonical_name": "lib/ld-linux.so.3",
+    "type": "symlink",
+    "size": 0,
+    "link_target": "ld-2.28.so",
+    "pax_headers": {},
+    "decision": "recorded_not_followed",
+    "link_target_classification": "relative",
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 19202,
+    "input": "target",
+    "raw_name": "sysroot-providers/lib32-linux-libc-headers",
+    "canonical_name": "sysroot-providers/lib32-linux-libc-headers",
+    "type": "regular",
+    "size": 24,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 19292,
+    "input": "target",
+    "raw_name": "sysroot-providers/lib32-glibc",
+    "canonical_name": "sysroot-providers/lib32-glibc",
+    "type": "regular",
+    "size": 11,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 19434,
+    "input": "target",
+    "raw_name": "usr/include/features.h",
+    "canonical_name": "usr/include/features.h",
+    "type": "regular",
+    "size": 15721,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 22079,
+    "input": "target",
+    "raw_name": "usr/include/linux/version.h",
+    "canonical_name": "usr/include/linux/version.h",
+    "type": "regular",
+    "size": 97,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  },
+  {
+    "jsonl_ordinal": 66742,
+    "input": "target",
+    "raw_name": "usr/share/icu/62.1/LICENSE",
+    "canonical_name": "usr/share/icu/62.1/LICENSE",
+    "type": "regular",
+    "size": 21000,
+    "link_target": "",
+    "pax_headers": {},
+    "decision": "recorded",
+    "link_target_classification": null,
+    "extractable": false,
+    "reasons": [
+      "metadata_only"
+    ],
+    "selected": false,
+    "nested_archive": false
+  }
+]

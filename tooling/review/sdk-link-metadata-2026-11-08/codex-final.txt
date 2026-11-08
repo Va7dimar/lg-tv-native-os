@@ -1,0 +1,9 @@
+Implemented the candidate: bounded rejected-link diagnostics and metadata-only classification of absolute/escaping symlinks. Hardlinks remain fail closed; launcher unchanged.
+
+Reader SHA256: `cecbb2ac06755100d414852b91dccf8527b05321b34a96da3e0eda86b59c16c1`
+
+Preserved RED: 6 failures. Final SDK-only suite: 47 tests, exit 0, with 10 honest bwrap EPERM skips.
+
+[Review package and assertion matrix](/workspace/lg-tv/tooling/review/sdk-link-metadata-2026-11-08/report.md) includes snapshots, exact diffs, hashes, logs, and limits.
+
+No SDK run occurred. The actual offender remains unknown; independent parent review is required.

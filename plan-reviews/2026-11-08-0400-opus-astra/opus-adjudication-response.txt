@@ -1,0 +1,83 @@
+```json
+{
+  "verdict": "corrections-needed",
+  "scope_statement": "Editorial adjudication and candidate consistency only: approval sequencing, dependency cycles, and plan/design alignment. Technical adequacy, hardware feasibility, security, and boot/recovery method were not assessed. No approval is granted or inferred. Source facts were taken as supplied.",
+  "adjudication": [
+    {
+      "issue": "Astra #1: whether to add owner acceptance of a provisional branch before Task 4, or to document multiple candidate-branch ledgers for desk comparison and keep the single owner freeze at Task 5.",
+      "decision": "Accept the maintainer approach. It is coherent, provided remaining finding R1 is fixed.",
+      "reason": "Astra's defect was that Task 4 had no defined object to evaluate before selection. The candidate fixes this by chaining Task 3 ('describe each plausible candidate branch and retained/replaced ledger explicitly'), Task 4 ('For each explicitly described candidate branch'), G1-target ('an explicitly described candidate boot/driver branch') and Task 5 (owner freeze after G3-D). This removes the gap without adding an approval or silently selecting an architecture. Astra's alternative would also be coherent, but it adds an owner decision that the evidence does not require. One Task 3 sentence still requires owner ledger acceptance before Task 4 (R1)."
+    },
+    {
+      "issue": "Maintainer split of G3-D (documentary build eligibility) from G3-V (tested recovery and exact-operation coverage before any target boot/write).",
+      "decision": "Accept. The split removes the build-artifact/recovery cycle at the PhaseB boundary and claims no boot or recovery pass. R2 wording fix needed.",
+      "reason": "Task 4, Task 5, PhaseB, PhaseT and the design dependency section all agree. G3-D gates only box-only build. G3-V gates any custom target boot/write. PhaseR is separate and 'cannot use an unapproved custom boot on the primary to prove safety.' One G3-D criterion, 'an authorized validation route', can be read as requiring PhaseR approval before build, which would re-couple build to recovery-validation approval (R2)."
+    },
+    {
+      "issue": "Proposed E1: bounded source inspection inside E1 that completes as learning even after a U0 deployment-no-go, replacing the earlier E1/E2 split.",
+      "decision": "Accept as an editorially coherent proposal. It resolves original F1, F2 and F4 and Astra #2. R4 fix needed.",
+      "reason": "Task 0 step 3, the U0 fail cell, the approval-scope summary, the exact approval text, and the design's 'Approval and readiness' and clarification sections now agree. Each frames this as a proposal and not as consent. The earlier Gemini split is preserved as chronology and marked superseded in 'Enhancement review'. It is described as a researcher-accepted correction, not an owner decision. That is consistent with the matrix. The E1 deliverable no longer promises G2b coverage. Task 3 explicitly separates 'preliminary triage' from the G2b pass."
+    },
+    {
+      "issue": "The owner approves E1 once, with no per-file approval or per-check owner sign-off.",
+      "decision": "Consistent, apart from one Task 2 phrase (R3).",
+      "reason": "Task 2 Consumes ('no extra owner approval for each in-bounds file'), the Pre-read checkpoint (self-recorded in handoff/approval-checklist.md, stop if enforcement cannot be shown) and the approval summary ('No new owner permission per in-bounds file') agree. Beyond-E1 work is limited to raised ceilings, nested expansion or broader extraction. 'Existing tools' is now defined as maintained general-purpose utilities, and project scripts are not implicitly trusted. This answers the original residual question."
+    }
+  ],
+  "remaining_editorial_findings": [
+    {
+      "id": "R1",
+      "quotes": [
+        "Owner must explicitly accept this ledger; replacing only launcher on stock init/system manager/app stack remains excluded.",
+        "For Task4 desk evaluation, describe each plausible candidate branch and retained/replaced ledger explicitly; this is not owner selection, build approval or a deployable artifact.",
+        "selected stack must legitimately use compatible HDCP services",
+        "If required proprietary components unavailable/incompatible, stop selected branch; no secret launcher fallback."
+      ],
+      "contradiction": "Task 3 still requires owner acceptance of the ledger and refers to a 'selected' stack and branch. This contradicts the adjudicated decision that Task 3 produces candidate ledgers only and that the owner freeze happens at Task 5.",
+      "consequence": "A reader can conclude that Astra's provisional owner approval is still required before Task 4. That would reintroduce the extra approval the maintainer rejected, or leave the sequencing ambiguous.",
+      "minimal_replacement": {
+        "ledger_sentence": "Owner acceptance of the final ledger occurs at Task5 (G4); replacing only launcher on stock init/system manager/app stack remains excluded from every candidate ledger.",
+        "protected_input_gate": "each candidate stack must legitimately use compatible HDCP services",
+        "acceptance_sentence": "If required proprietary components are unavailable/incompatible, mark that candidate branch blocked; no secret launcher fallback."
+      }
+    },
+    {
+      "id": "R2",
+      "quotes": [
+        "legitimately obtainable restore inputs, and an authorized validation route. It is not tested recovery.",
+        "Recovery validation itself still needs PhaseR approval"
+      ],
+      "contradiction": "'Authorized validation route' can mean either a legitimate, identified route or a route PhaseR has already approved. Under the second reading, G3-D (and therefore PhaseB box-only build) depends on PhaseR approval, including possible spare-hardware purchase approval.",
+      "consequence": "This partly reverses the decoupling the G3-D/G3-V split was meant to achieve. Build eligibility would wait on recovery-validation approval, and the approval order would become ambiguous.",
+      "minimal_replacement": "legitimately obtainable restore inputs, and an identified legitimate validation route that PhaseR could later approve (PhaseR approval itself is not a G3-D precondition). It is not tested recovery."
+    },
+    {
+      "id": "R3",
+      "quotes": [
+        "set approved disk/member/expanded-size limits after observing sizes and free disk.",
+        "no extra owner approval for each in-bounds file",
+        "No new owner permission per in-bounds file."
+      ],
+      "contradiction": "'Approved' limits set after observing sizes implies a new approval step at run time. The rest of the plan says in-bounds work needs no further owner go, and that limits above the stated ceilings are beyond-E1 work.",
+      "consequence": "It is unclear whether one E1 approval is enough, or whether an owner must approve the observed limits before reading begins.",
+      "minimal_replacement": "record disk/member/expanded-size limits at or below the E1 ceilings below after observing sizes and free disk; any limit above those ceilings is beyond-E1 work needing new scope."
+    },
+    {
+      "id": "R4",
+      "quotes": [
+        "**Consumes:** exact-model source register and candidate identity caveats; desk-only research approval.",
+        "Requestable first go (not yet granted): E1-box ONLY — desk-only boot/recovery research;"
+      ],
+      "contradiction": "Task 0 cites a 'desk-only research approval' that does not match any named scope. The approval summary places desk-only boot/recovery research inside E1-box.",
+      "consequence": "This is the same undefined-approval pattern as original F1. A reader cannot tell whether U0 needs E1 or a separate approval.",
+      "minimal_replacement": "**Consumes:** exact-model source register and candidate identity caveats; E1-box approval (desk-only boot/recovery research portion)."
+    }
+  ],
+  "coverage_limits": [
+    "Editorial and sequencing review only. The adequacy of parser/disk ceilings, gate content, recovery methods, architectures and hardware feasibility is not assessed, and nothing here implies the project is feasible or approves real-hardware work.",
+    "Reviewed only the supplied candidate plan/design text, the original findings and the matrix. The review-folder artifacts, hashes and raw outputs were not examined. The matrix claim that accepted findings resolve direct quotes was spot-checked against the candidate text, not against the original revision.",
+    "No architecture is selected. Accepting the maintainer's candidate-ledger approach is a coherence judgment, not a branch preference. Documenting multiple candidates may increase Task 4 desk work. That is a scope note, not an approval requirement.",
+    "Lower-priority notes beyond the four-finding cap: (a) Tech Stack still states 'read-only archive metadata analysis on the box' without the E1-approval/pre-read-check condition. (b) The M2 dependency cell lists 'M1 + G5 + specific target-test approval' but not G3-V; only the exit cell states it, while PhaseT lists it. (c) The exact approval text omits 'account changes', which the E1 summary excludes. (d) G3-V requires 'coverage of ... primary-unit data' but does not say whether Task 4's 'authoritative evidence that the documented operation cannot alter or invalidate that data' alone satisfies it. If a tested restore on the primary unit were required, that could reintroduce a primary-write cycle. Resolving this touches technical adequacy and is not adjudicated here."
+  ]
+}
+```

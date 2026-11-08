@@ -1,0 +1,58 @@
+{
+  "time_Atlantic_Reykjavik": "2026-11-08T07:09:20.022232+00:00",
+  "authority": "Owner t71\u201374 continuing offTVresearch plus parent actual-runhandoff; independent review is technical gate NOTpermission",
+  "review": "tooling/review/sdk-stdio-fix-independent-review.md",
+  "verdict": "SPEC PASS / QUALITY PASS / no mustfix",
+  "code_hashes_verified": {
+    "tooling/isolate_sdk_inventory.py": "2a6638e3439748a6dc4fb7237a03c3d05521685746df5315683c861acab9ca52",
+    "tooling/sdk_inventory_phase.py": "c04fe95faf8346741d18de8cdef4814beb520d47d079d7f1a702997ca026fd7f"
+  },
+  "inputs": [
+    {
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh",
+      "bytes_lstat": 166821312,
+      "mode": "0o644",
+      "expected_sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+      "pin_verification": "Fullhash INSIDE reviewed phase before ANYparse, not extra preflight archive reads"
+    },
+    {
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/native_sysroot_dependencies.tar.gz",
+      "bytes_lstat": 8017931,
+      "mode": "0o644",
+      "expected_sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+      "pin_verification": "Fullhash INSIDE reviewed phase before ANYparse, not extra preflight archive reads"
+    },
+    {
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/target_sysroot_dependencies.tar.gz",
+      "bytes_lstat": 323786694,
+      "mode": "0o644",
+      "expected_sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+      "pin_verification": "Fullhash INSIDE reviewed phase before ANYparse, not extra preflight archive reads"
+    }
+  ],
+  "fresh_output": "/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-PENDING-REVIEW",
+  "absent_including_dangling_symlink": true,
+  "no_symlink_ancestors": true,
+  "observed_free_bytes": 116593635328,
+  "disk_floor_bytes": 10737418240,
+  "disk_reserved": false,
+  "limits": {
+    "members": 200000,
+    "metadata_bytes": 100000000,
+    "logical_bytes": 4294967296,
+    "full_decoded_bytes": 4294967296,
+    "wall_seconds": 120,
+    "AS_bytes_not_RSS": 1073741824,
+    "LZMA_memory_bytes": 268435456,
+    "selected_text_bytes": 0
+  },
+  "format_policy": "FixedSDKslice10820..166821312 XZ;2singleGZstreams; rejectconcat/trailing/truncated/corrupt,absolute/escapinglinks; no recursion/extraction/execution",
+  "residuals": [
+    "XZCHECK_NONE can be labelledintegrityEOF; fullpin unchanged",
+    "tarfilePAX preallocAS/wallbackstop",
+    "ASnotRSS/noexecfalse",
+    "observedfreeisnotreserved",
+    "partial/failstopsall,no retry/resets/raisedceilings"
+  ],
+  "command_sha256": "011b54e8579f31035837f6adb19c2043ee10703eccab4b33f734eee75e8eab6d"
+}

@@ -1,0 +1,3 @@
+2.1.317 (Claude Code)
+codex-cli 0.166.0
+1.5.3

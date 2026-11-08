@@ -1,0 +1,31 @@
+UTC 2026-11-08T06:25:18.828930+00:00
+COMMAND ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'tooling/tests', '-p', 'test_sdk_inventory_phase.py', '-v']
+test_all_pins_precede_any_parser (test_sdk_inventory_phase.InventoryTests.test_all_pins_precede_any_parser) ... ok
+test_closed_production_parser (test_sdk_inventory_phase.InventoryTests.test_closed_production_parser) ... usage: python3 -m unittest [-h] --sdk SDK --native NATIVE --target TARGET
+                           --output-dir OUTPUT_DIR
+python3 -m unittest: error: the following arguments are required: --sdk, --native, --target, --output-dir
+usage: python3 -m unittest [-h] --sdk SDK --native NATIVE --target TARGET
+                           --output-dir OUTPUT_DIR
+python3 -m unittest: error: the following arguments are required: --sdk, --native, --target, --output-dir
+ok
+test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) ... ok
+test_deadline_covers_pins (test_sdk_inventory_phase.InventoryTests.test_deadline_covers_pins) ... ok
+test_links_pax_gnu_longnames_metadata_only (test_sdk_inventory_phase.InventoryTests.test_links_pax_gnu_longnames_metadata_only) ... ok
+test_lzma_memory_limit_and_bounded_decoder (test_sdk_inventory_phase.InventoryTests.test_lzma_memory_limit_and_bounded_decoder) ... ok
+test_mutation_detected_and_stable_descriptor (test_sdk_inventory_phase.InventoryTests.test_mutation_detected_and_stable_descriptor) ... ok
+test_output_freshness_symlinks_atomic_false (test_sdk_inventory_phase.InventoryTests.test_output_freshness_symlinks_atomic_false) ... ok
+test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) ... ok
+test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) ... ok
+test_success_shared_three_streams (test_sdk_inventory_phase.InventoryTests.test_success_shared_three_streams) ... ok
+test_synthetic_full_path_isolation (test_sdk_inventory_phase.InventoryTests.test_synthetic_full_path_isolation) ... skipped 'isolation runtime blocked: InventoryError: worker did not publish manifest: bwrap: loopback: Failed to create NETLINK_ROUTE socket: Operation not permitted\n'
+test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) ... ok
+test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) ... ok
+test_wrapper_command_exact_binds_and_limits (test_sdk_inventory_phase.InventoryTests.test_wrapper_command_exact_binds_and_limits) ... ok
+test_wrapper_failure_has_atomic_false_manifest (test_sdk_inventory_phase.InventoryTests.test_wrapper_failure_has_atomic_false_manifest) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.378s
+
+OK (skipped=1)
+
+EXIT 0

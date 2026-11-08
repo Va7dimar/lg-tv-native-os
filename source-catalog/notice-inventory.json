@@ -1,0 +1,3605 @@
+{
+  "file": "OSSNotice-3253_webOS 6.0 KLP_1.0_210204.html",
+  "bytes": 5562232,
+  "sha256": "3e7a13e14f6cd328c9b5483c25c416e735da67dc5cd08131b61804a9b06fbf8f",
+  "section_count": 317,
+  "unique_component_count": 923,
+  "license_label_count": 41,
+  "sections": [
+    {
+      "section": "id0",
+      "components": [
+        "acr2"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "MIT",
+        "OpenSSL",
+        "Zlib"
+      ]
+    },
+    {
+      "section": "id1",
+      "components": [
+        "activitymanager"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id2",
+      "components": [
+        "aiservice",
+        "aiservice-localization"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id3",
+      "components": [
+        "alibaba-adapter"
+      ],
+      "licenses": [
+        "LGPL-2.1",
+        "MIT",
+        "OpenSSL",
+        "Zlib"
+      ]
+    },
+    {
+      "section": "id4",
+      "components": [
+        "alsa-conf",
+        "alsa-lib"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id5",
+      "components": [
+        "alsa-plugins-pulseaudio-conf",
+        "libasound-module-conf-pulse",
+        "libasound-module-ctl-pulse",
+        "libasound-module-pcm-pulse"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id6",
+      "components": [
+        "alsa-states"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id7",
+      "components": [
+        "alsa-utils",
+        "alsa-utils-aconnect",
+        "alsa-utils-alsactl",
+        "alsa-utils-alsaloop",
+        "alsa-utils-alsamixer",
+        "alsa-utils-alsaucm",
+        "alsa-utils-amixer",
+        "alsa-utils-aplay",
+        "alsa-utils-aseqdump",
+        "alsa-utils-aseqnet",
+        "alsa-utils-iecset",
+        "alsa-utils-midi",
+        "alsa-utils-speakertest"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id8",
+      "components": [
+        "amazon-alexa-adapter",
+        "amazon-alexa-adapter-localization"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "ISC",
+        "MIT"
+      ]
+    },
+    {
+      "section": "id9",
+      "components": [
+        "aom"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id10",
+      "components": [
+        "app-shell",
+        "com.webos.app.browser",
+        "webruntime"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "BSD-3-Clause",
+        "LGPL-2.1",
+        "MIT",
+        "MPL-1.1"
+      ]
+    },
+    {
+      "section": "id11",
+      "components": [
+        "applicationinstallerutility"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id12",
+      "components": [
+        "arm-compute-library"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id13",
+      "components": [
+        "armnn"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id14",
+      "components": [
+        "audiooutputd"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id15",
+      "components": [
+        "avahi-daemon",
+        "libavahi-client",
+        "libavahi-common",
+        "libavahi-core",
+        "libavahi-glib",
+        "libavahi-gobject"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id16",
+      "components": [
+        "base-files"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id17",
+      "components": [
+        "base-passwd"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id18",
+      "components": [
+        "boost",
+        "boost-atomic",
+        "boost-chrono",
+        "boost-container",
+        "boost-context",
+        "boost-contract",
+        "boost-coroutine",
+        "boost-date-time",
+        "boost-filesystem",
+        "boost-graph",
+        "boost-iostreams",
+        "boost-locale",
+        "boost-log",
+        "boost-math",
+        "boost-program-options",
+        "boost-python",
+        "boost-random",
+        "boost-regex",
+        "boost-serialization",
+        "boost-signals",
+        "boost-system",
+        "boost-test",
+        "boost-thread",
+        "boost-timer",
+        "boost-wave"
+      ],
+      "licenses": [
+        "BSL-1.0",
+        "MIT",
+        "Python-2.0"
+      ]
+    },
+    {
+      "section": "id19",
+      "components": [
+        "busybox",
+        "busybox-syslog",
+        "busybox-udhcpc"
+      ],
+      "licenses": [
+        "GPLv2",
+        "bzip2"
+      ]
+    },
+    {
+      "section": "id20",
+      "components": [
+        "bzip2",
+        "libbz2"
+      ],
+      "licenses": [
+        "bzip2"
+      ]
+    },
+    {
+      "section": "id21",
+      "components": [
+        "c-ares"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id22",
+      "components": [
+        "ca-certificates"
+      ],
+      "licenses": [
+        "GPL-2.0",
+        "MPL-2.0"
+      ]
+    },
+    {
+      "section": "id23",
+      "components": [
+        "cairo"
+      ],
+      "licenses": [
+        "LGPLv2.1",
+        "MPL-1"
+      ]
+    },
+    {
+      "section": "id24",
+      "components": [
+        "capstone"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id25",
+      "components": [
+        "com.palm.service.devmode"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id26",
+      "components": [
+        "com.webos.app.enactbrowser"
+      ],
+      "licenses": [
+        "LicenseRef-EnactBrowser-Evaluation"
+      ]
+    },
+    {
+      "section": "id27",
+      "components": [
+        "com.webos.app.liveginga"
+      ],
+      "licenses": [
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id28",
+      "components": [
+        "com.webos.app.self-diagnosis",
+        "com.webos.app.self-diagnosis-localization"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "BSD-3-Clause",
+        "ISC",
+        "MIT"
+      ]
+    },
+    {
+      "section": "id29",
+      "components": [
+        "com.webos.service.pkgverifier"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id30",
+      "components": [
+        "configd"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id31",
+      "components": [
+        "configurator"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id32",
+      "components": [
+        "connman",
+        "connman-client"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id33",
+      "components": [
+        "connman-conf"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id34",
+      "components": [
+        "cpushareholder-stub"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id35",
+      "components": [
+        "crashd",
+        "libsegfault-webos"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "LGPL-2.1"
+      ]
+    },
+    {
+      "section": "id36",
+      "components": [
+        "criu-webos"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id37",
+      "components": [
+        "cryptsetup"
+      ],
+      "licenses": [
+        "GPL-2.0-with-OpenSSL-exception"
+      ]
+    },
+    {
+      "section": "id38",
+      "components": [
+        "curl",
+        "libcurl"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id39",
+      "components": [
+        "db8"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id40",
+      "components": [
+        "dbus",
+        "dbus-lib"
+      ],
+      "licenses": [
+        "AFL-2",
+        "GPL-2.0",
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id41",
+      "components": [
+        "dbus-gpl"
+      ],
+      "licenses": [
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id42",
+      "components": [
+        "dvbfrontend",
+        "dvbfrontend-atsc",
+        "dvbfrontend-dvb",
+        "kernel-module-a8303",
+        "kernel-module-a8303jp",
+        "kernel-module-atbm8891",
+        "kernel-module-atsc-dtv-soc",
+        "kernel-module-atsc-dtv-soc-chip",
+        "kernel-module-atsc-lgdt3307-chip",
+        "kernel-module-cxd2857",
+        "kernel-module-dtmb-dtv-soc",
+        "kernel-module-dtmb-dtv-soc-chip",
+        "kernel-module-dvb-a8303-adapter",
+        "kernel-module-dvb-a8303-chip",
+        "kernel-module-dvb-a8303jp-chip",
+        "kernel-module-dvb-atbm8891-adapter",
+        "kernel-module-dvb-atbm8891-chip",
+        "kernel-module-dvb-common-adapter",
+        "kernel-module-dvb-cxd2857-adapter",
+        "kernel-module-dvb-dtv-soc",
+        "kernel-module-dvb-dtv-soc-chip",
+        "kernel-module-dvb-lgdt3307-adapter",
+        "kernel-module-dvb-lnbr-adapter",
+        "kernel-module-dvb-lnbr-chip",
+        "kernel-module-dvb-mxl683-adapter",
+        "kernel-module-dvb-rda-adapter",
+        "kernel-module-dvb-rda5815m-chip",
+        "kernel-module-dvb-rda5816-chip",
+        "kernel-module-dvb-rt740-adapter",
+        "kernel-module-dvb-rt740-chip",
+        "kernel-module-dvb-si2151-chip",
+        "kernel-module-dvb-si2169d-chip",
+        "kernel-module-dvb-si2178b-chip",
+        "kernel-module-dvb-si2178bjp-chip",
+        "kernel-module-dvb-silab-adapter",
+        "kernel-module-integ-dtv-soc",
+        "kernel-module-integ-dtv-soc-chip",
+        "kernel-module-isdb-cxd2857-chip",
+        "kernel-module-isdb-dtv-soc",
+        "kernel-module-isdb-dtv-soc-chip",
+        "kernel-module-isdb-mxl683-chip",
+        "kernel-module-lgdt3307",
+        "kernel-module-lnbr",
+        "kernel-module-mxl683",
+        "kernel-module-rda5815m",
+        "kernel-module-rda5816",
+        "kernel-module-rt740",
+        "kernel-module-si2151",
+        "kernel-module-si2169d",
+        "kernel-module-si2178b",
+        "kernel-module-si2178b-atv",
+        "kernel-module-si2178bjp",
+        "kernel-module-webos-tv"
+      ],
+      "licenses": [
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id43",
+      "components": [
+        "e2fsprogs",
+        "e2fsprogs-resize2fs",
+        "libcomerr",
+        "libe2p",
+        "libext2fs",
+        "libss"
+      ],
+      "licenses": [
+        "BSD",
+        "GPLv2",
+        "LGPLv2",
+        "MIT"
+      ]
+    },
+    {
+      "section": "id44",
+      "components": [
+        "e2fsprogs-badblocks",
+        "e2fsprogs-e2fsck",
+        "e2fsprogs-mke2fs",
+        "e2fsprogs-tune2fs"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id45",
+      "components": [
+        "ecryptfs-utils"
+      ],
+      "licenses": [
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id46",
+      "components": [
+        "enhanced-flash-swap",
+        "kernel-module-dm-eswap-4.4.84-711.kalaupapa.4",
+        "kernel-module-dm-eswap-adaptor-4.4.84-711.kalaupapa.4"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id47",
+      "components": [
+        "event-monitor"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id48",
+      "components": [
+        "exiv2"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id49",
+      "components": [
+        "expat"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id50",
+      "components": [
+        "fdk-aac"
+      ],
+      "licenses": [
+        "Fraunhofer_FDK_AAC_Codec_Library_for_Android"
+      ]
+    },
+    {
+      "section": "id51",
+      "components": [
+        "filecache"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id52",
+      "components": [
+        "flac",
+        "libflac"
+      ],
+      "licenses": [
+        "BSD",
+        "GFDL-1.2",
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id53",
+      "components": [
+        "fontconfig",
+        "fontconfig-utils"
+      ],
+      "licenses": [
+        "MIT",
+        "MIT-style",
+        "PD"
+      ]
+    },
+    {
+      "section": "id54",
+      "components": [
+        "freetype"
+      ],
+      "licenses": [
+        "FreeType",
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id55",
+      "components": [
+        "fribidi"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id56",
+      "components": [
+        "fuse",
+        "fuse-utils",
+        "libulockmgr"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id57",
+      "components": [
+        "fuser",
+        "killall",
+        "psmisc",
+        "pstree"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id58",
+      "components": [
+        "gettext-runtime"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id59",
+      "components": [
+        "glib-2.0"
+      ],
+      "licenses": [
+        "BSD",
+        "LGPLv2.1",
+        "PD"
+      ]
+    },
+    {
+      "section": "id60",
+      "components": [
+        "glib-networking"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id61",
+      "components": [
+        "glibc",
+        "glibc-utils",
+        "tzcode"
+      ],
+      "licenses": [
+        "BSD",
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id62",
+      "components": [
+        "glibc-gconv",
+        "glibc-gconv-big5",
+        "glibc-gconv-cp1250",
+        "glibc-gconv-cp1251",
+        "glibc-gconv-cp1252",
+        "glibc-gconv-cp1253",
+        "glibc-gconv-cp1254",
+        "glibc-gconv-cp1255",
+        "glibc-gconv-cp1256",
+        "glibc-gconv-cp1258",
+        "glibc-gconv-euc-cn",
+        "glibc-gconv-euc-kr",
+        "glibc-gconv-gb18030",
+        "glibc-gconv-ibm874",
+        "glibc-gconv-iso-6937",
+        "glibc-gconv-iso8859-1",
+        "glibc-gconv-iso8859-11",
+        "glibc-gconv-iso8859-15",
+        "glibc-gconv-iso8859-2",
+        "glibc-gconv-iso8859-3",
+        "glibc-gconv-iso8859-4",
+        "glibc-gconv-iso8859-5",
+        "glibc-gconv-iso8859-6",
+        "glibc-gconv-iso8859-7",
+        "glibc-gconv-iso8859-8",
+        "glibc-gconv-iso8859-9",
+        "glibc-gconv-libgb",
+        "glibc-gconv-libksc",
+        "glibc-gconv-sjis",
+        "glibc-gconv-uhc",
+        "glibc-gconv-unicode",
+        "glibc-gconv-utf-16",
+        "glibc-gconv-utf-32"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id63",
+      "components": [
+        "glibmm"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id64",
+      "components": [
+        "gmp"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id65",
+      "components": [
+        "gnutls"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id66",
+      "components": [
+        "google-assistant-adapter"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "BSD-3-Clause",
+        "MIT",
+        "OpenSSL"
+      ]
+    },
+    {
+      "section": "id67",
+      "components": [
+        "gphoto2"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id68",
+      "components": [
+        "gphotofs"
+      ],
+      "licenses": [
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id69",
+      "components": [
+        "gptfdisk-sgdisk"
+      ],
+      "licenses": [
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id70",
+      "components": [
+        "gstreamer1.0"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id71",
+      "components": [
+        "gstreamer1.0-libav"
+      ],
+      "licenses": [
+        "LGPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id72",
+      "components": [
+        "gstreamer1.0-omx"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id73",
+      "components": [
+        "gstreamer1.0-plugins-bad",
+        "gstreamer1.0-plugins-bad-adpcmdec",
+        "gstreamer1.0-plugins-bad-adpcmenc",
+        "gstreamer1.0-plugins-bad-aiff",
+        "gstreamer1.0-plugins-bad-asfmux",
+        "gstreamer1.0-plugins-bad-autoconvert",
+        "gstreamer1.0-plugins-bad-bz2",
+        "gstreamer1.0-plugins-bad-camerabin",
+        "gstreamer1.0-plugins-bad-ckdrm",
+        "gstreamer1.0-plugins-bad-coloreffects",
+        "gstreamer1.0-plugins-bad-dashdemux",
+        "gstreamer1.0-plugins-bad-debugutilsbad",
+        "gstreamer1.0-plugins-bad-dvbsuboverlay",
+        "gstreamer1.0-plugins-bad-dvdspu",
+        "gstreamer1.0-plugins-bad-frei0r",
+        "gstreamer1.0-plugins-bad-h265combiner",
+        "gstreamer1.0-plugins-bad-hls",
+        "gstreamer1.0-plugins-bad-id3tag",
+        "gstreamer1.0-plugins-bad-interlace",
+        "gstreamer1.0-plugins-bad-ivfparse",
+        "gstreamer1.0-plugins-bad-legacyrawparse",
+        "gstreamer1.0-plugins-bad-meta",
+        "gstreamer1.0-plugins-bad-midi",
+        "gstreamer1.0-plugins-bad-mpegpsdemux",
+        "gstreamer1.0-plugins-bad-mpegpsmux",
+        "gstreamer1.0-plugins-bad-mpegtsdemux",
+        "gstreamer1.0-plugins-bad-mpegtsmux",
+        "gstreamer1.0-plugins-bad-multiappsrc",
+        "gstreamer1.0-plugins-bad-mxf",
+        "gstreamer1.0-plugins-bad-pcapparse",
+        "gstreamer1.0-plugins-bad-proxy",
+        "gstreamer1.0-plugins-bad-removesilence",
+        "gstreamer1.0-plugins-bad-rfbsrc",
+        "gstreamer1.0-plugins-bad-rtponvif",
+        "gstreamer1.0-plugins-bad-sdpelem",
+        "gstreamer1.0-plugins-bad-smooth",
+        "gstreamer1.0-plugins-bad-smoothstreaming",
+        "gstreamer1.0-plugins-bad-speed",
+        "gstreamer1.0-plugins-bad-subenc",
+        "gstreamer1.0-plugins-bad-videofiltersbad",
+        "gstreamer1.0-plugins-bad-videoframe-audiolevel",
+        "gstreamer1.0-plugins-bad-videoparsersbad",
+        "gstreamer1.0-plugins-bad-waylandsink",
+        "libgstadaptivedemux-1.0",
+        "libgstbadaudio-1.0",
+        "libgstbasecamerabinsrc-1.0",
+        "libgstbasedrm-1.0",
+        "libgstcodecparsers-1.0",
+        "libgstinsertbin-1.0",
+        "libgstisoff-1.0",
+        "libgstmpegts-1.0",
+        "libgstmultiapp-1.0",
+        "libgstphotography-1.0",
+        "libgstplayer-1.0",
+        "libgsturidownloader-1.0",
+        "libgstwayland-1.0",
+        "libgstwebrtc-1.0"
+      ],
+      "licenses": [
+        "LGPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id74",
+      "components": [
+        "gstreamer1.0-plugins-base",
+        "gstreamer1.0-plugins-base-adder",
+        "gstreamer1.0-plugins-base-alsa",
+        "gstreamer1.0-plugins-base-app",
+        "gstreamer1.0-plugins-base-apps",
+        "gstreamer1.0-plugins-base-audioconvert",
+        "gstreamer1.0-plugins-base-audiomixer",
+        "gstreamer1.0-plugins-base-audiorate",
+        "gstreamer1.0-plugins-base-audioresample",
+        "gstreamer1.0-plugins-base-encoding",
+        "gstreamer1.0-plugins-base-ivorbisdec",
+        "gstreamer1.0-plugins-base-meta",
+        "gstreamer1.0-plugins-base-ogg",
+        "gstreamer1.0-plugins-base-opengl",
+        "gstreamer1.0-plugins-base-pbtypes",
+        "gstreamer1.0-plugins-base-playback",
+        "gstreamer1.0-plugins-base-rawparse",
+        "gstreamer1.0-plugins-base-subparse",
+        "gstreamer1.0-plugins-base-tcp",
+        "gstreamer1.0-plugins-base-typefindfunctions",
+        "gstreamer1.0-plugins-base-videoconvert",
+        "gstreamer1.0-plugins-base-videorate",
+        "gstreamer1.0-plugins-base-videoscale",
+        "gstreamer1.0-plugins-base-videotestsrc",
+        "gstreamer1.0-plugins-base-volume",
+        "gstreamer1.0-plugins-base-vorbis",
+        "libgstallocators-1.0",
+        "libgstapp-1.0",
+        "libgstaudio-1.0",
+        "libgstfft-1.0",
+        "libgstgl-1.0",
+        "libgstpbutils-1.0",
+        "libgstriff-1.0",
+        "libgstrtp-1.0",
+        "libgstrtsp-1.0",
+        "libgstsdp-1.0",
+        "libgstsubtitle-1.0",
+        "libgsttag-1.0",
+        "libgstvideo-1.0"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id75",
+      "components": [
+        "gstreamer1.0-plugins-cool",
+        "gstreamer1.0-plugins-cool-avibin",
+        "gstreamer1.0-plugins-cool-cooltracer",
+        "gstreamer1.0-plugins-cool-decproxy",
+        "gstreamer1.0-plugins-cool-dolbystreamcombiner",
+        "gstreamer1.0-plugins-cool-dvcombbin",
+        "gstreamer1.0-plugins-cool-dynappsrc",
+        "gstreamer1.0-plugins-cool-fakedec",
+        "gstreamer1.0-plugins-cool-httpextbin",
+        "gstreamer1.0-plugins-cool-meta",
+        "gstreamer1.0-plugins-cool-mpomux",
+        "gstreamer1.0-plugins-cool-splitappsink",
+        "gstreamer1.0-plugins-cool-textbin",
+        "gstreamer1.0-plugins-cool-tsinkbin",
+        "libgstcool-1.0"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id76",
+      "components": [
+        "gstreamer1.0-plugins-dvr",
+        "gstreamer1.0-plugins-dvr-dashsink",
+        "gstreamer1.0-plugins-dvr-dvrdashdemux",
+        "gstreamer1.0-plugins-dvr-dvrdrm",
+        "gstreamer1.0-plugins-dvr-dvrisomp4",
+        "gstreamer1.0-plugins-dvr-dvrmpegtsdemux",
+        "gstreamer1.0-plugins-dvr-meta",
+        "libgstdvrmpegts-1.0"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id77",
+      "components": [
+        "gstreamer1.0-plugins-good",
+        "gstreamer1.0-plugins-good-alaw",
+        "gstreamer1.0-plugins-good-apetag",
+        "gstreamer1.0-plugins-good-audioparsers",
+        "gstreamer1.0-plugins-good-auparse",
+        "gstreamer1.0-plugins-good-avi",
+        "gstreamer1.0-plugins-good-deinterlace",
+        "gstreamer1.0-plugins-good-equalizer",
+        "gstreamer1.0-plugins-good-flac",
+        "gstreamer1.0-plugins-good-flv",
+        "gstreamer1.0-plugins-good-flxdec",
+        "gstreamer1.0-plugins-good-icydemux",
+        "gstreamer1.0-plugins-good-id3demux",
+        "gstreamer1.0-plugins-good-interleave",
+        "gstreamer1.0-plugins-good-isomp4",
+        "gstreamer1.0-plugins-good-isomp4-1-8",
+        "gstreamer1.0-plugins-good-level",
+        "gstreamer1.0-plugins-good-matroska",
+        "gstreamer1.0-plugins-good-meta",
+        "gstreamer1.0-plugins-good-mulaw",
+        "gstreamer1.0-plugins-good-multifile",
+        "gstreamer1.0-plugins-good-multipart",
+        "gstreamer1.0-plugins-good-pulseaudio",
+        "gstreamer1.0-plugins-good-replaygain",
+        "gstreamer1.0-plugins-good-rtp",
+        "gstreamer1.0-plugins-good-rtpmanager",
+        "gstreamer1.0-plugins-good-rtsp",
+        "gstreamer1.0-plugins-good-soup",
+        "gstreamer1.0-plugins-good-spectrum",
+        "gstreamer1.0-plugins-good-speex",
+        "gstreamer1.0-plugins-good-taglib",
+        "gstreamer1.0-plugins-good-udp",
+        "gstreamer1.0-plugins-good-video4linux2",
+        "gstreamer1.0-plugins-good-videofilter",
+        "gstreamer1.0-plugins-good-videomixer",
+        "gstreamer1.0-plugins-good-wavenc",
+        "gstreamer1.0-plugins-good-wavpack",
+        "gstreamer1.0-plugins-good-wavparse"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id78",
+      "components": [
+        "gstreamer1.0-plugins-nano",
+        "gstreamer1.0-plugins-nano-activeregiondetector",
+        "gstreamer1.0-plugins-nano-meta",
+        "libgstnano-1.0"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id79",
+      "components": [
+        "gstreamer1.0-plugins-rtk"
+      ],
+      "licenses": [
+        "LGPL-2.1"
+      ]
+    },
+    {
+      "section": "id80",
+      "components": [
+        "gstreamer1.0-plugins-ugly",
+        "gstreamer1.0-plugins-ugly-asf",
+        "gstreamer1.0-plugins-ugly-dvdlpcmdec",
+        "gstreamer1.0-plugins-ugly-dvdsub",
+        "gstreamer1.0-plugins-ugly-meta"
+      ],
+      "licenses": [
+        "LGPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id81",
+      "components": [
+        "gzip"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id82",
+      "components": [
+        "harfbuzz"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id83",
+      "components": [
+        "hbbtv2-plugin"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "BSD-2-Clause",
+        "MPL-1.1",
+        "NPL-1.1",
+        "Zlib"
+      ]
+    },
+    {
+      "section": "id84",
+      "components": [
+        "hdparm"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id85",
+      "components": [
+        "hunspell"
+      ],
+      "licenses": [
+        "LGPL-2.1",
+        "MPL-1.1"
+      ]
+    },
+    {
+      "section": "id86",
+      "components": [
+        "iconnectivity"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "BSD-2-Clause",
+        "BSD-3-Clause"
+      ]
+    },
+    {
+      "section": "id87",
+      "components": [
+        "icu",
+        "libicudata",
+        "libicui18n",
+        "libicuio",
+        "libicutu",
+        "libicuuc"
+      ],
+      "licenses": [
+        "ICU"
+      ]
+    },
+    {
+      "section": "id88",
+      "components": [
+        "iftop"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id89",
+      "components": [
+        "ilib-qml-plugin"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id90",
+      "components": [
+        "ilib-webapp"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id91",
+      "components": [
+        "imemanager",
+        "imemanager-localization"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "MIT"
+      ]
+    },
+    {
+      "section": "id92",
+      "components": [
+        "iot-client-webos",
+        "iot-client-webos-localization"
+      ],
+      "licenses": [
+        "EDL-1.0",
+        "MIT",
+        "curl"
+      ]
+    },
+    {
+      "section": "id93",
+      "components": [
+        "iotop"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id94",
+      "components": [
+        "iproute2"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id95",
+      "components": [
+        "iptables",
+        "iptables-module-ebt-802-3",
+        "iptables-module-ebt-ip",
+        "iptables-module-ebt-log",
+        "iptables-module-ebt-mark-m",
+        "iptables-module-ip6t-ah",
+        "iptables-module-ip6t-dnat",
+        "iptables-module-ip6t-dnpt",
+        "iptables-module-ip6t-dst",
+        "iptables-module-ip6t-eui64",
+        "iptables-module-ip6t-frag",
+        "iptables-module-ip6t-hbh",
+        "iptables-module-ip6t-hl",
+        "iptables-module-ip6t-icmp6",
+        "iptables-module-ip6t-ipv6header",
+        "iptables-module-ip6t-log",
+        "iptables-module-ip6t-masquerade",
+        "iptables-module-ip6t-mh",
+        "iptables-module-ip6t-netmap",
+        "iptables-module-ip6t-redirect",
+        "iptables-module-ip6t-reject",
+        "iptables-module-ip6t-rt",
+        "iptables-module-ip6t-snat",
+        "iptables-module-ip6t-snpt",
+        "iptables-module-ip6t-srh",
+        "iptables-module-ipt-ah",
+        "iptables-module-ipt-clusterip",
+        "iptables-module-ipt-dnat",
+        "iptables-module-ipt-ecn",
+        "iptables-module-ipt-icmp",
+        "iptables-module-ipt-log",
+        "iptables-module-ipt-masquerade",
+        "iptables-module-ipt-netmap",
+        "iptables-module-ipt-realm",
+        "iptables-module-ipt-redirect",
+        "iptables-module-ipt-reject",
+        "iptables-module-ipt-snat",
+        "iptables-module-ipt-ttl",
+        "iptables-module-ipt-ulog",
+        "iptables-module-xt-addrtype",
+        "iptables-module-xt-audit",
+        "iptables-module-xt-bpf",
+        "iptables-module-xt-cgroup",
+        "iptables-module-xt-checksum",
+        "iptables-module-xt-classify",
+        "iptables-module-xt-cluster",
+        "iptables-module-xt-comment",
+        "iptables-module-xt-connbytes",
+        "iptables-module-xt-connlimit",
+        "iptables-module-xt-connmark",
+        "iptables-module-xt-connsecmark",
+        "iptables-module-xt-conntrack",
+        "iptables-module-xt-cpu",
+        "iptables-module-xt-ct",
+        "iptables-module-xt-dccp",
+        "iptables-module-xt-devgroup",
+        "iptables-module-xt-dscp",
+        "iptables-module-xt-ecn",
+        "iptables-module-xt-esp",
+        "iptables-module-xt-hashlimit",
+        "iptables-module-xt-helper",
+        "iptables-module-xt-hmark",
+        "iptables-module-xt-idletimer",
+        "iptables-module-xt-ipcomp",
+        "iptables-module-xt-iprange",
+        "iptables-module-xt-ipvs",
+        "iptables-module-xt-led",
+        "iptables-module-xt-length",
+        "iptables-module-xt-limit",
+        "iptables-module-xt-mac",
+        "iptables-module-xt-mangle",
+        "iptables-module-xt-mark",
+        "iptables-module-xt-multiport",
+        "iptables-module-xt-nfacct",
+        "iptables-module-xt-nflog",
+        "iptables-module-xt-nfqueue",
+        "iptables-module-xt-notrack",
+        "iptables-module-xt-osf",
+        "iptables-module-xt-owner",
+        "iptables-module-xt-physdev",
+        "iptables-module-xt-pkttype",
+        "iptables-module-xt-policy",
+        "iptables-module-xt-quota",
+        "iptables-module-xt-rateest",
+        "iptables-module-xt-recent",
+        "iptables-module-xt-rpfilter",
+        "iptables-module-xt-sctp",
+        "iptables-module-xt-secmark",
+        "iptables-module-xt-set",
+        "iptables-module-xt-socket",
+        "iptables-module-xt-standard",
+        "iptables-module-xt-state",
+        "iptables-module-xt-statistic",
+        "iptables-module-xt-string",
+        "iptables-module-xt-synproxy",
+        "iptables-module-xt-tcp",
+        "iptables-module-xt-tcpmss",
+        "iptables-module-xt-tcpoptstrip",
+        "iptables-module-xt-tee",
+        "iptables-module-xt-time",
+        "iptables-module-xt-tos",
+        "iptables-module-xt-tproxy",
+        "iptables-module-xt-trace",
+        "iptables-module-xt-u32",
+        "iptables-module-xt-udp",
+        "iptables-modules"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id96",
+      "components": [
+        "iputils",
+        "iputils-arping",
+        "iputils-clockdiff",
+        "iputils-ping",
+        "iputils-rarpd",
+        "iputils-rdisc",
+        "iputils-tftpd",
+        "iputils-tracepath",
+        "iputils-traceroute6"
+      ],
+      "licenses": [
+        "BSD",
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id97",
+      "components": [
+        "iw"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id98",
+      "components": [
+        "jansson"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id99",
+      "components": [
+        "jemalloc"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id100",
+      "components": [
+        "json-c"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id101",
+      "components": [
+        "jsoncpp"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id102",
+      "components": [
+        "kbd",
+        "kbd-consolefonts",
+        "kbd-keymaps"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id103",
+      "components": [
+        "kdriver"
+      ],
+      "licenses": [
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id104",
+      "components": [
+        "kernel-base",
+        "kernel-image",
+        "kernel-image-uimage",
+        "kernel-module-demod-khal-4.4.84-711.kalaupapa.4",
+        "kernel-module-gsr-module-4.4.84-711.kalaupapa.4",
+        "kernel-module-gsr-module-fake-4.4.84-711.kalaupapa.4"
+      ],
+      "licenses": [
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id105",
+      "components": [
+        "keyutils"
+      ],
+      "licenses": [
+        "GPL-2.0",
+        "LGPL-2.1"
+      ]
+    },
+    {
+      "section": "id106",
+      "components": [
+        "kmod"
+      ],
+      "licenses": [
+        "GPL-2.0",
+        "LGPL-2.1"
+      ]
+    },
+    {
+      "section": "id107",
+      "components": [
+        "legacy-broadcast-atsc",
+        "legacy-broadcast-atsc-localization"
+      ],
+      "licenses": [
+        "MPL-1.1",
+        "Zlib"
+      ]
+    },
+    {
+      "section": "id108",
+      "components": [
+        "legacy-broadcast-dvb",
+        "legacy-broadcast-dvb-localization"
+      ],
+      "licenses": [
+        "MPL-1.1",
+        "Zlib"
+      ]
+    },
+    {
+      "section": "id109",
+      "components": [
+        "leptonica"
+      ],
+      "licenses": [
+        "BSD-2-Clause"
+      ]
+    },
+    {
+      "section": "id110",
+      "components": [
+        "leveldb"
+      ],
+      "licenses": [
+        "BSD-3-Clause"
+      ]
+    },
+    {
+      "section": "id111",
+      "components": [
+        "libacl"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id112",
+      "components": [
+        "libaio"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id113",
+      "components": [
+        "libarchive"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id114",
+      "components": [
+        "libatomic",
+        "libgomp",
+        "libstdc++"
+      ],
+      "licenses": [
+        "GPL-3.0-with-GCC-exception"
+      ]
+    },
+    {
+      "section": "id115",
+      "components": [
+        "libattr"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id116",
+      "components": [
+        "libavcodec",
+        "libavfilter",
+        "libavformat",
+        "libavutil",
+        "libswresample",
+        "libswscale"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id117",
+      "components": [
+        "libbson"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id118",
+      "components": [
+        "libcap"
+      ],
+      "licenses": [
+        "BSD",
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id119",
+      "components": [
+        "libconfig"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id120",
+      "components": [
+        "libcrypto",
+        "libssl",
+        "openssl",
+        "openssl-bin",
+        "openssl-conf"
+      ],
+      "licenses": [
+        "openssl"
+      ]
+    },
+    {
+      "section": "id121",
+      "components": [
+        "libcrypto10",
+        "libssl10",
+        "openssl10",
+        "openssl10-bin",
+        "openssl10-conf"
+      ],
+      "licenses": [
+        "openssl"
+      ]
+    },
+    {
+      "section": "id122",
+      "components": [
+        "libdaemon"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id123",
+      "components": [
+        "libdevmapper"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id124",
+      "components": [
+        "libdvbfrontend"
+      ],
+      "licenses": [
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id125",
+      "components": [
+        "libdvbv5"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id126",
+      "components": [
+        "libexif"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id127",
+      "components": [
+        "libffi"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id128",
+      "components": [
+        "libgcc"
+      ],
+      "licenses": [
+        "GPL-3.0-with-GCC-exception"
+      ]
+    },
+    {
+      "section": "id129",
+      "components": [
+        "libgcrypt"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id130",
+      "components": [
+        "libgpg-error"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id131",
+      "components": [
+        "libgphoto2",
+        "libgphoto2-camlibs",
+        "libgphotoport"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id132",
+      "components": [
+        "libhangul"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id133",
+      "components": [
+        "libjpeg-turbo"
+      ],
+      "licenses": [
+        "BSD-3-Clause"
+      ]
+    },
+    {
+      "section": "id134",
+      "components": [
+        "libkmod"
+      ],
+      "licenses": [
+        "LGPL-2.1"
+      ]
+    },
+    {
+      "section": "id135",
+      "components": [
+        "libltdl"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id136",
+      "components": [
+        "liblzma"
+      ],
+      "licenses": [
+        "PD"
+      ]
+    },
+    {
+      "section": "id137",
+      "components": [
+        "libmicrohttpd"
+      ],
+      "licenses": [
+        "LGPL-2.1"
+      ]
+    },
+    {
+      "section": "id138",
+      "components": [
+        "libmikmod"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id139",
+      "components": [
+        "libmnl"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id140",
+      "components": [
+        "libnl",
+        "libnl-genl"
+      ],
+      "licenses": [
+        "GPL-2.0",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id141",
+      "components": [
+        "libnlp"
+      ],
+      "licenses": [
+        "BSD-3-Clause",
+        "MIT"
+      ]
+    },
+    {
+      "section": "id142",
+      "components": [
+        "libnsbmp"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id143",
+      "components": [
+        "libnss-mdns"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id144",
+      "components": [
+        "libogg"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id145",
+      "components": [
+        "libopkg",
+        "opkg"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id146",
+      "components": [
+        "libopus"
+      ],
+      "licenses": [
+        "BSD-3-Clause"
+      ]
+    },
+    {
+      "section": "id147",
+      "components": [
+        "libpbnjson"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id148",
+      "components": [
+        "libpcap"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id149",
+      "components": [
+        "libpcre"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id150",
+      "components": [
+        "libpng"
+      ],
+      "licenses": [
+        "Libpng"
+      ]
+    },
+    {
+      "section": "id151",
+      "components": [
+        "libpng12"
+      ],
+      "licenses": [
+        "Libpng"
+      ]
+    },
+    {
+      "section": "id152",
+      "components": [
+        "libpulse",
+        "libpulse-simple",
+        "libpulsecommon",
+        "libpulsecore",
+        "pulseaudio",
+        "pulseaudio-lib-alsa-util",
+        "pulseaudio-lib-cli",
+        "pulseaudio-lib-protocol-cli",
+        "pulseaudio-lib-protocol-native",
+        "pulseaudio-lib-rtp",
+        "pulseaudio-misc",
+        "pulseaudio-module-alsa-card",
+        "pulseaudio-module-alsa-sink",
+        "pulseaudio-module-alsa-source",
+        "pulseaudio-module-always-sink",
+        "pulseaudio-module-augment-properties",
+        "pulseaudio-module-card-restore",
+        "pulseaudio-module-cli-protocol-tcp",
+        "pulseaudio-module-cli-protocol-unix",
+        "pulseaudio-module-default-device-restore",
+        "pulseaudio-module-detect",
+        "pulseaudio-module-device-restore",
+        "pulseaudio-module-filter-apply",
+        "pulseaudio-module-filter-heuristics",
+        "pulseaudio-module-intended-roles",
+        "pulseaudio-module-native-protocol-tcp",
+        "pulseaudio-module-native-protocol-unix",
+        "pulseaudio-module-null-sink",
+        "pulseaudio-module-null-source",
+        "pulseaudio-module-palm-policy",
+        "pulseaudio-module-position-event-sounds",
+        "pulseaudio-module-rescue-streams",
+        "pulseaudio-module-role-cork",
+        "pulseaudio-module-rtp-recv",
+        "pulseaudio-module-rtp-send",
+        "pulseaudio-module-stream-restore",
+        "pulseaudio-module-suspend-on-idle",
+        "pulseaudio-module-switch-on-port-available",
+        "pulseaudio-module-udev-detect",
+        "pulseaudio-server"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id153",
+      "components": [
+        "libpython2",
+        "python-codecs",
+        "python-compression",
+        "python-contextlib",
+        "python-core",
+        "python-crypt",
+        "python-ctypes",
+        "python-curses",
+        "python-datetime",
+        "python-email",
+        "python-fcntl",
+        "python-io",
+        "python-json",
+        "python-lang",
+        "python-math",
+        "python-mime",
+        "python-netclient",
+        "python-pickle",
+        "python-pprint",
+        "python-shell",
+        "python-subprocess",
+        "python-syslog",
+        "python-textutils",
+        "python-threading",
+        "python-unixadmin",
+        "python-xml",
+        "python-zlib"
+      ],
+      "licenses": [
+        "PSFv2"
+      ]
+    },
+    {
+      "section": "id154",
+      "components": [
+        "librolegen"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id155",
+      "components": [
+        "libsamplerate0"
+      ],
+      "licenses": [
+        "BSD-2-Clause"
+      ]
+    },
+    {
+      "section": "id156",
+      "components": [
+        "libsdl-image-webos"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id157",
+      "components": [
+        "libsdl-mixer-webos"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id158",
+      "components": [
+        "libsdl-net-webos"
+      ],
+      "licenses": [
+        "Zlib"
+      ]
+    },
+    {
+      "section": "id159",
+      "components": [
+        "libsdl-ttf-webos"
+      ],
+      "licenses": [
+        "Zlib"
+      ]
+    },
+    {
+      "section": "id160",
+      "components": [
+        "libsdl2-webos"
+      ],
+      "licenses": [
+        "Zlib"
+      ]
+    },
+    {
+      "section": "id161",
+      "components": [
+        "libsigc++-2.0"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id162",
+      "components": [
+        "libsmpeg-webos"
+      ],
+      "licenses": [
+        "LGPL-2.0"
+      ]
+    },
+    {
+      "section": "id163",
+      "components": [
+        "libsndfile1"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id164",
+      "components": [
+        "libsolv"
+      ],
+      "licenses": [
+        "BSD-3-Clause"
+      ]
+    },
+    {
+      "section": "id165",
+      "components": [
+        "libsoup-2.4"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id166",
+      "components": [
+        "libsqlite3",
+        "sqlite3"
+      ],
+      "licenses": [
+        "PD"
+      ]
+    },
+    {
+      "section": "id167",
+      "components": [
+        "libsystemd",
+        "libudev",
+        "systemd",
+        "systemd-analyze",
+        "systemd-extra-utils",
+        "systemd-vconsole-setup",
+        "udev",
+        "udev-hwdb"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id168",
+      "components": [
+        "libtasn1"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id169",
+      "components": [
+        "libtirpc"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id170",
+      "components": [
+        "libunwind"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id171",
+      "components": [
+        "libusb1"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id172",
+      "components": [
+        "libuv"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id173",
+      "components": [
+        "libvorbis"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id174",
+      "components": [
+        "libwebosi18n"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id175",
+      "components": [
+        "libwebp"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id176",
+      "components": [
+        "libwebsockets"
+      ],
+      "licenses": [
+        "LGPL-2.1"
+      ]
+    },
+    {
+      "section": "id177",
+      "components": [
+        "libwrap",
+        "tcp-wrappers"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id178",
+      "components": [
+        "libxcrypt"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id179",
+      "components": [
+        "libxkbcommon"
+      ],
+      "licenses": [
+        "MIT",
+        "MIT-style"
+      ]
+    },
+    {
+      "section": "id180",
+      "components": [
+        "libxml++"
+      ],
+      "licenses": [
+        "LGPL-2.1"
+      ]
+    },
+    {
+      "section": "id181",
+      "components": [
+        "libxml2"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id182",
+      "components": [
+        "lighttpd",
+        "lighttpd-module-access",
+        "lighttpd-module-accesslog",
+        "lighttpd-module-dirlisting",
+        "lighttpd-module-indexfile",
+        "lighttpd-module-staticfile"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id183",
+      "components": [
+        "ls2-helpers"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id184",
+      "components": [
+        "lsb"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id185",
+      "components": [
+        "luna-init"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id186",
+      "components": [
+        "luna-prefs"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id187",
+      "components": [
+        "luna-prefs-data"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id188",
+      "components": [
+        "luna-service2"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id189",
+      "components": [
+        "luna-service2-security-conf"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id190",
+      "components": [
+        "luna-service2-security-conf-pub"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id191",
+      "components": [
+        "luna-surfacemanager",
+        "luna-surfacemanager-base",
+        "luna-surfacemanager-localization"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id192",
+      "components": [
+        "luna-sysservice"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id193",
+      "components": [
+        "lvm2",
+        "lvm2-scripts"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id194",
+      "components": [
+        "makedevs"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id195",
+      "components": [
+        "maliit-framework-webos"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id196",
+      "components": [
+        "mdns"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id197",
+      "components": [
+        "mheg"
+      ],
+      "licenses": [
+        "BSD-3-Clause",
+        "IJG",
+        "LGPL-2.1",
+        "Libpng",
+        "MIT",
+        "OpenSSL",
+        "Zlib",
+        "curl"
+      ]
+    },
+    {
+      "section": "id198",
+      "components": [
+        "mojoloader"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id199",
+      "components": [
+        "mojoservicelauncher"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id200",
+      "components": [
+        "mpg123"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id201",
+      "components": [
+        "msgpack"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id202",
+      "components": [
+        "ncurses",
+        "ncurses-libformw",
+        "ncurses-libmenuw",
+        "ncurses-libncurses",
+        "ncurses-libncursesw",
+        "ncurses-libpanelw",
+        "ncurses-libtinfo",
+        "ncurses-terminfo-base"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id203",
+      "components": [
+        "ne10"
+      ],
+      "licenses": [
+        "BSD-3-Clause"
+      ]
+    },
+    {
+      "section": "id204",
+      "components": [
+        "netbase"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id205",
+      "components": [
+        "nettle"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id206",
+      "components": [
+        "nghttp2"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id207",
+      "components": [
+        "nodejs"
+      ],
+      "licenses": [
+        "Artistic-2.0",
+        "BSD",
+        "MIT"
+      ]
+    },
+    {
+      "section": "id208",
+      "components": [
+        "nodejs-module-usocket"
+      ],
+      "licenses": [
+        "ISC"
+      ]
+    },
+    {
+      "section": "id209",
+      "components": [
+        "nodejs-module-webos-dynaload"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id210",
+      "components": [
+        "nodejs-module-webos-pmlog"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id211",
+      "components": [
+        "nodejs-module-webos-service"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id212",
+      "components": [
+        "nodejs-module-webos-sysbus"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id213",
+      "components": [
+        "notificationmgr"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id214",
+      "components": [
+        "npapi-plugins"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "BSD-2-Clause",
+        "MPL-1.1",
+        "NPL-1.1",
+        "Zlib"
+      ]
+    },
+    {
+      "section": "id215",
+      "components": [
+        "nspr"
+      ],
+      "licenses": [
+        "GPL-2.0",
+        "LGPL-2.1",
+        "MPL-2.0"
+      ]
+    },
+    {
+      "section": "id216",
+      "components": [
+        "nss"
+      ],
+      "licenses": [
+        "GPL-2.0",
+        "LGPL-2.1",
+        "MPL-2.0"
+      ]
+    },
+    {
+      "section": "id217",
+      "components": [
+        "nuance-stt-adapter"
+      ],
+      "licenses": [
+        "BSD-3-Clause",
+        "MIT"
+      ]
+    },
+    {
+      "section": "id218",
+      "components": [
+        "nyx-lib"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id219",
+      "components": [
+        "nyx-modules"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id220",
+      "components": [
+        "nyx-modules-starfish"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id221",
+      "components": [
+        "nyx-utils"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id222",
+      "components": [
+        "omx-il-rtk"
+      ],
+      "licenses": [
+        "LGPL-2.1"
+      ]
+    },
+    {
+      "section": "id223",
+      "components": [
+        "openwnn-webos"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id224",
+      "components": [
+        "opkg-arch-config"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id225",
+      "components": [
+        "os-release"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id226",
+      "components": [
+        "packagegroup-core-boot"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id227",
+      "components": [
+        "packagegroup-starfish-bsp"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id228",
+      "components": [
+        "packagegroup-starfish-core"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id229",
+      "components": [
+        "packagegroup-starfish-extended"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id230",
+      "components": [
+        "packagegroup-starfish-foss"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id231",
+      "components": [
+        "packagegroup-starfish-ndk"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id232",
+      "components": [
+        "packagegroup-starfish-qt5"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id233",
+      "components": [
+        "packagegroup-starfish-tvsystem",
+        "packagegroup-starfish-tvsystem-atsc",
+        "packagegroup-starfish-tvsystem-dmost",
+        "packagegroup-starfish-tvsystem-dvb"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id234",
+      "components": [
+        "packagegroup-webos-extended"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id235",
+      "components": [
+        "packagegroup-webos-pro-extended"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id236",
+      "components": [
+        "packagegroup-webos-pro-qt5"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id237",
+      "components": [
+        "pacrunner"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id238",
+      "components": [
+        "pixman"
+      ],
+      "licenses": [
+        "MIT",
+        "MIT-style",
+        "PD"
+      ]
+    },
+    {
+      "section": "id239",
+      "components": [
+        "pmklogd"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id240",
+      "components": [
+        "pmlogctl"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id241",
+      "components": [
+        "pmlogdaemon"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id242",
+      "components": [
+        "pmloglib"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id243",
+      "components": [
+        "poco-crypto",
+        "poco-foundation",
+        "poco-json",
+        "poco-net",
+        "poco-netssl",
+        "poco-util",
+        "poco-xml"
+      ],
+      "licenses": [
+        "BSL-1.0"
+      ]
+    },
+    {
+      "section": "id244",
+      "components": [
+        "popt"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id245",
+      "components": [
+        "procps"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id246",
+      "components": [
+        "protobuf"
+      ],
+      "licenses": [
+        "BSD-3-Clause"
+      ]
+    },
+    {
+      "section": "id247",
+      "components": [
+        "protobuf-c"
+      ],
+      "licenses": [
+        "BSD-2-Clause"
+      ]
+    },
+    {
+      "section": "id248",
+      "components": [
+        "ptmalloc3"
+      ],
+      "licenses": [
+        "LGPLv2"
+      ]
+    },
+    {
+      "section": "id249",
+      "components": [
+        "pugixml"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id250",
+      "components": [
+        "pyzy"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id251",
+      "components": [
+        "qml-webos-bridge"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id252",
+      "components": [
+        "qml-webos-components"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id253",
+      "components": [
+        "qml-webos-framework"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id254",
+      "components": [
+        "qrencode"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id255",
+      "components": [
+        "qtwayland-webos"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id256",
+      "components": [
+        "readline"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id257",
+      "components": [
+        "run-postinsts"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id258",
+      "components": [
+        "sbc"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id259",
+      "components": [
+        "scd-service"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "BSD-2-Clause",
+        "BSD-3-Clause"
+      ]
+    },
+    {
+      "section": "id260",
+      "components": [
+        "sdparm"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id261",
+      "components": [
+        "second-screen-service",
+        "second-screen-service-localization"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "MIT"
+      ]
+    },
+    {
+      "section": "id262",
+      "components": [
+        "securitymanager"
+      ],
+      "licenses": [
+        "MIT",
+        "OpenSSL"
+      ]
+    },
+    {
+      "section": "id263",
+      "components": [
+        "settingsservice-conf"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id264",
+      "components": [
+        "sg3-utils"
+      ],
+      "licenses": [
+        "BSD",
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id265",
+      "components": [
+        "shadow",
+        "shadow-base"
+      ],
+      "licenses": [
+        "Artistic-1.0",
+        "BSD",
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id266",
+      "components": [
+        "shadow-gpl"
+      ],
+      "licenses": [
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id267",
+      "components": [
+        "shadow-securetty"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id268",
+      "components": [
+        "shared-mime-info"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id269",
+      "components": [
+        "sleepd"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id270",
+      "components": [
+        "smartmontools"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id271",
+      "components": [
+        "snappy"
+      ],
+      "licenses": [
+        "BSD-3-Clause"
+      ]
+    },
+    {
+      "section": "id272",
+      "components": [
+        "speex"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id273",
+      "components": [
+        "speexdsp"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id274",
+      "components": [
+        "starfish-initscripts"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id275",
+      "components": [
+        "sunpinyin"
+      ],
+      "licenses": [
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id276",
+      "components": [
+        "systemd-compat-units"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id277",
+      "components": [
+        "systemd-conf"
+      ],
+      "licenses": [
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id278",
+      "components": [
+        "systemd-serialgetty"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id279",
+      "components": [
+        "taglib"
+      ],
+      "licenses": [
+        "LGPLv2.1",
+        "MPL-1"
+      ]
+    },
+    {
+      "section": "id280",
+      "components": [
+        "tar"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id281",
+      "components": [
+        "tesseract"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id282",
+      "components": [
+        "tesseract-lang-eng"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id283",
+      "components": [
+        "thrift"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id284",
+      "components": [
+        "tiff"
+      ],
+      "licenses": [
+        "BSD-2-Clause"
+      ]
+    },
+    {
+      "section": "id285",
+      "components": [
+        "tpl-libs"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "BSD-2-Clause"
+      ]
+    },
+    {
+      "section": "id286",
+      "components": [
+        "tremor"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id287",
+      "components": [
+        "tts"
+      ],
+      "licenses": [
+        "BSD-3-Clause",
+        "MIT"
+      ]
+    },
+    {
+      "section": "id288",
+      "components": [
+        "tzdata",
+        "tzdata-africa",
+        "tzdata-americas",
+        "tzdata-antarctica",
+        "tzdata-arctic",
+        "tzdata-asia",
+        "tzdata-atlantic",
+        "tzdata-australia",
+        "tzdata-europe",
+        "tzdata-misc",
+        "tzdata-pacific",
+        "tzdata-posix",
+        "tzdata-right"
+      ],
+      "licenses": [
+        "BSD",
+        "BSD-3-Clause",
+        "PD"
+      ]
+    },
+    {
+      "section": "id289",
+      "components": [
+        "uchardet"
+      ],
+      "licenses": [
+        "MPLv1.1"
+      ]
+    },
+    {
+      "section": "id290",
+      "components": [
+        "umi"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id291",
+      "components": [
+        "update-alternatives-opkg"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id292",
+      "components": [
+        "uriparser"
+      ],
+      "licenses": [
+        "BSD-3-Clause"
+      ]
+    },
+    {
+      "section": "id293",
+      "components": [
+        "util-linux",
+        "util-linux-agetty",
+        "util-linux-cfdisk",
+        "util-linux-fdisk",
+        "util-linux-fsck",
+        "util-linux-getopt",
+        "util-linux-ionice",
+        "util-linux-libblkid",
+        "util-linux-libfdisk",
+        "util-linux-libmount",
+        "util-linux-libsmartcols",
+        "util-linux-libuuid",
+        "util-linux-losetup",
+        "util-linux-lsblk",
+        "util-linux-mkfs",
+        "util-linux-mount",
+        "util-linux-mountpoint",
+        "util-linux-prlimit",
+        "util-linux-readprofile",
+        "util-linux-sfdisk",
+        "util-linux-sulogin",
+        "util-linux-swaponoff",
+        "util-linux-switch-root",
+        "util-linux-umount"
+      ],
+      "licenses": [
+        "BSD",
+        "GPLv2",
+        "LGPLv2.1"
+      ]
+    },
+    {
+      "section": "id294",
+      "components": [
+        "videooutput-adaptation-layer-starfish"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id295",
+      "components": [
+        "videooutputd",
+        "videooutputd-localization"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id296",
+      "components": [
+        "videothumbnailer"
+      ],
+      "licenses": [
+        "GPL-2.0"
+      ]
+    },
+    {
+      "section": "id297",
+      "components": [
+        "voiceinput"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "BSD-2-Clause",
+        "BSD-3-Clause",
+        "MIT",
+        "OpenSSL"
+      ]
+    },
+    {
+      "section": "id298",
+      "components": [
+        "volatile-binds"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id299",
+      "components": [
+        "wam",
+        "wam-localization"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id300",
+      "components": [
+        "wavpack"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id301",
+      "components": [
+        "wayland"
+      ],
+      "licenses": [
+        "MIT"
+      ]
+    },
+    {
+      "section": "id302",
+      "components": [
+        "webos-bluetooth-service"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id303",
+      "components": [
+        "webos-connman-adapter"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "LGPL-2.1"
+      ]
+    },
+    {
+      "section": "id304",
+      "components": [
+        "webos-fontconfig-files"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id305",
+      "components": [
+        "webos-fonts"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "OFL-1.1"
+      ]
+    },
+    {
+      "section": "id306",
+      "components": [
+        "webos-initscripts"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "MIT"
+      ]
+    },
+    {
+      "section": "id307",
+      "components": [
+        "webos-nettools"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id308",
+      "components": [
+        "webos-pro-initscripts"
+      ],
+      "licenses": [
+        "Apache-2.0",
+        "MIT"
+      ]
+    },
+    {
+      "section": "id309",
+      "components": [
+        "webos-wayland-extensions"
+      ],
+      "licenses": [
+        "Apache-2.0"
+      ]
+    },
+    {
+      "section": "id310",
+      "components": [
+        "widevine-classic"
+      ],
+      "licenses": [
+        "MIT",
+        "OpenSSL"
+      ]
+    },
+    {
+      "section": "id311",
+      "components": [
+        "wpa-supplicant",
+        "wpa-supplicant-cli",
+        "wpa-supplicant-passphrase"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id312",
+      "components": [
+        "wpa-supplicant-conf"
+      ],
+      "licenses": [
+        "GPLv2"
+      ]
+    },
+    {
+      "section": "id313",
+      "components": [
+        "xinetd"
+      ],
+      "licenses": [
+        "BSD"
+      ]
+    },
+    {
+      "section": "id314",
+      "components": [
+        "xkeyboard-config"
+      ],
+      "licenses": [
+        "MIT",
+        "MIT-style"
+      ]
+    },
+    {
+      "section": "id315",
+      "components": [
+        "yajl"
+      ],
+      "licenses": [
+        "ISC"
+      ]
+    },
+    {
+      "section": "id316",
+      "components": [
+        "zlib"
+      ],
+      "licenses": [
+        "Zlib"
+      ]
+    }
+  ],
+  "plain_text_urls": [
+    "http://hdl.handle.net/1895.22/1013",
+    "http://mozilla.org/MPL/2.0/.",
+    "http://www.apache.org/licenses/",
+    "http://www.apache.org/licenses/LICENSE-2.0",
+    "http://www.gnu.org/copyleft/.",
+    "http://www.gnu.org/licenses/gcc-exception.html",
+    "http://www.mozilla.org/MPL/",
+    "http://www.mozilla.org/NPL/",
+    "http://www.openssl.org/)",
+    "http://www.pythonlabs.com/logos.html",
+    "https://www.freetype.org"
+  ],
+  "html_link_count": 0
+}

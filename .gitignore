@@ -1,0 +1,17 @@
+# Large / vendor-licensed inputs (recorded by hash in evidence manifests)
+source-catalog/archives/
+source-catalog/inspection-*/
+sdk-candidates/**/assets/
+sdk-candidates/**/inspection-*/
+official-webos6-guide.zip
+official-guide-extracted/
+official-guide-eng.txt
+# Python / caches
+__pycache__/
+*.pyc
+# Secrets / pairing keys
+.env
+*.key
+*.pem
+client-key*.txt
+secrets/

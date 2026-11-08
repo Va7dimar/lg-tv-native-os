@@ -1,0 +1,17 @@
+{
+  "recorded_utc": "2026-11-08T07:03:36.645998+00:00",
+  "command": "python3 -B -m unittest discover -s tooling/tests -p 'test_sdk*.py' -v",
+  "environment": {
+    "SDK_STDIO_TEST_EVIDENCE_DIR": "tooling/review/sdk-stdio-fix-2026-11-08/nested-evidence",
+    "SDK_FD_TEST_EVIDENCE_DIR": "tooling/review/sdk-stdio-fix-2026-11-08/nested-fd-evidence"
+  },
+  "exit_code": 0,
+  "ran_test_methods": 35,
+  "whole_test_skips": 3,
+  "subtest_skips": 7,
+  "failures": 0,
+  "errors": 0,
+  "unittest_summary": "OK (skipped=10)",
+  "runtime_seconds": 1.205,
+  "host_green": false
+}

@@ -1,0 +1,675 @@
+UTC 2026-11-08T06:22:21.012517+00:00
+COMMAND ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'tooling/tests', '-p', 'test_sdk_inventory_phase.py', '-v']
+test_all_pins_precede_any_parser (test_sdk_inventory_phase.InventoryTests.test_all_pins_precede_any_parser) ... ERROR
+test_closed_production_parser (test_sdk_inventory_phase.InventoryTests.test_closed_production_parser) ... usage: python3 -m unittest [-h]
+python3 -m unittest: error: unrecognized arguments: --test-spec bad
+usage: python3 -m unittest [-h]
+python3 -m unittest: error: unrecognized arguments: --test-spec bad
+FAIL
+test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) ... 
+  test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=0, kind='truncated') ... ERROR
+  test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=0, kind='corrupt') ... ERROR
+  test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=0, kind='concat') ... ERROR
+  test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=0, kind='zero_tail') ... ERROR
+  test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=0, kind='junk_tail') ... ERROR
+  test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=1, kind='truncated') ... ERROR
+  test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=1, kind='corrupt') ... ERROR
+  test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=1, kind='concat') ... ERROR
+  test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=1, kind='zero_tail') ... ERROR
+  test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=1, kind='junk_tail') ... ERROR
+test_deadline_covers_pins (test_sdk_inventory_phase.InventoryTests.test_deadline_covers_pins) ... ERROR
+test_links_pax_gnu_longnames_metadata_only (test_sdk_inventory_phase.InventoryTests.test_links_pax_gnu_longnames_metadata_only) ... ERROR
+test_lzma_memory_limit_and_bounded_decoder (test_sdk_inventory_phase.InventoryTests.test_lzma_memory_limit_and_bounded_decoder) ... ERROR
+test_mutation_detected_and_stable_descriptor (test_sdk_inventory_phase.InventoryTests.test_mutation_detected_and_stable_descriptor) ... ERROR
+test_output_freshness_symlinks_atomic_false (test_sdk_inventory_phase.InventoryTests.test_output_freshness_symlinks_atomic_false) ... ERROR
+test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) ... 
+  test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) (kwargs={'members': 2}) ... ERROR
+  test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) (kwargs={'metadata_bytes': 2}) ... ERROR
+  test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) (kwargs={'logical_bytes': 14}) ... ERROR
+  test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) (kwargs={'decoded_bytes': 20480}) ... ERROR
+test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) ... ERROR
+test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) ... 
+  test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='size') ... ERROR
+  test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='symlink') ... ERROR
+  test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='ancestor') ... ERROR
+  test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='offset') ... ERROR
+  test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='marker') ... ERROR
+  test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='signature') ... ERROR
+test_success_shared_three_streams (test_sdk_inventory_phase.InventoryTests.test_success_shared_three_streams) ... ERROR
+test_synthetic_full_path_isolation (test_sdk_inventory_phase.InventoryTests.test_synthetic_full_path_isolation) ... ERROR
+test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) ... 
+  test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) (length=10241) ... ERROR
+  test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) (length=1536) ... ERROR
+  test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) (length=1024) ... ERROR
+  test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) (length=1536) ... ERROR
+  test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) (length=1535) ... ERROR
+test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) ... ERROR
+test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) ... 
+  test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[('../x', b'')]") ... ERROR
+  test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[('/abs', b'')]") ... ERROR
+  test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[('C:/x', b'')]") ... ERROR
+  test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[('x/../y', b'')]") ... ERROR
+  test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[('a', b''), ('./a', b'')]") ... ERROR
+  test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[<TarInfo 'bad' at 0x7fb9fd7c13c0>]") ... ERROR
+  test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[<TarInfo 'bad' at 0x7fb9fd7c1600>]") ... ERROR
+  test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[<TarInfo 'bad' at 0x7fb9fd7c16c0>]") ... ERROR
+  test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[<TarInfo 'bad' at 0x7fb9fd7c1300>]") ... ERROR
+  test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[<TarInfo 'sparse' at 0x7fb9fd7c1540>]") ... ERROR
+test_wrapper_command_exact_binds_and_limits (test_sdk_inventory_phase.InventoryTests.test_wrapper_command_exact_binds_and_limits) ... ERROR
+test_wrapper_failure_has_atomic_false_manifest (test_sdk_inventory_phase.InventoryTests.test_wrapper_failure_has_atomic_false_manifest) ... ERROR
+
+======================================================================
+ERROR: test_all_pins_precede_any_parser (test_sdk_inventory_phase.InventoryTests.test_all_pins_precede_any_parser)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 88, in test_all_pins_precede_any_parser
+    doc, _ = self.run_phase(specs)
+             ~~~~~~~~~~~~~~^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=0, kind='truncated')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 139, in test_compression_failures_both_codecs
+    doc, _ = self.run_phase(self.specs(transforms={index: transform}))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=0, kind='corrupt')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 139, in test_compression_failures_both_codecs
+    doc, _ = self.run_phase(self.specs(transforms={index: transform}))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=0, kind='concat')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 139, in test_compression_failures_both_codecs
+    doc, _ = self.run_phase(self.specs(transforms={index: transform}))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=0, kind='zero_tail')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 139, in test_compression_failures_both_codecs
+    doc, _ = self.run_phase(self.specs(transforms={index: transform}))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=0, kind='junk_tail')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 139, in test_compression_failures_both_codecs
+    doc, _ = self.run_phase(self.specs(transforms={index: transform}))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=1, kind='truncated')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 139, in test_compression_failures_both_codecs
+    doc, _ = self.run_phase(self.specs(transforms={index: transform}))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=1, kind='corrupt')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 139, in test_compression_failures_both_codecs
+    doc, _ = self.run_phase(self.specs(transforms={index: transform}))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=1, kind='concat')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 139, in test_compression_failures_both_codecs
+    doc, _ = self.run_phase(self.specs(transforms={index: transform}))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=1, kind='zero_tail')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 139, in test_compression_failures_both_codecs
+    doc, _ = self.run_phase(self.specs(transforms={index: transform}))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) (index=1, kind='junk_tail')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 139, in test_compression_failures_both_codecs
+    doc, _ = self.run_phase(self.specs(transforms={index: transform}))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_deadline_covers_pins (test_sdk_inventory_phase.InventoryTests.test_deadline_covers_pins)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 171, in test_deadline_covers_pins
+    doc, _ = self.run_phase(self.specs())
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_links_pax_gnu_longnames_metadata_only (test_sdk_inventory_phase.InventoryTests.test_links_pax_gnu_longnames_metadata_only)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 193, in test_links_pax_gnu_longnames_metadata_only
+    doc, out = self.run_phase(self.specs(tar_bytes([('dir/file', b''), sy, hard, pax], fmt)))
+               ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_lzma_memory_limit_and_bounded_decoder (test_sdk_inventory_phase.InventoryTests.test_lzma_memory_limit_and_bounded_decoder)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 207, in test_lzma_memory_limit_and_bounded_decoder
+    doc, _ = self.run_phase(specs, lzma_memlimit=1 << 20)
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_mutation_detected_and_stable_descriptor (test_sdk_inventory_phase.InventoryTests.test_mutation_detected_and_stable_descriptor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 124, in test_mutation_detected_and_stable_descriptor
+    doc, _ = self.run_phase(specs)
+             ~~~~~~~~~~~~~~^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_output_freshness_symlinks_atomic_false (test_sdk_inventory_phase.InventoryTests.test_output_freshness_symlinks_atomic_false)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 223, in test_output_freshness_symlinks_atomic_false
+    with self.assertRaises(OSError): sdk.inventory(specs, p)
+                                     ~~~~~~~~~~~~~^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) (kwargs={'members': 2})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 162, in test_shared_limits_are_independent
+    doc, _ = self.run_phase(self.specs(), **kwargs)
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) (kwargs={'metadata_bytes': 2})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 162, in test_shared_limits_are_independent
+    doc, _ = self.run_phase(self.specs(), **kwargs)
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) (kwargs={'logical_bytes': 14})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 162, in test_shared_limits_are_independent
+    doc, _ = self.run_phase(self.specs(), **kwargs)
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) (kwargs={'decoded_bytes': 20480})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 162, in test_shared_limits_are_independent
+    doc, _ = self.run_phase(self.specs(), **kwargs)
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 166, in test_shared_limits_are_independent
+    doc, _ = self.run_phase(self.specs(), logical_bytes=15, decoded_bytes=3 * len(tar_bytes()))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='size')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 112, in test_size_nofollow_offset_marker_signature
+    doc, _ = self.run_phase(specs)
+             ~~~~~~~~~~~~~~^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='symlink')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 112, in test_size_nofollow_offset_marker_signature
+    doc, _ = self.run_phase(specs)
+             ~~~~~~~~~~~~~~^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='ancestor')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 112, in test_size_nofollow_offset_marker_signature
+    doc, _ = self.run_phase(specs)
+             ~~~~~~~~~~~~~~^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='offset')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 112, in test_size_nofollow_offset_marker_signature
+    doc, _ = self.run_phase(specs)
+             ~~~~~~~~~~~~~~^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='marker')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 112, in test_size_nofollow_offset_marker_signature
+    doc, _ = self.run_phase(specs)
+             ~~~~~~~~~~~~~~^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) (case='signature')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 112, in test_size_nofollow_offset_marker_signature
+    doc, _ = self.run_phase(specs)
+             ~~~~~~~~~~~~~~^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_success_shared_three_streams (test_sdk_inventory_phase.InventoryTests.test_success_shared_three_streams)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 72, in test_success_shared_three_streams
+    doc, out = self.run_phase(specs)
+               ~~~~~~~~~~~~~~^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_synthetic_full_path_isolation (test_sdk_inventory_phase.InventoryTests.test_synthetic_full_path_isolation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 259, in test_synthetic_full_path_isolation
+    doc = isolate.launch(specs, out, synthetic_probe=True)
+  File "/workspace/lg-tv/tooling/isolate_sdk_inventory.py", line 5, in launch
+    raise NotImplementedError('isolated metadata inventory not implemented')
+NotImplementedError: isolated metadata inventory not implemented
+
+======================================================================
+ERROR: test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) (length=10241)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 148, in test_tail_and_missing_tar_eof
+    doc, _ = self.run_phase(self.specs(data))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) (length=1536)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 148, in test_tail_and_missing_tar_eof
+    doc, _ = self.run_phase(self.specs(data))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) (length=1024)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 148, in test_tail_and_missing_tar_eof
+    doc, _ = self.run_phase(self.specs(data))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) (length=1536)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 148, in test_tail_and_missing_tar_eof
+    doc, _ = self.run_phase(self.specs(data))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) (length=1535)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 148, in test_tail_and_missing_tar_eof
+    doc, _ = self.run_phase(self.specs(data))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 151, in test_tail_and_missing_tar_eof
+    doc, _ = self.run_phase(self.specs(base[:1536] + b'BAD' + base[1539:]))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[('../x', b'')]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 185, in test_unsafe_duplicate_devices_sparse
+    doc, _ = self.run_phase(self.specs(tar_bytes(entries)))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[('/abs', b'')]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 185, in test_unsafe_duplicate_devices_sparse
+    doc, _ = self.run_phase(self.specs(tar_bytes(entries)))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[('C:/x', b'')]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 185, in test_unsafe_duplicate_devices_sparse
+    doc, _ = self.run_phase(self.specs(tar_bytes(entries)))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[('x/../y', b'')]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 185, in test_unsafe_duplicate_devices_sparse
+    doc, _ = self.run_phase(self.specs(tar_bytes(entries)))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[('a', b''), ('./a', b'')]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 185, in test_unsafe_duplicate_devices_sparse
+    doc, _ = self.run_phase(self.specs(tar_bytes(entries)))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[<TarInfo 'bad' at 0x7fb9fd7c13c0>]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 185, in test_unsafe_duplicate_devices_sparse
+    doc, _ = self.run_phase(self.specs(tar_bytes(entries)))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[<TarInfo 'bad' at 0x7fb9fd7c1600>]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 185, in test_unsafe_duplicate_devices_sparse
+    doc, _ = self.run_phase(self.specs(tar_bytes(entries)))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[<TarInfo 'bad' at 0x7fb9fd7c16c0>]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 185, in test_unsafe_duplicate_devices_sparse
+    doc, _ = self.run_phase(self.specs(tar_bytes(entries)))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[<TarInfo 'bad' at 0x7fb9fd7c1300>]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 185, in test_unsafe_duplicate_devices_sparse
+    doc, _ = self.run_phase(self.specs(tar_bytes(entries)))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) (entries="[<TarInfo 'sparse' at 0x7fb9fd7c1540>]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 185, in test_unsafe_duplicate_devices_sparse
+    doc, _ = self.run_phase(self.specs(tar_bytes(entries)))
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 64, in run_phase
+    result = sdk.inventory(specs or self.specs(), out, sdk.Limits(**limits))
+  File "/workspace/lg-tv/tooling/sdk_inventory_phase.py", line 24, in inventory
+    raise NotImplementedError('metadata inventory behavior not implemented')
+NotImplementedError: metadata inventory behavior not implemented
+
+======================================================================
+ERROR: test_wrapper_command_exact_binds_and_limits (test_sdk_inventory_phase.InventoryTests.test_wrapper_command_exact_binds_and_limits)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 247, in test_wrapper_command_exact_binds_and_limits
+    cmd = isolate.build_command(specs, '/proc/self/fd/99', ['/usr/bin/python3', '-I', '/tool/probe.py'], 117)
+  File "/workspace/lg-tv/tooling/isolate_sdk_inventory.py", line 7, in build_command
+    raise NotImplementedError('closed sandbox command not implemented')
+NotImplementedError: closed sandbox command not implemented
+
+======================================================================
+ERROR: test_wrapper_failure_has_atomic_false_manifest (test_sdk_inventory_phase.InventoryTests.test_wrapper_failure_has_atomic_false_manifest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 240, in test_wrapper_failure_has_atomic_false_manifest
+    doc = isolate.launch(specs, out)
+  File "/workspace/lg-tv/tooling/isolate_sdk_inventory.py", line 5, in launch
+    raise NotImplementedError('isolated metadata inventory not implemented')
+NotImplementedError: isolated metadata inventory not implemented
+
+======================================================================
+FAIL: test_closed_production_parser (test_sdk_inventory_phase.InventoryTests.test_closed_production_parser)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 233, in test_closed_production_parser
+    self.assertEqual(sum(s.size for s in sdk.PRODUCTION_SPECS), 498625937)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 498625937
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.127s
+
+FAILED (failures=1, errors=47)
+
+EXIT 1

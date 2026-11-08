@@ -1,0 +1,65 @@
+UTC 2026-11-08T06:27:47.696479+00:00
+COMMAND ['python3', '-B', '-m', 'unittest', 'discover', '-s', 'tooling/tests', '-p', 'test_sdk_inventory_phase.py', '-v']
+test_all_pins_precede_any_parser (test_sdk_inventory_phase.InventoryTests.test_all_pins_precede_any_parser) ... ok
+test_closed_cli_rejects_overrides_and_wrong_paths (test_sdk_inventory_phase.InventoryTests.test_closed_cli_rejects_overrides_and_wrong_paths) ... usage: python3 -m unittest [-h] --sdk SDK --native NATIVE --target TARGET
+                           --output-dir OUTPUT_DIR
+python3 -m unittest: error: unrecognized arguments: --select 1
+usage: python3 -m unittest [-h] --sdk SDK --native NATIVE --target TARGET
+                           --output-dir OUTPUT_DIR
+python3 -m unittest: error: unrecognized arguments: --max-members 1
+usage: python3 -m unittest [-h] --sdk SDK --native NATIVE --target TARGET
+                           --output-dir OUTPUT_DIR
+python3 -m unittest: error: unrecognized arguments: --offset 1
+usage: python3 -m unittest [-h] --sdk SDK --native NATIVE --target TARGET
+                           --output-dir OUTPUT_DIR
+python3 -m unittest: error: unrecognized arguments: --expected-hash 1
+usage: python3 -m unittest [-h] --sdk SDK --native NATIVE --target TARGET
+                           --output-dir OUTPUT_DIR
+python3 -m unittest: error: unrecognized arguments: --test-spec 1
+ok
+test_closed_production_parser (test_sdk_inventory_phase.InventoryTests.test_closed_production_parser) ... usage: python3 -m unittest [-h] --sdk SDK --native NATIVE --target TARGET
+                           --output-dir OUTPUT_DIR
+python3 -m unittest: error: the following arguments are required: --sdk, --native, --target, --output-dir
+usage: python3 -m unittest [-h] --sdk SDK --native NATIVE --target TARGET
+                           --output-dir OUTPUT_DIR
+python3 -m unittest: error: the following arguments are required: --sdk, --native, --target, --output-dir
+ok
+test_compression_failures_both_codecs (test_sdk_inventory_phase.InventoryTests.test_compression_failures_both_codecs) ... ok
+test_deadline_covers_pins (test_sdk_inventory_phase.InventoryTests.test_deadline_covers_pins) ... ok
+test_descriptor_replacement_does_not_substitute_unpinned_input (test_sdk_inventory_phase.InventoryTests.test_descriptor_replacement_does_not_substitute_unpinned_input) ... FAIL
+test_failed_phase_reports_verified_and_skipped_inputs (test_sdk_inventory_phase.InventoryTests.test_failed_phase_reports_verified_and_skipped_inputs) ... ok
+test_global_pax_and_hidden_extensions_are_counted (test_sdk_inventory_phase.InventoryTests.test_global_pax_and_hidden_extensions_are_counted) ... ok
+test_integrity_corruption_after_logical_tar_eof_is_detected (test_sdk_inventory_phase.InventoryTests.test_integrity_corruption_after_logical_tar_eof_is_detected) ... ok
+test_invalid_later_tar_header_is_not_tolerated (test_sdk_inventory_phase.InventoryTests.test_invalid_later_tar_header_is_not_tolerated) ... ok
+test_launcher_timeout_keeps_partial_and_false (test_sdk_inventory_phase.InventoryTests.test_launcher_timeout_keeps_partial_and_false) ... ok
+test_links_pax_gnu_longnames_metadata_only (test_sdk_inventory_phase.InventoryTests.test_links_pax_gnu_longnames_metadata_only) ... ok
+test_lzma_memory_limit_and_bounded_decoder (test_sdk_inventory_phase.InventoryTests.test_lzma_memory_limit_and_bounded_decoder) ... ok
+test_mutation_detected_and_stable_descriptor (test_sdk_inventory_phase.InventoryTests.test_mutation_detected_and_stable_descriptor) ... ok
+test_no_unbounded_reader_calls_and_drain_deadline (test_sdk_inventory_phase.InventoryTests.test_no_unbounded_reader_calls_and_drain_deadline) ... ok
+test_output_freshness_symlinks_atomic_false (test_sdk_inventory_phase.InventoryTests.test_output_freshness_symlinks_atomic_false) ... ok
+test_output_publication_never_overwrites (test_sdk_inventory_phase.InventoryTests.test_output_publication_never_overwrites) ... ok
+test_shared_limits_are_independent (test_sdk_inventory_phase.InventoryTests.test_shared_limits_are_independent) ... ok
+test_size_nofollow_offset_marker_signature (test_sdk_inventory_phase.InventoryTests.test_size_nofollow_offset_marker_signature) ... ok
+test_success_shared_three_streams (test_sdk_inventory_phase.InventoryTests.test_success_shared_three_streams) ... ok
+test_synthetic_full_path_isolation (test_sdk_inventory_phase.InventoryTests.test_synthetic_full_path_isolation) ... skipped 'isolation runtime blocked: InventoryError: worker did not publish manifest: bwrap: loopback: Failed to create NETLINK_ROUTE socket: Operation not permitted\n'
+test_tail_and_missing_tar_eof (test_sdk_inventory_phase.InventoryTests.test_tail_and_missing_tar_eof) ... ok
+test_unsafe_duplicate_devices_sparse (test_sdk_inventory_phase.InventoryTests.test_unsafe_duplicate_devices_sparse) ... ok
+test_worker_limit_claim_is_truthful_outside_sandbox (test_sdk_inventory_phase.InventoryTests.test_worker_limit_claim_is_truthful_outside_sandbox) ... ok
+test_wrapper_command_exact_binds_and_limits (test_sdk_inventory_phase.InventoryTests.test_wrapper_command_exact_binds_and_limits) ... ok
+test_wrapper_failure_has_atomic_false_manifest (test_sdk_inventory_phase.InventoryTests.test_wrapper_failure_has_atomic_false_manifest) ... ok
+
+======================================================================
+FAIL: test_descriptor_replacement_does_not_substitute_unpinned_input (test_sdk_inventory_phase.InventoryTests.test_descriptor_replacement_does_not_substitute_unpinned_input)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py", line 321, in test_descriptor_replacement_does_not_substitute_unpinned_input
+    self.assertFalse(doc['ok'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 26 tests in 0.407s
+
+FAILED (failures=1, skipped=1)
+
+EXIT 1

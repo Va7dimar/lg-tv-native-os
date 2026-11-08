@@ -1,0 +1,11 @@
+{
+  "audit": {
+    "0": "/dev/null",
+    "1": "/tmp/stdio-depth-t21y21to/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-PENDING-REVIEW/launcher-stdout.txt",
+    "2": "/tmp/stdio-depth-t21y21to/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-PENDING-REVIEW/launcher-stderr.txt"
+  },
+  "launcher": {
+    "ok": true,
+    "error": null
+  }
+}

@@ -1,0 +1,2 @@
+AST-identical baseline/current: InputSpec, Limits, check_deadline, signature, directory_fd, open_regular, fresh_output, disk_check, atomic_json, DecodedReader, canonical, argument_parser, production_arguments
+Launcher and FD/stdio tests byte-identical; hashes recorded.

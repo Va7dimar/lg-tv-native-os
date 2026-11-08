@@ -1,0 +1,18 @@
+{
+  "started_Atlantic_Reykjavik": "2026-11-08T07:09:20.045681+00:00",
+  "command_launcher": [
+    "/bin/bash",
+    "/workspace/lg-tv/tooling/review/sdk-inventory-2026-11-08/proposed-metadataonly-command.txt"
+  ],
+  "exact_literal_command_file": "/workspace/lg-tv/evidence/sdk-inventory-execution-2026-11-08/exact-reviewed-command.txt",
+  "invocation_count": 1,
+  "exit_code": 1,
+  "elapsed_seconds": 0.767,
+  "finished_Atlantic_Reykjavik": "2026-11-08T07:09:20.812311+00:00",
+  "observed_child_rusage": {
+    "user_seconds": 0.041736999999999996,
+    "system_seconds": 0.009273,
+    "maxrss_KiB_Linux": 19932,
+    "not_RSS_enforcement": true
+  }
+}

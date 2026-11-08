@@ -1,0 +1,93 @@
+{
+  "status": "FUTUREparenttechnicalcoordination,NOTexecuted; no newownerperfilequestion",
+  "objective": "BoundedplaintextSDKversion/environment/header/providercomparison,notinstallation/compilerexecution",
+  "selected_feature": "CurrentSDKreaderMETADATAONLYhasNOtextselection;newnarrowfeature/planrequiresTDD+independentreviewbeforeactualread",
+  "candidates": [
+    {
+      "input": "sdk",
+      "exact_path": "version-ca9v1-starfishmllib32-linux-gnueabi",
+      "indexed_bytes": 125,
+      "jsonl_ordinal": 5,
+      "contents_read": false
+    },
+    {
+      "input": "sdk",
+      "exact_path": "environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+      "indexed_bytes": 4321,
+      "jsonl_ordinal": 3,
+      "contents_read": false
+    },
+    {
+      "input": "sdk",
+      "exact_path": "site-config-ca9v1-starfishmllib32-linux-gnueabi",
+      "indexed_bytes": 13611,
+      "jsonl_ordinal": 4,
+      "contents_read": false
+    },
+    {
+      "input": "sdk",
+      "exact_path": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/linux/version.h",
+      "indexed_bytes": 97,
+      "jsonl_ordinal": 11618,
+      "contents_read": false
+    },
+    {
+      "input": "target",
+      "exact_path": "usr/include/linux/version.h",
+      "indexed_bytes": 97,
+      "jsonl_ordinal": 22079,
+      "contents_read": false
+    },
+    {
+      "input": "sdk",
+      "exact_path": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/features.h",
+      "indexed_bytes": 15721,
+      "jsonl_ordinal": 10826,
+      "contents_read": false
+    },
+    {
+      "input": "target",
+      "exact_path": "usr/include/features.h",
+      "indexed_bytes": 15721,
+      "jsonl_ordinal": 19434,
+      "contents_read": false
+    },
+    {
+      "input": "sdk",
+      "exact_path": "sysroots/x86_64-starfishsdk-linux/usr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0/include-fixed/README",
+      "indexed_bytes": 750,
+      "jsonl_ordinal": 5342,
+      "contents_read": false
+    },
+    {
+      "input": "target",
+      "exact_path": "sysroot-providers/lib32-linux-libc-headers",
+      "indexed_bytes": 24,
+      "jsonl_ordinal": 19202,
+      "contents_read": false
+    },
+    {
+      "input": "target",
+      "exact_path": "sysroot-providers/lib32-glibc",
+      "indexed_bytes": 11,
+      "jsonl_ordinal": 19292,
+      "contents_read": false
+    }
+  ],
+  "indexed_combined_bytes": 50478,
+  "proposed_text_bounds": {
+    "per_member_bytes": 32768,
+    "combined_bytes": 65536,
+    "exact_regular_files_only": true,
+    "reject_links_binary_or_path_aliases": true
+  },
+  "other_resources": "Existingwhole3phasecapsretained; no split/resume/reset/raisedceilings; futurefreshoutputparenthandoff",
+  "scope_exclusions": [
+    "installer/compiler/sourceexecution",
+    "ELFbinaryexecution",
+    "TVactions",
+    "nestedexpansion",
+    "sourcebuild",
+    "inferredSDKcompatibility/hardwareproof"
+  ]
+}

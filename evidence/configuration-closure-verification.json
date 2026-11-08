@@ -1,0 +1,26 @@
+{
+  "verified_at": "2026-11-08T06:08:44.509849+00:00",
+  "timezone": "Atlantic/Reykjavik",
+  "quote_ranges_verified": 32,
+  "citation_end_clamps": [
+    [
+      152,
+      151
+    ],
+    [
+      40,
+      32
+    ]
+  ],
+  "both_source_read_phases_ok": true,
+  "new_plaintext_files": 6,
+  "new_selected_bytes": 35043,
+  "reader_and_launcher_unchanged": true,
+  "old_chromium_partial_unchanged": true,
+  "originals_read_in_verification": false,
+  "sdk_assets_downloaded": false,
+  "source_executed_or_built": false,
+  "tv_actions": false,
+  "page_updated": true,
+  "disk_free_observed": 117479399424
+}

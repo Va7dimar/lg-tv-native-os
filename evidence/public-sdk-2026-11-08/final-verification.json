@@ -1,0 +1,43 @@
+{
+  "verified_at": "2026-11-08T06:17:07.015555+00:00",
+  "timezone": "Atlantic/Reykjavik",
+  "all3fresh_hashes_sizes_modes_http_match": true,
+  "assets": [
+    {
+      "name": "native_sysroot_dependencies.tar.gz",
+      "bytes": 8017931,
+      "sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+      "mode": "0644",
+      "stable_during_streamhash": true
+    },
+    {
+      "name": "starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh",
+      "bytes": 166821312,
+      "sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+      "mode": "0644",
+      "stable_during_streamhash": true
+    },
+    {
+      "name": "target_sysroot_dependencies.tar.gz",
+      "bytes": 323786694,
+      "sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+      "mode": "0644",
+      "stable_during_streamhash": true
+    }
+  ],
+  "observed_marker_byte_start": 10812,
+  "observed_payload_byte_start": 10820,
+  "raw_bytes_after_marker": 166810492,
+  "header_quote_ranges_verified": 11,
+  "prefix_read_cap_per_asset": 262144,
+  "payload_parser_or_installer_executed": false,
+  "sdk_installed": false,
+  "tv_actions": false,
+  "production_tooling_touched": false,
+  "archive2_or_libkadaptor_read": false,
+  "new_download_bytes": 498625937,
+  "new_download_budget_bytes": 21474836480,
+  "remaining_budget_bytes": 20976210543,
+  "free_disk_bytes": 116797616128,
+  "page_update": "successful5editbatchpublished"
+}

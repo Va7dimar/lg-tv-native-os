@@ -1,0 +1,25 @@
+{
+  "requested_model": "claude-opus-5-5/high",
+  "started_at": "2026-11-08T06:11:47.221287+00:00",
+  "timeout_seconds": 180,
+  "command": [
+    "claude",
+    "-p",
+    "<savedprompt>",
+    "--model",
+    "claude-opus-5-5",
+    "--effort",
+    "high",
+    "--output-format",
+    "json"
+  ],
+  "exit_code": 0,
+  "timed_out": false,
+  "elapsed_seconds": 53.499,
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "safety_stops": 0,
+  "is_error": false,
+  "response_status": "substantive staticanalysis;no refusal"
+}

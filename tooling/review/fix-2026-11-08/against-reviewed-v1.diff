@@ -1,0 +1,1081 @@
+# Diff of post-review fix against independently reviewed v1 copies
+# Reviewed SHA-256 values are recorded in ../independent-review.md
+
+--- /workspace/lg-tv/tooling/review/bounded_archive_inventory.py	2026-11-08 04:38:54.969984583 +0000
++++ /workspace/lg-tv/tooling/bounded_archive_inventory.py	2026-11-08 04:51:40.864742997 +0000
+@@ -80,6 +80,8 @@
+     address_space_bytes: int = HARD_MAX_ADDRESS_SPACE_BYTES
+     max_stdout_bytes: int = HARD_MAX_STDOUT_BYTES
+ 
++    _allow_lower_disk_reserve: bool = field(default=False, repr=False, compare=False)
++
+     def __post_init__(self) -> None:
+         maxima = {
+             "max_members": HARD_MAX_MEMBERS,
+@@ -98,6 +100,47 @@
+                 raise LimitError(f"{name} {value} exceeds hard maximum {hard}")
+         if not isinstance(self.min_free_disk_bytes, int) or self.min_free_disk_bytes < 1:
+             raise LimitError("min_free_disk_bytes must be a positive integer")
++        if (
++            self.min_free_disk_bytes < HARD_MIN_FREE_DISK_BYTES
++            and not self._allow_lower_disk_reserve
++        ):
++            raise LimitError(
++                f"min_free_disk_bytes {self.min_free_disk_bytes} is below approved floor "
++                f"{HARD_MIN_FREE_DISK_BYTES}"
++            )
++
++    @classmethod
++    def for_tests(cls, **kwargs) -> "Limits":
++        kwargs["_allow_lower_disk_reserve"] = True
++        return cls(**kwargs)
++
++
++def limits_public_dict(limits: Limits) -> dict:
++    data = asdict(limits)
++    data.pop("_allow_lower_disk_reserve", None)
++    return data
++
++
++@dataclass
++class Budgets:
++    members: int = 0
++    pathname_bytes: int = 0
++    expanded_bytes: int = 0
++    selected_text_bytes: int = 0
++
++    def exhausted(self, limits: Limits) -> str | None:
++        if self.members >= limits.max_members:
++            return "max_members"
++        if self.pathname_bytes >= limits.max_pathname_bytes:
++            return "max_pathname_bytes"
++        if self.expanded_bytes >= limits.max_expanded_bytes:
++            return "max_expanded_bytes"
++        return None
++
++
++def open_untrusted_tar_gz(fileobj: BinaryIO) -> tarfile.TarFile:
++    """Open a gzip tar using CPython stream=True so TarInfo objects are not cached."""
++    return tarfile.open(fileobj=fileobj, mode="r|gz", stream=True)
+ 
+ 
+ @dataclass
+@@ -339,9 +382,12 @@
+     return "\n".join(lines) + "\n"
+ 
+ 
+-def _write_selected_file(output_dir: Path, canonical: str, data: bytes) -> str:
+-    parts = [part for part in canonical.split("/") if part not in ("", ".")]
+-    if not parts:
++def _write_selected_file(output_dir: Path, archive_label: str, canonical: str, data: bytes) -> str:
++    label = Path(archive_label).name
++    if label in ("", ".", ".."):
++        label = "input"
++    parts = [label] + [part for part in canonical.split("/") if part not in ("", ".")]
++    if len(parts) < 2:
+         raise PathEscapeError("empty selected path")
+     selected_root = contained_path(output_dir, "selected")
+     dest = contained_path(selected_root, *parts)
+@@ -356,17 +402,22 @@
+     return str(dest.relative_to(output_dir.resolve()))
+ 
+ 
+-def _consume_payload(src: BinaryIO, hasher: hashlib._Hash | None = None) -> tuple[int, bool]:
++def _consume_payload(
++    src: BinaryIO,
++    hasher=None,
++    deadline: float | None = None,
++) -> tuple[int, str | None]:
+     total = 0
+-    truncated = False
+     while True:
++        if deadline is not None and time.monotonic() > deadline:
++            return total, "wall_seconds"
+         chunk = src.read(1024 * 1024)
+         if not chunk:
+             break
+         total += len(chunk)
+         if hasher is not None:
+             hasher.update(chunk)
+-    return total, truncated
++    return total, None
+ 
+ 
+ def _process_archive(
+@@ -376,6 +427,7 @@
+     select: set[str],
+     deadline: float,
+     hash_input: bool,
++    budgets: Budgets,
+ ) -> tuple[dict, list[str], str]:
+     errors: list[str] = []
+     members: list[dict] = []
+@@ -391,6 +443,7 @@
+     fileobj = None
+     input_sha = None
+     raw_stat = os.lstat(path)
++    archive_label = path.name
+     try:
+         fd, _st = open_regular_nofollow(path)
+         if hash_input:
+@@ -408,7 +461,7 @@
+             os.lseek(fd, 0, os.SEEK_SET)
+         fileobj = os.fdopen(fd, "rb")
+         fd = None
+-        tf = tarfile.open(fileobj=fileobj, mode="r:gz")
++        tf = open_untrusted_tar_gz(fileobj)
+         index = 0
+         while True:
+             if time.monotonic() > deadline:
+@@ -416,6 +469,12 @@
+                 archive_status = "partial"
+                 archive_error = "wall_seconds"
+                 break
++            exhausted = budgets.exhausted(limits)
++            if exhausted:
++                errors.append(f"{exhausted} exceeded")
++                archive_status = "partial"
++                archive_error = exhausted
++                break
+             try:
+                 info = tf.next()
+             except (tarfile.TarError, OSError, EOFError, ValueError, zlib.error) as exc:
+@@ -431,41 +490,35 @@
+             cost = metadata_byte_cost(raw_name, info)
+             if kind == "metadata":
+                 cost += logical_member_size(info)
+-            if pathname_bytes + cost > limits.max_pathname_bytes:
++            if budgets.pathname_bytes + cost > limits.max_pathname_bytes:
+                 errors.append("max_pathname_bytes exceeded")
+                 archive_status = "partial"
+                 archive_error = "max_pathname_bytes"
+                 break
+             pathname_bytes += cost
++            budgets.pathname_bytes += cost
++
++            if kind == "metadata":
++                continue
+ 
+-            if len(members) >= limits.max_members:
++            if budgets.members >= limits.max_members:
+                 errors.append("max_members exceeded")
+                 archive_status = "partial"
+                 archive_error = "max_members"
+                 break
+ 
+-            if kind == "metadata":
+-                src = tf.extractfile(info) if info.size else None
+-                extra = ""
+-                if src is not None:
+-                    extra_bytes = src.read(limits.max_pathname_bytes + 1)
+-                    extra = extra_bytes.decode("utf-8", "replace")
+-                    if info.type in (
+-                        getattr(tarfile, "XHDTYPE", "x"),
+-                        getattr(tarfile, "XGLTYPE", "g"),
+-                    ) and not _pax_records_valid(extra_bytes):
+-                        errors.append("malformed_pax")
+-                        archive_status = "failed"
+-                        archive_error = "malformed_pax"
+-                        break
+-                continue
+-
+             reasons: list[str] = []
+             decision = "accepted"
+             selected = False
+             selected_output = None
+             digest = None
+             nested = False
++            sparse = bool(getattr(info, "sparse", None))
++            if not sparse and hasattr(info, "issparse"):
++                try:
++                    sparse = bool(info.issparse())
++                except Exception:
++                    sparse = False
+             canonical, path_reasons = canonicalize_member_path(raw_name)
+             if path_reasons:
+                 decision = "rejected"
+@@ -493,25 +546,50 @@
+                 reasons.append("unsupported_type")
+                 security_failed = True
+             elif kind in {"symlink", "hardlink"}:
+-                safe, resolved, link_reasons = classify_link_target(canonical or "", info.linkname)
+-                if not safe:
+-                    decision = "rejected"
+-                    reasons.extend(link_reasons)
+-                    security_failed = True
++                if decision != "rejected":
++                    safe, resolved, link_reasons = classify_link_target(
++                        canonical or "", info.linkname
++                    )
++                    if not safe:
++                        decision = "rejected"
++                        reasons.extend(link_reasons)
++                        security_failed = True
++                    else:
++                        decision = "recorded_not_followed"
+                 else:
+-                    decision = "recorded_not_followed"
+-                if resolved:
+-                    # stored for evidence; never followed
++                    # Path already rejected (absolute/escape/etc). Do not
++                    # relabel as recorded_not_followed even if the target
++                    # string looks like a safe relative name.
+                     pass
+ 
+             logical = logical_member_size(info) if kind == "file" else 0
+             if kind == "file":
+-                if expanded_bytes + logical > limits.max_expanded_bytes:
++                if budgets.expanded_bytes + logical > limits.max_expanded_bytes:
+                     errors.append("max_expanded_bytes exceeded")
+                     archive_status = "partial"
+                     archive_error = "max_expanded_bytes"
++                    members.append(
++                        {
++                            "index": index,
++                            "raw_name": raw_name,
++                            "canonical_name": canonical,
++                            "type": kind,
++                            "size": logical,
++                            "link_target": info.linkname or None,
++                            "decision": decision,
++                            "reasons": reasons + ["max_expanded_bytes"],
++                            "selected": False,
++                            "selected_output": None,
++                            "sha256": None,
++                            "nested_archive_not_expanded": bool(
++                                canonical and is_nested_archive_name(canonical)
++                            ),
++                            "sparse": bool(sparse),
++                        }
++                    )
+                     break
+                 expanded_bytes += logical
++                budgets.expanded_bytes += logical
+                 if canonical and is_nested_archive_name(canonical):
+                     nested = True
+ 
+@@ -528,6 +606,7 @@
+                 "selected_output": None,
+                 "sha256": None,
+                 "nested_archive_not_expanded": nested,
++                "sparse": bool(sparse),
+             }
+ 
+             if kind == "file":
+@@ -537,6 +616,7 @@
+                     archive_status = "partial"
+                     archive_error = "unreadable_member"
+                     members.append(record)
++                    budgets.members += 1
+                     index += 1
+                     break
+                 want = (
+@@ -550,50 +630,70 @@
+                     want = False
+                     reasons.append("selected_oversize")
+                 hasher = hashlib.sha256()
++                read_total = 0
+                 if want:
+                     buf = src.read(limits.max_selected_text_member_bytes + 1)
+-                    hasher.update(buf[: limits.max_selected_text_member_bytes])
++                    read_total += len(buf)
+                     if len(buf) > limits.max_selected_text_member_bytes:
+                         reasons.append("selected_oversize")
+-                        rest_hasher = hasher
+-                        extra_total, _ = _consume_payload(src, None)
+-                        digest = None
++                        hasher.update(buf)
++                        extra, wall = _consume_payload(src, hasher, deadline)
++                        read_total += extra
++                        digest = hasher.hexdigest()
++                        if wall:
++                            errors.append("wall_seconds exceeded")
++                            archive_status = "partial"
++                            archive_error = "wall_seconds"
+                     elif b"\x00" in buf:
+-                        reasons.append("not_plaintext")
++                        hasher.update(buf)
+                         digest = hasher.hexdigest()
++                        reasons.append("not_plaintext")
+                     else:
++                        hasher.update(buf)
++                        digest = hasher.hexdigest()
+                         try:
+-                            selected_output = _write_selected_file(output_dir, canonical, buf)
++                            selected_output = _write_selected_file(
++                                output_dir, archive_label, canonical, buf
++                            )
+                             selected = True
+                             selected_text_bytes += len(buf)
++                            budgets.selected_text_bytes += len(buf)
+                         except (OSError, PathEscapeError) as exc:
+                             errors.append(f"selected_write:{exc}")
+                             archive_status = "failed"
+                             archive_error = "selected_write"
+                             security_failed = True
+-                        digest = hasher.hexdigest()
+-                    leftover = src.read(1024 * 1024)
+-                    while leftover:
+-                        leftover = src.read(1024 * 1024)
+                 else:
+-                    total, _ = _consume_payload(src, hasher)
++                    read_total, wall = _consume_payload(src, hasher, deadline)
+                     digest = hasher.hexdigest()
+-                    if logical and total < logical and getattr(info, "sparse", None) is None:
+-                        # gzip/tar may still be valid if the reader already
+-                        # padded; only mark truncated when the stream ended early
+-                        # and the parser did not raise. Keep going.
+-                        pass
++                    if wall:
++                        errors.append("wall_seconds exceeded")
++                        archive_status = "partial"
++                        archive_error = "wall_seconds"
++                if read_total > logical:
++                    extra = read_total - logical
++                    if budgets.expanded_bytes + extra > limits.max_expanded_bytes:
++                        errors.append("max_expanded_bytes exceeded")
++                        archive_status = "partial"
++                        archive_error = "max_expanded_bytes"
++                    else:
++                        expanded_bytes += extra
++                        budgets.expanded_bytes += extra
+                 record["sha256"] = digest
+-            elif kind in {"symlink", "hardlink", "dir", "device", "fifo", "unsupported"}:
+-                # no payload to follow or extract for non-files
+-                pass
+ 
+             record["decision"] = decision
+             record["reasons"] = reasons
+             record["selected"] = selected
+             record["selected_output"] = selected_output
+             members.append(record)
++            budgets.members += 1
+             index += 1
++            if archive_status in {"partial", "failed"} and archive_error in {
++                "wall_seconds",
++                "max_expanded_bytes",
++                "selected_write",
++            }:
++                break
+     except (tarfile.TarError, OSError, EOFError, ValueError) as exc:
+         errors.append(f"parse_error:{exc}")
+         archive_status = "partial" if members else "failed"
+@@ -685,17 +785,46 @@
+     generated_at = datetime.now(timezone.utc).astimezone().isoformat()
+     document = {
+         "tool": "bounded-archive-inventory",
+-        "version": "1.0.0",
++        "version": "1.1.0",
+         "status": "ok",
+         "ok": True,
+         "generated_at": generated_at,
+-        "limits": asdict(limits),
++        "limits": limits_public_dict(limits),
+         "host": {
+             "python": sys.version.split()[0],
+             "free_disk_bytes": free,
+             "platform": sys.platform,
+         },
+         "isolation_observation": isolation_observation(),
++        "controls": {
++            "isolation_entrypoint": "isolate_inventory.py",
++            "isolation_required_for_untrusted_inputs": True,
++            "parser_allocates_extended_headers_before_semantic_limits": True,
++            "allocation_backstop": (
++                "prlimit address-space and timeout wall via isolate_inventory.py; "
++                "semantic member/path/expansion caps do not contain tarfile.next() PAX/GNU allocations"
++            ),
++            "disk_reserve_check": (
++                "observed free bytes once before work; not a filesystem reservation"
++            ),
++            "in_process_wall_check": (
++                "checked between members and during payload reads; "
++                "allocation inside tarfile.next() still relies on the process wall"
++            ),
++            "tarfile_stream": True,
++            "noexec_output_demonstrated": False,
++            "selected_file_mode": "0644",
++            "selected_mode_is_not_noexec_mount": True,
++            "tool_never_executes_archive_content": True,
++            "selected_plaintext_is_untrusted_data": True,
++        },
++        "totals": {
++            "member_count": 0,
++            "pathname_bytes": 0,
++            "expanded_bytes": 0,
++            "selected_text_bytes": 0,
++        },
++        "skipped_inputs": [],
+         "archives": [],
+         "errors": [],
+     }
+@@ -712,21 +841,40 @@
+     deadline = time.monotonic() + limits.wall_seconds
+     select_set = set(select or ())
+     overall = "ok"
+-    security_or_fail = False
+-    for path in validated:
++    budgets = Budgets()
++    remaining = list(validated)
++    while remaining:
++        if overall in {"partial", "failed"}:
++            for path in remaining:
++                document["skipped_inputs"].append(str(path))
++            document["errors"].append("stopped_before_remaining_inputs")
++            break
++        exhausted = budgets.exhausted(limits)
++        if exhausted:
++            overall = "partial"
++            document["errors"].append(f"{exhausted} exceeded")
++            document["errors"].append("stopped_before_remaining_inputs")
++            for path in remaining:
++                document["skipped_inputs"].append(str(path))
++            break
++        path = remaining.pop(0)
+         archive, errors, archive_status = _process_archive(
+-            path, output_dir, limits, select_set, deadline, hash_input
++            path, output_dir, limits, select_set, deadline, hash_input, budgets
+         )
+         document["archives"].append(archive)
+         document["errors"].extend(errors)
+         if archive_status == "partial":
+             overall = "partial"
+         elif archive_status == "failed":
+-            security_or_fail = True
+-    if security_or_fail and overall != "partial":
+-        overall = "failed"
+-    elif document["errors"] and overall == "ok":
+-        overall = "failed" if security_or_fail else "partial"
++            overall = "failed"
++    document["totals"] = {
++        "member_count": budgets.members,
++        "pathname_bytes": budgets.pathname_bytes,
++        "expanded_bytes": budgets.expanded_bytes,
++        "selected_text_bytes": budgets.selected_text_bytes,
++    }
++    if document["errors"] and overall == "ok":
++        overall = "partial"
+ 
+     document["status"] = overall
+     document["ok"] = overall == "ok"
+@@ -775,7 +923,15 @@
+ def emit_stdout(payload: dict, limit: int) -> None:
+     raw = (json.dumps(payload, separators=(",", ":")) + "\n").encode("utf-8")
+     if len(raw) > limit:
+-        raw = raw[: max(0, limit - 20)] + b'..."truncated"}\n'
++        fallback = {
++            "status": payload.get("status", "failed"),
++            "ok": False,
++            "truncated": True,
++            "error": "stdout_truncated",
++        }
++        raw = (json.dumps(fallback, separators=(",", ":")) + "\n").encode("utf-8")
++        if len(raw) > limit:
++            raw = b'{"status":"failed","ok":false,"truncated":true,"error":"stdout_truncated"}\n'
+     buf = getattr(sys.stdout, "buffer", None)
+     if buf is not None:
+         buf.write(raw)
+--- /workspace/lg-tv/tooling/review/isolate_inventory.py	2026-11-08 04:38:54.969984583 +0000
++++ /workspace/lg-tv/tooling/isolate_inventory.py	2026-11-08 04:50:53.800573493 +0000
+@@ -78,7 +78,10 @@
+     used_names: set[str] = set()
+     inner_inputs: list[str] = []
+     for index, raw in enumerate(inputs):
+-        src = Path(raw).resolve()
++        path = Path(raw)
++        fd, _st = bai.open_regular_nofollow(path)
++        os.close(fd)
++        src = path.resolve()
+         name = src.name
+         if name in used_names:
+             name = f"{index}-{name}"
+@@ -147,13 +150,17 @@
+         forwarded.append("--hash-input")
+ 
+     tool_path = Path(__file__).with_name("bounded_archive_inventory.py")
+-    cmd = build_isolation_command(
+-        args.inputs,
+-        output_dir,
+-        limits=limits,
+-        tool_path=tool_path,
+-        forwarded_args=forwarded,
+-    )
++    try:
++        cmd = build_isolation_command(
++            args.inputs,
++            output_dir,
++            limits=limits,
++            tool_path=tool_path,
++            forwarded_args=forwarded,
++        )
++    except (bai.InputError, bai.InputCollisionError, bai.LimitError) as exc:
++        print(str(exc), file=sys.stderr)
++        return 2
+     host_net = None
+     try:
+         host_net = os.readlink("/proc/self/ns/net")
+--- /workspace/lg-tv/tooling/review/tests_test_bounded_archive_inventory.py	2026-11-08 04:38:54.973984598 +0000
++++ /workspace/lg-tv/tooling/tests/test_bounded_archive_inventory.py	2026-11-08 04:51:00.588597940 +0000
+@@ -187,7 +187,7 @@
+         self.tmp.cleanup()
+ 
+     def _result(self, archive: Path, **kwargs):
+-        limits = kwargs.pop("limits", bai.Limits(min_free_disk_bytes=1))
++        limits = kwargs.pop("limits", bai.Limits.for_tests(min_free_disk_bytes=1))
+         select = kwargs.pop("select", ())
+         return bai.inventory_archives(
+             [archive],
+@@ -221,7 +221,7 @@
+         )
+         result = self._result(archive, select=("docs/note.txt",))
+         self.assertTrue(result.ok)
+-        selected = self.out / "selected" / "docs" / "note.txt"
++        selected = self.out / "selected" / "sel.tar.gz" / "docs" / "note.txt"
+         self.assertTrue(selected.is_file())
+         self.assertEqual(selected.read_bytes(), b"plain text only\n")
+         self.assertEqual(stat.S_IMODE(selected.stat().st_mode), 0o644)
+@@ -233,9 +233,9 @@
+             self.fixtures / "big.txt.tar.gz",
+             {"big.txt": b"x" * 200},
+         )
+-        limits = bai.Limits(min_free_disk_bytes=1, max_selected_text_member_bytes=50)
++        limits = bai.Limits.for_tests(min_free_disk_bytes=1, max_selected_text_member_bytes=50)
+         result = self._result(archive, limits=limits, select=("big.txt",))
+-        self.assertFalse((self.out / "selected" / "big.txt").exists())
++        self.assertFalse(any(self.out.rglob("big.txt")))
+         payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+         member = payload["archives"][0]["members"][0]
+         self.assertFalse(member["selected"])
+@@ -247,7 +247,7 @@
+             {"blob.bin": b"hello\x00world"},
+         )
+         result = self._result(archive, select=("blob.bin",))
+-        self.assertFalse((self.out / "selected" / "blob.bin").exists())
++        self.assertFalse(any(self.out.rglob("blob.bin")))
+         payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+         member = next(m for m in payload["archives"][0]["members"] if m["canonical_name"] == "blob.bin")
+         self.assertIn("not_plaintext", member["reasons"])
+@@ -255,7 +255,7 @@
+     def test_member_count_limit_marks_partial(self):
+         files = {f"f{i}.txt": b"n" for i in range(6)}
+         archive = _write_regular_targz(self.fixtures / "many.tar.gz", files)
+-        limits = bai.Limits(min_free_disk_bytes=1, max_members=5)
++        limits = bai.Limits.for_tests(min_free_disk_bytes=1, max_members=5)
+         result = self._result(archive, limits=limits)
+         self.assertFalse(result.ok)
+         self.assertEqual(result.status, "partial")
+@@ -269,7 +269,7 @@
+             self.fixtures / "names.tar.gz",
+             {"short.txt": b"a", "a-quite-long-filename.txt": b"b"},
+         )
+-        limits = bai.Limits(min_free_disk_bytes=1, max_pathname_bytes=12)
++        limits = bai.Limits.for_tests(min_free_disk_bytes=1, max_pathname_bytes=12)
+         result = self._result(archive, limits=limits)
+         self.assertFalse(result.ok)
+         self.assertEqual(result.status, "partial")
+@@ -281,7 +281,7 @@
+             self.fixtures / "exp.tar.gz",
+             {"a.bin": b"A" * 40, "b.bin": b"B" * 40},
+         )
+-        limits = bai.Limits(min_free_disk_bytes=1, max_expanded_bytes=50)
++        limits = bai.Limits.for_tests(min_free_disk_bytes=1, max_expanded_bytes=50)
+         result = self._result(archive, limits=limits)
+         self.assertFalse(result.ok)
+         self.assertEqual(result.status, "partial")
+@@ -303,7 +303,7 @@
+             written.sparse = [(0, 4)]
+             payload = b"data" + bytes(10_000 - 4)
+             tf.addfile(written, io.BytesIO(payload))
+-        limits = bai.Limits(min_free_disk_bytes=1, max_expanded_bytes=100)
++        limits = bai.Limits.for_tests(min_free_disk_bytes=1, max_expanded_bytes=100)
+         result = self._result(raw, limits=limits)
+         self.assertFalse(result.ok)
+         payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+@@ -378,8 +378,8 @@
+             tf.addfile(link)
+         result = self._result(archive, select=("alias.txt", "real.txt"))
+         self.assertTrue(result.ok)
+-        self.assertFalse((self.out / "selected" / "alias.txt").exists())
+-        self.assertTrue((self.out / "selected" / "real.txt").is_file())
++        self.assertFalse(any(self.out.rglob("alias.txt")))
++        self.assertTrue((self.out / "selected" / "links.tar.gz" / "real.txt").is_file())
+         payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+         alias = next(m for m in payload["archives"][0]["members"] if m["canonical_name"] == "alias.txt")
+         self.assertEqual(alias["decision"], "recorded_not_followed")
+@@ -411,7 +411,7 @@
+             tf.addfile(hard)
+         result = self._result(archive, select=("hard.txt",))
+         self.assertTrue(result.ok)
+-        self.assertFalse((self.out / "selected" / "hard.txt").exists())
++        self.assertFalse(any(self.out.rglob("hard.txt")))
+         payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+         hard_m = next(m for m in payload["archives"][0]["members"] if m["canonical_name"] == "hard.txt")
+         self.assertEqual(hard_m["decision"], "recorded_not_followed")
+@@ -482,7 +482,7 @@
+             bai.inventory_archives(
+                 [archive, archive],
+                 self.out,
+-                limits=bai.Limits(min_free_disk_bytes=1),
++                limits=bai.Limits.for_tests(min_free_disk_bytes=1),
+             )
+ 
+     def test_same_basename_inputs_rejected(self):
+@@ -496,7 +496,7 @@
+             bai.inventory_archives(
+                 [a, b],
+                 self.out,
+-                limits=bai.Limits(min_free_disk_bytes=1),
++                limits=bai.Limits.for_tests(min_free_disk_bytes=1),
+             )
+ 
+     def test_symlink_input_rejected(self):
+@@ -507,7 +507,7 @@
+             bai.inventory_archives(
+                 [link],
+                 self.out,
+-                limits=bai.Limits(min_free_disk_bytes=1),
++                limits=bai.Limits.for_tests(min_free_disk_bytes=1),
+             )
+ 
+     def test_disk_reserve_failure(self):
+@@ -522,7 +522,7 @@
+             result = bai.inventory_archives(
+                 [archive],
+                 self.out,
+-                limits=bai.Limits(min_free_disk_bytes=10_000),
++                limits=bai.Limits.for_tests(min_free_disk_bytes=10_000),
+             )
+             self.assertFalse(result.ok)
+             payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
+@@ -544,7 +544,7 @@
+         nested = next(m for m in payload["archives"][0]["members"] if m["canonical_name"] == "nested.tar.gz")
+         self.assertTrue(nested.get("nested_archive_not_expanded"))
+         self.assertFalse(nested["selected"])
+-        self.assertFalse((self.out / "selected" / "secret.txt").exists())
++        self.assertFalse(any(self.out.rglob("secret.txt")))
+ 
+     def test_cli_rejects_raised_maximum(self):
+         archive = _write_regular_targz(self.fixtures / "cli.tar.gz", {"a.txt": b"a"})
+@@ -604,9 +604,9 @@
+         cmd = self.iso.build_isolation_command(
+             [inp],
+             out,
+-            limits=bai.Limits(min_free_disk_bytes=1),
++            limits=bai.Limits(),
+             tool_path=tool,
+-            forwarded_args=["--min-free-disk-bytes", "1"],
++            forwarded_args=["--max-members", "50"],
+         )
+         text = " ".join(cmd)
+         self.assertEqual(cmd[0], "timeout")
+@@ -633,8 +633,6 @@
+                 str(archive),
+                 "--output-dir",
+                 str(out),
+-                "--min-free-disk-bytes",
+-                "1",
+                 "--max-members",
+                 "50",
+             ]
+--- /dev/null	2026-11-06 13:35:33.221479195 +0000
++++ /workspace/lg-tv/tooling/tests/test_review_regressions.py	2026-11-08 04:49:04.856181123 +0000
+@@ -0,0 +1,304 @@
++"""Regression tests for independent-review findings. Synthetic fixtures only."""
++from __future__ import annotations
++
++import gzip
++import io
++import json
++import os
++import sys
++import tarfile
++import tempfile
++import unittest
++from pathlib import Path
++
++TOOL_DIR = Path(__file__).resolve().parents[1]
++if str(TOOL_DIR) not in sys.path:
++    sys.path.insert(0, str(TOOL_DIR))
++
++import bounded_archive_inventory as bai  # noqa: E402
++
++
++def _write_regular_targz(path: Path, files: dict[str, bytes]) -> Path:
++    with tarfile.open(path, "w:gz") as tf:
++        for name, data in files.items():
++            info = tarfile.TarInfo(name)
++            info.type = tarfile.REGTYPE
++            info.size = len(data)
++            info.mode = 0o644
++            tf.addfile(info, io.BytesIO(data))
++    return path
++
++
++def _octal(val: int, width: int) -> bytes:
++    return (oct(val)[2:].rjust(width - 1, "0") + "\0").encode("ascii")
++
++
++def _checksum(header: bytes) -> bytes:
++    buf = bytearray(header)
++    buf[148:156] = b"        "
++    chk = sum(buf)
++    buf[148:156] = f"{chk:06o}\0 ".encode("ascii")
++    return bytes(buf)
++
++
++def write_gnu_sparse_targz(path: Path, name: str = "sparse.bin", origsize: int = 10_000) -> Path:
++    """GNU type-S sparse member: 8 stored bytes, large logical origsize."""
++    header = bytearray(512)
++    encoded = name.encode("ascii") + b"\0"
++    header[0:len(encoded)] = encoded
++    header[100:108] = _octal(0o644, 8)
++    header[108:116] = _octal(0, 8)
++    header[116:124] = _octal(0, 8)
++    header[124:136] = _octal(8, 12)  # stored size
++    header[136:148] = _octal(0, 12)
++    header[156:157] = tarfile.GNUTYPE_SPARSE
++    header[257:263] = b"ustar "
++    header[263:265] = b" \0"
++    header[386:398] = _octal(0, 12)
++    header[398:410] = _octal(4, 12)
++    header[410:422] = _octal(origsize - 4, 12)
++    header[422:434] = _octal(4, 12)
++    header[482] = 0
++    header[483:495] = _octal(origsize, 12)
++    header = _checksum(header)
++    payload = b"DATAEND!" + bytes(512 - 8)
++    raw = bytes(header) + payload + bytes(1024)
++    with gzip.open(path, "wb") as handle:
++        handle.write(raw)
++    return path
++
++
++class ReviewRegressionTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory(prefix="bai-reg-")
++        self.root = Path(self.tmp.name)
++        self.out = self.root / "out"
++        self.out.mkdir()
++        self.fixtures = self.root / "fx"
++        self.fixtures.mkdir()
++
++    def tearDown(self):
++        self.tmp.cleanup()
++
++    def _limits(self, **kwargs):
++        kwargs.setdefault("min_free_disk_bytes", 1)
++        try:
++            return bai.Limits.for_tests(**kwargs)
++        except AttributeError:
++            return bai.Limits(**kwargs)
++
++    def test_cross_archive_member_budget_is_aggregate(self):
++        a1 = _write_regular_targz(self.fixtures / "a1.tar.gz", {"a.txt": b"1", "b.txt": b"2"})
++        a2 = _write_regular_targz(self.fixtures / "a2.tar.gz", {"c.txt": b"3", "d.txt": b"4"})
++        result = bai.inventory_archives(
++            [a1, a2], self.out, limits=self._limits(max_members=3)
++        )
++        payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
++        total = sum(arch["member_count"] for arch in payload["archives"])
++        self.assertFalse(result.ok)
++        self.assertEqual(result.status, "partial")
++        self.assertLessEqual(total, 3)
++        self.assertIn("max_members", " ".join(payload.get("errors", [])))
++
++    def test_cross_archive_expanded_budget_is_aggregate(self):
++        a1 = _write_regular_targz(self.fixtures / "e1.tar.gz", {"x.bin": b"X" * 80})
++        a2 = _write_regular_targz(self.fixtures / "e2.tar.gz", {"y.bin": b"Y" * 80})
++        result = bai.inventory_archives(
++            [a1, a2], self.out, limits=self._limits(max_expanded_bytes=100)
++        )
++        payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
++        expanded = sum(arch["expanded_bytes"] for arch in payload["archives"])
++        self.assertFalse(result.ok)
++        self.assertEqual(result.status, "partial")
++        self.assertLessEqual(expanded, 100)
++        self.assertIn("max_expanded_bytes", " ".join(payload.get("errors", [])))
++
++    def test_cross_archive_pathname_budget_is_aggregate(self):
++        a1 = _write_regular_targz(self.fixtures / "p1.tar.gz", {"abcdefghij.txt": b"1"})
++        a2 = _write_regular_targz(self.fixtures / "p2.tar.gz", {"klmnopqrst.txt": b"2"})
++        result = bai.inventory_archives(
++            [a1, a2], self.out, limits=self._limits(max_pathname_bytes=20)
++        )
++        payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
++        path_bytes = sum(arch["pathname_bytes"] for arch in payload["archives"])
++        self.assertFalse(result.ok)
++        self.assertEqual(result.status, "partial")
++        self.assertLessEqual(path_bytes, 20)
++        self.assertIn("max_pathname_bytes", " ".join(payload.get("errors", [])))
++
++    def test_partial_first_archive_does_not_process_or_select_later(self):
++        first = _write_regular_targz(
++            self.fixtures / "first.tar.gz",
++            {"one.txt": b"1", "two.txt": b"2", "three.txt": b"3"},
++        )
++        second = _write_regular_targz(self.fixtures / "second.tar.gz", {"later.txt": b"later"})
++        result = bai.inventory_archives(
++            [first, second],
++            self.out,
++            limits=self._limits(max_members=2),
++            select=("later.txt",),
++        )
++        payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
++        self.assertFalse(result.ok)
++        self.assertEqual(result.status, "partial")
++        self.assertEqual(len(payload["archives"]), 1)
++        self.assertEqual(payload["archives"][0]["status"], "partial")
++        later_names = [
++            m.get("canonical_name")
++            for arch in payload["archives"]
++            for m in arch.get("members", [])
++        ]
++        self.assertNotIn("later.txt", later_names)
++        self.assertFalse(any(self.out.rglob("later.txt")))
++        self.assertTrue(
++            payload.get("skipped_inputs")
++            or any("stopped" in err for err in payload.get("errors", []))
++        )
++
++    def test_failed_first_archive_does_not_read_later(self):
++        evil = self.fixtures / "evil.tar.gz"
++        with tarfile.open(evil, "w:gz") as tf:
++            link = tarfile.TarInfo("/abs/link")
++            link.type = tarfile.SYMTYPE
++            link.linkname = "../../etc/passwd"
++            tf.addfile(link)
++        later = _write_regular_targz(self.fixtures / "after.tar.gz", {"ok.txt": b"ok"})
++        result = bai.inventory_archives([evil, later], self.out, limits=self._limits())
++        payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
++        self.assertFalse(result.ok)
++        self.assertEqual(result.status, "failed")
++        self.assertEqual(len(payload["archives"]), 1)
++
++    def test_absolute_symlink_member_stays_rejected(self):
++        archive = self.fixtures / "abslink.tar.gz"
++        with tarfile.open(archive, "w:gz") as tf:
++            link = tarfile.TarInfo("/abs/link")
++            link.type = tarfile.SYMTYPE
++            link.linkname = "relative-target"
++            tf.addfile(link)
++            data = b"ok"
++            info = tarfile.TarInfo("ok.txt")
++            info.size = len(data)
++            tf.addfile(info, io.BytesIO(data))
++        result = bai.inventory_archives([archive], self.out, limits=self._limits())
++        payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
++        member = next(m for m in payload["archives"][0]["members"] if m["raw_name"] == "/abs/link")
++        self.assertEqual(member["decision"], "rejected")
++        self.assertIn("absolute_path", member["reasons"])
++        self.assertNotEqual(member["decision"], "recorded_not_followed")
++        self.assertFalse(result.ok)
++
++    def test_parser_surfaced_sparse_logical_size(self):
++        archive = write_gnu_sparse_targz(self.fixtures / "sparse-gnu.tar.gz")
++        with open(archive, "rb") as handle:
++            opener = getattr(bai, "open_untrusted_tar_gz", None)
++            self.assertIsNotNone(opener, "open_untrusted_tar_gz is required for stream-true reads")
++            tf = opener(handle)
++            try:
++                info = tf.next()
++            finally:
++                tf.close()
++        self.assertIsNotNone(info)
++        self.assertTrue(info.sparse)
++        self.assertGreaterEqual(bai.logical_member_size(info), 10_000)
++        self.assertLess(8, 10_000)  # stored payload is smaller than logical size
++        result = bai.inventory_archives(
++            [archive], self.out, limits=self._limits(max_expanded_bytes=100)
++        )
++        payload = json.loads((self.out / "inventory.json").read_text(encoding="utf-8"))
++        self.assertFalse(result.ok)
++        self.assertIn("max_expanded_bytes", " ".join(payload.get("errors", [])))
++        member = payload["archives"][0]["members"][0]
++        self.assertTrue(member.get("sparse"))
++        self.assertGreaterEqual(member["size"], 10_000)
++
++    def test_open_untrusted_tar_uses_noncaching_stream(self):
++        archive = _write_regular_targz(self.fixtures / "stream.tar.gz", {"a.txt": b"a", "b.txt": b"b"})
++        opener = getattr(bai, "open_untrusted_tar_gz", None)
++        self.assertIsNotNone(opener)
++        with open(archive, "rb") as handle:
++            tf = opener(handle)
++            try:
++                self.assertTrue(tf.stream)
++                seen = 0
++                while tf.next() is not None:
++                    seen += 1
++                    self.assertEqual(tf.members, [])
++                self.assertEqual(seen, 2)
++            finally:
++                tf.close()
++
++    def test_cli_cannot_lower_disk_reserve_floor(self):
++        archive = _write_regular_targz(self.fixtures / "diskcli.tar.gz", {"a.txt": b"a"})
++        rc = bai.main(
++            [
++                "--input",
++                str(archive),
++                "--output-dir",
++                str(self.out),
++                "--min-free-disk-bytes",
++                "1",
++            ]
++        )
++        self.assertEqual(rc, 2)
++        self.assertFalse((self.out / "inventory.json").exists())
++
++    def test_emit_stdout_truncation_is_valid_json(self):
++        from io import StringIO
++
++        buf = StringIO()
++        old = sys.stdout
++        sys.stdout = buf
++        try:
++            bai.emit_stdout({"status": "ok", "ok": True, "error": "x" * 4000}, 80)
++        finally:
++            sys.stdout = old
++        parsed = json.loads(buf.getvalue())
++        self.assertIsInstance(parsed, dict)
++        self.assertIn("status", parsed)
++        self.assertTrue(parsed.get("truncated") or parsed.get("error") == "stdout_truncated")
++
++    def test_cross_archive_selected_names_are_namespaced(self):
++        a1 = _write_regular_targz(self.fixtures / "left.tar.gz", {"README": b"one"})
++        a2 = _write_regular_targz(self.fixtures / "right.tar.gz", {"README": b"two"})
++        result = bai.inventory_archives(
++            [a1, a2], self.out, limits=self._limits(), select=("README",)
++        )
++        self.assertTrue(result.ok)
++        left = self.out / "selected" / "left.tar.gz" / "README"
++        right = self.out / "selected" / "right.tar.gz" / "README"
++        self.assertTrue(left.is_file())
++        self.assertTrue(right.is_file())
++        self.assertEqual(left.read_bytes(), b"one")
++        self.assertEqual(right.read_bytes(), b"two")
++
++    def test_isolate_rejects_symlink_input(self):
++        import isolate_inventory as iso
++
++        real = _write_regular_targz(self.fixtures / "real.tar.gz", {"a.txt": b"a"})
++        link = self.fixtures / "link.tar.gz"
++        link.symlink_to(real)
++        out = self.root / "iso-out"
++        out.mkdir()
++        with self.assertRaises(bai.InputError):
++            iso.build_isolation_command(
++                [link],
++                out,
++                limits=self._limits(),
++                tool_path=TOOL_DIR / "bounded_archive_inventory.py",
++            )
++        rc = iso.main(["--input", str(link), "--output-dir", str(out)])
++        self.assertNotEqual(rc, 0)
++
++    def test_document_states_isolation_backstop_and_noexec_honesty(self):
++        archive = _write_regular_targz(self.fixtures / "notes.tar.gz", {"a.txt": b"a"})
++        result = bai.inventory_archives([archive], self.out, limits=self._limits())
++        payload = result.document or json.loads((self.out / "inventory.json").read_text())
++        notes = json.dumps(payload).lower()
++        self.assertIn("isolate", notes)
++        self.assertFalse(payload["isolation_observation"]["noexec_output_demonstrated"])
++        self.assertIn("disk", notes)
++
++
++if __name__ == "__main__":
++    unittest.main()
+--- /workspace/lg-tv/tooling/review/2026-11-08-bounded-source-inventory.md	2026-11-08 04:38:54.973984598 +0000
++++ /workspace/lg-tv/docs/superpowers/plans/2026-11-08-bounded-source-inventory.md	2026-11-08 04:51:40.884743069 +0000
+@@ -182,3 +182,17 @@
+ - No catalog archive parsed; no Page update; no BSP/boot claim
+ 
+ After independent review of material changes, a later worker may run the same reader against the three originals.
++
++
++## Review-driven clarifications (2026-11-08, Atlantic/Reykjavik)
++
++These notes correct implementation constraints. They do **not** weaken the pinned aggregate ceilings or replace the original Task 2/G2a plan.
++
++- Member, pathname/metadata, and expanded-data ceilings are **invocation-level aggregates across all inputs**, not per-archive resets. A single run over the three catalog originals shares one 200000-member, 100000000 pathname-byte, and 20 GiB expanded budget.
++- Exceeding a ceiling, or a parse/policy `failed`/`partial` result, **stops the run**. Later inputs are not opened, inventoried, or selected. The index is marked `partial` or `failed` with `ok=false`.
++- `isolate_inventory.py` is the mandatory entrypoint for untrusted or catalog archives. CPython `tarfile.next()` reads PAX/GNU extended-header payloads before semantic budgets run. Process `prlimit` address-space (1 GiB) and `timeout` wall (120 s) are the allocation/time backstop, not the semantic caps.
++- The tool uses `tarfile.open(..., mode="r|gz", stream=True)` so CPython does not cache `TarInfo` objects in `TarFile.members`.
++- CLI `--min-free-disk-bytes` cannot go below the approved 10 GiB floor. Tests may use `Limits.for_tests(...)` to exercise the check. The disk check observes free space once before work; it is not a filesystem reservation.
++- Selected plaintext is written to `selected/<input-basename>/...` so same-named members from different archives do not collide. Mode `0644` means the file is not marked executable by this tool; it is **not** a noexec mount. Output remains an ordinary writable filesystem. Selected text is untrusted data (NUL-free), never executed by this tool, and not treated as a script runner.
++- In-process wall checks run between members and during payload reads. Time spent inside `tarfile.next()` (header/PAX allocation) still relies on the launcher process wall.
++- Input symlinks are rejected by both the reader and the isolation launcher (`O_NOFOLLOW` / lstat), which do not follow a leaf symlink to bind a different file.
+--- /workspace/lg-tv/tooling/review/implementation-report.md	2026-11-08 04:39:27.274100928 +0000
++++ /workspace/lg-tv/tooling/implementation-report.md	2026-11-08 04:52:07.888840326 +0000
+@@ -113,3 +113,72 @@
+ - `FILELIST.txt`
+ 
+ Parent should dispatch an independent reviewer on these material changes before any catalog-archive parse.
++
++
++## Review-fix loop (2026-11-08 04:51 Atlantic/Reykjavik)
++
++Independent review (`tooling/review/independent-review.md`) failed SPEC and quality. This section records the authorized box-only fix loop. Catalog/LG originals were still not parsed. This is a self-fix report, not a claim that independent review has passed.
++
++### Regression tests first (red)
++
++Command:
++
++```
++python3 -m unittest /workspace/lg-tv/tooling/tests/test_review_regressions.py -v
++```
++
++Artifact: `tooling/artifacts/red-review-regressions.txt`
++
++Result: `Ran 13 tests in 0.035s` `FAILED (failures=12, errors=1)` `EXIT:1`
++
++The 13 new tests encoded the review counterexamples before production changes: aggregate member/expanded/pathname budgets; stop-and-do-not-select later archives after partial or failed; absolute symlink member stays `rejected`; parser-surfaced GNU sparse logical size; `open_untrusted_tar_gz` stream=True without member cache; CLI disk-reserve floor; valid JSON stdout truncation; namespaced selected paths; isolate rejects symlink inputs; document isolation/noexec honesty.
++
++### Production fix (coherent patch)
++
++- Invocation-level `Budgets` accumulate members, pathname/metadata bytes, expanded logical (and extra decompressed) bytes, and selected-text bytes across all inputs. Remaining budget is enforced inside `_process_archive`.
++- After `partial` or `failed`, remaining inputs are recorded in `skipped_inputs` and are not opened. An already-exhausted budget also skips later inputs without reading them.
++- Link-target classification runs only when the member path itself was not already rejected, so `/abs/link` -> `relative-target` stays `decision=rejected` with `absolute_path`.
++- GNU type-S sparse fixtures are parsed via the same opener; inventory records `sparse=true` and charges parser-surfaced logical size (`info.size` after `_proc_sparse` plus sparse map extents).
++- Archives are opened with `tarfile.open(..., mode="r|gz", stream=True)` (`open_untrusted_tar_gz`) so CPython does not append to `TarFile.members`.
++- `Limits.for_tests` may lower the disk reserve for synthetic tests. Production `Limits()` and CLI `--min-free-disk-bytes` cannot go below 10 GiB.
++- Selected plaintext is written to `selected/<archive-basename>/...` with `O_CREAT|O_EXCL` and mode `0644`. `0644` is not a noexec mount; `noexec_output_demonstrated` remains false. The tool never executes archive content. Selected bytes are untrusted NUL-free data.
++- Isolate launcher `lstat`+`O_NOFOLLOW` rejects leaf symlink inputs instead of `Path.resolve()`-following them into `--ro-bind`.
++- `emit_stdout` truncation now emits a small valid JSON object (`truncated` / `stdout_truncated`) rather than sliced invalid JSON.
++- Unused leftover hasher/drain path removed; hashing uses one hasher through selected and remainder reads.
++- Inventory `controls` document the real guarantees: isolation required for untrusted inputs; PAX/GNU allocation happens inside `tarfile.next()` before semantic caps; AS/wall are the allocation backstop; disk check is a one-time observation, not a reservation; in-process wall is between members and during payload reads.
++
++### Green after fix
++
++Regression file:
++
++```
++python3 -m unittest /workspace/lg-tv/tooling/tests/test_review_regressions.py -v
++Ran 13 tests in 0.027s
++OK
++EXIT:0
++```
++
++Artifact: `tooling/artifacts/green-review-regressions.txt`
++
++Full suite, including isolation wrapper integration:
++
++```
++python3 -m unittest discover -s /workspace/lg-tv/tooling/tests -v
++Ran 61 tests in 0.145s
++OK
++EXIT:0
++```
++
++Artifact: `tooling/artifacts/green-after-review-fixes.txt` (2026-11-08 04:51 Atlantic/Reykjavik)
++
++Review probe counterexamples addressed by named tests: `test_cross_archive_member_budget_is_aggregate`, `test_cross_archive_expanded_budget_is_aggregate`, `test_partial_first_archive_does_not_process_or_select_later`, `test_absolute_symlink_member_stays_rejected`, `test_parser_surfaced_sparse_logical_size`.
++
++### Remaining concerns (self-review only)
++
++- Independent reviewer has not re-reviewed this patch. Do not treat this update as review-passed.
++- Semantic caps still cannot contain `tarfile.next()` PAX/GNU allocations. Catalog parsing, if later approved, must use `isolate_inventory.py`.
++- `prlimit --as` remains virtual address space, not RSS / cgroup `memory.max`.
++- Disk reserve is still a single pre-work observation, not a quota.
++- noexec output mount is still not demonstrated and is not claimed. Selected `0644` files can sit on an executable filesystem.
++- In-process deadline cannot interrupt allocation inside `tarfile.next()`; the process wall is the backstop there.
++- This tooling still does not establish a BSP, boot route, recovery path, or replacement OS.

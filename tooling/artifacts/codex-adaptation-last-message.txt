@@ -1,0 +1,10 @@
+Implemented:
+
+- [Adaptation phase](/workspace/lg-tv/tooling/adaptation_libkadaptor_phase.py)
+- [Isolation launcher](/workspace/lg-tv/tooling/isolate_adaptation_phase.py)
+- [Synthetic tests](/workspace/lg-tv/tooling/tests/test_adaptation_libkadaptor_phase.py)
+- [Handoff notes](/workspace/lg-tv/tooling/adaptation-phase-notes.md)
+
+All **54 new tests** and **139 full-suite tests** pass, including isolation integration. Red and green outputs are saved in [artifacts](/workspace/lg-tv/tooling/artifacts).
+
+All seven protected hashes remain unchanged. No original catalog archives were accessed.

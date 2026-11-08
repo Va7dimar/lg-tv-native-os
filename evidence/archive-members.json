@@ -1,0 +1,110 @@
+{
+  "recorded_at": "2026-11-08 04:59 Atlantic/Reykjavik",
+  "overall_status": "partial",
+  "ok": false,
+  "error": [
+    "max_members exceeded"
+  ],
+  "totals": {
+    "member_count": 200000,
+    "pathname_bytes": 15298208,
+    "expanded_bytes": 7346394462,
+    "selected_text_bytes": 0
+  },
+  "limits": {
+    "max_members": 200000,
+    "max_pathname_bytes": 100000000,
+    "max_selected_text_member_bytes": 16777216,
+    "min_free_disk_bytes": 10737418240,
+    "max_expanded_bytes": 21474836480,
+    "wall_seconds": 120,
+    "address_space_bytes": 1073741824,
+    "max_stdout_bytes": 65536
+  },
+  "command": [
+    "python3",
+    "/workspace/lg-tv/tooling/isolate_inventory.py",
+    "--input",
+    "/workspace/lg-tv/source-catalog/archives/webOS 6.0 KLP_1.0_1.tar.gz",
+    "--input",
+    "/workspace/lg-tv/source-catalog/archives/webOS 6.0 KLP_1.0_2.tar.gz",
+    "--input",
+    "/workspace/lg-tv/source-catalog/archives/webOS 6.0 KLP_1.0_3.tar.gz",
+    "--output-dir",
+    "/workspace/lg-tv/source-catalog/inspection-2026-11-08",
+    "--hash-input"
+  ],
+  "exit_code": 1,
+  "elapsed_seconds": 42.12,
+  "inventory_path": "/workspace/lg-tv/source-catalog/inspection-2026-11-08/inventory.json",
+  "inventory_markdown_path": "/workspace/lg-tv/source-catalog/inspection-2026-11-08/inventory.md",
+  "raw_input_hashes_match_catalog_manifest": true,
+  "selected_text_pass_performed": false,
+  "nested_archives_expanded": false,
+  "archives": [
+    {
+      "filename": "webOS 6.0 KLP_1.0_1.tar.gz",
+      "path": "/input/webOS 6.0 KLP_1.0_1.tar.gz",
+      "bytes": 3270734309,
+      "sha256": "2bef84ebee68a860e9729ad5504ae6bf29b18b5fff9c12df0167e68613569970",
+      "status": "ok",
+      "error": null,
+      "member_count": 131,
+      "pathname_bytes": 3698,
+      "expanded_bytes": 3580811871,
+      "selected_text_bytes": 0,
+      "top_level_counts": {
+        "common": 131
+      },
+      "nested_archives_not_expanded": 130,
+      "types": {
+        "dir": 1,
+        "file": 130
+      },
+      "policy_rejections_seen": 0
+    },
+    {
+      "filename": "webOS 6.0 KLP_1.0_2.tar.gz",
+      "path": "/input/webOS 6.0 KLP_1.0_2.tar.gz",
+      "bytes": 511945894,
+      "sha256": "95894dd81e2bb32fd1ced1eb119698f2e1464e6b9b5b5879ea51528d7d5e8832",
+      "status": "ok",
+      "error": null,
+      "member_count": 6,
+      "pathname_bytes": 159,
+      "expanded_bytes": 522047300,
+      "selected_text_bytes": 0,
+      "top_level_counts": {
+        "soc": 6
+      },
+      "nested_archives_not_expanded": 5,
+      "types": {
+        "dir": 1,
+        "file": 5
+      },
+      "policy_rejections_seen": 0
+    },
+    {
+      "filename": "webOS 6.0 KLP_1.0_3.tar.gz",
+      "path": "/input/webOS 6.0 KLP_1.0_3.tar.gz",
+      "bytes": 1777722146,
+      "sha256": "f37ca9716820849e37b946bdd5d91d52b51c765a95dc0b309203470015b6fa1c",
+      "status": "partial",
+      "error": "max_members",
+      "member_count": 199863,
+      "pathname_bytes": 15294351,
+      "expanded_bytes": 3243535291,
+      "selected_text_bytes": 0,
+      "top_level_counts": {
+        "chromium79": 199863
+      },
+      "nested_archives_not_expanded": 24,
+      "types": {
+        "dir": 15947,
+        "file": 183854,
+        "symlink": 62
+      },
+      "policy_rejections_seen": 0
+    }
+  ]
+}

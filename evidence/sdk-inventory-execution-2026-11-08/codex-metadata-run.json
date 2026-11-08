@@ -1,0 +1,23 @@
+{
+  "requested_model": "gpt-6.1-sol",
+  "requested_effort": "high",
+  "started_Atlantic_Reykjavik": "2026-11-08T07:10:00.167040+00:00",
+  "command": [
+    "codex",
+    "exec",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "--json",
+    "-o",
+    "/workspace/lg-tv/evidence/sdk-inventory-execution-2026-11-08/codex-metadata-analysis.txt",
+    "-"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 26.093,
+  "reported_model": "Not independently exposed inJSONevents; explicitlyrequestedgpt-6.1-sol/high"
+}

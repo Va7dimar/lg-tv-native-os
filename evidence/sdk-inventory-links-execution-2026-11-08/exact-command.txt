@@ -1,0 +1,8 @@
+# PROPOSED ONLY — METADATAONLY — DO NOT RUN during implementation.
+# Requires independent SPEC/QUALITY reviews, successful synthetic sandbox evidence,
+# and parent actual-run handoff. No actual SDK asset was opened to prepare this.
+/usr/bin/python3 -I -B /workspace/lg-tv/tooling/isolate_sdk_inventory.py \
+  --sdk /workspace/lg-tv/sdk-candidates/20191125/assets/starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh \
+  --native /workspace/lg-tv/sdk-candidates/20191125/assets/native_sysroot_dependencies.tar.gz \
+  --target /workspace/lg-tv/sdk-candidates/20191125/assets/target_sysroot_dependencies.tar.gz \
+  --output-dir /workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-links-PENDING-REVIEW

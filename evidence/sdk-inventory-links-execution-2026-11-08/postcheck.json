@@ -1,0 +1,14 @@
+{
+  "time_Atlantic_Reykjavik": "2026-11-08T13:35:13.327220+00:00",
+  "code_hashes_unchanged": true,
+  "observed_post_analysis_free_bytes": 116552855552,
+  "all3reportedtar_decoderEOF": true,
+  "selected_bytes": 0,
+  "production_invocation_count": 1,
+  "no_retry_or_additional_source_processing": true,
+  "no_installer_compiler_source_execution_or_TV_actions": true,
+  "subscription_analysis_elapsed_seconds": 115.63,
+  "subscription_requested_model": "gpt-6.1-sol",
+  "serving_model_ID": "notindependentlyreported",
+  "all_worker_started_jobs_completed": true
+}

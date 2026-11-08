@@ -1,0 +1,495 @@
+{
+  "basis": "already admitted selected plaintext only; no archive reads",
+  "hits": [
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm/Makefile",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm/Makefile",
+      "line": 257,
+      "text": "machine-$(CONFIG_ARCH_RTK2875)          += rtd2875",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm/configs/realtek/config.rescue.rtd2875.old_defconfig",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm/configs/realtek/config.rescue.rtd2875.old_defconfig",
+      "line": 98,
+      "text": "CONFIG_BUILD_ARM_APPENDED_DTB_IMAGE_NAMES_EXT=\"rtd2875.dtb\"",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm/configs/realtek/config.develop.rtd2875.tv006.emmc.old_defconfig",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm/configs/realtek/config.develop.rtd2875.tv006.emmc.old_defconfig",
+      "line": 143,
+      "text": "CONFIG_BUILD_ARM_APPENDED_DTB_IMAGE_NAMES_EXT=\"rtd2875.dtb\"",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm/configs/realtek/config.develop.rtd2875.tv006.emmc.gcov.old_defconfig",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm/configs/realtek/config.develop.rtd2875.tv006.emmc.gcov.old_defconfig",
+      "line": 142,
+      "text": "CONFIG_BUILD_ARM_APPENDED_DTB_IMAGE_NAMES_EXT=\"rtd2875.dtb\"",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm/mach-rtd2875/Makefile",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm/mach-rtd2875/Makefile",
+      "line": 13,
+      "text": "KBUILD_CPPFLAGS += -Iarch/$(ARCH)/mach-rtd2875/include",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm/mach-rtd2875/Makefile",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm/mach-rtd2875/Makefile",
+      "line": 14,
+      "text": "KBUILD_CPPFLAGS += -Iarch/$(ARCH)/mach-rtd2875",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm/Kconfig",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm/Kconfig",
+      "line": 1010,
+      "text": "source \"arch/arm/mach-rtd2875/Kconfig\"",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm/boot/dts/Makefile",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm/boot/dts/Makefile",
+      "line": 782,
+      "text": "dtb-$(CONFIG_ARCH_RTK2875) += rtd2875.dtb",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm64/Makefile",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm64/Makefile",
+      "line": 86,
+      "text": "machine-$(CONFIG_ARCH_RTK287O)          += rtd287o",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm64/configs/realtek/config.rescue.rtd287o64.old_defconfig",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm64/configs/realtek/config.rescue.rtd287o64.old_defconfig",
+      "line": 78,
+      "text": "CONFIG_BUILD_ARM_APPENDED_DTB_IMAGE_NAMES_EXT=\"rtd287o.dtb\"",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.2k.kasan.old_defconfig",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.2k.kasan.old_defconfig",
+      "line": 137,
+      "text": "CONFIG_BUILD_ARM_APPENDED_DTB_IMAGE_NAMES_EXT=\"rtd287o.dtb\"",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.2k.old_defconfig",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.2k.old_defconfig",
+      "line": 138,
+      "text": "CONFIG_BUILD_ARM_APPENDED_DTB_IMAGE_NAMES_EXT=\"rtd287o.dtb\"",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.kasan.old_defconfig",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.kasan.old_defconfig",
+      "line": 136,
+      "text": "CONFIG_BUILD_ARM_APPENDED_DTB_IMAGE_NAMES_EXT=\"rtd287o.dtb\"",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.old_defconfig",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm64/configs/realtek/config.develop.rtd287o64.tv006.emmc.old_defconfig",
+      "line": 140,
+      "text": "CONFIG_BUILD_ARM_APPENDED_DTB_IMAGE_NAMES_EXT=\"rtd287o.dtb\"",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm64/Kconfig",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm64/Kconfig",
+      "line": 187,
+      "text": "source \"arch/arm64/mach-rtd287o/Kconfig\"",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/arch/arm64/boot/dts/realtek/Makefile",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/arch/arm64/boot/dts/realtek/Makefile",
+      "line": 1,
+      "text": "dtb-$(CONFIG_ARCH_RTK287O) += rtd287o.dtb",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "kernel-1.0.0-711..4.tar.gz",
+      "inner_path": "linux-4.4.3/drivers/usb/host/Makefile",
+      "selected_output": "selected/kernel-1.0.0-711..4.tar.gz/linux-4.4.3/drivers/usb/host/Makefile",
+      "line": 24,
+      "text": "xhci-plat-hcd-y := xhci-plat-rtd289x.o",
+      "terms": [
+        "rtd289"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/realtek/board/realtek/tv001/board.c",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/realtek/board/realtek/tv001/board.c",
+      "line": 43,
+      "text": "#elif defined(CONFIG_RTD2875)",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/realtek/board/realtek/tv001/board.c",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/realtek/board/realtek/tv001/board.c",
+      "line": 44,
+      "text": "\tgd->bd->bi_arch_number = MACH_TYPE_RTK_RTD2875;",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/realtek/board/realtek/tv001_wowlan/board.c",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/realtek/board/realtek/tv001_wowlan/board.c",
+      "line": 43,
+      "text": "#if defined(CONFIG_RTD2875)",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/realtek/board/realtek/tv001_wowlan/board.c",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/realtek/board/realtek/tv001_wowlan/board.c",
+      "line": 44,
+      "text": "\t\tgd->bd->bi_arch_number = MACH_TYPE_RTK_RTD2875;",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3615,
+      "text": "#define PIN_DEMOD0_RESET    (0)//FIXME//RTD287O_BGA_PIN_G2_GPO_44(0,0) // 0: demod0 reset",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3813,
+      "text": "#define PIN_DATA_FORMAT_0\t(0)//FIXME//RTD287O_BGA_PIN_F8_GPO_17(0,0) //default low",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3814,
+      "text": "#define PIN_DATA_FORMAT_1\t(0)//FIXME//RTD287O_BGA_PIN_G8_GPO_18(0, 0) //default low",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3815,
+      "text": "#define PIN_VX1_MSE\t\t(0)//FIXME//RTD287O_BGA_PIN_F4_GPO_29(0,0)//default low",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3855,
+      "text": "//#define PIN_MICOM_INV_CTL                   RTD287O_BGA_PIN_T6_ISO_GPO_5(0, 0)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3856,
+      "text": "//#define PIN_MICOM_BT_WAKEUP_DEVICE          RTD287O_BGA_PIN_AC17_ISO_GPO_42(0, 0)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3857,
+      "text": "//#define PIN_MICOM_WOL_WIFI_POWER_ON         RTD287O_BGA_PIN_AA22_ISO_GPI_45(0)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3858,
+      "text": "//#define PIN_MICOM_POWER_DETECT              RTD287O_BGA_PIN_AC22_ISO_GPI_47(0)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3859,
+      "text": "//#define PIN_MICOM_PANEL_CTRL                RTD287O_BGA_PIN_R6_ISO_GPO_4(0, 0)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3860,
+      "text": "//#define PIN_MICOM_POWER_ON_OFF_1            RTD287O_BGA_PIN_AB17_ISO_GPO_43(0, 1)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3861,
+      "text": "//#define PIN_MICOM_POWER_ON_OFF_2_3          RTD287O_BGA_PIN_AB22_ISO_GPO_44(0 ,1)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3862,
+      "text": "//#define PIN_MICOM_POWER_ON_OFF_2_4          RTD287O_BGA_PIN_AC16_ISO_GPO_38(0, 1)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3863,
+      "text": "//#define PIN_MICOM_LED_R                     RTD287O_BGA_PIN_AA24_ISO_GPO_52(0, 1)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3864,
+      "text": "//#define PIN_MICOM_RL_ON                     RTD287O_BGA_PIN_V4_ISO_GPO_11(0, 1)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3865,
+      "text": "//#define PIN_MICOM_WIFI_ENABLE               RTD287O_BGA_PIN_AC15_ISO_GPO_39(0, 1)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3866,
+      "text": "//#define PIN_MICOM_WOL_CTL                   RTD287O_BGA_PIN_AC24_ISO_GPO_49(0, 1)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3867,
+      "text": "//#define PIN_MICOM_AMP_MUTE                  RTD287O_BGA_PIN_Y23_ISO_GPO_54(0, 0)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga_27x27.h",
+      "line": 3868,
+      "text": "//#define PIN_MICOM_debug                     RTD287O_BGA_PIN_AC13_ISO_GPO_34(0,0)",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga.h",
+      "line": 3448,
+      "text": "#define PIN_DEMOD0_RESET    (0)//FIXME//RTD287O_BGA_PIN_G2_GPO_44(0,0) // 0: demod0 reset Pin_H2",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga.h",
+      "line": 3632,
+      "text": "#define PIN_DATA_FORMAT_0\t\t(0)//FIXME//RTD287O_BGA_PIN_F8_GPO_17(0, 0) //default low",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga.h",
+      "line": 3633,
+      "text": "#define PIN_DATA_FORMAT_1\t\t(0)//FIXME//RTD287O_BGA_PIN_G8_GPO_18(0, 0) //default low",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga.h",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/arch/include/arch-realtek/platform_lib/board/pcb/pcb_realtek_tv006_bga.h",
+      "line": 3634,
+      "text": "#define PIN_VX1_MSE\t\t\t(0)//FIXME//RTD287O_BGA_PIN_F4_GPO_29(0, 0) //default low",
+      "terms": [
+        "rtd287o"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/board/realtek/tv006/board.c",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/board/realtek/tv006/board.c",
+      "line": 69,
+      "text": "#if defined(CONFIG_RTD2875)",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bsp/board/realtek/tv006/board.c",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bsp/board/realtek/tv006/board.c",
+      "line": 70,
+      "text": "\tgd->bd->bi_arch_number = MACH_TYPE_RTK_RTD2875;",
+      "terms": [
+        "rtd2875"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bin/makefile",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bin/makefile",
+      "line": 40,
+      "text": "PLATFORM_CHIP=k6l",
+      "terms": [
+        "k6l"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bin/makefile",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bin/makefile",
+      "line": 41,
+      "text": "PLATFORM_NAME=k6l",
+      "terms": [
+        "k6l"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bin/makefile",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bin/makefile",
+      "line": 43,
+      "text": "PLATFORM_ALLOW=\"k6l:\"",
+      "terms": [
+        "k6l"
+      ]
+    },
+    {
+      "package": "bootcode-1.0.0-1099.7.tar.gz",
+      "inner_path": "bootcode/bin/makefile",
+      "selected_output": "selected/bootcode-1.0.0-1099.7.tar.gz/bootcode/bin/makefile",
+      "line": 48,
+      "text": "PLATFORM_CHIP_VER=k6l",
+      "terms": [
+        "k6l"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,231 @@
+{
+  "recorded_at_Atlantic_Reykjavik": "2026-11-08T13:31:40.388008+00:00",
+  "status": "ok:complete metadata-only all3inputinventory",
+  "execution": {
+    "started_Atlantic_Reykjavik": "2026-11-08T13:30:17.591554+00:00",
+    "command": [
+      "/bin/bash",
+      "/workspace/lg-tv/evidence/sdk-inventory-links-execution-2026-11-08/exact-command.txt"
+    ],
+    "sole_literal_command_change": "freshoutputdirectory",
+    "invocation_count": 1,
+    "exit_code": 0,
+    "elapsed_seconds": 13.804,
+    "finished_Atlantic_Reykjavik": "2026-11-08T13:30:31.395508+00:00"
+  },
+  "worker_status": "ok",
+  "launcher_ok": true,
+  "review": "tooling/review/sdk-link-metadata-independent-review.md",
+  "full_hash_bytes": 498625937,
+  "pin_verifications": [
+    {
+      "bytes_hashed": 166821312,
+      "descriptor_stat": {
+        "ctime_ns": 1794118243876724238,
+        "device": 65040,
+        "inode": 449083,
+        "link_count": 1,
+        "mtime_ns": 1794118243872724224,
+        "size": 166821312
+      },
+      "expected_sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+      "expected_size": 166821312,
+      "label": "sdk",
+      "path": "/input/sdk",
+      "slice_end": 166821312,
+      "slice_start": 10820,
+      "verified": true
+    },
+    {
+      "bytes_hashed": 8017931,
+      "descriptor_stat": {
+        "ctime_ns": 1794118240416711777,
+        "device": 65040,
+        "inode": 449080,
+        "link_count": 1,
+        "mtime_ns": 1794118240412711762,
+        "size": 8017931
+      },
+      "expected_sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+      "expected_size": 8017931,
+      "label": "native",
+      "path": "/input/native",
+      "slice_end": 8017931,
+      "slice_start": 0,
+      "verified": true
+    },
+    {
+      "bytes_hashed": 323786694,
+      "descriptor_stat": {
+        "ctime_ns": 1794118250600748455,
+        "device": 65040,
+        "inode": 449085,
+        "link_count": 1,
+        "mtime_ns": 1794118250592748427,
+        "size": 323786694
+      },
+      "expected_sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+      "expected_size": 323786694,
+      "label": "target",
+      "path": "/input/target",
+      "slice_end": 323786694,
+      "slice_start": 0,
+      "verified": true
+    }
+  ],
+  "inputs": [
+    {
+      "compressed_bytes_consumed": 166810492,
+      "compressed_bytes_read": 166810492,
+      "compressed_counter_definition": "Read counts include read-ahead; consumed is exact at compression EOF, otherwise unknown/null",
+      "decoded_bytes": 891217920,
+      "decoded_zero_tail_bytes": 7680,
+      "integrity_eof": true,
+      "label": "sdk",
+      "max_decoder_chunk": 65536,
+      "path": "/input/sdk",
+      "sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+      "size": 166821312,
+      "slice_end": 166821312,
+      "slice_start": 10820,
+      "tar_eof": true,
+      "tar_eof_offset": 891210240
+    },
+    {
+      "compressed_bytes_consumed": 8017931,
+      "compressed_bytes_read": 8017931,
+      "compressed_counter_definition": "Read counts include read-ahead; consumed is exact at compression EOF, otherwise unknown/null",
+      "decoded_bytes": 16148480,
+      "decoded_zero_tail_bytes": 6656,
+      "integrity_eof": true,
+      "label": "native",
+      "max_decoder_chunk": 65536,
+      "path": "/input/native",
+      "sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+      "size": 8017931,
+      "slice_end": 8017931,
+      "slice_start": 0,
+      "tar_eof": true,
+      "tar_eof_offset": 16141824
+    },
+    {
+      "compressed_bytes_consumed": 323786694,
+      "compressed_bytes_read": 323786694,
+      "compressed_counter_definition": "Read counts include read-ahead; consumed is exact at compression EOF, otherwise unknown/null",
+      "decoded_bytes": 1228636160,
+      "decoded_zero_tail_bytes": 8704,
+      "integrity_eof": true,
+      "label": "target",
+      "max_decoder_chunk": 65536,
+      "path": "/input/target",
+      "sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+      "size": 323786694,
+      "slice_end": 323786694,
+      "slice_start": 0,
+      "tar_eof": true,
+      "tar_eof_offset": 1228627456
+    }
+  ],
+  "totals": {
+    "decoded_bytes": 2136002560,
+    "logical_regular_bytes": 2078148221,
+    "members": 73838,
+    "metadata_bytes": 12781920,
+    "selected_bytes": 0
+  },
+  "emitted_records": 66880,
+  "by_input": {
+    "sdk": {
+      "emitted_records": 18194,
+      "types": {
+        "directory": 857,
+        "regular": 16584,
+        "symlink": 736,
+        "hardlink": 17
+      },
+      "link_classifications": {
+        "relative": 718,
+        "absolute": 35
+      },
+      "nested_archive_flags": 0
+    },
+    "native": {
+      "emitted_records": 637,
+      "types": {
+        "directory": 70,
+        "regular": 553,
+        "symlink": 14
+      },
+      "link_classifications": {
+        "relative": 14
+      },
+      "nested_archive_flags": 1
+    },
+    "target": {
+      "emitted_records": 48049,
+      "types": {
+        "directory": 2845,
+        "regular": 43298,
+        "symlink": 886,
+        "hardlink": 1020
+      },
+      "link_classifications": {
+        "relative": 1885,
+        "absolute": 21
+      },
+      "nested_archive_flags": 109
+    }
+  },
+  "limits": {
+    "decoded_bytes": 4294967296,
+    "logical_bytes": 4294967296,
+    "lzma_memlimit": 268435456,
+    "members": 200000,
+    "metadata_bytes": 100000000
+  },
+  "controls": {
+    "allocation_backstop": "Mandatory launcher AS/wall limits; tarfile extended-header allocations precede some semantic checks",
+    "disk_floor_bytes": 10737418240,
+    "disk_reserved": false,
+    "enforced_address_space_bytes": 1073741824,
+    "extraction_implemented": false,
+    "hard_rss_limit": false,
+    "metadata_definition": "Observed header strings + padded extension bodies + resolved name/link/PAX UTF8; conservative repeated charging",
+    "noexec": false,
+    "raw_name_definition": "Maintained parser decoded name before canonicalization, after PAX/GNU substitution",
+    "required_launcher_address_space_bytes": 1073741824,
+    "selected_member_policy_bytes": 16777216,
+    "selected_total_policy_bytes": 67108864
+  },
+  "rejected_links": [],
+  "skipped_inputs": [],
+  "contents_selected_or_extracted": false,
+  "no_member_source_binary_or_installer_executed": true,
+  "nested_archive_expansion": false,
+  "source_payload_not_semantically_inspected": "Decoderstreamedpayloadsforboundedmetadata+EOF;0selected,notclaimingnobytesdecompressed",
+  "actual_unit_mapping": "unknown",
+  "SDK_March20190307compatibility": "unknown pendingactualadmittedmanifest/environment/headertext",
+  "prior_outcomes_preserved": [
+    "firstSDKUTF8partial",
+    "secondSDKlinkpolicyPartial",
+    "Chromium200kpartial",
+    "adaptation64MiBpartial"
+  ],
+  "raw_output": "sdk-candidates/20191125/inspection-metadata-links-PENDING-REVIEW",
+  "execution_audit": "evidence/sdk-inventory-links-execution-2026-11-08",
+  "XZ_checksum_algorithm": "notrecorded;priorCHECK_NONElabelresidualunchanged",
+  "next": "Boundedselectedplaintextinspectionfeature/planforindexedSDKversion/environment/manifests/headers;parentcoordination+review,noautomaticselection/build.",
+  "metadata_version_hints": {
+    "GCC": "8.2.0(versiondirectorylabel)",
+    "glibc": "2.28(libc/loaderfilenames)",
+    "binutils": "unknown;ARMldfilenamepresent",
+    "kernel_headers": "unknown;version.h97Bindexed",
+    "nominal_layout": "x86_64host + ca9v1/mllib32target ARM/AArch64lib/lib64",
+    "SDK_date": "5.0.0-20191125absoluteSSLlink+headerlabel,notverifiedrelease/compatibility"
+  },
+  "metadata_leads": "evidence/sdk-inventory-links-execution-2026-11-08/verified-metadata-leads.json",
+  "analysis_reconciliation": "evidence/sdk-inventory-links-execution-2026-11-08/reconciliation.md",
+  "next_text_plan": "handoff/sdk-selected-text-next-plan.json",
+  "future_exact_text_indexed_bytes": 50478,
+  "observed_post_analysis_free_bytes": 116552855552
+}

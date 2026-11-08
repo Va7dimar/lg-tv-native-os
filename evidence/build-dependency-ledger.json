@@ -1,0 +1,571 @@
+{
+  "recorded_at": "2026-11-08T13:34:18.275035+00:00",
+  "status": "Buildnotready:all3SDKmetadataOK;GCC8.2/glibc2.28filenamehints;actualenvironment/header/API/ABI/license/Marchcompatibility+unit/BSP/boot/recoveryunresolved.",
+  "ledger": [
+    {
+      "id": "D1",
+      "requirement": "Starfish SDK installer named starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20190307.sh",
+      "documented_in": "all three guides",
+      "supplied_state": "All3NovembercommunitySDKcontainersfullymetadata-indexedandpins/EOFverified:66880records. GCC8.2.0directory/glibc2.28filenames+host/targetlayoutnominal;no selectedtextorversionexecution. Binutilsversion/kernelheaderversion/March20190307compatibilityremainunknown.",
+      "needed_proof": "Boundedversion/environment/header/providertextcomparison:10exactregular50478Bfutureplan,narrowSDKtextfeatureTDD+reviewbeforeactualread;noinstaller/compilerexecution."
+    },
+    {
+      "id": "D2",
+      "requirement": "Kernel documented config realtek/config.develop.rtd2875.tv006.emmc.old_defconfig;cross prefix arm-starfish-linux-;KALLSYMS_EXTRA_PASS=1",
+      "documented_in": "kernel guide18\u201322",
+      "supplied_state": "Referenced defconfig is present and admitted selected plaintext;prior source quotes inspect CONFIG_ARCH_RTK2875 and CUSTOMER_TV006. Not an exact-unit production config verification;no build run.",
+      "needed_proof": "Exact unit/source mapping,SDK supply and build dependency completeness;guide choice is not physical TV identity."
+    },
+    {
+      "id": "D3",
+      "requirement": "Boot LG_TOOLCHAIN_PATH;PRJ=B3_A1R41 OR B7_A1R62",
+      "documented_in": "both boot guides",
+      "supplied_state": "Bothinccontentsnowread:bothRTD2875;B3BGA_27x27/TV006_27x27,B7BGA/TV006. BundledgeneratedheadermatchesB7distinguishers,notdeploymentproof.",
+      "needed_proof": "Project/release\u2192actualunitmapping;actualbuildselectionnotprovedbychecked-inheader."
+    },
+    {
+      "id": "D4",
+      "requirement": "Compiler-prefix/host-target wording consistency",
+      "documented_in": "kernel guide19/22;bootcode/bin/makefile23/24;README_Make_Boot11/26",
+      "supplied_state": "Kernel guide names arm-starfish-linux-;boot makefile defaults arm-starfish-linux-gnueabi-. Boot guide calls toolchain64bit but installer host prefixx86_64 and existing build ARCH=arm;no confirmed target64bit.",
+      "needed_proof": "SDK manifest and PRJ/config context;do not assume prefixes equivalent or 64bit heading means actual unit CPU."
+    },
+    {
+      "id": "D5",
+      "requirement": "Documented outputs vmlinux.bin and bin/tmp/u-boot.bin",
+      "documented_in": "kernel guide27\u201328;bootcode guide28\u201329",
+      "supplied_state": "Documentary names only;not built,not verified output/signing/package format.",
+      "needed_proof": "Future approved reproducible build and independently documented install/acceptance/recovery;raw outputnamesnotflashrecipe."
+    },
+    {
+      "id": "D6",
+      "requirement": "Source provenance/layout",
+      "documented_in": "README_Make_Boot3\u20136 names checkout wall.lge.com/bsp/realtek/boot to boot/",
+      "supplied_state": "Catalog-provided bootcode/bsp/uboot tree exists;guide names different working root boot/.Named checkout not accessed or authenticated.",
+      "needed_proof": "Document exact release layout/patch/input closure from available public sources;no private-host inquiry/access."
+    },
+    {
+      "id": "D7",
+      "requirement": "Installer transcript/path consistency",
+      "documented_in": "README_Make_Boot17\u201318",
+      "supplied_state": "Example enters . then echoes /opt/starfish-sdk-x86_64/5.0.0-20190307;actual installer behavior not tested.",
+      "needed_proof": "SDK manifest/documented installation layout in future authorized research;do not reproduce or execute transcript now."
+    },
+    {
+      "id": "D8",
+      "requirement": "Fullpackaging/hardware-setting/auxsourceclosure",
+      "documented_in": "bootcode/bin/makefile104\u2013121,264,352\u2013376",
+      "supplied_state": "DefaultprjbuildisU-Bootcandidate;flashimagepathseparate. Completebootindexhasno bin/hw_setting/realtek,tools/flash_image_maker,Aux_code orAux_code_2nd.",
+      "needed_proof": "Publicsupply/sourceofconcretemissinginputs;notassumefromrawubootoutputthatretailimageiscomplete."
+    },
+    {
+      "id": "D9",
+      "requirement": "Core/customerlibs and registerheaderclosure",
+      "documented_in": "source-configuration-closure.json citations+metadata",
+      "supplied_state": "Core/customerMakefilescompileincludedsource;13core.imginputsandinclude/rbus367filesindexed. Notmissingmerelybecauselibraryoutputnotprebuilt.",
+      "needed_proof": "Transitivebuild/configclosureandcompilercompatibility;no buildperformed."
+    },
+    {
+      "id": "D10",
+      "requirement": "Functional hardware adaptation/HAL implementation and config closure",
+      "documented_in": "libkadaptor/Makefile:1,2,5,25,26,76,82; evidence/adaptation-inspection.md",
+      "supplied_state": "PARTIAL prefix1434entries/796selected65599808B includes Makefile and391rbus headers. Makefile references system/src,system/include/MakeConfig,src/audio,ta_32bits_v3/ta_64bits_v3 not listed in this admitted prefix; unread tail unknown. Generated register maps/declarations and prebuilt libraries do not establish complete functional drivers.",
+      "needed_proof": "Dependency closure from authoritative source/manifests or compatible lawful supplied components; cannot infer global absence or resume this cap-stopped phase."
+    },
+    {
+      "id": "D11",
+      "requirement": "Component licensing/provenance and protected-input dependency boundary",
+      "documented_in": "evidence/adaptation-inspection.md:license/confidentiality and listed binaries",
+      "supplied_state": "Publicly acquired package contains confidentiality/no-license-grant banners; no conventional LICENSE/README/COPYING/NOTICE name in admitted prefix. Prebuilt DRM/TEE components are listed, not executed or assumed redistributable. No key material quoted or examined for reuse.",
+      "needed_proof": "Resolve rights and lawful compatible supply before any retained-component design/build; no DRM/TEE key extraction, transplant, bypass or sensitive implementation investigation required for feasibility."
+    },
+    {
+      "id": "D12",
+      "requirement": "Exact installed platform, panel/HDMI/audio/remote/power/thermal support",
+      "documented_in": "libkadaptor/Makefile:7,9-15,66,72,78,84; admitted register-map banners, evidence/adaptation-inspection.md",
+      "supplied_state": "k6lp/optee_V3_4k/Merlin3 and port-count macros are source/package labels only. HDMI/panel/audio/CEC/IR/power register names are not operating drivers; color_temp denotes display white-balance, NOT thermal sensing.",
+      "needed_proof": "Exact-unit config/board/panel mapping and functional support/safety/boot/recovery evidence. No architecture selected; no launcher/external-HDMI substitute."
+    }
+  ],
+  "review_reconciliation": "plan-reviews/2026-11-08-build-guide-findings/reconciliation.md",
+  "ongoing_authority": "Owner t71\u2013t74 permits autonomous offTVresearch/tooling without per-file approval;parent coordinatesTVimpact;no builds/sourceexecutionyet.",
+  "current_evidence": "evidence/source-configuration-closure.json",
+  "sdk_acquisition": "evidence/public-sdk-2026-11-08/sdk-header-findings.json",
+  "adaptation_evidence": "evidence/adaptation-inspection.json",
+  "adaptation_phase": {
+    "status": "partial",
+    "ok": false,
+    "exit_code": 1,
+    "error": "max_selected_combined_bytes exceeded",
+    "execution_start_Atlantic_Reykjavik": "2026-11-08 06:30:12",
+    "execution_end_Atlantic_Reykjavik": "2026-11-08 06:30:16",
+    "elapsed_seconds": 4.104,
+    "inner_members_recorded": 1434,
+    "selected_files": 796,
+    "selected_text_bytes": 65599808,
+    "selected_cap_bytes": 67108864,
+    "selected_rbus_headers": 391,
+    "next_unselected_member_bytes": 1717085,
+    "would_be_selected_bytes": 67316893,
+    "copied": {
+      "member": "soc/libkadaptor-1.0.0-908.3.tar.gz",
+      "path": "staged/libkadaptor-1.0.0-908.3.tar.gz",
+      "bytes": 123840909,
+      "sha256": "46e7e652bc8f6fc9a57ade3baca9b1300a9e8c1bdc4bcde3cb7675116184bf25",
+      "verified_before_inner": true,
+      "independent_file_hash_match": true
+    },
+    "totals_from_phase": {
+      "member_count": 1440,
+      "pathname_bytes": 119106,
+      "expanded_bytes": 879980114,
+      "outer_decoded_bytes": 522047300,
+      "binary_copy_bytes": 123840909,
+      "selected_text_bytes": 65599808,
+      "admitted_compressed_bytes": 635786803
+    },
+    "audit": "handoff/adaptation-result.md",
+    "evidence": "evidence/adaptation-inspection.json",
+    "raw_output": "source-catalog/inspection-adaptation-PENDING-REVIEW",
+    "retry_resume_raise_or_more_selection": false,
+    "coverage_scope": "Admitted prefix only; unread tail unknown. No complete package/BSP/licensing inference.",
+    "timing_caveat": "Review document label06:35 is later than observed run06:30; preserve discrepancy, do not substitute it for actual run clock.",
+    "resources": {
+      "wall_seconds": 120,
+      "address_space_bytes": 1073741824,
+      "address_space_not_RSS": true,
+      "selected_total_bytes": 67108864,
+      "observed_disk_before_bytes": 116787204096,
+      "observed_disk_after_bytes": 116594716672,
+      "disk_floor_bytes": 10737418240,
+      "disk_reserved": false,
+      "noexec_output_demonstrated": false,
+      "outer_decoded_counter": "logical regular payload, not TAR headers/padding"
+    },
+    "actual_limits_from_generated_phase": {
+      "wall_seconds": 120,
+      "address_space_bytes": 1073741824,
+      "max_members": 200000,
+      "max_pathname_bytes": 100000000,
+      "max_phase_expanded_bytes": 4294967296,
+      "max_outer_compressed_bytes": 536870912,
+      "max_outer_decoded_bytes": 671088640,
+      "max_binary_each_bytes": 134217728,
+      "max_binary_combined_bytes": 134217728,
+      "max_admitted_compressed_bytes": 1073741824,
+      "max_selected_text_member_bytes": 16777216,
+      "max_selected_combined_bytes": 67108864,
+      "min_free_disk_bytes": 10737418240
+    }
+  },
+  "sdk_payload_inventory": {
+    "recorded_at_Atlantic_Reykjavik": "2026-11-08T12:59:32.793729+00:00",
+    "status": "partial",
+    "launcher_status": "failed",
+    "exit_code": 1,
+    "started_Atlantic_Reykjavik": "2026-11-08T07:09:20.045681+00:00",
+    "elapsed_seconds": 0.767,
+    "error": "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc4 in position 99: unexpected end of data",
+    "manifest": "sdk-candidates/20191125/inspection-metadata-PENDING-REVIEW/manifest.json",
+    "generated_member_records": 88,
+    "record_types": {
+      "directory": 8,
+      "regular": 21,
+      "symlink": 59
+    },
+    "totals": {
+      "decoded_bytes": 634072,
+      "logical_regular_bytes": 555335,
+      "members": 96,
+      "metadata_bytes": 24143,
+      "selected_bytes": 0
+    },
+    "all_pins_verified_before_parse": true,
+    "full_hash_bytes": 498625937,
+    "pin_verifications": [
+      {
+        "bytes_hashed": 166821312,
+        "descriptor_stat": {
+          "ctime_ns": 1794118243876724238,
+          "device": 65040,
+          "inode": 449083,
+          "link_count": 1,
+          "mtime_ns": 1794118243872724224,
+          "size": 166821312
+        },
+        "expected_sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+        "expected_size": 166821312,
+        "label": "sdk",
+        "path": "/input/sdk",
+        "slice_end": 166821312,
+        "slice_start": 10820,
+        "verified": true
+      },
+      {
+        "bytes_hashed": 8017931,
+        "descriptor_stat": {
+          "ctime_ns": 1794118240416711777,
+          "device": 65040,
+          "inode": 449080,
+          "link_count": 1,
+          "mtime_ns": 1794118240412711762,
+          "size": 8017931
+        },
+        "expected_sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+        "expected_size": 8017931,
+        "label": "native",
+        "path": "/input/native",
+        "slice_end": 8017931,
+        "slice_start": 0,
+        "verified": true
+      },
+      {
+        "bytes_hashed": 323786694,
+        "descriptor_stat": {
+          "ctime_ns": 1794118250600748455,
+          "device": 65040,
+          "inode": 449085,
+          "link_count": 1,
+          "mtime_ns": 1794118250592748427,
+          "size": 323786694
+        },
+        "expected_sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+        "expected_size": 323786694,
+        "label": "target",
+        "path": "/input/target",
+        "slice_end": 323786694,
+        "slice_start": 0,
+        "verified": true
+      }
+    ],
+    "skipped_inputs": [
+      "native",
+      "target"
+    ],
+    "decoder_observations": [
+      {
+        "compressed_bytes_consumed": null,
+        "compressed_bytes_read": 196608,
+        "decoded_bytes": 634072,
+        "integrity_eof": false,
+        "label": "sdk",
+        "max_decoder_chunk": 65536,
+        "path": "/input/sdk",
+        "sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+        "size": 166821312,
+        "slice_end": 166821312,
+        "slice_start": 10820,
+        "tar_eof": false
+      }
+    ],
+    "limits": {
+      "decoded_bytes": 4294967296,
+      "logical_bytes": 4294967296,
+      "lzma_memlimit": 268435456,
+      "members": 200000,
+      "metadata_bytes": 100000000
+    },
+    "controls": {
+      "allocation_backstop": "Mandatory launcher AS/wall limits; tarfile extended-header allocations precede some semantic checks",
+      "disk_floor_bytes": 10737418240,
+      "disk_reserved": false,
+      "enforced_address_space_bytes": 1073741824,
+      "extraction_implemented": false,
+      "hard_rss_limit": false,
+      "metadata_definition": "Observed header strings + padded extension bodies + resolved name/link/PAX UTF8; conservative repeated charging",
+      "noexec": false,
+      "raw_name_definition": "Maintained parser decoded name before canonicalization, after PAX/GNU substitution",
+      "required_launcher_address_space_bytes": 1073741824,
+      "selected_member_policy_bytes": 16777216,
+      "selected_total_policy_bytes": 67108864
+    },
+    "source_payload_text_selected": false,
+    "raw_inputs_reopened_by_this_integration": false,
+    "proven_leads_filename_only": [
+      {
+        "path": "post-relocate-setup.sh",
+        "bytes": 949
+      },
+      {
+        "path": "environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+        "bytes": 4321
+      },
+      {
+        "path": "site-config-ca9v1-starfishmllib32-linux-gnueabi",
+        "bytes": 13611
+      },
+      {
+        "path": "version-ca9v1-starfishmllib32-linux-gnueabi",
+        "bytes": 125
+      },
+      {
+        "path": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/icecc-env.sh",
+        "bytes": 2170
+      },
+      {
+        "path": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/openssl.sh",
+        "bytes": 69
+      },
+      {
+        "path": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/cmake.sh",
+        "bytes": 185
+      }
+    ],
+    "compatibility": "unknown: compiler/API/ABI/sysroot/version/license/March20190307 equivalence not established",
+    "failure_interpretation": "StrictUTF8 policy failure; failingfield/archiveoffset/corruption NOTestablished. GNU/PAXfixed-header boundary is synthetic-reproducer hypothesis only.",
+    "reruns": 0,
+    "prior_histories_preserved": [
+      "Chromium200000memberPARTIAL",
+      "adaptation64MiBselectionPARTIAL"
+    ],
+    "owner_resume": "t77u continue after t75u pause; existingoffTVscope; no newownercheckpoint",
+    "next": "Synthetic-only UTF8 GNU/PAX reproducer+reviewed narrowfix; parentindependentreview before anynew actualSDKprocessing; neverreuseoldoutput."
+  },
+  "sdk_tooling_status": "Metadata-onlylinkpolicyindependentPASS;actualall3inventoryOK,73838headers/66880records/0selected. NoSDKtextselector/installation/build.",
+  "sdk_utf8_fix_candidate": {
+    "status": "independentSPEC/QUALITYPASS;realhandedoffphaseexecutedonceandpartialunsafe-linkpolicy",
+    "reader_sha256": "e70f683abf7597f16d54f15c1f7e86d10be873dda9b0c6f95d881000c7047ba4",
+    "launcher_sha256_unchanged": "2a6638e3439748a6dc4fb7237a03c3d05521685746df5315683c861acab9ca52",
+    "review_package": "tooling/review/sdk-utf8-fix-2026-11-08/package/HOST-VERIFICATION-ADDENDUM.md",
+    "host_synthetic_methods_passed": 41,
+    "host_skips": 0,
+    "actual_SDK_cause": "unknown; syntheticGNUfixedUTF8boundaryproved",
+    "owner_resume": "t77u continue; no routine ownercheck-in",
+    "recorded_at_Atlantic_Reykjavik": "2026-11-08T13:05:58.148599+00:00"
+  },
+  "sdk_latest_payload_inventory": {
+    "recorded_at_Atlantic_Reykjavik": "2026-11-08T13:31:40.388008+00:00",
+    "status": "ok:complete metadata-only all3inputinventory",
+    "execution": {
+      "started_Atlantic_Reykjavik": "2026-11-08T13:30:17.591554+00:00",
+      "command": [
+        "/bin/bash",
+        "/workspace/lg-tv/evidence/sdk-inventory-links-execution-2026-11-08/exact-command.txt"
+      ],
+      "sole_literal_command_change": "freshoutputdirectory",
+      "invocation_count": 1,
+      "exit_code": 0,
+      "elapsed_seconds": 13.804,
+      "finished_Atlantic_Reykjavik": "2026-11-08T13:30:31.395508+00:00"
+    },
+    "worker_status": "ok",
+    "launcher_ok": true,
+    "review": "tooling/review/sdk-link-metadata-independent-review.md",
+    "full_hash_bytes": 498625937,
+    "pin_verifications": [
+      {
+        "bytes_hashed": 166821312,
+        "descriptor_stat": {
+          "ctime_ns": 1794118243876724238,
+          "device": 65040,
+          "inode": 449083,
+          "link_count": 1,
+          "mtime_ns": 1794118243872724224,
+          "size": 166821312
+        },
+        "expected_sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+        "expected_size": 166821312,
+        "label": "sdk",
+        "path": "/input/sdk",
+        "slice_end": 166821312,
+        "slice_start": 10820,
+        "verified": true
+      },
+      {
+        "bytes_hashed": 8017931,
+        "descriptor_stat": {
+          "ctime_ns": 1794118240416711777,
+          "device": 65040,
+          "inode": 449080,
+          "link_count": 1,
+          "mtime_ns": 1794118240412711762,
+          "size": 8017931
+        },
+        "expected_sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+        "expected_size": 8017931,
+        "label": "native",
+        "path": "/input/native",
+        "slice_end": 8017931,
+        "slice_start": 0,
+        "verified": true
+      },
+      {
+        "bytes_hashed": 323786694,
+        "descriptor_stat": {
+          "ctime_ns": 1794118250600748455,
+          "device": 65040,
+          "inode": 449085,
+          "link_count": 1,
+          "mtime_ns": 1794118250592748427,
+          "size": 323786694
+        },
+        "expected_sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+        "expected_size": 323786694,
+        "label": "target",
+        "path": "/input/target",
+        "slice_end": 323786694,
+        "slice_start": 0,
+        "verified": true
+      }
+    ],
+    "inputs": [
+      {
+        "compressed_bytes_consumed": 166810492,
+        "compressed_bytes_read": 166810492,
+        "compressed_counter_definition": "Read counts include read-ahead; consumed is exact at compression EOF, otherwise unknown/null",
+        "decoded_bytes": 891217920,
+        "decoded_zero_tail_bytes": 7680,
+        "integrity_eof": true,
+        "label": "sdk",
+        "max_decoder_chunk": 65536,
+        "path": "/input/sdk",
+        "sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+        "size": 166821312,
+        "slice_end": 166821312,
+        "slice_start": 10820,
+        "tar_eof": true,
+        "tar_eof_offset": 891210240
+      },
+      {
+        "compressed_bytes_consumed": 8017931,
+        "compressed_bytes_read": 8017931,
+        "compressed_counter_definition": "Read counts include read-ahead; consumed is exact at compression EOF, otherwise unknown/null",
+        "decoded_bytes": 16148480,
+        "decoded_zero_tail_bytes": 6656,
+        "integrity_eof": true,
+        "label": "native",
+        "max_decoder_chunk": 65536,
+        "path": "/input/native",
+        "sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+        "size": 8017931,
+        "slice_end": 8017931,
+        "slice_start": 0,
+        "tar_eof": true,
+        "tar_eof_offset": 16141824
+      },
+      {
+        "compressed_bytes_consumed": 323786694,
+        "compressed_bytes_read": 323786694,
+        "compressed_counter_definition": "Read counts include read-ahead; consumed is exact at compression EOF, otherwise unknown/null",
+        "decoded_bytes": 1228636160,
+        "decoded_zero_tail_bytes": 8704,
+        "integrity_eof": true,
+        "label": "target",
+        "max_decoder_chunk": 65536,
+        "path": "/input/target",
+        "sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+        "size": 323786694,
+        "slice_end": 323786694,
+        "slice_start": 0,
+        "tar_eof": true,
+        "tar_eof_offset": 1228627456
+      }
+    ],
+    "totals": {
+      "decoded_bytes": 2136002560,
+      "logical_regular_bytes": 2078148221,
+      "members": 73838,
+      "metadata_bytes": 12781920,
+      "selected_bytes": 0
+    },
+    "emitted_records": 66880,
+    "by_input": {
+      "sdk": {
+        "emitted_records": 18194,
+        "types": {
+          "directory": 857,
+          "regular": 16584,
+          "symlink": 736,
+          "hardlink": 17
+        },
+        "link_classifications": {
+          "relative": 718,
+          "absolute": 35
+        },
+        "nested_archive_flags": 0
+      },
+      "native": {
+        "emitted_records": 637,
+        "types": {
+          "directory": 70,
+          "regular": 553,
+          "symlink": 14
+        },
+        "link_classifications": {
+          "relative": 14
+        },
+        "nested_archive_flags": 1
+      },
+      "target": {
+        "emitted_records": 48049,
+        "types": {
+          "directory": 2845,
+          "regular": 43298,
+          "symlink": 886,
+          "hardlink": 1020
+        },
+        "link_classifications": {
+          "relative": 1885,
+          "absolute": 21
+        },
+        "nested_archive_flags": 109
+      }
+    },
+    "limits": {
+      "decoded_bytes": 4294967296,
+      "logical_bytes": 4294967296,
+      "lzma_memlimit": 268435456,
+      "members": 200000,
+      "metadata_bytes": 100000000
+    },
+    "controls": {
+      "allocation_backstop": "Mandatory launcher AS/wall limits; tarfile extended-header allocations precede some semantic checks",
+      "disk_floor_bytes": 10737418240,
+      "disk_reserved": false,
+      "enforced_address_space_bytes": 1073741824,
+      "extraction_implemented": false,
+      "hard_rss_limit": false,
+      "metadata_definition": "Observed header strings + padded extension bodies + resolved name/link/PAX UTF8; conservative repeated charging",
+      "noexec": false,
+      "raw_name_definition": "Maintained parser decoded name before canonicalization, after PAX/GNU substitution",
+      "required_launcher_address_space_bytes": 1073741824,
+      "selected_member_policy_bytes": 16777216,
+      "selected_total_policy_bytes": 67108864
+    },
+    "rejected_links": [],
+    "skipped_inputs": [],
+    "contents_selected_or_extracted": false,
+    "no_member_source_binary_or_installer_executed": true,
+    "nested_archive_expansion": false,
+    "source_payload_not_semantically_inspected": "Decoderstreamedpayloadsforboundedmetadata+EOF;0selected,notclaimingnobytesdecompressed",
+    "actual_unit_mapping": "unknown",
+    "SDK_March20190307compatibility": "unknown pendingactualadmittedmanifest/environment/headertext",
+    "prior_outcomes_preserved": [
+      "firstSDKUTF8partial",
+      "secondSDKlinkpolicyPartial",
+      "Chromium200kpartial",
+      "adaptation64MiBpartial"
+    ],
+    "raw_output": "sdk-candidates/20191125/inspection-metadata-links-PENDING-REVIEW",
+    "execution_audit": "evidence/sdk-inventory-links-execution-2026-11-08",
+    "XZ_checksum_algorithm": "notrecorded;priorCHECK_NONElabelresidualunchanged",
+    "next": "Boundedselectedplaintextinspectionfeature/planforindexedSDKversion/environment/manifests/headers;parentcoordination+review,noautomaticselection/build.",
+    "metadata_version_hints": {
+      "GCC": "8.2.0(versiondirectorylabel)",
+      "glibc": "2.28(libc/loaderfilenames)",
+      "binutils": "unknown;ARMldfilenamepresent",
+      "kernel_headers": "unknown;version.h97Bindexed",
+      "nominal_layout": "x86_64host + ca9v1/mllib32target ARM/AArch64lib/lib64",
+      "SDK_date": "5.0.0-20191125absoluteSSLlink+headerlabel,notverifiedrelease/compatibility"
+    },
+    "metadata_leads": "evidence/sdk-inventory-links-execution-2026-11-08/verified-metadata-leads.json",
+    "analysis_reconciliation": "evidence/sdk-inventory-links-execution-2026-11-08/reconciliation.md",
+    "next_text_plan": "handoff/sdk-selected-text-next-plan.json",
+    "future_exact_text_indexed_bytes": 50478
+  },
+  "sdk_payload_inventory_history": [
+    "evidence/sdk-inventory-inspection.json",
+    "evidence/sdk-inventory-utf8-inspection.json",
+    "evidence/sdk-inventory-links-inspection.json"
+  ]
+}

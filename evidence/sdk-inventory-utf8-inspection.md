@@ -1,0 +1,21 @@
+# Actual UTF8-reviewed SDK inventory — PARTIAL at link policy
+
+2026-11-08T13:15:56.697882+00:00 Atlantic/Reykjavik. Independent UTF8-fix review SPEC/QUALITY PASS admitted this separately handed-off one-shot phase; review was a technical gate, not owner authority.
+
+- Executed13:14:45.005–13:14:46.474 Atlantic/Reykjavik,exit1,1.469s. Only literal command change was freshoutput `inspection-metadata-utf8-PENDING-REVIEW`. Oldoutput untouched. WorkerPARTIAL/launcherFAILED: `InventoryError: unsafe link target`. **No retry,split,capraise,linkpolicychange or more sourceprocessing.**
+- ALL3fullpins verified BEFORE anyparse,498625937B. SDK289observedheaders versus269emittedrecords(69regular/11directories/189symlinks);72591metadataB,643264logicalregularB,830680full decodedB,196608compressedBread.0selected;tar/integrityEOFfalse. Native/targethashverifiedbutPARSESKIPPED. Exact offendinglink/memberNOTemitted;lastsuccessisnot culprit evidence. No corruption/maliciousness/absolute-target diagnosis implied.
+- Existingnon-ASCII names/targets nowappear in generatedindex;this establishesreaderprogress beyondprior88records,not exact diagnosisofpriorfailure. Recordedheadersandemittedrecordsaredifferentcounters.
+- Filename-only leads remain `environment-setup-ca9v1-starfishmllib32-linux-gnueabi`4321B,`site-config-ca9v1-starfishmllib32-linux-gnueabi`13611B,`version-ca9v1-starfishmllib32-linux-gnueabi`125B,`sysroots/x86_64-starfishsdk-linux/environment-setup.d/icecc-env.sh`2170B,`cmake.sh`185B,`openssl.sh`69B. Hostsysrootprefix+SSLcertificatepackagingobserved;NOcompiler/GCC/binutils/glibcversionorABI/API/licensecontentestablished. November-versus-requiredMarch20190307compatibilityremainsunknown,not disproved. Noabsenceinferencefromshortprefix.
+- Unchanged200kheaders/100MBmetadata/separate4GiBlogical+full decoded/120swall/1GiBASnotRSS/256MiBLZMAmemory/10GiBobservedfloor/noexecfalse. Not timeout/capfailure. PinsnotofficialauthenticityorarchiveEOF/integrityproof. XZCHECK_NONElabel/PAXbackstopresidualsunchanged.
+- Reader e70f683abf7597f16d54f15c1f7e86d10be873dda9b0c6f95d881000c7047ba4;launcher 2a6638e3439748a6dc4fb7237a03c3d05521685746df5315683c861acab9ca52 verifiedbeforephase. Review:`tooling/review/sdk-utf8-fix-independent-review.md`;actualcommand/checkpoint/logs:`evidence/sdk-inventory-utf8-execution-2026-11-08/`;rawmanifest/launcher/membersJSONL:`sdk-candidates/20191125/inspection-metadata-utf8-PENDING-REVIEW/`.
+
+Next gap is a reviewed metadata-only link-policy/diagnostic objective,not a budget problem. If parent chooses record-not-follow for unsafe targetstrings,that requires explicit narrowcontract+TDD+independentreview; no link resolution/extraction/execution,duplicate/pathescape bypassorautomaticretry. Preserve thisfailurehistory and allpriorChromium/adaptation/firstSDKpartials. StillnoTVidentity/fullBSP/build/boot/recovery proof;noinstaller/compiler/sourceexecution orTVaction.
+
+# Generated-metadata analysis reconciliation
+2026-11-08T13:17:01.919462+00:00 Atlantic/Reykjavik. OneprimarysubscribedCodexgpt-6.1-sol/high read-onlycall,37.426s,exit0/substantive,norefusal/fallback/reset. Requestedmodel/effortexplicit;JSONstreamnoindependentservingmodelID. Prompt/raw/events/run+usagepreserved. No tool/originalarchive/memberpayload access.
+
+Verifiedagainstgenerated269-recordindex:environment/site/versionmembernames+4321/13611/125B;hostx86_64sysrootandicecc/cmake/opensslhooks. No compiler executable orGCC/binutils/glibcversion identified in admittedprefix;not evidenceofabsencefromrest. CertificatepackagingdoesnotestablishSDKlicensing. TargetstylelabelnotactualTVhardwareorABI.
+
+All3pinsverifiedBEFOREparse,SDKpartial,native/targetparseSKIPPED,0selected,tar/integrityEOFfalse.289headercountervs269emittedrecords20differencecompositionnotinferred. UnsafeoffendinglinkNOTemitted;don'tidentifylastsuccessfulrecordasculprit. The model'sdateexpansionof20190307isnotindependentlyverifiedreleasedate—retainliteralversionlabel. No corruption/maliciousness/compatibilityverdict.
+
+Immediategap:exactescapedrejectedmember/type/target+reasonwithboundeddianostics. Anyfuturemetadata-onlylinkrecord-not-followpolicymustbeexplicitlycontracted/tested/reviewedfirst;notautomaticretry/budgetreset/bypass. No implementationchangeinthisphase. Actualcompiler/version/API/ABI/licensingtextandMarchcompatibilitystillunread.

@@ -1,0 +1,4305 @@
+{
+  "manifest": {
+    "controls": {
+      "allocation_backstop": "Mandatory launcher AS/wall limits; tarfile extended-header allocations precede some semantic checks",
+      "disk_floor_bytes": 10737418240,
+      "disk_reserved": false,
+      "enforced_address_space_bytes": 1073741824,
+      "extraction_implemented": false,
+      "hard_rss_limit": false,
+      "metadata_definition": "Observed header strings + padded extension bodies + resolved name/link/PAX UTF8; conservative repeated charging",
+      "noexec": false,
+      "raw_name_definition": "Maintained parser decoded name before canonicalization, after PAX/GNU substitution",
+      "required_launcher_address_space_bytes": 1073741824,
+      "selected_member_policy_bytes": 16777216,
+      "selected_total_policy_bytes": 67108864
+    },
+    "error": "InventoryError: unsafe link target",
+    "full_hash_bytes": 498625937,
+    "inputs": [
+      {
+        "compressed_bytes_consumed": null,
+        "compressed_bytes_read": 196608,
+        "decoded_bytes": 830680,
+        "integrity_eof": false,
+        "label": "sdk",
+        "max_decoder_chunk": 65536,
+        "path": "/input/sdk",
+        "sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+        "size": 166821312,
+        "slice_end": 166821312,
+        "slice_start": 10820,
+        "tar_eof": false
+      }
+    ],
+    "limits": {
+      "decoded_bytes": 4294967296,
+      "logical_bytes": 4294967296,
+      "lzma_memlimit": 268435456,
+      "members": 200000,
+      "metadata_bytes": 100000000
+    },
+    "members_jsonl": "members.jsonl",
+    "mode": "METADATAONLY",
+    "observed_initial_free_bytes": 116583948288,
+    "ok": false,
+    "pin_verifications": [
+      {
+        "bytes_hashed": 166821312,
+        "descriptor_stat": {
+          "ctime_ns": 1794118243876724238,
+          "device": 65040,
+          "inode": 449083,
+          "link_count": 1,
+          "mtime_ns": 1794118243872724224,
+          "size": 166821312
+        },
+        "expected_sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+        "expected_size": 166821312,
+        "label": "sdk",
+        "path": "/input/sdk",
+        "slice_end": 166821312,
+        "slice_start": 10820,
+        "verified": true
+      },
+      {
+        "bytes_hashed": 8017931,
+        "descriptor_stat": {
+          "ctime_ns": 1794118240416711777,
+          "device": 65040,
+          "inode": 449080,
+          "link_count": 1,
+          "mtime_ns": 1794118240412711762,
+          "size": 8017931
+        },
+        "expected_sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+        "expected_size": 8017931,
+        "label": "native",
+        "path": "/input/native",
+        "slice_end": 8017931,
+        "slice_start": 0,
+        "verified": true
+      },
+      {
+        "bytes_hashed": 323786694,
+        "descriptor_stat": {
+          "ctime_ns": 1794118250600748455,
+          "device": 65040,
+          "inode": 449085,
+          "link_count": 1,
+          "mtime_ns": 1794118250592748427,
+          "size": 323786694
+        },
+        "expected_sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+        "expected_size": 323786694,
+        "label": "target",
+        "path": "/input/target",
+        "slice_end": 323786694,
+        "slice_start": 0,
+        "verified": true
+      }
+    ],
+    "skipped_inputs": [
+      "native",
+      "target"
+    ],
+    "status": "partial",
+    "totals": {
+      "decoded_bytes": 830680,
+      "logical_regular_bytes": 643264,
+      "members": 289,
+      "metadata_bytes": 72591,
+      "selected_bytes": 0
+    }
+  },
+  "launcher": {
+    "address_space_bytes": 1073741824,
+    "disk_reserved": false,
+    "elapsed_seconds": 1.370287121993897,
+    "error": "InventoryError: unsafe link target",
+    "exit_code": 1,
+    "hard_rss_limit": false,
+    "host_net_ns": "net:[4026531840]",
+    "noexec": false,
+    "ok": false,
+    "sandbox_unavailable": false,
+    "status": "failed",
+    "wall_seconds": 120,
+    "worker_manifest": "manifest.json"
+  },
+  "execution": {
+    "started_Atlantic_Reykjavik": "2026-11-08T13:14:45.005232+00:00",
+    "command": [
+      "/bin/bash",
+      "/workspace/lg-tv/evidence/sdk-inventory-utf8-execution-2026-11-08/exact-command.txt"
+    ],
+    "sole_change_from_previous_reviewed_literal": "outputdirectoryonly",
+    "invocation_count": 1,
+    "exit_code": 1,
+    "elapsed_seconds": 1.469,
+    "finished_Atlantic_Reykjavik": "2026-11-08T13:14:46.474318+00:00"
+  },
+  "emitted_records": 269,
+  "types": {
+    "directory": 11,
+    "regular": 69,
+    "symlink": 189
+  },
+  "all_rows": [
+    {
+      "input": "sdk",
+      "raw_name": ".",
+      "canonical_name": ".",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./post-relocate-setup.sh",
+      "canonical_name": "post-relocate-setup.sh",
+      "type": "regular",
+      "size": 949,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+      "canonical_name": "environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+      "type": "regular",
+      "size": 4321,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./site-config-ca9v1-starfishmllib32-linux-gnueabi",
+      "canonical_name": "site-config-ca9v1-starfishmllib32-linux-gnueabi",
+      "type": "regular",
+      "size": 13611,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./version-ca9v1-starfishmllib32-linux-gnueabi",
+      "canonical_name": "version-ca9v1-starfishmllib32-linux-gnueabi",
+      "type": "regular",
+      "size": 125,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots",
+      "canonical_name": "sysroots",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/environment-setup.d",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/environment-setup.d",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/environment-setup.d/icecc-env.sh",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/icecc-env.sh",
+      "type": "regular",
+      "size": 2170,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/environment-setup.d/openssl.sh",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/openssl.sh",
+      "type": "regular",
+      "size": 69,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/environment-setup.d/cmake.sh",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/cmake.sh",
+      "type": "regular",
+      "size": 185,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/private",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/private",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/openssl.cnf.openssl",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/openssl.cnf.openssl",
+      "type": "regular",
+      "size": 10835,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/OpenTrust_Root_CA_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/OpenTrust_Root_CA_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/OpenTrust_Root_CA_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AC_RAIZ_FNMT-RCM.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AC_RAIZ_FNMT-RCM.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/AC_RAIZ_FNMT-RCM.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca38.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca38.pem",
+      "type": "regular",
+      "size": 1286,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/T-TeleSec_GlobalRoot_Class_2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/T-TeleSec_GlobalRoot_Class_2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/T-TeleSec_GlobalRoot_Class_2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/64d1f6f4.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/64d1f6f4.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca27.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TrustCor_RootCert_CA-2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TrustCor_RootCert_CA-2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/TrustCor_RootCert_CA-2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/0f11b315.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/0f11b315.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca36.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/USERTrust_RSA_Certification_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/USERTrust_RSA_Certification_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/USERTrust_RSA_Certification_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca02.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca02.pem",
+      "type": "regular",
+      "size": 1180,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SSL.com_Root_Certification_Authority_ECC.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SSL.com_Root_Certification_Authority_ECC.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/SSL.com_Root_Certification_Authority_ECC.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ce5e74ef.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ce5e74ef.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca03.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TWCA_Root_Certification_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TWCA_Root_Certification_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/TWCA_Root_Certification_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca34.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca34.pem",
+      "type": "regular",
+      "size": 1593,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certum_Trusted_Network_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certum_Trusted_Network_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Certum_Trusted_Network_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GlobalSign_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GlobalSign_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GlobalSign_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SSL.com_Root_Certification_Authority_RSA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SSL.com_Root_Certification_Authority_RSA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/SSL.com_Root_Certification_Authority_RSA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/686ef281.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/686ef281.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca20.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Staat_der_Nederlanden_Root_CA_-_G3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Staat_der_Nederlanden_Root_CA_-_G3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Staat_der_Nederlanden_Root_CA_-_G3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SSL.com_EV_Root_Certification_Authority_RSA_R2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SSL.com_EV_Root_Certification_Authority_RSA_R2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/SSL.com_EV_Root_Certification_Authority_RSA_R2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Hellenic_Academic_and_Research_Institutions_RootCA_2011.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Hellenic_Academic_and_Research_Institutions_RootCA_2011.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Hellenic_Academic_and_Research_Institutions_RootCA_2011.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/6005dbad.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/6005dbad.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca40.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/thawte_Primary_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/thawte_Primary_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/thawte_Primary_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/LuxTrust_Global_Root_2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/LuxTrust_Global_Root_2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/LuxTrust_Global_Root_2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/CFCA_EV_ROOT.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/CFCA_EV_ROOT.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/CFCA_EV_ROOT.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/D-TRUST_Root_Class_3_CA_2_2009.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/D-TRUST_Root_Class_3_CA_2_2009.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/D-TRUST_Root_Class_3_CA_2_2009.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca04.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca04.pem",
+      "type": "regular",
+      "size": 1900,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Assured_ID_Root_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Assured_ID_Root_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/DigiCert_Assured_ID_Root_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Verisign_Class_3_Public_Primary_Certification_Authority_-_G3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Verisign_Class_3_Public_Primary_Certification_Authority_-_G3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Verisign_Class_3_Public_Primary_Certification_Authority_-_G3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/9e6afd31.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/9e6afd31.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca29.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/0a775a30.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/0a775a30.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca48.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Hellenic_Academic_and_Research_Institutions_RootCA_2015.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Hellenic_Academic_and_Research_Institutions_RootCA_2015.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Hellenic_Academic_and_Research_Institutions_RootCA_2015.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/XRamp_Global_CA_Root.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/XRamp_Global_CA_Root.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/XRamp_Global_CA_Root.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/NetLock_Arany_=Class_Gold=_F\u0151tan\u00fas\u00edtv\u00e1ny.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/NetLock_Arany_=Class_Gold=_F\u0151tan\u00fas\u00edtv\u00e1ny.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/NetLock_Arany_=Class_Gold=_F\u0151tan\u00fas\u00edtv\u00e1ny.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca07.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca07.pem",
+      "type": "regular",
+      "size": 2724,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca41.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca41.pem",
+      "type": "regular",
+      "size": 833,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SwissSign_Silver_CA_-_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SwissSign_Silver_CA_-_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/SwissSign_Silver_CA_-_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca36.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca36.pem",
+      "type": "regular",
+      "size": 881,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates.crt",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates.crt",
+      "type": "regular",
+      "size": 503545,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Comodo_AAA_Services_root.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Comodo_AAA_Services_root.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Comodo_AAA_Services_root.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca01.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca01.pem",
+      "type": "regular",
+      "size": 2233,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_High_Assurance_EV_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_High_Assurance_EV_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/DigiCert_High_Assurance_EV_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Global_Root_G3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Global_Root_G3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/DigiCert_Global_Root_G3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca16.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca16.pem",
+      "type": "regular",
+      "size": 2153,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca44.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca44.pem",
+      "type": "regular",
+      "size": 1774,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/thawte_Primary_Root_CA_-_G3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/thawte_Primary_Root_CA_-_G3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/thawte_Primary_Root_CA_-_G3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/a3418fda.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/a3418fda.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca49.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca20.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca20.pem",
+      "type": "regular",
+      "size": 2295,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ISRG_Root_X1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ISRG_Root_X1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/ISRG_Root_X1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Izenpe.com.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Izenpe.com.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Izenpe.com.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Global_Chambersign_Root_-_2008.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Global_Chambersign_Root_-_2008.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Global_Chambersign_Root_-_2008.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Primary_Certification_Authority_-_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Primary_Certification_Authority_-_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GeoTrust_Primary_Certification_Authority_-_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/d44c9caa.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/d44c9caa.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca50.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/04ca7b7e.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/04ca7b7e.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca08.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/2a8f6cd3.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/2a8f6cd3.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca52.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Go_Daddy_Class_2_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Go_Daddy_Class_2_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Go_Daddy_Class_2_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/9b7d5c0f.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/9b7d5c0f.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca07.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/de6d66f3.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/de6d66f3.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca06.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Security_Communication_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Security_Communication_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Security_Communication_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Buypass_Class_2_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Buypass_Class_2_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Buypass_Class_2_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/12ac4d91.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/12ac4d91.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca16.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TrustCor_ECA-1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TrustCor_ECA-1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/TrustCor_ECA-1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/27eb7704.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/27eb7704.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca42.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AffirmTrust_Networking.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AffirmTrust_Networking.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/AffirmTrust_Networking.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Microsec_e-Szigno_Root_CA_2009.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Microsec_e-Szigno_Root_CA_2009.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Microsec_e-Szigno_Root_CA_2009.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/c8841d13.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/c8841d13.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca33.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca05.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca05.pem",
+      "type": "regular",
+      "size": 673,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Go_Daddy_Root_Certificate_Authority_-_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Go_Daddy_Root_Certificate_Authority_-_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Go_Daddy_Root_Certificate_Authority_-_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Network_Solutions_Certificate_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Network_Solutions_Certificate_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Network_Solutions_Certificate_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Amazon_Root_CA_1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Amazon_Root_CA_1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Amazon_Root_CA_1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Assured_ID_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Assured_ID_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/DigiCert_Assured_ID_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA_2_G3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA_2_G3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/QuoVadis_Root_CA_2_G3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/OpenTrust_Root_CA_G1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/OpenTrust_Root_CA_G1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/OpenTrust_Root_CA_G1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/T\u00dcRKTRUST_Elektronik_Sertifika_Hizmet_Sa\u011flay\u0131c\u0131s\u0131_H5.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/T\u00dcRKTRUST_Elektronik_Sertifika_Hizmet_Sa\u011flay\u0131c\u0131s\u0131_H5.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/T\u00dcRKTRUST_Elektronik_Sertifika_Hizmet_Sa\u011flay\u0131c\u0131s\u0131_H5.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/VeriSign_Class_3_Public_Primary_Certification_Authority_-_G4.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/VeriSign_Class_3_Public_Primary_Certification_Authority_-_G4.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/VeriSign_Class_3_Public_Primary_Certification_Authority_-_G4.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca42.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca42.pem",
+      "type": "regular",
+      "size": 1780,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca08.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca08.pem",
+      "type": "regular",
+      "size": 2748,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/COMODO_RSA_Certification_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/COMODO_RSA_Certification_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/COMODO_RSA_Certification_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/3dfd7537.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/3dfd7537.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca30.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Primary_Certification_Authority_-_G3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Primary_Certification_Authority_-_G3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GeoTrust_Primary_Certification_Authority_-_G3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca00.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca00.pem",
+      "type": "regular",
+      "size": 1886,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/2ece9326.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/2ece9326.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca17.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Universal_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Universal_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GeoTrust_Universal_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/4efc7a23.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/4efc7a23.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca23.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Assured_ID_Root_G3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Assured_ID_Root_G3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/DigiCert_Assured_ID_Root_G3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/11c69ce5.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/11c69ce5.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca25.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca21.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca21.pem",
+      "type": "regular",
+      "size": 1974,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TUBITAK_Kamu_SM_SSL_Kok_Sertifikasi_-_Surum_1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TUBITAK_Kamu_SM_SSL_Kok_Sertifikasi_-_Surum_1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/TUBITAK_Kamu_SM_SSL_Kok_Sertifikasi_-_Surum_1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Entrust_Root_Certification_Authority_-_EC1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Entrust_Root_Certification_Authority_-_EC1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Entrust_Root_Certification_Authority_-_EC1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca48.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca48.pem",
+      "type": "regular",
+      "size": 1279,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/a5fd78f0.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/a5fd78f0.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca32.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca53.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca53.pem",
+      "type": "regular",
+      "size": 1333,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/c1911e97.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/c1911e97.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca18.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/certSIGN_ROOT_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/certSIGN_ROOT_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/certSIGN_ROOT_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca46.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca46.pem",
+      "type": "regular",
+      "size": 2425,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/08391330.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/08391330.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca44.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca09.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca09.pem",
+      "type": "regular",
+      "size": 2241,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/a9854cac.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/a9854cac.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca45.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca17.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca17.pem",
+      "type": "regular",
+      "size": 1365,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AffirmTrust_Premium_ECC.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AffirmTrust_Premium_ECC.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/AffirmTrust_Premium_ECC.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca24.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca24.pem",
+      "type": "regular",
+      "size": 1844,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ddacb872.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ddacb872.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca38.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca37.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca37.pem",
+      "type": "regular",
+      "size": 1155,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certplus_Class_2_Primary_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certplus_Class_2_Primary_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Certplus_Class_2_Primary_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AffirmTrust_Commercial.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AffirmTrust_Commercial.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/AffirmTrust_Commercial.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/8cb5ee0f.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/8cb5ee0f.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca05.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/16b3fe3c.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/16b3fe3c.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca21.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca28.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca28.pem",
+      "type": "regular",
+      "size": 1252,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/f131b364.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/f131b364.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca43.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA_3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA_3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/QuoVadis_Root_CA_3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca54.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca54.pem",
+      "type": "regular",
+      "size": 878,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA_3_G3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA_3_G3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/QuoVadis_Root_CA_3_G3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/eb99629b.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/eb99629b.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca12.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/46117fcc.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/46117fcc.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca10.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/98ec67f0.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/98ec67f0.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca02.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca50.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca50.pem",
+      "type": "regular",
+      "size": 1698,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/d2184fc9.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/d2184fc9.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca51.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/21a8e2ff.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/21a8e2ff.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca39.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Entrust_Root_Certification_Authority_-_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Entrust_Root_Certification_Authority_-_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Entrust_Root_Certification_Authority_-_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/778e3cb0.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/778e3cb0.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca34.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Trusted_Root_G4.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Trusted_Root_G4.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/DigiCert_Trusted_Root_G4.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/OpenTrust_Root_CA_G3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/OpenTrust_Root_CA_G3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/OpenTrust_Root_CA_G3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SecureTrust_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SecureTrust_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/SecureTrust_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Amazon_Root_CA_4.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Amazon_Root_CA_4.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Amazon_Root_CA_4.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/a302054c.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/a302054c.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca09.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/COMODO_ECC_Certification_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/COMODO_ECC_Certification_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/COMODO_ECC_Certification_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Staat_der_Nederlanden_Root_CA_-_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Staat_der_Nederlanden_Root_CA_-_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Staat_der_Nederlanden_Root_CA_-_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Starfield_Class_2_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Starfield_Class_2_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Starfield_Class_2_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AddTrust_External_Root.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AddTrust_External_Root.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/AddTrust_External_Root.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/COMODO_Certification_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/COMODO_Certification_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/COMODO_Certification_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Visa_eCommerce_Root.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Visa_eCommerce_Root.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Visa_eCommerce_Root.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/8a8820f4.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/8a8820f4.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca01.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/IdenTrust_Public_Sector_Root_CA_1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/IdenTrust_Public_Sector_Root_CA_1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/IdenTrust_Public_Sector_Root_CA_1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SSL.com_EV_Root_Certification_Authority_ECC.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SSL.com_EV_Root_Certification_Authority_ECC.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/SSL.com_EV_Root_Certification_Authority_ECC.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Amazon_Root_CA_2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Amazon_Root_CA_2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Amazon_Root_CA_2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca10.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca10.pem",
+      "type": "regular",
+      "size": 2166,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/166851b2.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/166851b2.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca24.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/5ad8a5d6.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/5ad8a5d6.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca55.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/607986c7.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/607986c7.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca53.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GlobalSign_Root_CA_-_R3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GlobalSign_Root_CA_-_R3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GlobalSign_Root_CA_-_R3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/6a5ff65f.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/6a5ff65f.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca11.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GlobalSign_ECC_Root_CA_-_R4.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GlobalSign_ECC_Root_CA_-_R4.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GlobalSign_ECC_Root_CA_-_R4.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Secure_Global_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Secure_Global_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Secure_Global_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Buypass_Class_3_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Buypass_Class_3_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Buypass_Class_3_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca52.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca52.pem",
+      "type": "regular",
+      "size": 1313,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Taiwan_GRCA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Taiwan_GRCA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Taiwan_GRCA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Hongkong_Post_Root_CA_1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Hongkong_Post_Root_CA_1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Hongkong_Post_Root_CA_1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/57b0f75e.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/57b0f75e.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca31.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SwissSign_Gold_CA_-_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SwissSign_Gold_CA_-_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/SwissSign_Gold_CA_-_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Security_Communication_RootCA2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Security_Communication_RootCA2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Security_Communication_RootCA2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certplus_Root_CA_G1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certplus_Root_CA_G1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Certplus_Root_CA_G1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/USERTrust_ECC_Certification_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/USERTrust_ECC_Certification_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/USERTrust_ECC_Certification_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TrustCor_RootCert_CA-1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TrustCor_RootCert_CA-1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/TrustCor_RootCert_CA-1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ACCVRAIZ1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ACCVRAIZ1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/ACCVRAIZ1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca03.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca03.pem",
+      "type": "regular",
+      "size": 1205,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/VeriSign_Universal_Root_Certification_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/VeriSign_Universal_Root_Certification_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/VeriSign_Universal_Root_Certification_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Sonera_Class_2_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Sonera_Class_2_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Sonera_Class_2_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Universal_CA_2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Universal_CA_2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GeoTrust_Universal_CA_2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca39.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca39.pem",
+      "type": "regular",
+      "size": 1334,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/EE_Certification_Centre_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/EE_Certification_Centre_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/EE_Certification_Centre_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/a137bd1c.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/a137bd1c.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca19.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Global_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Global_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/DigiCert_Global_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca27.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca27.pem",
+      "type": "regular",
+      "size": 1264,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/626dceaf.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/626dceaf.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca47.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Hellenic_Academic_and_Research_Institutions_ECC_RootCA_2015.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Hellenic_Academic_and_Research_Institutions_ECC_RootCA_2015.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Hellenic_Academic_and_Research_Institutions_ECC_RootCA_2015.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/CA_Disig_Root_R2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/CA_Disig_Root_R2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/CA_Disig_Root_R2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Global_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Global_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GeoTrust_Global_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Global_Root_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DigiCert_Global_Root_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/DigiCert_Global_Root_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/978601d0.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/978601d0.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca14.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DST_Root_CA_X3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/DST_Root_CA_X3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/DST_Root_CA_X3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Actalis_Authentication_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Actalis_Authentication_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Actalis_Authentication_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/VeriSign_Class_3_Public_Primary_Certification_Authority_-_G5.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/VeriSign_Class_3_Public_Primary_Certification_Authority_-_G5.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/VeriSign_Class_3_Public_Primary_Certification_Authority_-_G5.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates.list",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates.list",
+      "type": "regular",
+      "size": 10198,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Primary_Certification_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GeoTrust_Primary_Certification_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GeoTrust_Primary_Certification_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca23.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca23.pem",
+      "type": "regular",
+      "size": 1701,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certigna.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certigna.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Certigna.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Cybertrust_Global_Root.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Cybertrust_Global_Root.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Cybertrust_Global_Root.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca43.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca43.pem",
+      "type": "regular",
+      "size": 1403,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/E-Tugra_Certification_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/E-Tugra_Certification_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/E-Tugra_Certification_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Entrust.net_Premium_2048_Secure_Server_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Entrust.net_Premium_2048_Secure_Server_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Entrust.net_Premium_2048_Secure_Server_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GlobalSign_Root_CA_-_R2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GlobalSign_Root_CA_-_R2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GlobalSign_Root_CA_-_R2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca31.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca31.pem",
+      "type": "regular",
+      "size": 1617,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Autoridad_de_Certificacion_Firmaprofesional_CIF_A62634068.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Autoridad_de_Certificacion_Firmaprofesional_CIF_A62634068.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Autoridad_de_Certificacion_Firmaprofesional_CIF_A62634068.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/bad35b78.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/bad35b78.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca35.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca11.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca11.pem",
+      "type": "regular",
+      "size": 1831,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/598630ad.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/598630ad.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca13.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GDCA_TrustAUTH_R5_ROOT.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GDCA_TrustAUTH_R5_ROOT.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GDCA_TrustAUTH_R5_ROOT.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca22.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca22.pem",
+      "type": "regular",
+      "size": 1710,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Baltimore_CyberTrust_Root.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Baltimore_CyberTrust_Root.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Baltimore_CyberTrust_Root.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/T-TeleSec_GlobalRoot_Class_3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/T-TeleSec_GlobalRoot_Class_3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/T-TeleSec_GlobalRoot_Class_3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Trustis_FPS_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Trustis_FPS_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Trustis_FPS_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca06.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca06.pem",
+      "type": "regular",
+      "size": 754,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca33.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca33.pem",
+      "type": "regular",
+      "size": 1429,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca45.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca45.pem",
+      "type": "regular",
+      "size": 1774,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TWCA_Global_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TWCA_Global_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/TWCA_Global_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/D-TRUST_Root_Class_3_CA_2_EV_2009.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/D-TRUST_Root_Class_3_CA_2_EV_2009.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/D-TRUST_Root_Class_3_CA_2_EV_2009.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/09ca81a7.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/09ca81a7.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca28.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AffirmTrust_Premium.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/AffirmTrust_Premium.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/AffirmTrust_Premium.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/5d9b27b5.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/5d9b27b5.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca00.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/EC-ACC.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/EC-ACC.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/EC-ACC.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/af4f0c93.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/af4f0c93.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca22.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ePKI_Root_Certification_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ePKI_Root_Certification_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/ePKI_Root_Certification_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/OISTE_WISeKey_Global_Root_GB_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/OISTE_WISeKey_Global_Root_GB_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/OISTE_WISeKey_Global_Root_GB_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ed9bb25c.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ed9bb25c.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca15.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Amazon_Root_CA_3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Amazon_Root_CA_3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Amazon_Root_CA_3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca30.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca30.pem",
+      "type": "regular",
+      "size": 1318,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Chambers_of_Commerce_Root_-_2008.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Chambers_of_Commerce_Root_-_2008.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Chambers_of_Commerce_Root_-_2008.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca25.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca25.pem",
+      "type": "regular",
+      "size": 900,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca12.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca12.pem",
+      "type": "regular",
+      "size": 2258,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/6faac4e3.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/6faac4e3.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca37.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca26.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca26.pem",
+      "type": "regular",
+      "size": 1238,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA_1_G3.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA_1_G3.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/QuoVadis_Root_CA_1_G3.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca51.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca51.pem",
+      "type": "regular",
+      "size": 1490,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/6d41d539.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/6d41d539.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca04.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca14.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca14.pem",
+      "type": "regular",
+      "size": 1608,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca49.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca49.pem",
+      "type": "regular",
+      "size": 1279,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Starfield_Root_Certificate_Authority_-_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Starfield_Root_Certificate_Authority_-_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Starfield_Root_Certificate_Authority_-_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/1001acf7.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/1001acf7.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca46.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca29.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca29.pem",
+      "type": "regular",
+      "size": 1022,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates/pkg",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates/pkg",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates/pkg/pkg-chain.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates/pkg/pkg-chain.pem",
+      "type": "regular",
+      "size": 4363,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates/lg",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates/lg",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates/lg/cert.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates/lg/cert.pem",
+      "type": "regular",
+      "size": 2073,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates/lg/sub_cert.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/ca-certificates/lg/sub_cert.pem",
+      "type": "regular",
+      "size": 2147,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca55.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca55.pem",
+      "type": "regular",
+      "size": 1319,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certinomis_-_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certinomis_-_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Certinomis_-_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Deutsche_Telekom_Root_CA_2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Deutsche_Telekom_Root_CA_2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Deutsche_Telekom_Root_CA_2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/QuoVadis_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/IdenTrust_Commercial_Root_CA_1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/IdenTrust_Commercial_Root_CA_1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/IdenTrust_Commercial_Root_CA_1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca15.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca15.pem",
+      "type": "regular",
+      "size": 1458,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca19.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca19.pem",
+      "type": "regular",
+      "size": 1982,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Entrust_Root_Certification_Authority.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Entrust_Root_Certification_Authority.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Entrust_Root_Certification_Authority.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/OISTE_WISeKey_Global_Root_GA_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/OISTE_WISeKey_Global_Root_GA_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/OISTE_WISeKey_Global_Root_GA_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TeliaSonera_Root_CA_v1.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/TeliaSonera_Root_CA_v1.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/TeliaSonera_Root_CA_v1.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SZAFIR_ROOT_CA2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SZAFIR_ROOT_CA2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/SZAFIR_ROOT_CA2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca47.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca47.pem",
+      "type": "regular",
+      "size": 2425,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/2540784e.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/2540784e.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca41.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GlobalSign_ECC_Root_CA_-_R5.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/GlobalSign_ECC_Root_CA_-_R5.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/GlobalSign_ECC_Root_CA_-_R5.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certum_Trusted_Network_CA_2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certum_Trusted_Network_CA_2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Certum_Trusted_Network_CA_2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca18.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca18.pem",
+      "type": "regular",
+      "size": 957,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/thawte_Primary_Root_CA_-_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/thawte_Primary_Root_CA_-_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/thawte_Primary_Root_CA_-_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca13.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca13.pem",
+      "type": "regular",
+      "size": 1818,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca32.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca32.pem",
+      "type": "regular",
+      "size": 1708,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/dd8e9d41.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/dd8e9d41.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca54.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certplus_Root_CA_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Certplus_Root_CA_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Certplus_Root_CA_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Atos_TrustedRoot_2011.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Atos_TrustedRoot_2011.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Atos_TrustedRoot_2011.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Starfield_Services_Root_Certificate_Authority_-_G2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Starfield_Services_Root_Certificate_Authority_-_G2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Starfield_Services_Root_Certificate_Authority_-_G2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA_2.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/QuoVadis_Root_CA_2.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/QuoVadis_Root_CA_2.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/3a7f6b22.0",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/3a7f6b22.0",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "trusted_ca26.pem",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca35.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca35.pem",
+      "type": "regular",
+      "size": 1517,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca40.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/trusted_ca40.pem",
+      "type": "regular",
+      "size": 1492,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SecureSign_RootCA11.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/SecureSign_RootCA11.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/SecureSign_RootCA11.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Staat_der_Nederlanden_EV_Root_CA.pem",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/etc/ssl/certs/Staat_der_Nederlanden_EV_Root_CA.pem",
+      "type": "symlink",
+      "size": 0,
+      "link_target": "../../../usr/share/ca-certificates/mozilla/Staat_der_Nederlanden_EV_Root_CA.crt",
+      "pax_headers": {},
+      "decision": "recorded_not_followed",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    }
+  ],
+  "filename_leads": [
+    {
+      "ordinal": 3,
+      "input": "sdk",
+      "raw_name": "./environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+      "canonical_name": "environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+      "type": "regular",
+      "size": 4321,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "ordinal": 4,
+      "input": "sdk",
+      "raw_name": "./site-config-ca9v1-starfishmllib32-linux-gnueabi",
+      "canonical_name": "site-config-ca9v1-starfishmllib32-linux-gnueabi",
+      "type": "regular",
+      "size": 13611,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "ordinal": 5,
+      "input": "sdk",
+      "raw_name": "./version-ca9v1-starfishmllib32-linux-gnueabi",
+      "canonical_name": "version-ca9v1-starfishmllib32-linux-gnueabi",
+      "type": "regular",
+      "size": 125,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "ordinal": 8,
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/environment-setup.d",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/environment-setup.d",
+      "type": "directory",
+      "size": 0,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "ordinal": 9,
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/environment-setup.d/icecc-env.sh",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/icecc-env.sh",
+      "type": "regular",
+      "size": 2170,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "ordinal": 10,
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/environment-setup.d/openssl.sh",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/openssl.sh",
+      "type": "regular",
+      "size": 69,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    },
+    {
+      "ordinal": 11,
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/environment-setup.d/cmake.sh",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/environment-setup.d/cmake.sh",
+      "type": "regular",
+      "size": 185,
+      "link_target": "",
+      "pax_headers": {},
+      "decision": "recorded",
+      "reasons": [
+        "metadata_only"
+      ],
+      "selected": false,
+      "nested_archive": false
+    }
+  ],
+  "constraints": "GeneratedmetadataONLY;NOoriginalarchiveorfilecontents,no newparseorpolicymodification. Unsafe offendingmemberwasnotemitted:cannotinventpath/absolute-vs-relativecause. All3pinsverified,native/targetparseSKIPPED. No tools/additional filesystemaccess/modelcalls.",
+  "questions": [
+    "Concretecompiler/GCC/binutils/glibc/sysroot/version/licensing filenamehints? Only inferfromnames,notreadcontent. Exactpathsandsizes.",
+    "Doesnewmetadataestablish20191125compiler/ABI/APIequivalence torequired20190307? Enumeratemissingproof.",
+    "Explainunsafe-linkstopconservativelywithoutclaimingexactoffendinglinkorcorruption; definepossiblefuturemetadata-onlyrecord-not-follow-policyobjectiveforparentNOTautomaticretryorfixpermission."
+  ]
+}

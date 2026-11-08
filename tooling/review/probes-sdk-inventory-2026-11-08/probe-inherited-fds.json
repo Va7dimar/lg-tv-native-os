@@ -1,0 +1,70 @@
+{
+  "exit_code": 0,
+  "stderr": "",
+  "worker": {
+    "fds": [
+      {
+        "fd": 0,
+        "target": "pipe:[4365204]"
+      },
+      {
+        "fd": 1,
+        "target": "pipe:[4365205]"
+      },
+      {
+        "fd": 2,
+        "target": "pipe:[4365206]"
+      },
+      {
+        "fd": 3,
+        "target": "[Errno 2] No such file or directory: '/proc/self/fd/3'"
+      },
+      {
+        "fd": 4,
+        "target": "/tmp/sdk-fd-probe-dvsh23no/out"
+      },
+      {
+        "fd": 5,
+        "target": "/tmp/sdk-fd-probe-dvsh23no/in-0"
+      },
+      {
+        "fd": 6,
+        "target": "/tmp/sdk-fd-probe-dvsh23no/in-1"
+      },
+      {
+        "fd": 7,
+        "target": "/tmp/sdk-fd-probe-dvsh23no/in-2"
+      }
+    ],
+    "openat_parent": {
+      "via_fd": 4,
+      "parent_names": [
+        "in-1",
+        "in-2",
+        "in-0",
+        "out"
+      ]
+    },
+    "reopen_write": [
+      {
+        "fd": 5,
+        "writable": true
+      },
+      {
+        "fd": 6,
+        "writable": true
+      },
+      {
+        "fd": 7,
+        "writable": true
+      }
+    ]
+  },
+  "passed_fds": [
+    4,
+    5,
+    6,
+    7
+  ],
+  "note": "synthetic files under tempfile only; no sdk-candidates access"
+}

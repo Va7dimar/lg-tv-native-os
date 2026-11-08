@@ -1,0 +1,55 @@
+# LG 65NANO756PR (webOS 6): diagnosing MENU vs QMENU over the pointer socket
+
+I ran no tools and fetched nothing. The library details below come from my memory of public source code and READMEs, so check each URL before relying on it. LG does not publicly document the SSAP control protocol. Its developer site (https://webostv.developer.lge.com/) covers APIs for apps running on the TV, not outside control. Everything here comes from community libraries.
+
+## 1. Framing: MENU vs QMENU
+
+**What your observations prove:**
+- The pointer-socket connection, the use of text frames, and the `\n\n` terminator all work. Move frames are parsed on the same socket.
+- `type:button\nname:MENU\n\n` is the same shape as a move frame. If the framing were wrong, moves would most likely fail too. So framing is probably not the cause.
+- It's normal that buttons send nothing back. The pointer socket doesn't reply to individual frames, so silence doesn't mean failure.
+
+**Library facts (from memory, please verify):**
+- lgtv2 gets the socket with `ssap://com.webos.service.networkinput/getPointerInputSocket`. It then sends `type:<t>\n`, one `key:value\n` line per field, and a final `\n`. Its README example is `sock.send('button', {name:'HOME'})`. https://github.com/hobbyquaker/lgtv2
+- Home Assistant's `webostv.button` documentation lists MENU among the valid names, alongside HOME, BACK, ENTER, EXIT, INFO, DASH and VOLUMEUP. https://www.home-assistant.io/integrations/webostv/
+- I believe bscpylgtv lists both `MENU` and `QMENU`. I'm not certain. https://github.com/chros73/bscpylgtv
+- Other references: https://github.com/klattimer/LGWebOSRemote and https://github.com/supersaiyanmode/PyWebOSTV
+
+**Guesses (no source):**
+- On webOS 6 the remote's gear button opens Quick Settings. Which SSAP name maps to it on this firmware isn't documented. MENU may simply do nothing here, and QMENU may be the Quick Settings key.
+- On an HDMI input with SIMPLINK (HDMI-CEC) turned on, some keys may be passed to the connected device instead of the TV. Turning SIMPLINK off would rule that out.
+- If "pointer moves twice" means each move frame moves the pointer twice, look for duplicate sends. If it means the user confirmed movement twice, ignore this.
+
+## 2. Status the TV will report back
+
+These are community-documented endpoints. Not all are confirmed to support `subscribe:true`; if one rejects it, poll instead.
+- `ssap://audio/getVolume` and `ssap://audio/getStatus`. These are the best way to confirm a button worked.
+- `ssap://com.webos.applicationManager/getForegroundAppInfo`. As you saw, Settings appears as an overlay and the foreground app stays hdmi2. Treat that as a likely firmware behaviour, not documented.
+- `ssap://com.webos.service.tvpower/power/getPowerState`
+- `ssap://settings/getSystemSettings` with category `picture`. You already read this; whether it can be subscribed to on webOS 6 is unverified.
+- `ssap://com.webos.service.apiadapter/audio/getSoundOutput`
+- `ssap://com.webos.service.ime/registerRemoteKeyboard`. This reports only whether a **text-input field** has focus. It doesn't track menu focus.
+
+## 3. Can a public API see the menu or focus without screenshots?
+
+I don't know of any public SSAP endpoint that reports on-screen menu state or which item has focus. The only indirect signals are:
+- foreground app changes, which you've shown don't happen for Settings;
+- whether a text field has focus;
+- changes in a setting's value after an action.
+
+## 4. Smallest safe test, in one persistent session
+
+1. Open one SSAP connection with the existing pairing. Subscribe to getVolume, getForegroundAppInfo and getPowerState, and poll picture settings once a second. Save a baseline. Request the pointer socket **once** and keep it open.
+2. **Check that buttons work at all:** send `VOLUMEUP`, wait 1.5 s, and expect a volume event. Then send `VOLUMEDOWN` and confirm it's back to baseline.
+   - If there's an event, button framing is proven.
+   - If there's none, check whether sound goes out through ARC or a soundbar, which may keep the TV from reporting volume. Try `MUTE` with getStatus instead.
+3. Send `EXIT` (harmless on HDMI) to start clean.
+4. Send `QMENU` alone, wait 2 s, have a person report what appears, and log every status reading. Then send `BACK` and `EXIT`.
+5. Repeat step 4 with `MENU`, then with `HOME` as a positive control. Leave at least 1 s between frames and log timestamps.
+6. Don't send ENTER or arrow keys inside a menu unless a person is watching.
+
+## 5. Limit on learning by itself
+
+With only public, permitted APIs, closed-loop menu navigation isn't possible. The worker can't see where focus is. It can only notice changes in a few readable settings (volume and the picture keys above). Pressing keys blindly could change settings it can't read: picture mode, network, or even a reset.
+
+The honest ceiling is fixed key sequences, each step confirmed by a person or checked against a setting's readback. A camera the user owns, pointed at the TV, is a legitimate way to see the screen without using the TV's API, but only with the user's agreement.

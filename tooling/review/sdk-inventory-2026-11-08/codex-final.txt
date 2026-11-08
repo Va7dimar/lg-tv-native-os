@@ -1,0 +1,8 @@
+Implemented the [worker](/workspace/lg-tv/tooling/sdk_inventory_phase.py), [launcher](/workspace/lg-tv/tooling/isolate_sdk_inventory.py), and [synthetic tests](/workspace/lg-tv/tooling/tests/test_sdk_inventory_phase.py).
+
+- Final run: **26 passed, 1 blocked/skipped**; four additional checks passed under 1 GiB AS.
+- Isolation remains unverified: bwrap failed with `NETLINK_ROUTE: Operation not permitted`. **Not ready for actual invocation.**
+- [Report](/workspace/lg-tv/tooling/sdk-implementation-report.md) documents limitations and actual RED/GREEN logs. [SHA256SUMS](/workspace/lg-tv/tooling/review/sdk-inventory-2026-11-08/SHA256SUMS.txt) covers whole-file review snapshots.
+- [Exact proposed command](/workspace/lg-tv/tooling/review/sdk-inventory-2026-11-08/proposed-metadataonly-command.txt) is saved and **unexecuted**.
+
+No actual SDK/source payload was read or hashed. Independent reviews and successful synthetic isolation remain outstanding.

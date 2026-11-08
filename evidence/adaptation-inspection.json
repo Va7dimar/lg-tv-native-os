@@ -1,0 +1,236 @@
+{
+  "document": "adaptation-inspection",
+  "timezone": "Atlantic/Reykjavik (UTC+0)",
+  "analysis_written": "2026-11-08 (see execution audit for run clock)",
+  "run": {
+    "success_claim": false,
+    "launcher_exit": 1,
+    "phase_ok": false,
+    "phase_status": "partial",
+    "errors": [
+      "max_selected_combined_bytes exceeded"
+    ],
+    "note": "Do not treat leftover staged/selected files as a complete pass. Inner listing stops at the member that tripped the 64 MiB selected-text cap; later archive members, if any, were not recorded."
+  },
+  "copied": {
+    "member": "soc/libkadaptor-1.0.0-908.3.tar.gz",
+    "path": "staged/libkadaptor-1.0.0-908.3.tar.gz",
+    "bytes": 123840909,
+    "sha256": "46e7e652bc8f6fc9a57ade3baca9b1300a9e8c1bdc4bcde3cb7675116184bf25",
+    "verified_before_inner": true,
+    "independent_file_hash_match": true
+  },
+  "outer_members_recorded": [
+    {
+      "canonical_name": "soc",
+      "type": "dir",
+      "size": 0
+    },
+    {
+      "canonical_name": "soc/libkadaptor-1.0.0-908.3.tar.gz",
+      "type": "file",
+      "size": 123840909,
+      "copied": true
+    },
+    {
+      "canonical_name": "soc/r_8812_wifi_driver.tar.gz",
+      "type": "file",
+      "size": 79725513,
+      "copied": false
+    },
+    {
+      "canonical_name": "soc/gstreamer-1.0.0-2089.tar.gz",
+      "type": "file",
+      "size": 136115594,
+      "copied": false
+    },
+    {
+      "canonical_name": "soc/kernel-1.0.0-711..4.tar.gz",
+      "type": "file",
+      "size": 170350960,
+      "copied": false
+    },
+    {
+      "canonical_name": "soc/bootcode-1.0.0-1099.7.tar.gz",
+      "type": "file",
+      "size": 12014324,
+      "copied": false
+    }
+  ],
+  "inner": {
+    "filename": "libkadaptor-1.0.0-908.3.tar.gz",
+    "status": "partial",
+    "members_listed": 1434,
+    "kinds": {
+      "dir": 77,
+      "file": 1357
+    },
+    "selected_files": 796,
+    "selected_text_bytes": 65599808,
+    "not_selected_listed": 638,
+    "last_listed_member": "libkadaptor/system/optee/optee_os_64bits/optee_os_prebuilt/arm-plat-rtk/export-ta_arm64/include/rbus/rtk_dtv_demod_isdbt_reg.h",
+    "last_listed_size": 1717085,
+    "last_listed_selected": false,
+    "rbus_selected_files": 391,
+    "rbus_arm32_include_files_listed": 302,
+    "rbus_arm32_host_include_files_listed": 302,
+    "rbus_arm64_include_files_listed": 90
+  },
+  "totals_from_phase": {
+    "member_count": 1440,
+    "pathname_bytes": 119106,
+    "expanded_bytes": 879980114,
+    "outer_decoded_bytes": 522047300,
+    "binary_copy_bytes": 123840909,
+    "selected_text_bytes": 65599808,
+    "admitted_compressed_bytes": 635786803
+  },
+  "analysis_worker": {
+    "tool": "claude",
+    "requested": "claude-opus-5-5 --effort high",
+    "reported_canonical_model": "claude-opus-5-5",
+    "session_id": "7cae6b7b-d602-4243-927b-9f8cdc756598",
+    "duration_ms": 152560,
+    "is_error": false,
+    "permission_denials": "Bash reads denied by Claude sandbox (7 attempts); report written from packet files. Quotes below were independently re-checked against selected files and phase.json hashes.",
+    "no_original_archive_access": true
+  },
+  "license": {
+    "named_license_readme_copying_notice": false,
+    "makefile_has_license_block": false,
+    "intel_confidential_header": "libkadaptor/system/optee/export/export-ta_arm32/include/drivers/hdcp2/hdcp2_hal.h lines 4-22"
+  },
+  "source_completeness": {
+    "makefile_references_missing_from_listed_members": [
+      "system/src (Makefile:1)",
+      "system/include/MakeConfig (Makefile:2)",
+      "src/audio and src/audio/build_binary.sh (Makefile:5,26)",
+      "system/optee/ta_32bits_v3 and ta_64bits_v3 (Makefile:76,82)"
+    ],
+    "listed_but_not_selected": [
+      "libkadaptor/kadaptor.mk (2474 B)",
+      "libkadaptor/common.setting (6000 B)",
+      "libkadaptor/files/pkgconfig/kadaptor.pc (305 B, sha256 7a4c6c236f797313bdf1d1df066d8d31d6af6b94b14ccaf5997b738b3941ebd7)"
+    ],
+    "implementation_c_files_listed": "only OP-TEE TA boilerplate user_ta_header.c / ta.ld.S (not selected)",
+    "binary_like_listed": 37,
+    "prebuilt_drm_names": [
+      "oemcrypto",
+      "oemcrypto_classic",
+      "oemsvp",
+      "playreadypk30",
+      "playreadypk40",
+      "fairplay",
+      "nrd416",
+      "nrd503",
+      "nrd510",
+      "nrd520",
+      "skb",
+      "jpmarlin"
+    ]
+  },
+  "identifiers": {
+    "packaging": [
+      "optee-k6lp_64bit.tar.bz2",
+      "optee-k6lp_32bit.tar.bz2",
+      "optee-V3-k6lp_64bit.tar.bz2",
+      "optee-V3-k6lp_32bit.tar.bz2"
+    ],
+    "default_make_target": "ADD_OPTIMIZE_OPTION_OFF optee_V3_4k package_optee",
+    "rbus_design_banner": "Merlin3-DesignSpec-* (Realtek mm_mm2_rd_sw_kernel@realtek.com)",
+    "hdmi_max_port_num": 4,
+    "not_proof_of_tv_model": true
+  },
+  "quoted_files": [
+    {
+      "path": "libkadaptor/Makefile",
+      "bytes": 3100,
+      "sha256": "53802315af59e91b864830acef88d69145c7f6f025aa4d5b9232f2aedfadfdf2",
+      "selected_output": "selected/libkadaptor-1.0.0-908.3.tar.gz/libkadaptor/Makefile"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/drivers/hdcp2/hdmi.h",
+      "bytes": 361,
+      "sha256": "6fdab9b6f8e6c370cbced2a057a1c565e4583b87493f62c9d9250293509db51a"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/drivers/hdcp2/hdcp2_rcp_api.h",
+      "bytes": 1084,
+      "sha256": "b1fbfa577ec67151facc467439d1e5c6c78b0a929b0dbc0cc2e32ddb454a8021"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/drivers/hdcp2/hdcp2_hal.h",
+      "bytes": 2897,
+      "sha256": "fe44680a829a232db581b6e491a68fdc6a15413cf5ea7cd7cada413c8d67c310"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/drivers/hdcp2/hdcp2_interface.h",
+      "bytes": 14580,
+      "sha256": "51393f74475fc30a18c418b1acc418e41672e66644c73c88c471643738f8e1b5"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/hdmi_p0_reg.h",
+      "bytes": 618533,
+      "sha256": "9fb8d5bbc78fad7b0550b1702168ec4bc8d3da9b38f97778ad2c90762f0ceb3e",
+      "banner": "Merlin3-DesignSpec-P0_HDMI_RX_MAC"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/dfe_hdmi_rx_phy_reg.h",
+      "bytes": 429474,
+      "sha256": "3f18c9629bf22c0ff2753f59385fb05e00622b7775d6f2fa8b23a24e937d6983",
+      "banner": "Merlin3-DesignSpec-DFE_HDMI_RX_PHY"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/audio_reg.h",
+      "bytes": 1102068,
+      "sha256": "5ed69ee98fef184ec0a50c6370ae9b57600c3f7847cdf591edb78e3e459b7633",
+      "banner": "Merlin3-DesignSpec-AUDIO"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/cec_reg.h",
+      "bytes": 130425,
+      "sha256": "2e7e57a9c6a54e32d7d806cb2169c25a801d0d27e93d3b71994bb7b69628f1e8",
+      "banner": "Merlin3-DesignSpec-CEC"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/irda_reg.h",
+      "sha256": "babcac77d846cc82da1433812bfbcbf9d7358e1523eaccbf3a3388588af168ba",
+      "banner": "Merlin3-DesignSpec-ISO_MISC_IRDA"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/tcon_reg.h",
+      "sha256": "6a54f41b31fa6854d6823649dc9cd22e68f25de2ef9a5c772861ba9f092574f1",
+      "banner": "Merlin3-DesignSpec-D_Domain_TCON"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/ppoverlay_reg.h",
+      "sha256": "6c5f65ddc635c5d292cc885c4756ba1da3b0364f8083c5ea2917c5ef4d84043c",
+      "banner": "Merlin3-DesignSpec-Display_Timing_Generator"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/vby1_reg.h",
+      "sha256": "24a33629f7d21ad021efc0a93682f609392b4c9b9f01c50152a20112172d9b60",
+      "banner": "Merlin3_DesignSpec_Vby1"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/emcu_reg.h",
+      "sha256": "615c747486f9c5dd2540c16a6ff588cb9bd3d874f8fdb92c22aef45343960e9c",
+      "banner": "Merlin3-DesignSpec-EMCU"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/iso_misc_reg.h",
+      "sha256": "3d79cdd2a6a0990e2f9aaa27f1f373d698f6db0a7bea46c0cf02010ab40164ac",
+      "banner": "Merlin3-DesignSpec-ISO_MISC_arch_spec"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/lg_m_plus_reg.h",
+      "sha256": "b217af7b247738c3d3e5aa957312e61e35fea82e9e7e3349916ee1c9629a2cd8",
+      "banner": "Merlin3-DesignSpec-D-Domain_LGD_M_plus"
+    },
+    {
+      "path": "libkadaptor/system/optee/export/export-ta_arm32/include/rbus/sys_reg_reg.h",
+      "sha256": "57e1e4067946c903293b8f2d8c79017df42538d0a38d2e72eca2ac986641389f",
+      "banner": "Merlin3-DesignSpec-CRT"
+    }
+  ]
+}

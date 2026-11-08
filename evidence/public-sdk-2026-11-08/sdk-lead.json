@@ -1,0 +1,43 @@
+{
+  "catalogue": "https://github.com/lgstreamer/starfish-sdk-x86_64/releases/tag/04.40.20",
+  "readme": "https://github.com/lgstreamer/starfish-sdk-x86_64/blob/main/README.md",
+  "official_app_sdk": "https://webostv.developer.lge.com/develop/tools/sdk-introduction",
+  "community_claim": "authorreportslegalLGinquiry+MR_firmware.zip+webOS5.0JO2.0/OLEDCX04.40.20;notindependentlyauthenticatedLGorigin",
+  "listed_sdk": "5.0.0-20191125",
+  "required_by_guides": "5.0.0-20190307",
+  "interchangeable": "NOT ESTABLISHED",
+  "assets": [
+    {
+      "name": "native_sysroot_dependencies.tar.gz",
+      "size": 8017931,
+      "digest": null,
+      "browser_download_url": "https://github.com/lgstreamer/starfish-sdk-x86_64/releases/download/04.40.20/native_sysroot_dependencies.tar.gz",
+      "state": "uploaded"
+    },
+    {
+      "name": "starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh",
+      "size": 166821312,
+      "digest": null,
+      "browser_download_url": "https://github.com/lgstreamer/starfish-sdk-x86_64/releases/download/04.40.20/starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh",
+      "state": "uploaded"
+    },
+    {
+      "name": "target_sysroot_dependencies.tar.gz",
+      "size": 323786694,
+      "digest": null,
+      "browser_download_url": "https://github.com/lgstreamer/starfish-sdk-x86_64/releases/download/04.40.20/target_sysroot_dependencies.tar.gz",
+      "state": "uploaded"
+    }
+  ],
+  "assets_downloaded": true,
+  "new_download_bytes": 498625937,
+  "repo_root": "README.md only;noSDKmanifest/compilerfilesatroot",
+  "bounded_search": "2webqueries+1Xquery,X0results;4documentreads;noexactMarchSDKfound\u2014notglobalabsence",
+  "official_page_fact": "LGSDKIntroductiondescribesappdevelopmentCLI/Studio/Simulator/Beanviser,notfirmwarecrosscompiler",
+  "acquisition_manifest": "evidence/public-sdk-2026-11-08/acquisition-manifest.json",
+  "header_findings": "evidence/public-sdk-2026-11-08/sdk-header-findings.json",
+  "payload_inventory_performed": false,
+  "sdk_installed": false,
+  "sdk_binary_executed": false,
+  "useful_candidate": "Headerdeclaresmatchingca9v1/lib32targetenvironmentfamily,butpayload/compiler/sysrootcompatibilityunknown;notexactMarchSDKreplacement."
+}

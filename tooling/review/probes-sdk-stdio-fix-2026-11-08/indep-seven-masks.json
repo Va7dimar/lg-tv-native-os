@@ -1,0 +1,72 @@
+{
+  "1": {
+    "ok": true,
+    "audit": {
+      "0": "/dev/null",
+      "1": "/tmp/sdk-synthetic-634tr662/stdio-output/launcher-stdout.txt",
+      "2": "/tmp/sdk-synthetic-634tr662/stdio-output/launcher-stderr.txt"
+    },
+    "exit": 0,
+    "error": null
+  },
+  "2": {
+    "ok": true,
+    "audit": {
+      "0": "/dev/null",
+      "1": "/tmp/sdk-synthetic-9mltuz4j/stdio-output/launcher-stdout.txt",
+      "2": "/tmp/sdk-synthetic-9mltuz4j/stdio-output/launcher-stderr.txt"
+    },
+    "exit": 0,
+    "error": null
+  },
+  "3": {
+    "ok": true,
+    "audit": {
+      "0": "/dev/null",
+      "1": "/tmp/sdk-synthetic-h4_teide/stdio-output/launcher-stdout.txt",
+      "2": "/tmp/sdk-synthetic-h4_teide/stdio-output/launcher-stderr.txt"
+    },
+    "exit": 0,
+    "error": null
+  },
+  "4": {
+    "ok": true,
+    "audit": {
+      "0": "/dev/null",
+      "1": "/tmp/sdk-synthetic-stybdlfn/stdio-output/launcher-stdout.txt",
+      "2": "/tmp/sdk-synthetic-stybdlfn/stdio-output/launcher-stderr.txt"
+    },
+    "exit": 0,
+    "error": null
+  },
+  "5": {
+    "ok": true,
+    "audit": {
+      "0": "/dev/null",
+      "1": "/tmp/sdk-synthetic-jupg5rq_/stdio-output/launcher-stdout.txt",
+      "2": "/tmp/sdk-synthetic-jupg5rq_/stdio-output/launcher-stderr.txt"
+    },
+    "exit": 0,
+    "error": null
+  },
+  "6": {
+    "ok": true,
+    "audit": {
+      "0": "/dev/null",
+      "1": "/tmp/sdk-synthetic-jr4vehp2/stdio-output/launcher-stdout.txt",
+      "2": "/tmp/sdk-synthetic-jr4vehp2/stdio-output/launcher-stderr.txt"
+    },
+    "exit": 0,
+    "error": null
+  },
+  "7": {
+    "ok": true,
+    "audit": {
+      "0": "/dev/null",
+      "1": "/tmp/sdk-synthetic-hemgl9qb/stdio-output/launcher-stdout.txt",
+      "2": "/tmp/sdk-synthetic-hemgl9qb/stdio-output/launcher-stderr.txt"
+    },
+    "exit": 0,
+    "error": null
+  }
+}

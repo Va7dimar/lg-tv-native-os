@@ -1,0 +1,1 @@
+{"error": "InventoryError: worker did not publish manifest: bwrap: loopback: Failed to create NETLINK_ROUTE socket: Operation not permitted\n", "members_jsonl_may_be_partial": true, "mode": "SELECTEDTEXT", "ok": false, "status": "failed", "totals": null, "worker_completed": false}

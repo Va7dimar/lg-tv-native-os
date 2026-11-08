@@ -1,0 +1,178 @@
+[
+  {
+    "line": 27,
+    "text": "SDK_ARCH=$(echo x86_64 | sed -e \"s/i[3-6]86/ix86/\" -e \"s/x86[-_]64/x86_64/\")"
+  },
+  {
+    "line": 29,
+    "text": "INST_GCC_VER=$(gcc --version | sed -ne 's/.* \\([0-9]\\+\\.[0-9]\\+\\)\\.[0-9]\\+.*/\\1/p')"
+  },
+  {
+    "line": 30,
+    "text": "SDK_GCC_VER=''"
+  },
+  {
+    "line": 46,
+    "text": "if [ \"$INST_ARCH\" != \"$SDK_ARCH\" ]; then"
+  },
+  {
+    "line": 48,
+    "text": "\tif [ \"$INST_ARCH\" != x86_64 -o \"$SDK_ARCH\" != ix86 ]; then"
+  },
+  {
+    "line": 49,
+    "text": "\t\techo \"Error: Incompatible SDK installer! Your host is $INST_ARCH and this SDK was built for $SDK_ARCH hosts.\""
+  },
+  {
+    "line": 54,
+    "text": "if ! xz -V > /dev/null 2>&1; then"
+  },
+  {
+    "line": 55,
+    "text": "\techo \"Error: xz is required for installation of this SDK, please install it first\""
+  },
+  {
+    "line": 59,
+    "text": "DEFAULT_INSTALL_DIR=\"/opt/starfish-sdk-x86_64/5.0.0-20191125\""
+  },
+  {
+    "line": 62,
+    "text": "target_sdk_dir=\"\""
+  },
+  {
+    "line": 75,
+    "text": "\t\ttarget_sdk_dir=$OPTARG"
+  },
+  {
+    "line": 114,
+    "text": "payload_offset=$(($(grep -na -m1 \"^MARKER:$\" $0|cut -d':' -f1) + 1))"
+  },
+  {
+    "line": 116,
+    "text": "    tail -n +$payload_offset $0| tar tvJ || exit 1"
+  },
+  {
+    "line": 132,
+    "text": "\tDEFAULT_INSTALL_DIR=\"~/starfish_sdk\""
+  },
+  {
+    "line": 133,
+    "text": "\tif [ \"$INST_GCC_VER\" = '4.8' -a \"$SDK_GCC_VER\" = '4.9' ] || [ \"$INST_GCC_VER\" = '4.8' -a \"$SDK_GCC_VER\" = '' ] || \\"
+  },
+  {
+    "line": 134,
+    "text": "\t\t[ \"$INST_GCC_VER\" = '4.9' -a \"$SDK_GCC_VER\" = '' ]; then"
+  },
+  {
+    "line": 135,
+    "text": "\t\techo \"Error: Incompatible SDK installer! Your host gcc version is $INST_GCC_VER and this SDK was built by gcc higher version.\""
+  },
+  {
+    "line": 142,
+    "text": "\t\ttarget_sdk_dir=\"$DEFAULT_INSTALL_DIR\""
+  },
+  {
+    "line": 144,
+    "text": "\t\tread -p \"Enter target directory for SDK (default: $DEFAULT_INSTALL_DIR): \" target_sdk_dir"
+  },
+  {
+    "line": 145,
+    "text": "\t\t[ \"$target_sdk_dir\" = \"\" ] && target_sdk_dir=$DEFAULT_INSTALL_DIR"
+  },
+  {
+    "line": 149,
+    "text": "eval target_sdk_dir=$(echo \"$target_sdk_dir\"|sed 's/ /\\\\ /g')"
+  },
+  {
+    "line": 151,
+    "text": "\ttarget_sdk_dir=$(cd \"$target_sdk_dir\"; pwd)"
+  },
+  {
+    "line": 153,
+    "text": "\ttarget_sdk_dir=$(readlink -m \"$target_sdk_dir\")"
+  },
+  {
+    "line": 156,
+    "text": "# limit the length for target_sdk_dir, ensure the relocation behaviour in relocate_sdk.py has right result."
+  },
+  {
+    "line": 186,
+    "text": "if [ -e \"$target_sdk_dir/environment-setup-ca9v1-starfishmllib32-linux-gnueabi\" ]; then"
+  },
+  {
+    "line": 235,
+    "text": "tail -n +$payload_offset $0| $SUDO_EXEC tar xJ -C $target_sdk_dir --checkpoint=.2500 $EXTRA_TAR_OPTIONS || exit 1"
+  },
+  {
+    "line": 241,
+    "text": "for env_setup_script in `ls $target_sdk_dir/environment-setup-*`; do"
+  },
+  {
+    "line": 244,
+    "text": "\t\t# environment-setup-* so that they have relocation"
+  },
+  {
+    "line": 261,
+    "text": "native_sysroot=$($SUDO_EXEC cat $env_setup_script |grep 'OECORE_NATIVE_SYSROOT='|cut -d'=' -f2|tr -d '\"')"
+  },
+  {
+    "line": 262,
+    "text": "dl_path=$($SUDO_EXEC find $native_sysroot/lib -name \"ld-linux*\")"
+  },
+  {
+    "line": 267,
+    "text": "executable_files=$($SUDO_EXEC find $native_sysroot -type f \\"
+  },
+  {
+    "line": 279,
+    "text": "cat <<EOF >> $tdir/relocate_sdk.sh"
+  },
+  {
+    "line": 293,
+    "text": "\\${PYTHON} ${env_setup_script%/*}/relocate_sdk.py $target_sdk_dir $dl_path $executable_files"
+  },
+  {
+    "line": 296,
+    "text": "$SUDO_EXEC mv $tdir/relocate_sdk.sh ${env_setup_script%/*}/relocate_sdk.sh"
+  },
+  {
+    "line": 297,
+    "text": "$SUDO_EXEC chmod 755 ${env_setup_script%/*}/relocate_sdk.sh"
+  },
+  {
+    "line": 300,
+    "text": "\t$SUDO_EXEC ${env_setup_script%/*}/relocate_sdk.sh"
+  },
+  {
+    "line": 309,
+    "text": "for replace in \"$target_sdk_dir -maxdepth 1\" \"$native_sysroot\"; do"
+  },
+  {
+    "line": 313,
+    "text": "    grep -Ev \"$target_sdk_dir/(environment-setup-*|relocate_sdk*|${0##*/})\" | \\"
+  },
+  {
+    "line": 315,
+    "text": "        -e \"s:$DEFAULT_INSTALL_DIR:$target_sdk_dir:g\" \\"
+  },
+  {
+    "line": 325,
+    "text": "for l in $($SUDO_EXEC find $native_sysroot -type l); do"
+  },
+  {
+    "line": 326,
+    "text": "\t$SUDO_EXEC ln -sfn $(readlink $l|$SUDO_EXEC sed -e \"s:$DEFAULT_INSTALL_DIR:$target_sdk_dir:\") $l"
+  },
+  {
+    "line": 339,
+    "text": "\t$SUDO_EXEC rm -f ${env_setup_script%/*}/relocate_sdk.py ${env_setup_script%/*}/relocate_sdk.sh"
+  },
+  {
+    "line": 352,
+    "text": "for env_setup_script in `ls $target_sdk_dir/environment-setup-*`; do"
+  },
+  {
+    "line": 358,
+    "text": "MARKER:"
+  }
+]

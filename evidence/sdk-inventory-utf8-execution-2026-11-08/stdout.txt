@@ -1,0 +1,1 @@
+{"ok": false, "status": "failed", "launcher_result": "/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-utf8-PENDING-REVIEW/launcher-result.json"}

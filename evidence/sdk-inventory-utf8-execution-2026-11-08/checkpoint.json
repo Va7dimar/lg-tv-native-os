@@ -1,0 +1,50 @@
+{
+  "time_Atlantic_Reykjavik": "2026-11-08T13:14:45.004891+00:00",
+  "authority": "Owner t77u/t71\u201374 continuingoffTVresearch+parentactualhandoff; reviewtechnicalgateNOTpermission",
+  "review": "tooling/review/sdk-utf8-fix-independent-review.md",
+  "review_sha256": "13ba1ab83e232c67b69c4984b6145014631603199af2db6e958024b15beb1ebc",
+  "verdict": "SPEC/QUALITYPASS,nomustfix",
+  "code_hashes_verified": {
+    "tooling/sdk_inventory_phase.py": "e70f683abf7597f16d54f15c1f7e86d10be873dda9b0c6f95d881000c7047ba4",
+    "tooling/isolate_sdk_inventory.py": "2a6638e3439748a6dc4fb7237a03c3d05521685746df5315683c861acab9ca52"
+  },
+  "inputs_metadata_checked": [
+    {
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh",
+      "bytes_lstat": 166821312,
+      "mode": "0o644",
+      "expected_sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+      "pin_verification": "Fullhash INSIDE reviewed phase before ANYparse, not extra preflight archive reads"
+    },
+    {
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/native_sysroot_dependencies.tar.gz",
+      "bytes_lstat": 8017931,
+      "mode": "0o644",
+      "expected_sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+      "pin_verification": "Fullhash INSIDE reviewed phase before ANYparse, not extra preflight archive reads"
+    },
+    {
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/target_sysroot_dependencies.tar.gz",
+      "bytes_lstat": 323786694,
+      "mode": "0o644",
+      "expected_sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+      "pin_verification": "Fullhash INSIDE reviewed phase before ANYparse, not extra preflight archive reads"
+    }
+  ],
+  "fullpin_checks": "INSIDEphaseBEFOREanyparse,noextrapreflightassetrehash",
+  "output_absent_no_symlink_ancestors": "/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-utf8-PENDING-REVIEW",
+  "old_output_untouched": "/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-PENDING-REVIEW",
+  "observed_free_bytes": 116583956480,
+  "unchanged_limits": {
+    "members": 200000,
+    "metadata_bytes": 100000000,
+    "logical_bytes": 4294967296,
+    "full_decoded_bytes": 4294967296,
+    "wall_seconds": 120,
+    "AS_bytes_not_RSS": 1073741824,
+    "LZMA_memory_bytes": 268435456,
+    "selected_text_bytes": 0
+  },
+  "invocation_count": 1,
+  "no_retry_split_ceiling_raise": true
+}

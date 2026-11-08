@@ -1,0 +1,14 @@
+python3 /workspace/lg-tv/tooling/isolate_inventory.py \
+  --input "/workspace/lg-tv/source-catalog/inspection-core-two-PENDING-REVIEW/staged/kernel-1.0.0-711..4.tar.gz" \
+  --input "/workspace/lg-tv/source-catalog/inspection-core-two-PENDING-REVIEW/staged/bootcode-1.0.0-1099.7.tar.gz" \
+  --output-dir /workspace/lg-tv/source-catalog/inspection-build-guides-2026-11-08 \
+  --select "linux-4.4.3/README_HowToMake.txt" \
+  --select "bootcode/README_Make_Boot.txt" \
+  --select "bootcode/README-bootcode.txt" \
+  --max-members 200000 \
+  --max-pathname-bytes 100000000 \
+  --max-expanded-bytes 4294967296 \
+  --max-selected-text-member-bytes 1217 \
+  --min-free-disk-bytes 10737418240 \
+  --wall-seconds 120 \
+  --hash-input

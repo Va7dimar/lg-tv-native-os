@@ -1,0 +1,10 @@
+# Actual guide objective complete
+ExactcommandexecutedONCE,exit0,6.089s;64174members andexactthree3442B. BothstagedinputpinsmatchedBEFOREguidefindings trusted. No originalouterreads,retries,otherpackages/deepernesting,sourceexecution/builds/TVactions. Reader/launcherunchanged;priorChromiumscanremainsPARTIAL.
+
+ActualguidesdocumentStarfishSDK5.0.0-20190307 installer,RTK2875/tv006/emmcold_defconfig+arm-starfish-linux-+KALLSYMS_EXTRA_PASS=1→vmlinux.bin;bootLG_TOOLCHAIN_PATH,PRJB3_A1R41OR B7_A1R62→bin/tmp/u-boot.bin. Neither project selected. PRJcontentsunread;SDKinstallerexactbasenameabsentfromtwoinspectedpackageindexes (133otherpackagesfromouter1/2uninspected). Prefix,host/targetwording,installerexamplepath andlayoutrelationships remainopen. Sourcebuilddirectionsnotactualunitidentity,completeBSP/buildproof orcustomboot/recoverymethod.
+
+Evidence/citations/hashes/fullnumberedguides: evidence/build-guide-inspection.json/.md; dependencyledger: evidence/build-dependency-ledger.json/.md. Run/checkpoint/command/rawlogs/acceptance/finalverification: evidence/build-guide-execution-2026-11-08/. Inventory+launcherlogs: source-catalog/inspection-build-guides-2026-11-08/.
+
+Threefocusedsubscriptionreviewsreturnedexit0,no timeout/refusal:Opusrequested5.5high50.209s,reported5.5AND4.8+safety_stops2 (notexclusive5.5;nooperatorfallback);Codexactualgpt-6.1-sol/high27.635s;Gemini requestedArgonhigh55.367s,actualmodelnotseparatelyreported. Rawprompts/outcomes/reconciliation/manifest: plan-reviews/2026-11-08-build-guide-findings/. Rejectedunsupportedhardincompatibility/unrecoverability,automaticprojectchoice or scopeexpansion.
+
+Next documentary frontier:SDKlawfulsupply/manifest or justifiedcompatiblealternative,PRJproject/config/inputclosure,exactunit/sourceassociation,legitimateboot andindependentrecovery/logging/preservation. Exactcurrentthree-guideobjectiveEXHAUSTED;noautomaticPRJread/SDKfetch/build orTVstep. Parentcoordinatesnewboundedobjectivewithoutunnecessaryownerquestions;nochassisopeningconsentinferred. SamePageupdated,notnewPage.

@@ -1,0 +1,215 @@
+test_core_two_pins_exact_targets_and_excludes_libkadaptor (lg-tv.tooling.tests.test_targeted_core_two_phase.AllowlistPinTests.test_core_two_pins_exact_targets_and_excludes_libkadaptor) ... ok
+test_phase_limits_cannot_be_raised (lg-tv.tooling.tests.test_targeted_core_two_phase.AllowlistPinTests.test_phase_limits_cannot_be_raised) ... FAIL
+test_evidence_names_accepted (lg-tv.tooling.tests.test_targeted_core_two_phase.EvidenceNameTests.test_evidence_names_accepted) ... FAIL
+test_non_evidence_names_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.EvidenceNameTests.test_non_evidence_names_rejected) ... ok
+test_isolation_command_is_narrow (lg-tv.tooling.tests.test_targeted_core_two_phase.IsolationTests.test_isolation_command_is_narrow) ... ERROR
+test_isolation_integration (lg-tv.tooling.tests.test_targeted_core_two_phase.IsolationTests.test_isolation_integration) ... ERROR
+test_absolute_and_parent_paths_fail_closed (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_absolute_and_parent_paths_fail_closed) ... FAIL
+test_combined_binary_budget (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_combined_binary_budget) ... FAIL
+test_disk_reserve_failure (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_disk_reserve_failure) ... FAIL
+test_duplicate_target_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_duplicate_target_rejected) ... FAIL
+test_exact_copy_selects_evidence_allows_nul_in_binary_only (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_exact_copy_selects_evidence_allows_nul_in_binary_only) ... ERROR
+test_global_deadline_does_not_reset (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_global_deadline_does_not_reset) ... FAIL
+test_inner_nested_archive_not_expanded (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_inner_nested_archive_not_expanded) ... FAIL
+test_member_budget_does_not_reset_for_inner (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_member_budget_does_not_reset_for_inner) ... FAIL
+test_missing_target_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_missing_target_rejected) ... FAIL
+test_outer_decoded_budget_is_shared (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_outer_decoded_budget_is_shared) ... FAIL
+test_oversize_binary_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_oversize_binary_rejected) ... FAIL
+test_symlink_target_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_symlink_target_rejected) ... FAIL
+test_tests_do_not_point_at_catalog_archives (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_tests_do_not_point_at_catalog_archives) ... ok
+test_unallowlisted_libkadaptor_is_not_copied (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_unallowlisted_libkadaptor_is_not_copied) ... ok
+test_wrong_hash_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_wrong_hash_rejected) ... FAIL
+test_wrong_outer_hash_never_reads_members (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_wrong_outer_hash_never_reads_members) ... FAIL
+test_wrong_size_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_wrong_size_rejected) ... FAIL
+
+======================================================================
+ERROR: test_isolation_command_is_narrow (lg-tv.tooling.tests.test_targeted_core_two_phase.IsolationTests.test_isolation_command_is_narrow)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 453, in test_isolation_command_is_narrow
+    self.assertEqual(cmd[0], "timeout")
+                     ~~~^^^
+IndexError: list index out of range
+
+======================================================================
+ERROR: test_isolation_integration (lg-tv.tooling.tests.test_targeted_core_two_phase.IsolationTests.test_isolation_integration)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 488, in test_isolation_integration
+    payload = json.loads((out / "phase.json").read_text(encoding="utf-8"))
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 548, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 539, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/core2-iso-8rib1h6z/iso-out/phase.json'
+
+======================================================================
+ERROR: test_exact_copy_selects_evidence_allows_nul_in_binary_only (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_exact_copy_selects_evidence_allows_nul_in_binary_only)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 215, in test_exact_copy_selects_evidence_allows_nul_in_binary_only
+    self.assertEqual(staged_k.read_bytes(), self.kernel_payload)
+                     ~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 539, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/core2-jd6gx1x6/out/staged/kernel-1.0.0-711..4.tar.gz'
+
+======================================================================
+FAIL: test_phase_limits_cannot_be_raised (lg-tv.tooling.tests.test_targeted_core_two_phase.AllowlistPinTests.test_phase_limits_cannot_be_raised)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 112, in test_phase_limits_cannot_be_raised
+    with self.assertRaises(tcp.PhaseLimitError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+AssertionError: PhaseLimitError not raised
+
+======================================================================
+FAIL: test_evidence_names_accepted (lg-tv.tooling.tests.test_targeted_core_two_phase.EvidenceNameTests.test_evidence_names_accepted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 134, in test_evidence_names_accepted
+    self.assertTrue(tcp.is_evidence_plaintext_name(name), name)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : README
+
+======================================================================
+FAIL: test_absolute_and_parent_paths_fail_closed (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_absolute_and_parent_paths_fail_closed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 335, in test_absolute_and_parent_paths_fail_closed
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_combined_binary_budget (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_combined_binary_budget)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 356, in test_combined_binary_budget
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_disk_reserve_failure (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_disk_reserve_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 419, in test_disk_reserve_failure
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_duplicate_target_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_duplicate_target_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 317, in test_duplicate_target_rejected
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_global_deadline_does_not_reset (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_global_deadline_does_not_reset)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 395, in test_global_deadline_does_not_reset
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_inner_nested_archive_not_expanded (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_inner_nested_archive_not_expanded)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 349, in test_inner_nested_archive_not_expanded
+    self.assertTrue(nested_flags)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+AssertionError: [] is not true
+
+======================================================================
+FAIL: test_member_budget_does_not_reset_for_inner (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_member_budget_does_not_reset_for_inner)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 373, in test_member_budget_does_not_reset_for_inner
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_missing_target_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_missing_target_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 286, in test_missing_target_rejected
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_outer_decoded_budget_is_shared (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_outer_decoded_budget_is_shared)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 365, in test_outer_decoded_budget_is_shared
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_oversize_binary_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_oversize_binary_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 240, in test_oversize_binary_rejected
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_symlink_target_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_symlink_target_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 302, in test_symlink_target_rejected
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_wrong_hash_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_wrong_hash_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 262, in test_wrong_hash_rejected
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_wrong_outer_hash_never_reads_members (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_wrong_outer_hash_never_reads_members)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 381, in test_wrong_outer_hash_never_reads_members
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_wrong_size_rejected (lg-tv.tooling.tests.test_targeted_core_two_phase.PhaseBehaviorTests.test_wrong_size_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/lg-tv/tooling/tests/test_targeted_core_two_phase.py", line 278, in test_wrong_size_rejected
+    self.assertFalse(result.ok)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 23 tests in 0.026s
+
+FAILED (failures=16, errors=3)
+EXIT:1

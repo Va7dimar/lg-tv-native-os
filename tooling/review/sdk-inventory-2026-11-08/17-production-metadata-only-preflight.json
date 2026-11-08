@@ -1,0 +1,36 @@
+{
+  "time_Atlantic_Reykjavik": "2026-11-08T06:32:36.030464+00:00",
+  "inputs": [
+    {
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh",
+      "bytes_lstat_only": 166821312,
+      "mode": "0o644",
+      "regular_nofollow": true,
+      "symlink_ancestors": false,
+      "expected_sha256_from_acquisition_not_rehashed": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b"
+    },
+    {
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/native_sysroot_dependencies.tar.gz",
+      "bytes_lstat_only": 8017931,
+      "mode": "0o644",
+      "regular_nofollow": true,
+      "symlink_ancestors": false,
+      "expected_sha256_from_acquisition_not_rehashed": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a"
+    },
+    {
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/target_sysroot_dependencies.tar.gz",
+      "bytes_lstat_only": 323786694,
+      "mode": "0o644",
+      "regular_nofollow": true,
+      "symlink_ancestors": false,
+      "expected_sha256_from_acquisition_not_rehashed": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b"
+    }
+  ],
+  "output": "/workspace/lg-tv/sdk-candidates/20191125/inspection-metadata-PENDING-REVIEW",
+  "output_absent_including_dangling_symlinks": true,
+  "output_symlink_ancestors": false,
+  "observed_free_bytes": 116597002240,
+  "floor_bytes": 10737418240,
+  "assets_content_read_or_rehashed": false,
+  "preflight_must_be_rechecked_in_reviewed_actual_phase": true
+}

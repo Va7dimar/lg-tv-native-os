@@ -1,0 +1,77 @@
+{
+  "tool": "adaptation-libkadaptor-phase",
+  "version": "1.0.0",
+  "status": "failed",
+  "ok": false,
+  "synthetic_fixture_mode": true,
+  "pins": {
+    "outer_name": "webOS 6.0 KLP_1.0_2.tar.gz",
+    "member": "soc/libkadaptor-1.0.0-908.3.tar.gz",
+    "outer_bytes": 624,
+    "outer_sha256": "fbf5f8a8b12bab7398a2bde94419bf80aae3de6d31a87d94c18aef9181a96a3a",
+    "target_size": 426,
+    "target_sha256": "502ef55ac98694a3bb22ab1147e006915e7c970e4f2d3c4ef0d3563d6fe32d0e",
+    "synthetic": true
+  },
+  "limits": {
+    "wall_seconds": 120,
+    "address_space_bytes": 1073741824,
+    "max_members": 200000,
+    "max_pathname_bytes": 100000000,
+    "max_phase_expanded_bytes": 4294967296,
+    "max_outer_compressed_bytes": 536870912,
+    "max_outer_decoded_bytes": 671088640,
+    "max_binary_each_bytes": 134217728,
+    "max_binary_combined_bytes": 134217728,
+    "max_admitted_compressed_bytes": 1073741824,
+    "max_selected_text_member_bytes": 16777216,
+    "max_selected_combined_bytes": 67108864,
+    "min_free_disk_bytes": 1
+  },
+  "errors": [
+    "output collision:phase.json"
+  ],
+  "copied": [],
+  "inners": [],
+  "outer_members": [],
+  "disk_observations": [
+    {
+      "purpose": "before phase",
+      "free_bytes": 116785508352
+    },
+    {
+      "purpose": "before index writes",
+      "free_bytes": 116785508352
+    }
+  ],
+  "totals": {
+    "member_count": 0,
+    "pathname_bytes": 0,
+    "expanded_bytes": 0,
+    "outer_decoded_bytes": 0,
+    "binary_copy_bytes": 0,
+    "selected_text_bytes": 0,
+    "admitted_compressed_bytes": 0
+  },
+  "isolation_observation": {
+    "home_box_visible": true,
+    "root_ssh_visible": false,
+    "cursor_visible": true,
+    "sandbox_net_ns": "net:[4026531840]",
+    "noexec_output_demonstrated": false
+  },
+  "controls": {
+    "isolation_entrypoint": "isolate_adaptation_phase.py",
+    "isolation_required_for_untrusted_inputs": true,
+    "parser_allocates_extended_headers_before_semantic_limits": true,
+    "allocation_backstop": "prlimit --as and timeout wall via isolate_adaptation_phase.py; tarfile.next() PAX/GNU allocations precede semantic checks",
+    "disk_reserve_check": "free disk observation before phase and before writes; not a reservation",
+    "in_process_wall_check": "single deadline for hash + copy + inner; never reset",
+    "outer_decoded_regular_files_only": true,
+    "noexec_output_demonstrated": false,
+    "selected_file_mode": "0644",
+    "selected_mode_is_not_noexec_mount": true,
+    "tool_never_executes_archive_content": true,
+    "inner_levels": 1
+  }
+}

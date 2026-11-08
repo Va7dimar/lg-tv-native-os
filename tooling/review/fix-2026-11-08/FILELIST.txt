@@ -1,0 +1,14 @@
+review package files (whole-file copies, not a git repo)
+FILELIST.txt is excluded from its own hash list so this digest stays stable.
+2026-11-08 04:52:21 GMT
+
+sha256:
+9454dd0ff24ba9f3510eb96a9592507404e9967a8373868169e549e7289e9106  /workspace/lg-tv/tooling/review/fix-2026-11-08/2026-11-08-bounded-source-inventory.md
+afa2bc436d7f2e1d6de9d2c8b9556fdfb3bdbdd7cf8eb4d193124b78b88785be  /workspace/lg-tv/tooling/review/fix-2026-11-08/README.md
+e54f86bd3e6e60c0a7e522c67ad5f7b8dc9587ca5aa8dd23576b88ce1a5c4c1e  /workspace/lg-tv/tooling/review/fix-2026-11-08/against-reviewed-v1.diff
+ee7870b95a6603fae3c38d5a9908da559c598fd29a7b69ba7c2b9a369473ae2c  /workspace/lg-tv/tooling/review/fix-2026-11-08/bounded_archive_inventory.py
+bf10f0186c97a2c0577c33a8e41fe58ebc13249717744f9326f79c7e928ea8fb  /workspace/lg-tv/tooling/review/fix-2026-11-08/implementation-report.md
+eb289faf86523479944275918a2777cf23c429d2b96dd1a8822a2ead2f371915  /workspace/lg-tv/tooling/review/fix-2026-11-08/isolate_inventory.py
+7462571c87888b11318a04ec472af70360f897fd36a8b316cfc55278a118a644  /workspace/lg-tv/tooling/review/fix-2026-11-08/progress.md
+0d8d354713481a6ac543a3f91dec36e8c206145e5c70be56e59752f4997d583d  /workspace/lg-tv/tooling/review/fix-2026-11-08/tests_test_bounded_archive_inventory.py
+2a0671483ebea3c5e1664510575e6f35660f68a7b50ce69767a6e015bbde9a7c  /workspace/lg-tv/tooling/review/fix-2026-11-08/tests_test_review_regressions.py

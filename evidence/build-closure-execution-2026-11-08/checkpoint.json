@@ -1,0 +1,18 @@
+{
+  "time": "2026-11-08T06:03:35.295854+00:00",
+  "authority": "owner t71u\u2013t74u ongoing autonomous OFF-TV source research",
+  "purpose": "generator/config linkage closure,new successful bounded objective not Chromiumresume",
+  "expected_input_sha256": "b88f252cf9ae4f4535e015959916cd87067f0e6cf551ef0f189cdc2f4365e23e",
+  "selectors": {
+    "bootcode/genlink_realtek.sh": 1108,
+    "bootcode/tools/script/configconv.pl": 6387,
+    "bootcode/src/include/extern_param.h": 4093
+  },
+  "expected_selected_total": 11588,
+  "policy_max_selected_total": 67108864,
+  "tool_pins": {
+    "bounded_archive_inventory.py": "ee7870b95a6603fae3c38d5a9908da559c598fd29a7b69ba7c2b9a369473ae2c",
+    "isolate_inventory.py": "eb289faf86523479944275918a2777cf23c429d2b96dd1a8822a2ead2f371915"
+  },
+  "no_source_execution": true
+}

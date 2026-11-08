@@ -1,0 +1,31 @@
+{
+  "started_at": "2026-11-08T05:47:55.076951+00:00",
+  "timezone": "Atlantic/Reykjavik",
+  "authority": "owner t69u Continue+t70u subscribed verification;parent actual-run handoff",
+  "parent_literal_command_review": "PASS,2026-11-08 05:47 Atlantic/Reykjavik;coordination judgment not new code audit",
+  "command_sha256": "d40686fb2d51964980ef50300cdab9530433b86c71adae520ed39d43af211476",
+  "output_absent": true,
+  "symlink_ancestors": false,
+  "regular_nofollow_expected_size_inputs": [
+    {
+      "path": "/workspace/lg-tv/source-catalog/inspection-core-two-PENDING-REVIEW/staged/kernel-1.0.0-711..4.tar.gz",
+      "bytes": 170350960,
+      "expected_sha256_from_completed_phase": "110f08578519954be3113108ca461d4190d387c3cbb6e50d648274c9dcaf9962",
+      "hash_recomputed_in_preparation": false
+    },
+    {
+      "path": "/workspace/lg-tv/source-catalog/inspection-core-two-PENDING-REVIEW/staged/bootcode-1.0.0-1099.7.tar.gz",
+      "bytes": 12014324,
+      "expected_sha256_from_completed_phase": "b88f252cf9ae4f4535e015959916cd87067f0e6cf551ef0f189cdc2f4365e23e",
+      "hash_recomputed_in_preparation": false
+    }
+  ],
+  "tool_hashes": {
+    "bounded_archive_inventory.py": "ee7870b95a6603fae3c38d5a9908da559c598fd29a7b69ba7c2b9a369473ae2c",
+    "isolate_inventory.py": "eb289faf86523479944275918a2777cf23c429d2b96dd1a8822a2ead2f371915"
+  },
+  "disk_free_bytes": 117538279424,
+  "pin_limitation": "--hash-input records before each parse;expected pins compared BEFORE trusting findings,not enforced before parsing",
+  "noexec": false,
+  "address_space_not_rss": true
+}
