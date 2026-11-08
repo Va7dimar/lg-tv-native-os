@@ -127,3 +127,28 @@ adopted as confirmed wording.
 Documentary recovery no-go for a custom-OS experiment is **unchanged**.
 That remains an evidence limit, not a claim that manufacturer service
 recovery cannot exist.
+
+# Follow-up — root/Homebrew Channel is not independent recovery (2026-11-08 ~17:50 Atlantic/Reykjavik)
+
+G3-D remains **BLOCKED**. G3-V remains **BLOCKED**. Owner-run root and a
+visible Homebrew Channel catalog (`root-result-2026-11-08.md`) do not
+identify:
+
+- recovery entry independent of the stock system being replaced
+- recovery when kernel, userspace, or display fail
+- recovery from interrupted writes to boot/system regions
+- an independent early log channel when stock OS/display is unavailable
+- preservation/restore of unique calibration/provisioning
+
+Homebrew Channel is itself stock-OS userspace. Factory reset remains
+settings recovery (and would also be destructive to the recorded
+baseline). Official consumer USB updating remains forward-only stock
+packages when the updater can run (`boot-route.md`). Authorised repair
+is still the public referral when the consumer updater cannot run.
+
+Storage/layout, boot policy, and partition map remain **unknown**. This
+note does not invent them from source labels or from root success.
+
+Documentary recovery no-go for a custom-OS experiment is **unchanged**.
+What evidence would move these gates, and what is research-safe versus
+write-gated: `../handoff/post-root-research-2026-11-08.md`.
