@@ -115,3 +115,21 @@ under `build-cache/` (not committed). `abi/wayland-hello-v3-ABI-REPORT.txt`:
 ABI CHECK PASS, `e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`,
 `libdl.so.2`, `librt.so.1`. Hard alarm is now `duration+5` (max 35 s). No 0.3
 binary was copied to or run on the TV.
+
+## 2026-11-08: wayland-hello 0.4 (SHM frame and buffer telemetry)
+
+Base revision before this commit: `a8f051ded78ff34042f8a439f233ddf914b8ccb2`.
+No protocol registration change. `set_state` 3 stays the logged OSE assumption.
+Resize still destroys the current buffer without waiting for release, and logs
+`destroy-before-release` when that buffer is busy. That is not claimed as the
+focus-loss cause.
+
+Host `make test`: **123 tests, 0 failed**.
+
+`make sdk-abi` with the openlgtv `2026.08-webos` SDK under `build-cache/`
+(not committed). `abi/wayland-hello-v4-ABI-REPORT.txt` ends in ABI CHECK PASS:
+`e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`,
+`librt.so.1`. SDK binary SHA256
+`87ce383a48dae7e3cb870af4a4c9cb5845392d29cfacc027ea833194877274cf`
+(`build/sdk/wayland-hello`, not committed). No 0.4 binary was copied to or
+run on the TV.

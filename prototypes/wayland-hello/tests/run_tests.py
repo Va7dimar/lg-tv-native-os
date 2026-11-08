@@ -51,7 +51,7 @@ def parser_tests():
     check("v2 flags parse", rc == 0 and "input=1" in out and "webos_shell=1" in out and "egl=1" in out
           and "app_id=wayland-hello-prototype" in out, out)
     rc, out, _, _ = run(["--version"])
-    check("version 0.3", rc == 0 and "0.3-prototype" in out, out)
+    check("version 0.4", rc == 0 and "0.4-prototype" in out, out)
     rc, _, err, _ = run(["--parse-only", "--webos-key-mask"])
     check("key mask requires webos shell", rc == 2, "rc=%d %s" % (rc, err))
     rc, out, _, _ = run(["--parse-only", "--webos-shell", "--webos-key-mask", "--exit-on-leave"])
@@ -128,7 +128,13 @@ def mock_tests():
     check("no shm temp files left", not left, str(left))
     check("disconnect observed", any(e.get("event") == "disconnect" for e in ev), "")
     check("stderr lines carry monotonic timestamps", any(line.startswith("t=") and line[2:3].isdigit() for line in err.splitlines()), err[:200])
-    check("countdown starts at first frame", "countdown started trigger=frame" in err, err)
+    check("countdown arms on commit-queued", "countdown-armed trigger=commit-queued" in err, err)
+    names = [e.get("req") for e in ev]
+    check("frame request precedes commit", "frame" in names and "commit" in names and names.index("frame") < names.index("commit"), str(names))
+    check("one pending frame callback", names.count("frame") == 1, str(names))
+    check("missing frame callback is not a failed present", rc == 0 and "frame: request queued" in err
+          and "frame: pending callback destroyed during cleanup" in err
+          and "summary: commits=" in err and "frame_done=0" in err and "frame_pending=1" in err, err[-500:])
     check("shell ping is logged and ponged", "shell: ping serial=" in err and "shell: pong serial=" in err, err)
     check("configure logs raw and clamped size", "raw=5000x3000" in err and "clamped=1920x1080" in err, err)
 
@@ -180,8 +186,8 @@ def input_tests():
     check("input mode rc=0", rc == 0, "rc=%d %s" % (rc, err[-400:]))
     check("raw keycodes on stdout", "keycode raw=105 state=pressed seat=0" in out and "keycode raw=30 state=pressed seat=0" in out, out)
     check("keycode log names the evdev assumption", "keycode-log assumption=wl_keyboard_key_is_evdev" in out, out)
-    check("arrow moves square", "input: square x=60 y=100 size=40" in err, err)
-    check("other key recolors", "input: color ff0000" in err, err)
+    check("arrow moves square", "input: model square x=60 y=100 size=40" in err, err)
+    check("other key recolors", "input: model color ff0000" in err, err)
     pix = [e for e in ev if e.get("event") == "pixels"]
     check("pixels show moved green square and red background",
           pix and pix[-1].get("16,16") == 0xffff0000 and pix[-1].get("80,120") == 0xff00ff00
@@ -323,6 +329,40 @@ def xml_tests():
     check("OSE fullscreen state is 3", states.get("fullscreen") == 3 and states.get("default") == 0, str(states))
 
 
+def telemetry_tests():
+    (rc, out, err, dt), ev, _ = with_mock(["--frame-done"], ["--duration", "2"])
+    check("frame done keeps server timestamp separate", rc == 0 and "server_ts=123456" in err
+          and "local_ms=" in err and "not subtracted from local time" in err
+          and "not a visibility proof" in err and "frame: callback proxy destroyed" in err, err[-700:])
+    check("frame done does not rearm the countdown", err.count("countdown-armed") == 1, err)
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p105", "--no-release"],
+                                          ["--input", "--duration", "2"])
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("busy redraw is deferred", rc == 0 and "redraw: deferred" in err and "input: model square" in err, err[-700:])
+    check("deferred redraw does not write busy memory",
+          pix and pix[-1].get("120,120") == 0xff00ff00 and pix[-1].get("80,120") != 0xff00ff00, str(pix))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--configure", "800x600", "--no-release"], ["--duration", "2"])
+    check("resize logs generations and busy destruction",
+          rc == 0 and "resize: apply old_gen=1" in err and "busy=1" in err
+          and "destroy-before-release gen=1" in err and "buf: create gen=2" in err
+          and "resize: applied new_gen=2" in err, err[-900:])
+
+    (rc, out, err, dt), ev, _ = with_mock([], ["--duration", "2"])
+    check("no configure still exits on the countdown", rc == 0 and 1.5 < dt < 4.5
+          and "countdown-armed trigger=commit-queued" in err, "rc=%d dt=%.2f" % (rc, dt))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p105,p105,p105"],
+                                          ["--input", "--duration", "2"])
+    check("repeated input stays bounded and rate-limits model logs",
+          rc == 0 and "model_repeats_suppressed=" in err and "model_repeats_suppressed=0" not in err, err[-400:])
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "L"],
+                                          ["--input", "--exit-on-leave", "--duration", "6"])
+    check("leave names the surface", "keyboard leave seat=0 surface=ours" in err and "keyboard enter seat=0 surface=ours" in err, err[-500:])
+
+
 def egl_tests():
     empty = tempfile.mkdtemp(prefix="wlh-egl-")
     (rc, out, err, dt), ev, _ = with_mock([], ["--egl", "--duration", "2"], env_extra={"WAYLAND_HELLO_LIB_DIR": empty})
@@ -334,7 +374,7 @@ def egl_tests():
                                           env_extra={"WAYLAND_HELLO_LIB_DIR": empty})
     check("missing egl symbol is logged and shm input still works",
           rc == 0 and "missing symbol wl_egl_window_create" in err and "falling back to shm" in err
-          and "keycode raw=105 state=pressed" in out and "input: square x=60" in err, err[-500:])
+          and "keycode raw=105 state=pressed" in out and "input: model square x=60" in err, err[-500:])
 
 
 def linkage_tests():
@@ -358,6 +398,7 @@ if __name__ == "__main__":
     mock_tests()
     input_tests()
     webos_tests()
+    telemetry_tests()
     egl_tests()
     linkage_tests()
     n_fail = sum(1 for _, ok, _ in results if not ok)

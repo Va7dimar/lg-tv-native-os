@@ -71,6 +71,7 @@ class Client:
         self.mem = None
         self.last_buf = None
         self.did_input = False
+        self.frame_cb = 0
         self.keymap = b'xkb_keymap {\n\txkb_keycodes "(evdev)";\n};\n'
 
     def send(self, data):
@@ -124,7 +125,10 @@ class Client:
         self.send(msg(kid, 4, struct.pack("<IIIII", 7, 1, 0, 0, 0)))
 
     def on_commit(self):
-        if self.buffer_id:
+        if self.args.get("frame_done") and self.frame_cb:
+            self.send(msg(self.frame_cb, 0, struct.pack("<I", 123456)))
+            self.frame_cb = 0
+        if self.buffer_id and not self.args.get("no_release"):
             self.send(msg(self.buffer_id, 0, b""))  # wl_buffer.release
         if self.did_input:
             return
@@ -210,6 +214,8 @@ class Client:
                 self.send_keymap(args[0])
             elif newtype == "wl_pointer":
                 self.send(msg(args[0], 2, struct.pack("<Iii", 10, 2560, 1280)))
+            elif newtype == "wl_callback" and iface == "wl_surface" and name == "frame":
+                self.frame_cb = args[0]
         if self.args.get("stall"):
             return
         if (iface, name) == ("wl_display", "sync"):
@@ -264,7 +270,8 @@ class Client:
 def main():
     a = sys.argv[1:]
     path, logp = a[0], a[1]
-    args = {"no_shell": "--no-shell" in a, "stall": "--stall" in a, "webos": "--webos" in a}
+    args = {"no_shell": "--no-shell" in a, "stall": "--stall" in a, "webos": "--webos" in a,
+            "frame_done": "--frame-done" in a, "no_release": "--no-release" in a}
     if "--seats" in a:
         args["seats"] = int(a[a.index("--seats") + 1])
     if "--input-script" in a:

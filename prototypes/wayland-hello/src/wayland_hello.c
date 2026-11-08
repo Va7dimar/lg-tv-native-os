@@ -47,7 +47,7 @@
 #include <unistd.h>
 #include <link.h>
 
-#define HELLO_VERSION "0.3-prototype"
+#define HELLO_VERSION "0.4-prototype"
 
 /* ---- limits ------------------------------------------------------------ */
 #define DEFAULT_DURATION_S 10
@@ -128,7 +128,7 @@ struct opts {
 
 static void elog(const char *fmt, ...);
 static void olog(const char *fmt, ...);
-static void note_show(const char *trigger);
+static void arm_countdown(const char *trigger);
 
 static void usage(FILE *f)
 {
@@ -382,7 +382,7 @@ enum { COMPOSITOR_CREATE_SURFACE = 0 };
 enum { SHM_CREATE_POOL = 0 };
 enum { SHM_POOL_CREATE_BUFFER = 0, SHM_POOL_DESTROY = 1 };
 enum { BUFFER_DESTROY = 0 };
-enum { SURFACE_DESTROY = 0, SURFACE_ATTACH = 1, SURFACE_DAMAGE = 2, SURFACE_COMMIT = 6 };
+enum { SURFACE_DESTROY = 0, SURFACE_ATTACH = 1, SURFACE_DAMAGE = 2, SURFACE_FRAME = 3, SURFACE_COMMIT = 6 };
 enum { SHELL_GET_SHELL_SURFACE = 0 };
 enum { SHSURF_PONG = 0, SHSURF_SET_TOPLEVEL = 3, SHSURF_SET_FULLSCREEN = 5, SHSURF_SET_TITLE = 8 };
 enum { SEAT_GET_POINTER = 0, SEAT_GET_KEYBOARD = 1 };
@@ -417,6 +417,7 @@ struct buf {
 	size_t size;
 	int w, h;
 	int busy;
+	int gen;
 };
 
 struct seat_slot {
@@ -458,6 +459,14 @@ static struct {
 	int cur_w, cur_h;
 	int resize_pending;
 	struct buf buf;
+	struct wl_proxy *frame_cb; /* at most one SHM wl_surface.frame callback */
+	int buf_gen_next;
+	int n_commits, n_frame_done, n_releases, n_deferred, n_redraws;
+	int n_focus_enter, n_focus_leave, model_suppressed;
+	int model_key_set;
+	uint32_t model_key;
+	int64_t model_log_ms;
+	int egl_frame_noted;
 	int fatal;
 	int quit;
 	int reason;
@@ -528,14 +537,18 @@ static void ss_configure(void *data, struct wl_proxy *ss, uint32_t edges, int32_
 {
 	int32_t raw_w = w, raw_h = h;
 	(void)data; (void)ss;
-	note_show("configure");
+	arm_countdown("configure");
 	if (w <= 0 || h <= 0) {
 		elog("shell: configure edges=%u raw=%dx%d action=client-decides\n", edges, raw_w, raw_h);
 		return;
 	}
 	if (w > S.o->max_w) w = S.o->max_w;
 	if (h > S.o->max_h) h = S.o->max_h;
-	if (w != S.cur_w || h != S.cur_h) { S.want_w = w; S.want_h = h; S.resize_pending = 1; }
+	if (w != S.cur_w || h != S.cur_h) {
+		S.want_w = w; S.want_h = h; S.resize_pending = 1;
+		elog("resize: requested raw=%dx%d clamped=%dx%d current=%dx%d gen=%d\n",
+		     raw_w, raw_h, w, h, S.cur_w, S.cur_h, S.buf.gen);
+	}
 	elog("shell: configure edges=%u raw=%dx%d clamped=%dx%d\n", edges, raw_w, raw_h, w, h);
 }
 static void ss_popup_done(void *data, struct wl_proxy *ss)
@@ -670,6 +683,12 @@ static void paint(struct buf *b, uint32_t rgb)
 
 static void destroy_buf(struct buf *b)
 {
+	if (!b->buffer && !(b->data && b->data != MAP_FAILED)) return;
+	if (b->busy)
+		elog("buf: destroy-before-release gen=%d busy=1 size=%dx%d (wl_buffer.destroy before release leaves contents undefined; not treated as the cause of focus loss)\n",
+		     b->gen, b->w, b->h);
+	else
+		elog("buf: destroy gen=%d busy=0 size=%dx%d\n", b->gen, b->w, b->h);
 	if (b->buffer) { W.proxy_marshal(b->buffer, BUFFER_DESTROY); W.proxy_destroy(b->buffer); }
 	if (b->data && b->data != MAP_FAILED) munmap(b->data, b->size);
 	memset(b, 0, sizeof *b);
@@ -694,8 +713,10 @@ static int create_buf(struct buf *b, int w, int h)
 		elog("error: mmap shm: %s\n", strerror(errno));
 		close(fd); b->data = NULL; return EX_ALLOC;
 	}
-	b->size = size; b->w = w; b->h = h;
+	b->size = size; b->w = w; b->h = h; b->busy = 0;
+	b->gen = ++S.buf_gen_next;
 	S.cur_w = w; S.cur_h = h;
+	elog("buf: create gen=%d %dx%d busy=0\n", b->gen, w, h);
 	paint(b, S.bg);   /* safe: backing reserved by posix_fallocate */
 
 	pool = new_obj(S.shm, W.i_shm_pool);
@@ -722,11 +743,11 @@ static int create_buf(struct buf *b, int w, int h)
 	return 0;
 }
 
-/* Soft countdown for time on screen. Armed once, at the first configure or
- * the first committed frame, whichever comes first. Before that, g_deadline
- * is still the connect budget (duration from start) so a stalled peer exits
- * on --duration. The result is clamped to 1s before the hard alarm. */
-static void note_show(const char *trigger)
+/* Arms the soft countdown once. Triggers are "configure", "commit-queued",
+ * or "egl-swap". This is the same arming moment as 0.3. It does not measure
+ * visible pixels, and a frame callback does not arm or rearm it. Focus,
+ * sync, buffer release and wl_callback.done are not proof of visibility. */
+static void arm_countdown(const char *trigger)
 {
 	int64_t now, until;
 	if (g_show_armed || !S.o) return;
@@ -736,22 +757,83 @@ static void note_show(const char *trigger)
 	if (g_alarm_at && until > g_alarm_at - 1000) until = g_alarm_at - 1000;
 	if (until < now) until = now;
 	g_deadline = until;
-	elog("info: countdown started trigger=%s show_ms=%lld\n", trigger, (long long)(until - now));
+	elog("info: countdown-armed trigger=%s\n", trigger);
+}
+
+/* SHM-only. One pending wl_callback. Listener is not the roundtrip's stack int. */
+static void frame_done(void *data, struct wl_proxy *cb, uint32_t server_ts)
+{
+	(void)data;
+	S.n_frame_done++;
+	elog("frame: callback done local_ms=%lld server_ts=%u (undefined base; not subtracted from local time; not a visibility proof)\n",
+	     (long long)elapsed_ms(), server_ts);
+	if (cb && cb == S.frame_cb) {
+		W.proxy_destroy(S.frame_cb);
+		S.frame_cb = NULL;
+		elog("frame: callback proxy destroyed\n");
+	}
+}
+static void *frame_listener[] = { (void *)frame_done };
+
+static void queue_frame_callback(void)
+{
+	struct wl_proxy *cb;
+	if (S.frame_cb) {
+		elog("frame: request skipped pending cap=1\n");
+		return;
+	}
+	cb = new_obj((struct wl_proxy *)S.display, W.i_callback);
+	if (!cb) {
+		elog("frame: callback proxy allocation failed; committing without a frame request (not a failed present)\n");
+		return;
+	}
+	if (LISTEN(cb, frame_listener, NULL) != 0) {
+		elog("frame: callback listener install failed; committing without a frame request (not a failed present)\n");
+		W.proxy_destroy(cb);
+		return;
+	}
+	W.proxy_marshal(S.surface, SURFACE_FRAME, cb);
+	S.frame_cb = cb;
+	elog("frame: request queued before commit (shm only; egl frame callbacks are not covered)\n");
 }
 
 static void present(void)
 {
-	note_show("frame");
+	arm_countdown("commit-queued");
+	queue_frame_callback();
 	W.proxy_marshal(S.surface, SURFACE_ATTACH, S.buf.buffer, 0, 0);
 	W.proxy_marshal(S.surface, SURFACE_DAMAGE, 0, 0, S.buf.w, S.buf.h);
 	W.proxy_marshal(S.surface, SURFACE_COMMIT);
 	S.buf.busy = 1;
+	S.n_commits++;
+	elog("buf: commit-queued seq=%d gen=%d busy=1\n", S.n_commits, S.buf.gen);
+}
+
+/* Suppress only an immediate repeat of the same key. A different key still logs. */
+static int model_log_ok(uint32_t key)
+{
+	int64_t now = elapsed_ms();
+	if (S.model_key_set && key == S.model_key && S.model_log_ms && now - S.model_log_ms < 100) {
+		S.model_suppressed++;
+		return 0;
+	}
+	S.model_key_set = 1;
+	S.model_key = key;
+	S.model_log_ms = now;
+	return 1;
 }
 
 static void request_redraw(void)
 {
 	if (!S.buf.buffer || !S.buf.data) return;
-	if (S.buf.busy) { S.dirty = 1; return; }
+	if (S.buf.busy) {
+		S.dirty = 1;
+		S.n_deferred++;
+		elog("redraw: deferred gen=%d busy=1\n", S.buf.gen);
+		return;
+	}
+	S.n_redraws++;
+	elog("redraw: queued gen=%d busy=0\n", S.buf.gen);
 	paint(&S.buf, S.bg);
 	present();
 	S.dirty = 0;
@@ -763,6 +845,8 @@ static void buf_release(void *data, struct wl_proxy *b)
 	struct buf *buf = data;
 	(void)b;
 	buf->busy = 0;
+	S.n_releases++;
+	elog("buf: release gen=%d busy=0\n", buf->gen);
 	if (S.dirty && !S.quit && buf->data && buf->buffer) request_redraw();
 }
 
@@ -861,7 +945,8 @@ static void on_key(struct seat_slot *seat, uint32_t code, uint32_t state, uint32
 			if (code == KEY_UP_EVDEV) S.sq_y -= SQ_STEP;
 			if (code == KEY_DOWN_EVDEV) S.sq_y += SQ_STEP;
 			clamp_square(S.buf.w, S.buf.h);
-			elog("input: square x=%d y=%d size=%d\n", S.sq_x, S.sq_y, S.sq);
+			if (model_log_ok(code))
+				elog("input: model square x=%d y=%d size=%d\n", S.sq_x, S.sq_y, S.sq);
 			request_redraw();
 		}
 		return;
@@ -869,7 +954,8 @@ static void on_key(struct seat_slot *seat, uint32_t code, uint32_t state, uint32
 	S.color_i = (S.color_i + 1) % N_PALETTE;
 	if (k_palette[S.color_i] == S.bg) S.color_i = (S.color_i + 1) % N_PALETTE;
 	S.bg = k_palette[S.color_i];
-	elog("input: color %06x\n", S.bg);
+	if (model_log_ok(code))
+		elog("input: model color %06x\n", S.bg);
 	if (!S.egl_on) request_redraw();
 }
 
@@ -899,19 +985,29 @@ static void kb_keymap(void *data, struct wl_proxy *kb, uint32_t format, int32_t 
 	if (fd >= 0) close(fd);
 }
 
+static const char *surface_whose(struct wl_proxy *surface)
+{
+	if (!surface) return "null";
+	if (S.surface && surface == S.surface) return "ours";
+	return "other";
+}
+
 static void kb_enter(void *data, struct wl_proxy *kb, uint32_t serial, struct wl_proxy *surface, void *keys)
 {
 	struct seat_slot *seat = data;
-	(void)kb; (void)surface; (void)keys;
+	(void)kb; (void)keys;
 	seat->kb_entered = 1;
-	elog("input: keyboard enter seat=%d name=%s serial=%u\n", seat->index, seat->label, serial);
+	S.n_focus_enter++;
+	elog("input: keyboard enter seat=%d surface=%s name=%s serial=%u\n",
+	     seat->index, surface_whose(surface), seat->label, serial);
 }
 static void kb_leave(void *data, struct wl_proxy *kb, uint32_t serial, struct wl_proxy *surface)
 {
 	struct seat_slot *seat = data;
-	(void)kb; (void)surface;
-	elog("input: keyboard leave seat=%d name=%s serial=%u entered=%d\n",
-	     seat->index, seat->label, serial, seat->kb_entered);
+	(void)kb;
+	S.n_focus_leave++;
+	elog("input: keyboard leave seat=%d surface=%s name=%s serial=%u entered=%d\n",
+	     seat->index, surface_whose(surface), seat->label, serial, seat->kb_entered);
 	if (S.o && S.o->exit_on_leave && seat->kb_entered) {
 		S.quit = 1;
 		S.reason = REASON_KB_LEAVE;
@@ -1501,7 +1597,13 @@ static void egl_draw(void)
 			if (brc != 0) S.fatal = brc;
 			else present();
 		}
-	} else note_show("frame");
+	} else {
+		arm_countdown("egl-swap");
+		if (!S.egl_frame_noted) {
+			S.egl_frame_noted = 1;
+			elog("egl: wl_surface.frame callbacks are not instrumented on this path\n");
+		}
+	}
 }
 
 static const char *reason_text(void)
@@ -1515,10 +1617,22 @@ static const char *reason_text(void)
 	return "deadline";
 }
 
+static void log_summary(void)
+{
+	elog("summary: commits=%d frame_done=%d frame_pending=%d releases=%d deferred_redraws=%d redraws_queued=%d focus_enter=%d focus_leave=%d model_repeats_suppressed=%d\n",
+	     S.n_commits, S.n_frame_done, S.frame_cb ? 1 : 0, S.n_releases, S.n_deferred,
+	     S.n_redraws, S.n_focus_enter, S.n_focus_leave, S.model_suppressed);
+}
+
 static void cleanup(void)
 {
 	int i;
 	egl_shutdown();
+	if (S.frame_cb && W.proxy_destroy) {
+		W.proxy_destroy(S.frame_cb);
+		S.frame_cb = NULL;
+		elog("frame: pending callback destroyed during cleanup\n");
+	}
 	if (S.buf.buffer || S.buf.data) destroy_buf(&S.buf);
 	if (S.shell_surface) W.proxy_destroy(S.shell_surface);
 	if (S.webos_shell_surface && W.proxy_destroy) W.proxy_destroy(S.webos_shell_surface);
@@ -1709,7 +1823,7 @@ int main(int argc, char **argv)
 		W.proxy_marshal(S.webos_shell, (uint32_t)S.op_get_shell_surface, S.webos_shell_surface, S.surface);
 		W.proxy_marshal(S.webos_shell_surface, (uint32_t)S.op_set_state, st);
 		W.proxy_marshal(S.webos_shell_surface, (uint32_t)S.op_set_property, "appId", o.app_id);
-		elog("info: webos set_state opcode=%d value=%u (OSE enum fullscreen=3 default=0; numeric value is not in the runtime interface)\n",
+		elog("info: webos set_state opcode=%d value=%u (OSE enum fullscreen=3 is an assumption, not verified TV semantics; numeric value is not in the runtime interface)\n",
 		        S.op_set_state, st);
 		elog("info: webos set_property opcode=%d name=appId value=%s\n", S.op_set_property, o.app_id);
 		if (o.webos_key_mask) {
@@ -1761,10 +1875,13 @@ int main(int argc, char **argv)
 				E.Viewport(0, 0, S.want_w, S.want_h);
 				S.cur_w = S.want_w; S.cur_h = S.want_h;
 			} else if (!S.egl_on) {
+				elog("resize: apply old_gen=%d old=%dx%d busy=%d new=%dx%d\n",
+				     S.buf.gen, S.buf.w, S.buf.h, S.buf.busy, S.want_w, S.want_h);
 				destroy_buf(&S.buf);
 				clamp_square(S.want_w, S.want_h);
 				rc = create_buf(&S.buf, S.want_w, S.want_h);
 				if (rc != 0) break;
+				elog("resize: applied new_gen=%d %dx%d\n", S.buf.gen, S.buf.w, S.buf.h);
 				present();
 			}
 		}
@@ -1772,6 +1889,7 @@ int main(int argc, char **argv)
 	}
 	if (S.fatal && rc == EX_OK) rc = S.fatal;
 	elog("info: exiting (%s)\n", reason_text());
+	log_summary();
 	cleanup();
 	return rc;
 }
