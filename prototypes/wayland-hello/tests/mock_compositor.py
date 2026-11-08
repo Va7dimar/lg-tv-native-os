@@ -138,8 +138,11 @@ class Client:
             if not self.keyboards:
                 self.emit(event="script_dropped")
                 return
-            state = 1 if kind == "p" else 0
-            self.send(msg(self.keyboards[0], 3, struct.pack("<IIII", serial, 1, code, state)))
+            if kind == "L":
+                self.send(msg(self.keyboards[0], 2, struct.pack("<II", serial, self.surface_id)))
+            else:
+                state = 1 if kind == "p" else 0
+                self.send(msg(self.keyboards[0], 3, struct.pack("<IIII", serial, 1, code, state)))
             serial += 1
 
     def sample_pixels(self):
@@ -160,6 +163,11 @@ class Client:
             nid, surf = struct.unpack_from("<II", payload)
             self.objs[nid] = "wl_webos_shell_surface"
             self.emit(iface="wl_webos_shell", obj=obj, req="op%d" % op, args=[nid, surf])
+            self.send(msg(nid, 0, struct.pack("<I", 3)))
+            self.send(msg(nid, 1, struct.pack("<ii", 10, 20)))
+            body = struct.pack("<iiiii", 0, 0, 100, 50, -1)
+            self.send(msg(nid, 3, struct.pack("<I", len(body)) + body))
+            self.send(msg(nid, 4, struct.pack("<I", 2)))
         else:
             self.emit(iface="wl_webos_shell", obj=obj, req="op%d" % op, args=[len(payload)])
 
@@ -262,7 +270,9 @@ def main():
     if "--input-script" in a:
         script = []
         for part in a[a.index("--input-script") + 1].split(","):
-            if part:
+            if part in ("L", "l"):
+                script.append(("L", 0))
+            elif part and part[0] in "pr":
                 script.append((part[0], int(part[1:])))
         args["script"] = script
     if "--configure" in a:

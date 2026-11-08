@@ -51,7 +51,11 @@ def parser_tests():
     check("v2 flags parse", rc == 0 and "input=1" in out and "webos_shell=1" in out and "egl=1" in out
           and "app_id=wayland-hello-prototype" in out, out)
     rc, out, _, _ = run(["--version"])
-    check("version 0.2", rc == 0 and "0.2-prototype" in out, out)
+    check("version 0.3", rc == 0 and "0.3-prototype" in out, out)
+    rc, _, err, _ = run(["--parse-only", "--webos-key-mask"])
+    check("key mask requires webos shell", rc == 2, "rc=%d %s" % (rc, err))
+    rc, out, _, _ = run(["--parse-only", "--webos-shell", "--webos-key-mask", "--exit-on-leave"])
+    check("v3 flags parse", rc == 0 and "webos_key_mask=1" in out and "exit_on_leave=1" in out, out)
     for bad in ("", "has space", "../x", "a/b", "A" * 65):
         rc, _, _, _ = run(["--parse-only", "--app-id", bad])
         check("reject app-id %r" % bad, rc == 2, "rc=%d" % rc)
@@ -123,6 +127,10 @@ def mock_tests():
     check("pool fd size matches declared", pools and all(p["size"] == p["declared"] for p in pools), str(pools))
     check("no shm temp files left", not left, str(left))
     check("disconnect observed", any(e.get("event") == "disconnect" for e in ev), "")
+    check("stderr lines carry monotonic timestamps", any(line.startswith("t=") and line[2:3].isdigit() for line in err.splitlines()), err[:200])
+    check("countdown starts at first frame", "countdown started trigger=frame" in err, err)
+    check("shell ping is logged and ponged", "shell: ping serial=" in err and "shell: pong serial=" in err, err)
+    check("configure logs raw and clamped size", "raw=5000x3000" in err and "clamped=1920x1080" in err, err)
 
     rc, out, err, dt = run(["--dry-run", "--duration", "2"],
                            {"XDG_RUNTIME_DIR": tempfile.mkdtemp(), "WAYLAND_DISPLAY": "none"})
@@ -202,6 +210,14 @@ def input_tests():
     check("unknown 461 does not exit early", rc == 0 and dt > 1.5, "rc=%d dt=%.2f" % (rc, dt))
     check("unknown 461 raw on stdout", "keycode raw=461 state=pressed seat=0" in out and "assumed_evdev=unknown" in err, out + err)
 
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "L"], ["--input", "--exit-on-leave", "--duration", "6"])
+    check("exit-on-leave after keyboard leave", rc == 0 and dt < 4.0 and "exiting (keyboard-leave)" in err
+          and "input: keyboard leave" in err and "input: keyboard enter" in err, "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "L"], ["--input", "--duration", "2"])
+    check("leave without the flag waits for the deadline", rc == 0 and dt > 1.5 and "keyboard leave" in err
+          and "exiting (deadline)" in err, "rc=%d dt=%.2f" % (rc, dt))
+
     (rc, out, err, dt), ev, _ = with_mock([], ["--input", "--duration", "3"])
     check("no wl_seat fails closed rc=8", rc == 8, "rc=%d %s" % (rc, err))
     check("no seat means no surface", ("wl_compositor", "create_surface") not in reqs(ev), str(reqs(ev)))
@@ -224,10 +240,14 @@ def webos_tests():
     bad = webos_src(
         [("get_shell_surface", "u")],
         [("set_state", "u"), ("set_property", "ss")])
-    d_ose, d_shift, d_bad, d_empty = [tempfile.mkdtemp(prefix="wlh-so-") for _ in range(4)]
+    nokey = webos_src(
+        [("get_system_pip", ""), ("get_shell_surface", "no")],
+        [("set_location_hint", "u"), ("set_state", "u"), ("set_property", "ss")])
+    d_ose, d_shift, d_bad, d_nokey, d_empty = [tempfile.mkdtemp(prefix="wlh-so-") for _ in range(5)]
     build_so(ose, os.path.join(d_ose, "libwayland-webos-client.so.1"))
     build_so(shifted, os.path.join(d_shift, "libwayland-webos-client.so.1"))
     build_so(bad, os.path.join(d_bad, "libwayland-webos-client.so.1"))
+    build_so(nokey, os.path.join(d_nokey, "libwayland-webos-client.so.1"))
 
     def ops(ev):
         return [(e.get("iface"), e.get("req"), e.get("args")) for e in ev if str(e.get("iface", "")).startswith("wl_webos")]
@@ -240,7 +260,10 @@ def webos_tests():
           any(i == "wl_webos_shell" and r == "op1" for i, r, a in found) and "get_shell_surface=1" in err, str(found))
     check("set_state fullscreen value 3", any(r == "op1" and a == [3] for i, r, a in found if i.endswith("surface")), str(found))
     check("appId property sent", any(r == "op2" and a == ["appId", "wayland-hello-prototype"] for i, r, a in found), str(found))
-    check("key mask sent", any(r == "op3" and a == [0xFFFFFFFE] for i, r, a in found), str(found))
+    check("key mask not sent unless opted in", not any(r == "op3" for i, r, a in found), str(found))
+    check("webos events logged with values",
+          "webos: event state_changed value=3" in err and "webos: event position_changed x=10 y=20" in err
+          and "webos: event exposed" in err and "webos: event state_about_to_change value=2" in err, err[-800:])
     check("wl_shell not bound in webos mode", not any(e.get("req") == "bind" and e.get("args", [None, None])[1] == "wl_shell" for e in ev), str(reqs(ev)))
 
     (rc, out, err, dt), ev, _ = with_mock(["--webos"], ["--webos-shell", "--no-fullscreen", "--duration", "2"],
@@ -265,8 +288,39 @@ def webos_tests():
     check("missing webos library fails closed", rc == 9 and "libwayland-webos-client.so.1" in err and "Failing closed" in err, err[-500:])
     check("missing library sends no bind", not any(e.get("req") == "bind" for e in ev), str(reqs(ev)))
 
+    (rc, out, err, dt), ev, _ = with_mock(["--webos"], ["--webos-shell", "--webos-key-mask", "--duration", "2"],
+                                          env_extra={"WAYLAND_HELLO_LIB_DIR": d_ose})
+    found = ops(ev)
+    check("opt-in key mask sends OSE back|exit", rc == 0 and any(r == "op3" and a == [0xFFFFFFFE] for i, r, a in found), str(found) + err[-300:])
+
+    (rc, out, err, dt), ev, _ = with_mock(["--webos"], ["--webos-shell", "--webos-key-mask", "--duration", "2"],
+                                          env_extra={"WAYLAND_HELLO_LIB_DIR": d_nokey})
+    check("opt-in key mask fails closed when set_key_mask is absent", rc == 9 and not any(e.get("req") == "bind" for e in ev),
+          "rc=%d %s" % (rc, err[-400:]))
+
     (rc, out, err, dt), ev, _ = with_mock([], ["--webos-shell", "--duration", "2"])
     check("absent wl_webos_shell fails closed", rc == 9 and "not advertised" in err, err[-300:])
+
+    xml_tests()
+
+
+def xml_tests():
+    import xml.etree.ElementTree as ET
+    path = os.path.join(os.path.dirname(HERE), "third_party", "webos-wayland-extensions", "protocol", "webos-shell.xml")
+    root = ET.parse(path).getroot()
+    surf = next(i for i in root.findall("interface") if i.get("name") == "wl_webos_shell_surface")
+    reqs_xml = [r for r in list(surf) if r.tag == "request"]
+    names = [r.get("name") for r in reqs_xml]
+    check("vendored XML has set_key_mask", "set_key_mask" in names, str(names))
+    mask = next(r for r in reqs_xml if r.get("name") == "set_key_mask")
+    args = mask.findall("arg")
+    check("set_key_mask takes one uint", len(args) == 1 and args[0].get("type") == "uint", str([(a.get("name"), a.get("type")) for a in args]))
+    enum = next(e for e in surf.findall("enum") if e.get("name") == "webos_key")
+    bits = {en.get("name"): int(en.get("value"), 0) for en in enum.findall("entry")}
+    check("OSE key bits back exit default", bits.get("back") == 2 and bits.get("exit") == 4 and bits.get("default") == 0xFFFFFFF8, str(bits))
+    state = next(e for e in surf.findall("enum") if e.get("name") == "state")
+    states = {en.get("name"): int(en.get("value"), 0) for en in state.findall("entry")}
+    check("OSE fullscreen state is 3", states.get("fullscreen") == 3 and states.get("default") == 0, str(states))
 
 
 def egl_tests():

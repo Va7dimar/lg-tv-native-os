@@ -97,3 +97,21 @@ at commit `4b243378b451bd139466c242ae1e58753fea0fbf` (git blob
 `cb3cabcef35810be06d881f373a62d67afa79ccd`). Opcodes are resolved at runtime from
 `libwayland-webos-client.so.1`. No 0.2 binary was copied to or run on the TV.
 Input still comes only from `wl_seat`; the client does not open evdev nodes.
+
+## 2026-11-08: wayland-hello 0.3 (timestamps, on-screen countdown, leave)
+
+Written after `tvs/lg-65nano756pr/evidence/wayland-input-2026-11-08.md`. That
+0.2 run delivered arrows on seat 1 and then lost keyboard focus on every seat
+while the process waited out a deadline that had started at connect.
+
+Host `make test`: **112 tests, 0 failed**. New coverage: `t=` prefixes,
+countdown armed on the first frame, ping/pong and configure logging,
+`--exit-on-leave`, webOS shell events with values, and opt-in
+`--webos-key-mask` (including fail-closed when the runtime interface lacks
+`set_key_mask`, and a check that the mask bits match the vendored XML).
+
+`make sdk-abi` with the same openlgtv `2026.08-webos` SDK already unpacked
+under `build-cache/` (not committed). `abi/wayland-hello-v3-ABI-REPORT.txt`:
+ABI CHECK PASS, `e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`,
+`libdl.so.2`, `librt.so.1`. Hard alarm is now `duration+5` (max 35 s). No 0.3
+binary was copied to or run on the TV.
