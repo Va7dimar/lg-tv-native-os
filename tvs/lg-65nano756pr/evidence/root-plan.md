@@ -1,6 +1,8 @@
 # Root research and decision — 2026-11-08
 
-Status: **STOPPED before any TV change.** No apps were installed, no exploit was run, no USB payload was prepared, no settings were changed, and the offered `03.53.46` update was not started.
+Status: **SUPERSEDED — owner rooted this unit on 2026-11-08 via SlopBro.** Homebrew Channel 0.7.3 and root SSH are available. See the [post-root plan](../plan-2026-11-08-post-root.md), [live inventory](live-system-inventory-2026-11-08.md) and [SSH evidence](ssh-access-2026-11-08.md). No exploit reproduction steps are added here.
+
+The assessment below is historical, pre-root research; its “STOPPED”, “no-go from this session” and network-access statements are not the present state. Root access does not establish custom boot or independent recovery. Original status: **STOPPED before any TV change.** No apps were installed, no exploit was run, no USB payload was prepared, no settings were changed, and the offered `03.53.46` update was not started.
 
 This file is a compatibility and risk assessment, not a reproduction procedure. It does not include commands, script flags, payloads, launcher app identities, or button-by-button steps.
 
