@@ -1,0 +1,65 @@
+{
+  "executed": false,
+  "exact_command_file_sha256": "4856e812ece17229f0872f22ae66921bca78c80fb97fe9ae465c5dd3749963d7",
+  "output_dir": "/workspace/lg-tv/sdk-candidates/20191125/inspection-selected-text-PENDING-REVIEW",
+  "output_dir_existed_at_package_time": false,
+  "selected_total_bytes": 50478,
+  "selector_count": 10,
+  "sdk_count": 6,
+  "target_count": 4,
+  "native_count": 0,
+  "selector_size_sum": 50478,
+  "selectors": [
+    {
+      "input": "sdk",
+      "path": "version-ca9v1-starfishmllib32-linux-gnueabi",
+      "size": 125
+    },
+    {
+      "input": "sdk",
+      "path": "environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+      "size": 4321
+    },
+    {
+      "input": "sdk",
+      "path": "site-config-ca9v1-starfishmllib32-linux-gnueabi",
+      "size": 13611
+    },
+    {
+      "input": "sdk",
+      "path": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/linux/version.h",
+      "size": 97
+    },
+    {
+      "input": "target",
+      "path": "usr/include/linux/version.h",
+      "size": 97
+    },
+    {
+      "input": "sdk",
+      "path": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/features.h",
+      "size": 15721
+    },
+    {
+      "input": "target",
+      "path": "usr/include/features.h",
+      "size": 15721
+    },
+    {
+      "input": "sdk",
+      "path": "sysroots/x86_64-starfishsdk-linux/usr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0/include-fixed/README",
+      "size": 750
+    },
+    {
+      "input": "target",
+      "path": "sysroot-providers/lib32-linux-libc-headers",
+      "size": 24
+    },
+    {
+      "input": "target",
+      "path": "sysroot-providers/lib32-glibc",
+      "size": 11
+    }
+  ],
+  "note": "production_arguments parse only; no isolate.launch; no SDK asset open"
+}

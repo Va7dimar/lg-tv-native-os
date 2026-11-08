@@ -231,5 +231,27 @@ Exactpaths/sizes/JSONLordinals:`tvs/lg-65nano756pr/evidence/sdk-inventory-links-
 
 Same200kheaders/100MBmetadata/separate4GiBlogical+decoded/120swall/1GiBASnotRSS/256MiBLZMA/10GiBobservedfloor,noexecfalse. Countersbounddecompressedregularpayloads+headers/padding/drain;metadataonlydoesnotmeannobytesdecompressed. No membercontents selected orinterpretedascode. Currentreadercecbb2ac06755100d414852b91dccf8527b05321b34a96da3e0eda86b59c16c1,launcherunchanged2a6638e3439748a6dc4fb7237a03c3d05521685746df5315683c861acab9ca52.
 
+## Later selected-text follow-up
+The ten-file plaintext phase has now run once (see "Actual SDK selected plaintext" below). Metadata-era filename hints are superseded for glibc 2.28 header macros and linux/version.h 4.18.0; binutils version and 20190307 compatibility remain open.
+
+
+# Actual SDK selected plaintext — SUCCESS, not installed
+2026-11-08T14:03:46.778176+00:00–2026-11-08T14:03:59.987049+00:00 Atlantic/Reykjavik. Exit0,13.209s outer. Exact reviewed command (hash 4856e812ece17229f0872f22ae66921bca78c80fb97fe9ae465c5dd3749963d7) used fresh unused `inspection-selected-text-PENDING-REVIEW`. Prior selector review SPEC FAIL (`tooling/review/sdk-text-selector-independent-review.md`); `./` prefix re-review SPEC/QUALITY PASS (`tooling/review/sdk-text-selector-dot-prefix-independent-review.md`). Owner t77u/t71–74 research scope + parent handoff. No retries/cap raise/source execution/build/TV actions; prior outputs untouched.
+
+## Proven selected coverage
+ALL3 full pins 498625937B verified BEFORE parse. Worker+launcher ok=true; mode SELECTEDTEXT; selected_bytes=50478; ten generated mode-0600 files; all3 tar_eof and reader integrity_eof true. 66880 JSONL rows. Six SDK members stored as `./`+canonical and accepted; four target members matched exactly. Contents treated as inert plaintext; installer/compiler never run.
+
+## Version/environment findings, not compatibility proof
+- SDK self-label: Distro starfish 5.0.0, Metadata Revision 032f3c60ecca3ecc5a2411216bee122c714335ca, Timestamp 20191125070704; OECORE_SDK_VERSION=5.0.0-20191125. Not authenticated; not official 20190307 equivalence.
+- Triple/flags: `arm-starfishmllib32-linux-gnueabi-`; configure target/host same, build x86_64-linux; CC `-march=armv7-a -mthumb -mfpu=neon -mfloat-abi=softfp -mcpu=cortex-a9 -mtune=cortex-a9`. include-fixed README path uses related `arm-starfish-linux-gnueabi` + directory `8.2.0`. PATH also lists a musl prefix (PATH component only).
+- GCC: compiler name plus **path label** 8.2.0. `gcc --version` not executed. README body is generic fixincludes text.
+- glibc: SDK and target `features.h` byte-identical; `__GLIBC__ 2`, `__GLIBC_MINOR__ 28`. Provider text `lib32-glibc`. Header macros, not executed libc or TV ABI.
+- Kernel headers: SDK and target `linux/version.h` byte-identical; `LINUX_VERSION_CODE 266752` decodes to **4.18.0**. Provider text `lib32-linux-libc-headers`. Not the TV's previously recorded Linux **4.4.84**.
+- Binutils: tool names present; **version UNKNOWN** in these ten files (including site-config). `ac_cv_linux_vers=2` is a cached uname-style major, not a kernel version.
+
+Reader 3598007632b1c13790d16cad9f6a68c23e5f4b35a4996948a3917bef2d8f8168; launcher unchanged c4befa0c75267bb99e804076eda54d400edeb651151d61ea5112a4e3fd09387a. Exact command/checkpoint/logs/selected copies: `tvs/lg-65nano756pr/evidence/sdk-selected-text-execution-2026-11-08/`; analysis: `tvs/lg-65nano756pr/evidence/sdk-selected-text-inspection.json` / `.md`; raw output remains at the gitignored physical path `sdk-candidates/20191125/inspection-selected-text-PENDING-REVIEW/` (also documented as `tvs/lg-65nano756pr/sources/sdk-candidates/20191125/inspection-selected-text-PENDING-REVIEW/`).
+
+Reproduce this phase ONLY via that stored exact-command (do not rerun against the now-existing output directory without a new fresh dir and new review/handoff). DO NOT source/install the SDK or compile with it.
+
 ## Next evidence gap
-Version/env/site/header/providerTEXTneededforMarch20190307compilerprefix/API/ABI/kernelheaderscomparison. Tenindexedexactregularmembers50478Bproposedfutureplan32KiB/member64KiBtotal:`tvs/lg-65nano756pr/handoff/sdk-selected-text-next-plan.json`. CurrentSDKreaderhasNOtextselector;parentcoordinatesnarrowtested/reviewedfeature/planbeforeactualread. Noper-fileownerquestion,installer/compiler/sourceexecutionorTVaction. FullLG_BSP,missingpackaging/auxinputs,exactunitconfig,legitimateboot/recovery/calibrationpreservationremainunproved. OldChromium200k/adaptation64MiB/SDKUTF8/SDKunsafe-linkpartialsunchanged;successofthisnewcontrolledphaseisnotcompletionofthosehistories.
+Official 20190307 compiler-prefix/API/ABI comparison still unverified; binutils version still unknown; executed compiler identity absent; full LG_BSP, missing packaging/aux inputs, exact unit config, legitimate boot/recovery/calibration preservation remain unproved. Old Chromium200k/adaptation64MiB/SDK UTF8/SDK unsafe-link partials unchanged; success of this selected-text phase is not completion of those histories. No installer/compiler/source execution or TV action.

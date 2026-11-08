@@ -1,0 +1,112 @@
+[
+  {
+    "input": "sdk",
+    "raw_name": "./environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+    "canonical_name": "environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+    "size": 4321,
+    "content_sha256": "7600b4aac477a8ee699f078ec2f839703ca8bf0f76899ee316be666238d5d6c7",
+    "disk_sha256": "7600b4aac477a8ee699f078ec2f839703ca8bf0f76899ee316be666238d5d6c7",
+    "output_data_path": "selected-000001.txt",
+    "mode": "0o600",
+    "hash_match": true
+  },
+  {
+    "input": "sdk",
+    "raw_name": "./site-config-ca9v1-starfishmllib32-linux-gnueabi",
+    "canonical_name": "site-config-ca9v1-starfishmllib32-linux-gnueabi",
+    "size": 13611,
+    "content_sha256": "f6fa0ead272f0d1e0e56f2373d246425ca023637b01012c76b5674788aa7db86",
+    "disk_sha256": "f6fa0ead272f0d1e0e56f2373d246425ca023637b01012c76b5674788aa7db86",
+    "output_data_path": "selected-000002.txt",
+    "mode": "0o600",
+    "hash_match": true
+  },
+  {
+    "input": "sdk",
+    "raw_name": "./version-ca9v1-starfishmllib32-linux-gnueabi",
+    "canonical_name": "version-ca9v1-starfishmllib32-linux-gnueabi",
+    "size": 125,
+    "content_sha256": "58063b2fd532e3382472d3d812f0839240edacb6448366b21bf6bce278b79650",
+    "disk_sha256": "58063b2fd532e3382472d3d812f0839240edacb6448366b21bf6bce278b79650",
+    "output_data_path": "selected-000003.txt",
+    "mode": "0o600",
+    "hash_match": true
+  },
+  {
+    "input": "sdk",
+    "raw_name": "./sysroots/x86_64-starfishsdk-linux/usr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0/include-fixed/README",
+    "canonical_name": "sysroots/x86_64-starfishsdk-linux/usr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0/include-fixed/README",
+    "size": 750,
+    "content_sha256": "32baa94efdf4fb418c20321f14a1b66982a6cd3c2b5bc8fbfbe438f687c528d6",
+    "disk_sha256": "32baa94efdf4fb418c20321f14a1b66982a6cd3c2b5bc8fbfbe438f687c528d6",
+    "output_data_path": "selected-000004.txt",
+    "mode": "0o600",
+    "hash_match": true
+  },
+  {
+    "input": "sdk",
+    "raw_name": "./sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/features.h",
+    "canonical_name": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/features.h",
+    "size": 15721,
+    "content_sha256": "fe8f936657c367f7641052dbd4a706fda67633771655925205c04495125b0595",
+    "disk_sha256": "fe8f936657c367f7641052dbd4a706fda67633771655925205c04495125b0595",
+    "output_data_path": "selected-000005.txt",
+    "mode": "0o600",
+    "hash_match": true
+  },
+  {
+    "input": "sdk",
+    "raw_name": "./sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/linux/version.h",
+    "canonical_name": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/linux/version.h",
+    "size": 97,
+    "content_sha256": "e166ce7e243189fc62ff15da8087109ee0b5a86c1bcc945a9e90442afb8b6498",
+    "disk_sha256": "e166ce7e243189fc62ff15da8087109ee0b5a86c1bcc945a9e90442afb8b6498",
+    "output_data_path": "selected-000006.txt",
+    "mode": "0o600",
+    "hash_match": true
+  },
+  {
+    "input": "target",
+    "raw_name": "sysroot-providers/lib32-linux-libc-headers",
+    "canonical_name": "sysroot-providers/lib32-linux-libc-headers",
+    "size": 24,
+    "content_sha256": "8e1f183b829fbffb879485f640df73a9ab272fe383191a7b4b96d366c969289c",
+    "disk_sha256": "8e1f183b829fbffb879485f640df73a9ab272fe383191a7b4b96d366c969289c",
+    "output_data_path": "selected-000007.txt",
+    "mode": "0o600",
+    "hash_match": true
+  },
+  {
+    "input": "target",
+    "raw_name": "sysroot-providers/lib32-glibc",
+    "canonical_name": "sysroot-providers/lib32-glibc",
+    "size": 11,
+    "content_sha256": "8622aa90e72ff9db0cf618cccfbee87a24227363e28165f88d0d14ae8a34d173",
+    "disk_sha256": "8622aa90e72ff9db0cf618cccfbee87a24227363e28165f88d0d14ae8a34d173",
+    "output_data_path": "selected-000008.txt",
+    "mode": "0o600",
+    "hash_match": true
+  },
+  {
+    "input": "target",
+    "raw_name": "usr/include/features.h",
+    "canonical_name": "usr/include/features.h",
+    "size": 15721,
+    "content_sha256": "fe8f936657c367f7641052dbd4a706fda67633771655925205c04495125b0595",
+    "disk_sha256": "fe8f936657c367f7641052dbd4a706fda67633771655925205c04495125b0595",
+    "output_data_path": "selected-000009.txt",
+    "mode": "0o600",
+    "hash_match": true
+  },
+  {
+    "input": "target",
+    "raw_name": "usr/include/linux/version.h",
+    "canonical_name": "usr/include/linux/version.h",
+    "size": 97,
+    "content_sha256": "e166ce7e243189fc62ff15da8087109ee0b5a86c1bcc945a9e90442afb8b6498",
+    "disk_sha256": "e166ce7e243189fc62ff15da8087109ee0b5a86c1bcc945a9e90442afb8b6498",
+    "output_data_path": "selected-000010.txt",
+    "mode": "0o600",
+    "hash_match": true
+  }
+]

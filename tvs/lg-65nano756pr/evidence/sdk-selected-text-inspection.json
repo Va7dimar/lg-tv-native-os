@@ -1,0 +1,248 @@
+{
+  "recorded_at_Atlantic_Reykjavik": "2026-11-08T14:05:36.886430+00:00",
+  "status": "ok: SELECTEDTEXT ten-file plaintext read; not installed; not compiled; not TV-compatible proof",
+  "execution": {
+    "started_Atlantic_Reykjavik": "2026-11-08T14:03:46.778176+00:00",
+    "command": [
+      "/bin/bash",
+      "/workspace/lg-tv/evidence/sdk-selected-text-execution-2026-11-08/exact-command.txt"
+    ],
+    "sole_literal_command_change": "none: exact reviewed command; output dir was already the unused inspection-selected-text-PENDING-REVIEW",
+    "invocation_count": 1,
+    "exit_code": 0,
+    "elapsed_seconds": 13.209,
+    "finished_Atlantic_Reykjavik": "2026-11-08T14:03:59.987049+00:00",
+    "reader": "3598007632b1c13790d16cad9f6a68c23e5f4b35a4996948a3917bef2d8f8168",
+    "launcher": "c4befa0c75267bb99e804076eda54d400edeb651151d61ea5112a4e3fd09387a",
+    "exact_command": "4856e812ece17229f0872f22ae66921bca78c80fb97fe9ae465c5dd3749963d7",
+    "review": "tooling/review/sdk-text-selector-dot-prefix-independent-review.md"
+  },
+  "worker_status": "ok",
+  "launcher_ok": true,
+  "mode": "SELECTEDTEXT",
+  "ok": true,
+  "review": "tooling/review/sdk-text-selector-dot-prefix-independent-review.md",
+  "prior_selector_review_fail": "tooling/review/sdk-text-selector-independent-review.md",
+  "full_hash_bytes": 498625937,
+  "selected_bytes": 50478,
+  "jsonl_rows": 66880,
+  "selected_rows": 10,
+  "inputs_eof": [
+    {
+      "label": "sdk",
+      "tar_eof": true,
+      "integrity_eof": true,
+      "decoded_bytes": 891217920,
+      "compressed_bytes_consumed": 166810492
+    },
+    {
+      "label": "native",
+      "tar_eof": true,
+      "integrity_eof": true,
+      "decoded_bytes": 16148480,
+      "compressed_bytes_consumed": 8017931
+    },
+    {
+      "label": "target",
+      "tar_eof": true,
+      "integrity_eof": true,
+      "decoded_bytes": 1228636160,
+      "compressed_bytes_consumed": 323786694
+    }
+  ],
+  "pin_verifications_all_true": true,
+  "selected_files": [
+    {
+      "input": "sdk",
+      "raw_name": "./environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+      "canonical_name": "environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+      "size": 4321,
+      "content_sha256": "7600b4aac477a8ee699f078ec2f839703ca8bf0f76899ee316be666238d5d6c7",
+      "disk_sha256": "7600b4aac477a8ee699f078ec2f839703ca8bf0f76899ee316be666238d5d6c7",
+      "output_data_path": "selected-000001.txt",
+      "mode": "0o600",
+      "hash_match": true
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./site-config-ca9v1-starfishmllib32-linux-gnueabi",
+      "canonical_name": "site-config-ca9v1-starfishmllib32-linux-gnueabi",
+      "size": 13611,
+      "content_sha256": "f6fa0ead272f0d1e0e56f2373d246425ca023637b01012c76b5674788aa7db86",
+      "disk_sha256": "f6fa0ead272f0d1e0e56f2373d246425ca023637b01012c76b5674788aa7db86",
+      "output_data_path": "selected-000002.txt",
+      "mode": "0o600",
+      "hash_match": true
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./version-ca9v1-starfishmllib32-linux-gnueabi",
+      "canonical_name": "version-ca9v1-starfishmllib32-linux-gnueabi",
+      "size": 125,
+      "content_sha256": "58063b2fd532e3382472d3d812f0839240edacb6448366b21bf6bce278b79650",
+      "disk_sha256": "58063b2fd532e3382472d3d812f0839240edacb6448366b21bf6bce278b79650",
+      "output_data_path": "selected-000003.txt",
+      "mode": "0o600",
+      "hash_match": true
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/x86_64-starfishsdk-linux/usr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0/include-fixed/README",
+      "canonical_name": "sysroots/x86_64-starfishsdk-linux/usr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0/include-fixed/README",
+      "size": 750,
+      "content_sha256": "32baa94efdf4fb418c20321f14a1b66982a6cd3c2b5bc8fbfbe438f687c528d6",
+      "disk_sha256": "32baa94efdf4fb418c20321f14a1b66982a6cd3c2b5bc8fbfbe438f687c528d6",
+      "output_data_path": "selected-000004.txt",
+      "mode": "0o600",
+      "hash_match": true
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/features.h",
+      "canonical_name": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/features.h",
+      "size": 15721,
+      "content_sha256": "fe8f936657c367f7641052dbd4a706fda67633771655925205c04495125b0595",
+      "disk_sha256": "fe8f936657c367f7641052dbd4a706fda67633771655925205c04495125b0595",
+      "output_data_path": "selected-000005.txt",
+      "mode": "0o600",
+      "hash_match": true
+    },
+    {
+      "input": "sdk",
+      "raw_name": "./sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/linux/version.h",
+      "canonical_name": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/linux/version.h",
+      "size": 97,
+      "content_sha256": "e166ce7e243189fc62ff15da8087109ee0b5a86c1bcc945a9e90442afb8b6498",
+      "disk_sha256": "e166ce7e243189fc62ff15da8087109ee0b5a86c1bcc945a9e90442afb8b6498",
+      "output_data_path": "selected-000006.txt",
+      "mode": "0o600",
+      "hash_match": true
+    },
+    {
+      "input": "target",
+      "raw_name": "sysroot-providers/lib32-linux-libc-headers",
+      "canonical_name": "sysroot-providers/lib32-linux-libc-headers",
+      "size": 24,
+      "content_sha256": "8e1f183b829fbffb879485f640df73a9ab272fe383191a7b4b96d366c969289c",
+      "disk_sha256": "8e1f183b829fbffb879485f640df73a9ab272fe383191a7b4b96d366c969289c",
+      "output_data_path": "selected-000007.txt",
+      "mode": "0o600",
+      "hash_match": true
+    },
+    {
+      "input": "target",
+      "raw_name": "sysroot-providers/lib32-glibc",
+      "canonical_name": "sysroot-providers/lib32-glibc",
+      "size": 11,
+      "content_sha256": "8622aa90e72ff9db0cf618cccfbee87a24227363e28165f88d0d14ae8a34d173",
+      "disk_sha256": "8622aa90e72ff9db0cf618cccfbee87a24227363e28165f88d0d14ae8a34d173",
+      "output_data_path": "selected-000008.txt",
+      "mode": "0o600",
+      "hash_match": true
+    },
+    {
+      "input": "target",
+      "raw_name": "usr/include/features.h",
+      "canonical_name": "usr/include/features.h",
+      "size": 15721,
+      "content_sha256": "fe8f936657c367f7641052dbd4a706fda67633771655925205c04495125b0595",
+      "disk_sha256": "fe8f936657c367f7641052dbd4a706fda67633771655925205c04495125b0595",
+      "output_data_path": "selected-000009.txt",
+      "mode": "0o600",
+      "hash_match": true
+    },
+    {
+      "input": "target",
+      "raw_name": "usr/include/linux/version.h",
+      "canonical_name": "usr/include/linux/version.h",
+      "size": 97,
+      "content_sha256": "e166ce7e243189fc62ff15da8087109ee0b5a86c1bcc945a9e90442afb8b6498",
+      "disk_sha256": "e166ce7e243189fc62ff15da8087109ee0b5a86c1bcc945a9e90442afb8b6498",
+      "output_data_path": "selected-000010.txt",
+      "mode": "0o600",
+      "hash_match": true
+    }
+  ],
+  "findings": {
+    "sdk_identity_text": {
+      "distro": "starfish",
+      "distro_version": "5.0.0",
+      "sdk_version_env": "5.0.0-20191125",
+      "metadata_revision": "032f3c60ecca3ecc5a2411216bee122c714335ca",
+      "timestamp": "20191125070704",
+      "source": "sdk version-ca9v1-starfishmllib32-linux-gnueabi + environment-setup OECORE_*",
+      "claim_limit": "Self-declared text inside the community 20191125 SDK; not an authenticated release and not equivalence to official 20190307"
+    },
+    "target_triple_and_flags": {
+      "target_prefix": "arm-starfishmllib32-linux-gnueabi-",
+      "configure_target": "arm-starfishmllib32-linux-gnueabi",
+      "configure_host": "arm-starfishmllib32-linux-gnueabi",
+      "configure_build": "x86_64-linux",
+      "oecore_target_arch": "arm",
+      "oecore_target_os": "linux-gnueabi",
+      "cc_cpu_flags": "-march=armv7-a -mthumb -mfpu=neon -mfloat-abi=softfp -mcpu=cortex-a9 -mtune=cortex-a9",
+      "sdk_sysroot_label": "ca9v1-starfishmllib32-linux-gnueabi",
+      "host_sysroot_label": "x86_64-starfishsdk-linux",
+      "assumed_install_prefix": "/opt/starfish-sdk-x86_64/5.0.0-20191125",
+      "gcc_directory_triple_in_readme_path": "arm-starfish-linux-gnueabi",
+      "note": "Environment tool prefix uses starfishmllib32; the selected include-fixed README lives under arm-starfish-linux-gnueabi/gcc/.../8.2.0/. These strings are related labels, not proof they are the same toolchain identity. PATH also mentions arm-starfishmllib32-linux-musl; that is a PATH component, not evidence the selected libc is musl."
+    },
+    "gcc": {
+      "version_from_path_component": "8.2.0",
+      "compiler_filename_in_env": "arm-starfishmllib32-linux-gnueabi-gcc",
+      "include_fixed_readme": "generic GCC fixincludes notice; no version number in file body",
+      "executed_version": false,
+      "claim_limit": "Directory component 8.2.0 plus compiler name; not gcc --version output"
+    },
+    "binutils": {
+      "version": null,
+      "tool_names_in_env": [
+        "arm-starfishmllib32-linux-gnueabi-as",
+        "arm-starfishmllib32-linux-gnueabi-ld",
+        "arm-starfishmllib32-linux-gnueabi-ar",
+        "arm-starfishmllib32-linux-gnueabi-nm",
+        "arm-starfishmllib32-linux-gnueabi-objcopy",
+        "arm-starfishmllib32-linux-gnueabi-objdump",
+        "arm-starfishmllib32-linux-gnueabi-ranlib",
+        "arm-starfishmllib32-linux-gnueabi-strip"
+      ],
+      "site_config_version": "no binutils/ld/as version assignment found in the 13611-byte site-config",
+      "claim_limit": "Version remains UNKNOWN from these ten files"
+    },
+    "kernel_headers": {
+      "LINUX_VERSION_CODE": 266752,
+      "decoded_KERNEL_VERSION": "4.18.0",
+      "sdk_and_target_version_h_identical": true,
+      "provider_file_text": "lib32-linux-libc-headers",
+      "tv_kernel_previously_recorded": "Linux 4.4.84 (unit/source label; not re-verified here)",
+      "claim_limit": "UAPI header LINUX_VERSION_CODE only. Not the TV running kernel, not proof the headers match this panel/SoC, and not a 20190307 comparison."
+    },
+    "glibc": {
+      "features_h_macros": {
+        "__GLIBC__": 2,
+        "__GLIBC_MINOR__": 28,
+        "__GNU_LIBRARY__": 6
+      },
+      "sdk_and_target_features_h_identical": true,
+      "provider_file_text": "lib32-glibc",
+      "no_uclibc_or_musl_macros_in_features_h": true,
+      "claim_limit": "Header macros identify glibc 2.28 userspace headers. Not an executed ldd/libc --version, not ELF SONAME proof (prior metadata filename libc-2.28.so remains a separate hint), and not ABI compatibility with the TV."
+    },
+    "site_config": {
+      "role": "autoconf site cache for cross builds",
+      "notable": [
+        "ac_cv_c_littleendian=yes",
+        "ac_cv_linux_vers=2"
+      ],
+      "ac_cv_linux_vers_note": "Cached uname-style major 2, NOT kernel 4.18 and not TV 4.4.84"
+    }
+  },
+  "not_established": [
+    "compatibility with official LG build-guide SDK 20190307",
+    "compatibility with the owner TV kernel/userspace/board/panel",
+    "binutils version",
+    "executed compiler or assembler identity",
+    "legitimate custom boot or independent recovery",
+    "permission to install, relocate, or run the SDK"
+  ]
+}

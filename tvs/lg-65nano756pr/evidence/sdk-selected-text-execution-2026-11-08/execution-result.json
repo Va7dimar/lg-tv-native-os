@@ -1,0 +1,16 @@
+{
+  "started_Atlantic_Reykjavik": "2026-11-08T14:03:46.778176+00:00",
+  "command": [
+    "/bin/bash",
+    "/workspace/lg-tv/evidence/sdk-selected-text-execution-2026-11-08/exact-command.txt"
+  ],
+  "sole_literal_command_change": "none: exact reviewed command; output dir was already the unused inspection-selected-text-PENDING-REVIEW",
+  "invocation_count": 1,
+  "exit_code": 0,
+  "elapsed_seconds": 13.209,
+  "finished_Atlantic_Reykjavik": "2026-11-08T14:03:59.987049+00:00",
+  "reader": "3598007632b1c13790d16cad9f6a68c23e5f4b35a4996948a3917bef2d8f8168",
+  "launcher": "c4befa0c75267bb99e804076eda54d400edeb651151d61ea5112a4e3fd09387a",
+  "exact_command": "4856e812ece17229f0872f22ae66921bca78c80fb97fe9ae465c5dd3749963d7",
+  "review": "tooling/review/sdk-text-selector-dot-prefix-independent-review.md"
+}

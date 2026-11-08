@@ -208,8 +208,8 @@ Exactpaths/sizes/JSONLordinals:`tvs/lg-65nano756pr/evidence/sdk-inventory-links-
 
 Same200kheaders/100MBmetadata/separate4GiBlogical+decoded/120swall/1GiBASnotRSS/256MiBLZMA/10GiBobservedfloor,noexecfalse. Countersbounddecompressedregularpayloads+headers/padding/drain;metadataonlydoesnotmeannobytesdecompressed. No membercontents selected orinterpretedascode. Currentreadercecbb2ac06755100d414852b91dccf8527b05321b34a96da3e0eda86b59c16c1,launcherunchanged2a6638e3439748a6dc4fb7237a03c3d05521685746df5315683c861acab9ca52.
 
-## Next evidence gap
-Version/env/site/header/providerTEXTneededforMarch20190307compilerprefix/API/ABI/kernelheaderscomparison. Tenindexedexactregularmembers50478Bproposedfutureplan32KiB/member64KiBtotal:`tvs/lg-65nano756pr/handoff/sdk-selected-text-next-plan.json`. CurrentSDKreaderhasNOtextselector;parentcoordinatesnarrowtested/reviewedfeature/planbeforeactualread. Noper-fileownerquestion,installer/compiler/sourceexecutionorTVaction. FullLG_BSP,missingpackaging/auxinputs,exactunitconfig,legitimateboot/recovery/calibrationpreservationremainunproved. OldChromium200k/adaptation64MiB/SDKUTF8/SDKunsafe-linkpartialsunchanged;successofthisnewcontrolledphaseisnotcompletionofthosehistories.
+## Later selected-text follow-up
+The ten-file plaintext phase has now run once (see "Actual SDK selected plaintext" below). Metadata-era filename hints are superseded for glibc 2.28 header macros and linux/version.h 4.18.0; binutils version and 20190307 compatibility remain open.
 
 # Metadata-ledger reconciliation
 2026-11-08T13:34:18.275035+00:00 Atlantic/Reykjavik. OneprimarysubscribedCodex explicitlygpt-6.1-sol/high,115.63s,exit0/substantive,norefusal/fallback/reset. ServingmodelIDnotindependentlyexposedbyJSONeventstream. Only3generatedmetadatafilesread,ordinaryPythonJSONanalysis,nobinary/member/scriptcontentreads or execution.
@@ -222,3 +222,12 @@ Codex13futureplaintextcandidates98065Bincludegettext/ICUlicenseexamples;these do
 
 ## 2026-11-08T13:35:13.327220+00:00 Atlantic/Reykjavik — SDK metadata-success delivery
 SamePage/ledgers/REPRODUCING/playbookupdated:all3metadataOK,73838headers/66880records,0selected. VerifiedGCC8.2.0/glibc2.28filenamehints;binutils/kernelheaderversionunknown,Marchcompatibilityunknown. PrimarysubscribedCodexgpt-6.1-sol/high115.63s,onlygeneratedJSONfiles,no refusal/fallback/reset. New10exacttextcandidateplan50478BfutureTDD/reviewneeded(currentreaderNOselector),noexecution/selectionyet. Codeunchanged;prioroutputspartialsretained. Handoff:sdk-metadata-success-2026-11-08.md. Noactiveworkerjobs.
+
+# Actual SDK selected plaintext — SUCCESS, not installed
+2026-11-08T14:03:46.778176+00:00 Atlantic/Reykjavik. 14:03:46.778–14:03:59.987, exit0, 13.209s outer. Exact reviewed command; fresh `inspection-selected-text-PENDING-REVIEW`. Selector feature first review SPEC FAIL (./ stored names); test-first fix accepted member.name in (selector.path, './'+selector.path); re-review SPEC/QUALITY PASS. No retries/capraise/sourceexecution/build/TV actions.
+
+ALL3 pins 498625937B verified before parse; SELECTEDTEXT 50478B; ten mode-0600 files; 66880 JSONL rows; all3 EOF true. Six SDK raw_names used ./ prefix.
+
+Findings (text only, not executed tools, not TV/20190307 compatibility): starfish 5.0.0 / 20191125 self-label (revision 032f3c60ecca3ecc5a2411216bee122c714335ca); triple arm-starfishmllib32-linux-gnueabi- with cortex-a9/neon/softfp flags; GCC path label 8.2.0; glibc headers __GLIBC__ 2 / __GLIBC_MINOR__ 28; LINUX_VERSION_CODE 266752 => 4.18.0 (not TV 4.4.84); binutils version UNKNOWN.
+
+Reader 3598007632b1c13790d16cad9f6a68c23e5f4b35a4996948a3917bef2d8f8168; launcher c4befa0c75267bb99e804076eda54d400edeb651151d61ea5112a4e3fd09387a. Review:`tooling/review/sdk-text-selector-dot-prefix-independent-review.md`; package:`tooling/review/sdk-text-selector-dot-prefix-2026-11-08/`; evidence:`tvs/lg-65nano756pr/evidence/sdk-selected-text-execution-2026-11-08/` and `tvs/lg-65nano756pr/evidence/sdk-selected-text-inspection.json`. Committed after reorg PR #1 merged as fed0224a1daa30bc08766548504f5d0414759ff2.

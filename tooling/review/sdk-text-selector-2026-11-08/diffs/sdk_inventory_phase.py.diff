@@ -1,0 +1,233 @@
+--- before/sdk_inventory_phase.py
++++ current/sdk_inventory_phase.py
+@@ -1,6 +1,6 @@
+-"""Pinned metadata-only inventory. Production invocation belongs to the launcher.
+-
+-No member content is extracted or hashed. TarInfo hooks delegate header parsing to
++"""Pinned inventory with optional exact plaintext selection via the launcher.
++
++Default mode never emits/hashes member content. TarInfo hooks delegate parsing to
+ CPython tarfile; the hooks count extension headers and retain its zero boundary.
+ """
+ from __future__ import annotations
+@@ -20,6 +20,8 @@
+ 
+ CHUNK = 65536
+ DISK_FLOOR = 10 * 1024**3
++SELECTED_MEMBER_MAX = 16 * 1024**2
++SELECTED_TOTAL_MAX = 64 * 1024**2
+ 
+ 
+ class InventoryError(Exception):
+@@ -35,6 +37,74 @@
+     codec: str
+     offset: int = 0
+     marker: bytes = b''
++
++
++@dataclass(frozen=True)
++class TextSelector:
++    input: str
++    path: str
++    size: int
++
++
++def validate_selectors(selectors, selected_total_bytes):
++    """Literal trusted configuration only; never normalize a requested path."""
++    if type(selected_total_bytes) is not int or not 0 <= selected_total_bytes <= SELECTED_TOTAL_MAX:
++        raise InventoryError('invalid selected total bound')
++    result, total = {}, 0
++    for selector in selectors:
++        if not isinstance(selector, TextSelector):
++            raise InventoryError('invalid selector')
++        if selector.input not in ('sdk', 'native', 'target'):
++            raise InventoryError('unknown selector input')
++        path = selector.path
++        if (not isinstance(path, str) or not path or path == '.' or
++                any(c in path for c in '*?[]') or not path.isprintable() or
++                canonical(path) != path):
++            raise InventoryError('nonliteral/noncanonical selector path')
++        if type(selector.size) is not int or not 0 <= selector.size <= SELECTED_MEMBER_MAX:
++            raise InventoryError('invalid selected size')
++        key = (selector.input, path)
++        if key in result:
++            raise InventoryError('duplicate selector')
++        result[key] = selector
++        total += selector.size
++        if total > selected_total_bytes:
++            raise InventoryError('selected total exceeds shared bound')
++    return result
++
++
++def selected_plaintext(tf, member):
++    """Read only a validated regular member, never resolve a link or extract paths.
++
++    Strict UTF8: printable Unicode plus TAB/LF/CR only. In particular NUL,
++    C0/C1/DEL, format controls, and other nonprintable code points are rejected.
++    """
++    data = bytearray()
++    with tf.extractfile(member) as source:
++        while len(data) < member.size:
++            chunk = source.read(min(CHUNK, member.size - len(data)))
++            if not chunk:
++                raise InventoryError('truncated selected payload')
++            data.extend(chunk)
++        if source.read(1):
++            raise InventoryError('selected payload exceeds indexed size')
++    try:
++        text = data.decode('utf-8', 'strict')
++    except UnicodeError as e:
++        raise InventoryError('invalid UTF8 selected plaintext') from e
++    if any(c not in '\t\n\r' and not c.isprintable() for c in text):
++        raise InventoryError('nonplaintext selected content')
++    return data
++
++
++def write_selected(outfd, name, data):
++    disk_check(outfd)
++    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
++                 0o600, dir_fd=outfd)
++    with os.fdopen(fd, 'wb') as dest:
++        dest.write(data)
++        dest.flush()
++        os.fsync(dest.fileno())
+ 
+ 
+ _BASE = '/workspace/lg-tv/sdk-candidates/20191125/assets/'
+@@ -335,7 +405,7 @@
+         raise InventoryError('unsafe link escape')
+ 
+ 
+-def parse_archive(fd, spec, budget, observation, emit):
++def parse_archive(fd, spec, budget, observation, emit, select=None):
+     reader = DecodedReader(fd, spec, budget, observation)
+     boundary = [None]
+     extensions = (tarfile.XHDTYPE, tarfile.XGLTYPE, tarfile.SOLARIS_XHDTYPE,
+@@ -414,14 +484,17 @@
+                     raise InventoryError('unsupported member type/device')
+                 if kind != 'regular' and member.size:
+                     raise InventoryError('nonregular payload unsupported')
+-                emit(dict(input=spec.label, raw_name=member.name, canonical_name=name,
++                record = dict(input=spec.label, raw_name=member.name, canonical_name=name,
+                           type=kind, size=member.size, link_target=member.linkname,
+                           pax_headers=member.pax_headers,
+                           decision=('recorded_not_followed_nonextractable' if classification in ('absolute', 'out_of_tree') else
+                                     'recorded_not_followed' if kind in ('symlink', 'hardlink') else 'recorded'),
+                           link_target_classification=classification, extractable=False,
+                           reasons=['metadata_only'] + ([classification + '_target'] if classification in ('absolute', 'out_of_tree') else []), selected=False,
+-                          nested_archive=name.lower().endswith(('.tar', '.gz', '.xz', '.zip', '.7z', '.bz2', '.tgz'))))
++                          nested_archive=name.lower().endswith(('.tar', '.gz', '.xz', '.zip', '.7z', '.bz2', '.tgz')))
++                if select is not None:
++                    select(tf, member, record)
++                emit(record)
+             except (InventoryError, UnicodeError) as e:
+                 budget.reject_link(member, e)
+                 raise
+@@ -446,12 +519,13 @@
+         raise InventoryError('missing integrity EOF')
+ 
+ 
+-def inventory(specs, output_dir, limits=None, *, output_fd=None, deadline=None):
++def inventory(specs, output_dir, limits=None, *, output_fd=None, deadline=None,
++              selectors=(), selected_total_bytes=SELECTED_TOTAL_MAX):
+     limits = limits or Limits()
+     deadline = time.monotonic() + 120 if deadline is None else deadline
+     budget = Budget(limits, deadline)
+     outfd = fresh_output(output_dir) if output_fd is None else os.dup(output_fd)
+-    doc = dict(ok=False, status='failed', mode='METADATAONLY', inputs=[],
++    doc = dict(ok=False, status='failed', mode='SELECTEDTEXT' if selectors else 'METADATAONLY', inputs=[],
+                totals=budget.totals, full_hash_bytes=0, error=None,
+                members_jsonl='members.jsonl', limits=asdict(limits),
+                pin_verifications=[], skipped_inputs=[], rejected_links=budget.rejected_links,
+@@ -468,6 +542,12 @@
+     opened = []
+     log = None
+     try:
++        requested = validate_selectors(selectors, selected_total_bytes)
++        found = set()
++        if requested:
++            doc['selection'] = dict(selectors=[asdict(s) for s in requested.values()],
++                                   shared_bound_bytes=selected_total_bytes,
++                                   plaintext_policy='strict UTF8; printable Unicode plus TAB/LF/CR only')
+         doc['observed_initial_free_bytes'] = disk_check(outfd)
+         check_deadline(deadline)
+         if len(specs) != 3 or [s.label for s in specs] != ['sdk', 'native', 'target']:
+@@ -515,6 +595,30 @@
+             disk_check(outfd)
+             log.write(json.dumps(record, ensure_ascii=True, separators=(',', ':')) + '\n')
+             log.flush()
++        def select(tf, member, record):
++            key = (record['input'], record['canonical_name'])
++            selector = requested.get(key)
++            if selector is None:
++                return
++            if member.name != selector.path:
++                raise InventoryError('selected member path alias')
++            if not member.isreg():
++                raise InventoryError('selected member not regular')
++            if member.size != selector.size:
++                raise InventoryError('selected size mismatch')
++            if key in found:
++                raise InventoryError('duplicate selected member')
++            if budget.totals['selected_bytes'] + member.size > selected_total_bytes:
++                raise InventoryError('selected total exceeds shared bound')
++            data = selected_plaintext(tf, member)
++            check_deadline(deadline)
++            name = f'selected-{len(found) + 1:06d}.txt'
++            write_selected(outfd, name, data)
++            budget.totals['selected_bytes'] += len(data)
++            found.add(key)
++            record.update(selected=True, decision='selected_plaintext_data',
++                          reasons=['exact_selector_size_and_plaintext_validated'],
++                          content_sha256=hashlib.sha256(data).hexdigest(), output_data_path=name)
+         for fd, identity, s in opened:
+             if signature(os.fstat(fd)) != identity:
+                 raise InventoryError('input mutation before parsing')
+@@ -524,12 +628,14 @@
+                                decoded_bytes=0, max_decoder_chunk=0,
+                                tar_eof=False, integrity_eof=False)
+             doc['inputs'].append(observation)
+-            parse_archive(fd, s, budget, observation, emit)
++            parse_archive(fd, s, budget, observation, emit, select=select if requested else None)
+             if signature(os.fstat(fd)) != identity:
+                 raise InventoryError('input mutation after parsing')
+         for fd, identity, s in opened:
+             if signature(os.fstat(fd)) != identity:
+                 raise InventoryError('input mutation at final check')
++        if found != requested.keys():
++            raise InventoryError('missing selected member(s): ' + str(len(requested.keys() - found)))
+         check_deadline(deadline)
+         doc.update(ok=True, status='ok')
+     except (Exception, MemoryError) as e:
+@@ -549,10 +655,13 @@
+ 
+ 
+ def argument_parser():
+-    parser = argparse.ArgumentParser(description='Pinned three-input METADATAONLY SDK inventory')
++    parser = argparse.ArgumentParser(description='Pinned three-input inventory; default METADATAONLY')
+     for label in ('sdk', 'native', 'target'):
+         parser.add_argument('--' + label, required=True)
+     parser.add_argument('--output-dir', required=True)
++    parser.add_argument('--select-text', nargs=3, action='append', default=[],
++                        metavar=('INPUT', 'EXACT_PATH', 'INDEXED_BYTES'))
++    parser.add_argument('--selected-total-bytes')
+     return parser
+ 
+ 
+@@ -561,6 +670,16 @@
+     for spec in PRODUCTION_SPECS:
+         if getattr(args, spec.label) != spec.path:
+             raise InventoryError('production input path must equal immutable ' + spec.label + ' path')
++    def literal_size(value):
++        if not re.fullmatch(r'0|[1-9][0-9]{0,7}', value):
++            raise InventoryError('invalid literal selected byte count')
++        return int(value)
++    if bool(args.select_text) != (args.selected_total_bytes is not None):
++        raise InventoryError('selectors require explicit shared selected total, and vice versa')
++    args.selectors = [TextSelector(label, path, literal_size(size)) for label, path, size in args.select_text]
++    args.selected_total_bytes = (literal_size(args.selected_total_bytes)
++                                 if args.selected_total_bytes is not None else SELECTED_TOTAL_MAX)
++    validate_selectors(args.selectors, args.selected_total_bytes)
+     return args
+ 
+ 

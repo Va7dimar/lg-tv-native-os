@@ -1,0 +1,75 @@
+--- before/isolate_sdk_inventory.py
++++ current/isolate_sdk_inventory.py
+@@ -57,11 +57,12 @@
+     return json.loads(raw)
+ 
+ 
+-def _bootstrap(specs, deadline, probe):
++def _bootstrap(specs, deadline, probe, selectors=(), selected_total_bytes=sdk.SELECTED_TOTAL_MAX):
+     # Literal trusted configuration from the closed CLI, or synthetic library
+     # fixtures; never read an external spec/configuration file.
+     mapped = [dataclasses.replace(s, path='/input/' + s.label) for s in specs]
+     values = repr([dataclasses.asdict(s) for s in mapped])
++    selection = repr([dataclasses.asdict(s) for s in selectors])
+     # bwrap has finished the descriptor-backed binds before this runs. Close
+     # every host descriptor, including numbers above the lowered RLIMIT_NOFILE,
+     # and fail closed before reader imports. /proc enumeration briefly opens a
+@@ -84,8 +85,10 @@
+     code += ('import json,time,socket;sys.path.insert(0,"/tool");'
+             'import sdk_inventory_phase as s;'
+             f'specs=[s.InputSpec(**x) for x in {values}];'
++            f'selectors=[s.TextSelector(**x) for x in {selection}];'
+             'fd=s.directory_fd("/output");'
+-            f'doc=s.inventory(specs,"/output",output_fd=fd,deadline={deadline!r});')
++            f'doc=s.inventory(specs,"/output",output_fd=fd,deadline={deadline!r},'
++            f'selectors=selectors,selected_total_bytes={selected_total_bytes!r});')
+     if probe:
+         code += '''
+ readonly=True
+@@ -117,7 +120,8 @@
+                     os.close(fd)
+ 
+ 
+-def launch(specs, output_dir, *, synthetic_probe=False):
++def launch(specs, output_dir, *, synthetic_probe=False,
++           selectors=(), selected_total_bytes=sdk.SELECTED_TOTAL_MAX):
+     started = time.monotonic()
+     deadline = started + 120
+     _normalize_stdio()
+@@ -131,6 +135,7 @@
+                   worker_manifest='manifest.json')
+     doc = None
+     try:
++        sdk.validate_selectors(selectors, selected_total_bytes)
+         sdk.disk_check(outfd)
+         for spec in specs:
+             sdk.check_deadline(deadline)
+@@ -138,7 +143,8 @@
+             inputs.append((fd, identity))
+         remaining = deadline - time.monotonic()
+         sdk.check_deadline(deadline)
+-        bootstrap = _bootstrap(specs, deadline, synthetic_probe)
++        bootstrap = (_bootstrap(specs, deadline, synthetic_probe, selectors, selected_total_bytes)
++                     if selectors else _bootstrap(specs, deadline, synthetic_probe))
+         worker = [os.path.realpath('/usr/bin/python3'), '-I', '-B', '-c', bootstrap]
+         cmd = build_command(specs, f'/proc/self/fd/{outfd}', worker, remaining,
+                             input_sources=[f'/proc/self/fd/{fd}' for fd, _ in inputs])
+@@ -184,7 +190,7 @@
+         try:
+             if doc is None:
+                 doc = dict(ok=False, status='failed', error=result['error'],
+-                           mode='METADATAONLY', worker_completed=False,
++                           mode='SELECTEDTEXT' if selectors else 'METADATAONLY', worker_completed=False,
+                            totals=None, members_jsonl_may_be_partial=True)
+                 # Never overwrite a worker result, including after timeout.
+                 try:
+@@ -201,7 +207,8 @@
+ def main(argv=None):
+     try:
+         args = sdk.production_arguments(argv)
+-        result = launch(sdk.PRODUCTION_SPECS, args.output_dir)
++        result = launch(sdk.PRODUCTION_SPECS, args.output_dir, selectors=args.selectors,
++                        selected_total_bytes=args.selected_total_bytes)
+         print(json.dumps(dict(ok=result['ok'], status=result['status'],
+                               launcher_result=str(Path(args.output_dir) / 'launcher-result.json'))))
+         return 0 if result['ok'] else 1

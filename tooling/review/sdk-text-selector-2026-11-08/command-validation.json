@@ -1,0 +1,98 @@
+{
+  "exact_command_file_sha256": "4856e812ece17229f0872f22ae66921bca78c80fb97fe9ae465c5dd3749963d7",
+  "executed": false,
+  "input_pins": [
+    {
+      "codec": "xz",
+      "label": "sdk",
+      "marker_hex": "4d41524b45523a0a",
+      "offset": 10820,
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/starfish-sdk-x86_64-ca9v1-toolchain-5.0.0-20191125.sh",
+      "sha256": "3029c64809fe93e6fe6bfb72ac9de6ec556452a0790feb0f9b23abed409e669b",
+      "size": 166821312
+    },
+    {
+      "codec": "gz",
+      "label": "native",
+      "marker_hex": "",
+      "offset": 0,
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/native_sysroot_dependencies.tar.gz",
+      "sha256": "f97498cc24de8a617be8e842962e30299be034730981ac8da0e216548a92f48a",
+      "size": 8017931
+    },
+    {
+      "codec": "gz",
+      "label": "target",
+      "marker_hex": "",
+      "offset": 0,
+      "path": "/workspace/lg-tv/sdk-candidates/20191125/assets/target_sysroot_dependencies.tar.gz",
+      "sha256": "b5bbe22da19a9fabea1f24cc1965e5a853e9d2935e9e5bdfcd81d7c83174f39b",
+      "size": 323786694
+    }
+  ],
+  "output_dir": "/workspace/lg-tv/sdk-candidates/20191125/inspection-selected-text-PENDING-REVIEW",
+  "selected_member_hard_max": 16777216,
+  "selected_total_bytes": 50478,
+  "selected_total_hard_max": 67108864,
+  "selectors": [
+    {
+      "input": "sdk",
+      "path": "version-ca9v1-starfishmllib32-linux-gnueabi",
+      "size": 125
+    },
+    {
+      "input": "sdk",
+      "path": "environment-setup-ca9v1-starfishmllib32-linux-gnueabi",
+      "size": 4321
+    },
+    {
+      "input": "sdk",
+      "path": "site-config-ca9v1-starfishmllib32-linux-gnueabi",
+      "size": 13611
+    },
+    {
+      "input": "sdk",
+      "path": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/linux/version.h",
+      "size": 97
+    },
+    {
+      "input": "target",
+      "path": "usr/include/linux/version.h",
+      "size": 97
+    },
+    {
+      "input": "sdk",
+      "path": "sysroots/ca9v1-starfishmllib32-linux-gnueabi/usr/include/features.h",
+      "size": 15721
+    },
+    {
+      "input": "target",
+      "path": "usr/include/features.h",
+      "size": 15721
+    },
+    {
+      "input": "sdk",
+      "path": "sysroots/x86_64-starfishsdk-linux/usr/lib/arm-starfish-linux-gnueabi/gcc/arm-starfish-linux-gnueabi/8.2.0/include-fixed/README",
+      "size": 750
+    },
+    {
+      "input": "target",
+      "path": "sysroot-providers/lib32-linux-libc-headers",
+      "size": 24
+    },
+    {
+      "input": "target",
+      "path": "sysroot-providers/lib32-glibc",
+      "size": 11
+    }
+  ],
+  "source_command": "evidence/sdk-inventory-links-execution-2026-11-08/exact-command.txt",
+  "unchanged_limits": {
+    "decoded_bytes": 4294967296,
+    "logical_bytes": 4294967296,
+    "lzma_memlimit": 268435456,
+    "members": 200000,
+    "metadata_bytes": 100000000
+  },
+  "validation": "production_arguments only, guarded against input opening"
+}

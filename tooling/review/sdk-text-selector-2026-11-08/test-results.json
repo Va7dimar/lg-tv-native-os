@@ -1,0 +1,154 @@
+{
+  "actual_sdk_phase_executed": false,
+  "counts_note": "unittest counts test methods; skip entries include seven stdio subtests, so do not subtract eleven from seventy to infer passes.",
+  "independent_review_status": "not performed",
+  "observed_serving_model": null,
+  "observed_serving_model_note": "Exact serving model/revision metadata is not exposed to this worker; cannot verify. Developer identifies Codex based on GPT-6, which is not observed serving metadata.",
+  "other_models_invoked": false,
+  "requested_model": null,
+  "requested_model_note": "No exact model identifier specified in the user request available to this worker.",
+  "requested_role": "primary implementation worker",
+  "runs": {
+    "GREEN": {
+      "command": [
+        "/usr/bin/python3",
+        "-I",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tooling/tests",
+        "-p",
+        "test_sdk_text_selector.py",
+        "-v"
+      ],
+      "duration_seconds": 2.201,
+      "environment_overrides": {
+        "SDK_TEXT_TEST_EVIDENCE_DIR": "/workspace/lg-tv/tooling/review/sdk-text-selector-2026-11-08/sandbox-targeted"
+      },
+      "error_entries": 0,
+      "exit_code": 0,
+      "failure_entries": 0,
+      "raw_exit": "GREEN.exit.txt",
+      "raw_stderr": "GREEN.stderr.log",
+      "raw_stdout": "GREEN.stdout.log",
+      "skipped_entries": 1,
+      "skipped_subtests": 0,
+      "skipped_whole_methods": 1,
+      "started_utc": "2026-11-08T13:41:41.445155+00:00",
+      "summary": [
+        "Ran 23 tests in 2.201s",
+        "OK (skipped=1)"
+      ],
+      "test_methods": 23
+    },
+    "GREEN-attempt-1": {
+      "command": [
+        "/usr/bin/python3",
+        "-I",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tooling/tests",
+        "-p",
+        "test_sdk_text_selector.py",
+        "-v"
+      ],
+      "duration_seconds": 2.078,
+      "error_entries": 0,
+      "exit_code": 0,
+      "failure_entries": 0,
+      "raw_exit": "GREEN-attempt-1.exit.txt",
+      "raw_stderr": "GREEN-attempt-1.stderr.log",
+      "raw_stdout": "GREEN-attempt-1.stdout.log",
+      "skipped_entries": 1,
+      "skipped_subtests": 0,
+      "skipped_whole_methods": 1,
+      "started_utc": "2026-11-08T13:40:22.498127+00:00",
+      "summary": [
+        "Ran 23 tests in 2.078s",
+        "OK (skipped=1)"
+      ],
+      "test_methods": 23
+    },
+    "RED": {
+      "command": [
+        "/usr/bin/python3",
+        "-I",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tooling/tests",
+        "-p",
+        "test_sdk_text_selector.py",
+        "-v"
+      ],
+      "duration_seconds": 0.656,
+      "error_entries": 126,
+      "exit_code": 1,
+      "explanation": "Expected RED: unchanged production has no TextSelector or selectors/selected_total_bytes API or --select-text CLI. Default metadata-only regression should pass. No production modifications preceded this run.",
+      "failure_entries": 0,
+      "production_sha256": {
+        "isolate_sdk_inventory.py": "2a6638e3439748a6dc4fb7237a03c3d05521685746df5315683c861acab9ca52",
+        "sdk_inventory_phase.py": "cecbb2ac06755100d414852b91dccf8527b05321b34a96da3e0eda86b59c16c1"
+      },
+      "raw_exit": "RED.exit.txt",
+      "raw_stderr": "RED.stderr.log",
+      "raw_stdout": "RED.stdout.log",
+      "skipped_entries": 0,
+      "skipped_subtests": 0,
+      "skipped_whole_methods": 0,
+      "started_utc": "2026-11-08T13:39:04.279165+00:00",
+      "stderr_bytes": 134694,
+      "stdout_bytes": 0,
+      "summary": [
+        "Ran 23 tests in 0.656s",
+        "FAILED (errors=126)"
+      ],
+      "test_methods": 23
+    },
+    "SDK-suite": {
+      "command": [
+        "/usr/bin/python3",
+        "-I",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tooling/tests",
+        "-p",
+        "test_sdk*.py",
+        "-v"
+      ],
+      "duration_seconds": 3.162,
+      "environment_overrides": {
+        "SDK_FD_TEST_EVIDENCE_DIR": "/workspace/lg-tv/tooling/review/sdk-text-selector-2026-11-08/fd-full-suite",
+        "SDK_STDIO_TEST_EVIDENCE_DIR": "/workspace/lg-tv/tooling/review/sdk-text-selector-2026-11-08/stdio-full-suite",
+        "SDK_TEXT_TEST_EVIDENCE_DIR": "/workspace/lg-tv/tooling/review/sdk-text-selector-2026-11-08/sandbox-full-suite"
+      },
+      "error_entries": 0,
+      "exit_code": 0,
+      "failure_entries": 0,
+      "raw_exit": "SDK-suite.exit.txt",
+      "raw_stderr": "SDK-suite.stderr.log",
+      "raw_stdout": "SDK-suite.stdout.log",
+      "skipped_entries": 11,
+      "skipped_subtests": 7,
+      "skipped_whole_methods": 4,
+      "started_utc": "2026-11-08T13:41:52.609797+00:00",
+      "summary": [
+        "Ran 70 tests in 3.162s",
+        "OK (skipped=11)"
+      ],
+      "test_methods": 70
+    }
+  },
+  "sandbox_limitation": "bwrap loopback NETLINK_ROUTE socket: Operation not permitted; no bypass attempted",
+  "synthetic_only": true
+}

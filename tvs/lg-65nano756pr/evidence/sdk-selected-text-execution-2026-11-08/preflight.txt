@@ -1,0 +1,5 @@
+preflight_Atlantic_Reykjavik=2026-11-08T14:03:38+00:00
+3598007632b1c13790d16cad9f6a68c23e5f4b35a4996948a3917bef2d8f8168  /workspace/lg-tv/tooling/sdk_inventory_phase.py
+c4befa0c75267bb99e804076eda54d400edeb651151d61ea5112a4e3fd09387a  /workspace/lg-tv/tooling/isolate_sdk_inventory.py
+4856e812ece17229f0872f22ae66921bca78c80fb97fe9ae465c5dd3749963d7  /workspace/lg-tv/evidence/sdk-selected-text-execution-2026-11-08/exact-command.txt
+output_dir_absent=true

@@ -1,0 +1,17 @@
+{
+  "command": [
+    "python3",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tooling/tests",
+    "-p",
+    "test_sdk*.py",
+    "-v"
+  ],
+  "exit": 0,
+  "elapsed_seconds": 3.8736513990006642,
+  "timestamp_Atlantic_Reykjavik": "2026-11-08T13:47:05.197722+00:00",
+  "synthetic_only": true
+}

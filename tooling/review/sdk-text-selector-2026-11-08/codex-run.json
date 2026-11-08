@@ -1,0 +1,23 @@
+{
+  "requested_model": "gpt-6.1-sol",
+  "effort": "high",
+  "command": [
+    "codex",
+    "exec",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "workspace-write",
+    "-m",
+    "gpt-6.1-sol",
+    "-c",
+    "model_reasoning_effort=\"high\"",
+    "--json",
+    "-o",
+    "/workspace/lg-tv/tooling/review/sdk-text-selector-2026-11-08/codex-final.txt",
+    "-"
+  ],
+  "start_Atlantic_Reykjavik": "2026-11-08T13:36:06.952056+00:00",
+  "elapsed_seconds": 647.6854791000005,
+  "exit": 0,
+  "serving_model": "check raw events; not inferred from request"
+}

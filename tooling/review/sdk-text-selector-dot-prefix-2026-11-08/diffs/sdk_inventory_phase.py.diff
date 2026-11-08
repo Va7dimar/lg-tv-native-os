@@ -1,0 +1,11 @@
+--- sdk_inventory_phase.py
++++ sdk_inventory_phase.py
+@@ -600,7 +600,7 @@
+             selector = requested.get(key)
+             if selector is None:
+                 return
+-            if member.name != selector.path:
++            if member.name not in (selector.path, './' + selector.path):
+                 raise InventoryError('selected member path alias')
+             if not member.isreg():
+                 raise InventoryError('selected member not regular')

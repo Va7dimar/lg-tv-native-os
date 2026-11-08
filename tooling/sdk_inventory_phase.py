@@ -600,7 +600,7 @@ def inventory(specs, output_dir, limits=None, *, output_fd=None, deadline=None,
             selector = requested.get(key)
             if selector is None:
                 return
-            if member.name != selector.path:
+            if member.name not in (selector.path, './' + selector.path):
                 raise InventoryError('selected member path alias')
             if not member.isreg():
                 raise InventoryError('selected member not regular')
