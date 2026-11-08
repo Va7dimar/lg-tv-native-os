@@ -133,3 +133,21 @@ Host `make test`: **123 tests, 0 failed**.
 `87ce383a48dae7e3cb870af4a4c9cb5845392d29cfacc027ea833194877274cf`
 (`build/sdk/wayland-hello`, not committed). No 0.4 binary was copied to or
 run on the TV.
+
+## 2026-11-08: wayland-hello 0.5 (app id and window type)
+
+The focus-loss log shows a plain `wl_shell` surface as a CARD with an empty
+`app_id`, then SAM `last_input_handler` relaunching `com.webos.app.home`.
+The 0.4 webOS path sent `set_state` (OSE fullscreen 3) before `appId`. 0.5
+sends `appId`, optional `_WEBOS_WINDOW_TYPE`, and `displayAffinity` 0 before
+`set_state`, still before the first commit. Fullscreen stays 3; maximized is
+2 in the OSE XML and was not substituted. Plain `wl_shell` now passes the
+same app id to `set_title` and `set_class`.
+
+Host `make test`: **130 tests, 0 failed**.
+
+SDK binary SHA256
+`c2132928fc2b06f42972c20a3aa767a2721e7bb365abdcf919387d7ff1e6c33a`
+(`build/sdk/wayland-hello`, not committed). `abi/wayland-hello-v5-ABI-REPORT.txt`
+ABI CHECK PASS, `e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`,
+`libdl.so.2`, `librt.so.1`. No 0.5 binary was copied to or run on the TV.

@@ -34,6 +34,7 @@ REQ = {
     ("wl_shell_surface", 3): ("set_toplevel", "", None),
     ("wl_shell_surface", 5): ("set_fullscreen", "uu?o", None),
     ("wl_shell_surface", 8): ("set_title", "s", None),
+    ("wl_shell_surface", 9): ("set_class", "s", None),
     ("wl_seat", 0): ("get_pointer", "n", "wl_pointer"),
     ("wl_seat", 1): ("get_keyboard", "n", "wl_keyboard"),
     ("wl_seat", 2): ("get_touch", "n", "wl_touch"),

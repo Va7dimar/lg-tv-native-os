@@ -47,7 +47,7 @@
 #include <unistd.h>
 #include <link.h>
 
-#define HELLO_VERSION "0.4-prototype"
+#define HELLO_VERSION "0.5-prototype"
 
 /* ---- limits ------------------------------------------------------------ */
 #define DEFAULT_DURATION_S 10
@@ -123,6 +123,7 @@ struct opts {
 	const char *runtime_dir;
 	const char *display_name;
 	const char *app_id;
+	const char *window_type;    /* NULL unless --window-type; webOS shell only */
 	uint32_t color;             /* 0xRRGGBB */
 };
 
@@ -140,7 +141,8 @@ static void usage(FILE *f)
 "  --webos-key-mask     with --webos-shell, set_key_mask for BACK and EXIT\n"
 "  --exit-on-leave      exit when a focused wl_keyboard leaves\n"
 "  --egl                try GLES2 via dlopen; shm if the libraries differ\n"
-"  --app-id ID          webOS appId property (default wayland-hello-prototype)\n"
+"  --app-id ID          app id (default wayland-hello-prototype)\n"
+"  --window-type TYPE   with --webos-shell, set_property _WEBOS_WINDOW_TYPE\n"
 "  --duration N         on-screen seconds after first configure or frame (1..%d, default %d)\n"
 "  --size WxH           initial buffer size (default %dx%d, max %dx%d)\n"
 "  --max-size WxH       cap for compositor-requested sizes (default %dx%d)\n"
@@ -220,6 +222,22 @@ static int parse_opts(int argc, char **argv, struct opts *o)
 				elog("error: --max-size must be WxH within %dx%d\n", MAX_W, MAX_H); return -1;
 			}
 			i++;
+		} else if (!strcmp(a, "--window-type")) {
+			const char *p;
+			int n = 0;
+			/* luna-surfacemanager reads the property _WEBOS_WINDOW_TYPE. */
+			if (!v || strncmp(v, "_WEBOS_WINDOW_TYPE_", 19) != 0) {
+				elog("error: --window-type must look like _WEBOS_WINDOW_TYPE_OVERLAY\n");
+				return -1;
+			}
+			for (p = v; *p; p++, n++) {
+				unsigned char c = (unsigned char)*p;
+				if (n >= 64 || !(c == '_' || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))) {
+					elog("error: --window-type must look like _WEBOS_WINDOW_TYPE_OVERLAY\n");
+					return -1;
+				}
+			}
+			o->window_type = v; i++;
 		} else if (!strcmp(a, "--app-id")) {
 			const char *p;
 			int n = 0;
@@ -267,6 +285,10 @@ static int parse_opts(int argc, char **argv, struct opts *o)
 	if (o->height > o->max_h) o->height = o->max_h;
 	if (o->webos_key_mask && !o->webos_shell) {
 		elog("error: --webos-key-mask requires --webos-shell\n");
+		return -1;
+	}
+	if (o->window_type && !o->webos_shell) {
+		elog("error: --window-type requires --webos-shell\n");
 		return -1;
 	}
 	return 0;
@@ -384,7 +406,7 @@ enum { SHM_POOL_CREATE_BUFFER = 0, SHM_POOL_DESTROY = 1 };
 enum { BUFFER_DESTROY = 0 };
 enum { SURFACE_DESTROY = 0, SURFACE_ATTACH = 1, SURFACE_DAMAGE = 2, SURFACE_FRAME = 3, SURFACE_COMMIT = 6 };
 enum { SHELL_GET_SHELL_SURFACE = 0 };
-enum { SHSURF_PONG = 0, SHSURF_SET_TOPLEVEL = 3, SHSURF_SET_FULLSCREEN = 5, SHSURF_SET_TITLE = 8 };
+enum { SHSURF_PONG = 0, SHSURF_SET_TOPLEVEL = 3, SHSURF_SET_FULLSCREEN = 5, SHSURF_SET_TITLE = 8, SHSURF_SET_CLASS = 9 };
 enum { SEAT_GET_POINTER = 0, SEAT_GET_KEYBOARD = 1 };
 #define WL_SHM_FORMAT_XRGB8888 1
 /* wl_keyboard.key carries the evdev code (wayland.xml). XKB keycode = evdev + 8.
@@ -853,10 +875,11 @@ static void buf_release(void *data, struct wl_proxy *b)
 /* ---- main ------------------------------------------------------------- */
 static void print_config(const struct opts *o)
 {
-	printf("dry_run=%d\ninput=%d\nwebos_shell=%d\nwebos_key_mask=%d\nexit_on_leave=%d\negl=%d\napp_id=%s\nduration_s=%d\n"
+	printf("dry_run=%d\ninput=%d\nwebos_shell=%d\nwebos_key_mask=%d\nexit_on_leave=%d\negl=%d\napp_id=%s\nwindow_type=%s\nduration_s=%d\n"
 	       "size=%dx%d\nmax_size=%dx%d\ncolor=%06x\nfullscreen=%d\n"
 	       "runtime_dir=%s\ndisplay=%s\n",
 	       o->dry_run, o->input, o->webos_shell, o->webos_key_mask, o->exit_on_leave, o->egl, o->app_id,
+	       o->window_type ? o->window_type : "-",
 	       o->duration_s, o->width, o->height, o->max_w, o->max_h,
 	       (unsigned)o->color, !o->no_fullscreen, o->runtime_dir, o->display_name);
 }
@@ -1821,11 +1844,24 @@ int main(int argc, char **argv)
 		if (!S.webos_shell_surface) return fail_alloc("wl_webos_shell_surface");
 		if (install_webos_listener(S.webos_shell_surface) != 0) return fail_listener("wl_webos_shell_surface");
 		W.proxy_marshal(S.webos_shell, (uint32_t)S.op_get_shell_surface, S.webos_shell_surface, S.surface);
-		W.proxy_marshal(S.webos_shell_surface, (uint32_t)S.op_set_state, st);
+		/* Properties before set_state, and both before the first commit.
+		 * The 0.4 client sent set_state(fullscreen=3) first, while appId was
+		 * still unset. OSE luna-surfacemanager applies appId, _WEBOS_WINDOW_TYPE
+		 * and displayAffinity from set_property; overlay/popup models keep a
+		 * surface only when displayAffinity equals the display id (OSE default
+		 * is 0). Fullscreen remains OSE value 3, not switched to maximized 2:
+		 * the XML gives both, and this TV has not shown which number it uses. */
 		W.proxy_marshal(S.webos_shell_surface, (uint32_t)S.op_set_property, "appId", o.app_id);
-		elog("info: webos set_state opcode=%d value=%u (OSE enum fullscreen=3 is an assumption, not verified TV semantics; numeric value is not in the runtime interface)\n",
+		elog("webos: set_property opcode=%d name=appId value=%s\n", S.op_set_property, o.app_id);
+		if (o.window_type) {
+			W.proxy_marshal(S.webos_shell_surface, (uint32_t)S.op_set_property, "_WEBOS_WINDOW_TYPE", o.window_type);
+			elog("webos: set_property opcode=%d name=_WEBOS_WINDOW_TYPE value=%s\n", S.op_set_property, o.window_type);
+		}
+		W.proxy_marshal(S.webos_shell_surface, (uint32_t)S.op_set_property, "displayAffinity", "0");
+		elog("webos: set_property opcode=%d name=displayAffinity value=0\n", S.op_set_property);
+		W.proxy_marshal(S.webos_shell_surface, (uint32_t)S.op_set_state, st);
+		elog("webos: set_state opcode=%d value=%u (OSE default=0 minimized=1 maximized=2 fullscreen=3; fullscreen is an assumption, not verified TV semantics; properties were sent first, before this call and before the first commit)\n",
 		        S.op_set_state, st);
-		elog("info: webos set_property opcode=%d name=appId value=%s\n", S.op_set_property, o.app_id);
 		if (o.webos_key_mask) {
 			/* OSE webos_key: default 0xFFFFFFF8 omits home|back|exit. OR back|exit.
 			 * tests/run_tests.py checks these numbers against the vendored XML. */
@@ -1839,7 +1875,13 @@ int main(int argc, char **argv)
 		if (!S.shell_surface) return fail_alloc("wl_shell_surface");
 		if (LISTEN(S.shell_surface, shell_surface_listener, NULL) != 0) return fail_listener("wl_shell_surface");
 		W.proxy_marshal(S.shell, SHELL_GET_SHELL_SURFACE, S.shell_surface, S.surface);
-		W.proxy_marshal(S.shell_surface, SHSURF_SET_TITLE, "wayland-hello");
+		/* Plain wl_shell has no webOS property map. LSM registered that path as
+		 * a CARD with an empty app_id. set_title and set_class both carry the
+		 * app id so a later run can see whether LSM copies either one. */
+		W.proxy_marshal(S.shell_surface, SHSURF_SET_TITLE, o.app_id);
+		elog("shell: set_title opcode=%d value=%s\n", SHSURF_SET_TITLE, o.app_id);
+		W.proxy_marshal(S.shell_surface, SHSURF_SET_CLASS, o.app_id);
+		elog("shell: set_class opcode=%d value=%s\n", SHSURF_SET_CLASS, o.app_id);
 		if (o.no_fullscreen) W.proxy_marshal(S.shell_surface, SHSURF_SET_TOPLEVEL);
 		else W.proxy_marshal(S.shell_surface, SHSURF_SET_FULLSCREEN, 0u, 0u, (struct wl_proxy *)NULL);
 	}

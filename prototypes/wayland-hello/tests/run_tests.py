@@ -51,7 +51,13 @@ def parser_tests():
     check("v2 flags parse", rc == 0 and "input=1" in out and "webos_shell=1" in out and "egl=1" in out
           and "app_id=wayland-hello-prototype" in out, out)
     rc, out, _, _ = run(["--version"])
-    check("version 0.4", rc == 0 and "0.4-prototype" in out, out)
+    check("version 0.5", rc == 0 and "0.5-prototype" in out, out)
+    rc, _, err, _ = run(["--parse-only", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY"])
+    check("window-type requires webos shell", rc == 2, "rc=%d %s" % (rc, err))
+    rc, _, err, _ = run(["--parse-only", "--webos-shell", "--window-type", "OVERLAY"])
+    check("window-type must be the webOS token", rc == 2, "rc=%d %s" % (rc, err))
+    rc, out, _, _ = run(["--parse-only", "--webos-shell", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY", "--app-id", "wayland-hello-prototype"])
+    check("window-type parses", rc == 0 and "window_type=_WEBOS_WINDOW_TYPE_OVERLAY" in out and "app_id=wayland-hello-prototype" in out, out)
     rc, _, err, _ = run(["--parse-only", "--webos-key-mask"])
     check("key mask requires webos shell", rc == 2, "rc=%d %s" % (rc, err))
     rc, out, _, _ = run(["--parse-only", "--webos-shell", "--webos-key-mask", "--exit-on-leave"])
@@ -136,6 +142,9 @@ def mock_tests():
           and "frame: pending callback destroyed during cleanup" in err
           and "summary: commits=" in err and "frame_done=0" in err and "frame_pending=1" in err, err[-500:])
     check("shell ping is logged and ponged", "shell: ping serial=" in err and "shell: pong serial=" in err, err)
+    check("wl_shell title and class carry the app id",
+          any(e.get("req") == "set_title" and e.get("args") == ["wayland-hello-prototype"] for e in ev)
+          and any(e.get("req") == "set_class" and e.get("args") == ["wayland-hello-prototype"] for e in ev), str(reqs(ev)))
     check("configure logs raw and clamped size", "raw=5000x3000" in err and "clamped=1920x1080" in err, err)
 
     rc, out, err, dt = run(["--dry-run", "--duration", "2"],
@@ -266,6 +275,12 @@ def webos_tests():
           any(i == "wl_webos_shell" and r == "op1" for i, r, a in found) and "get_shell_surface=1" in err, str(found))
     check("set_state fullscreen value 3", any(r == "op1" and a == [3] for i, r, a in found if i.endswith("surface")), str(found))
     check("appId property sent", any(r == "op2" and a == ["appId", "wayland-hello-prototype"] for i, r, a in found), str(found))
+    seq = [(e.get("req"), e.get("args")) for e in ev if e.get("iface") == "wl_webos_shell_surface"]
+    state_at = next(i for i, (r, a) in enumerate(seq) if r == "op1")
+    prop_at = [i for i, (r, a) in enumerate(seq) if r == "op2"]
+    check("properties precede set_state", prop_at and max(prop_at) < state_at, str(seq))
+    check("displayAffinity 0 is sent before state",
+          any(r == "op2" and a == ["displayAffinity", "0"] for r, a in seq[:state_at]), str(seq))
     check("key mask not sent unless opted in", not any(r == "op3" for i, r, a in found), str(found))
     check("webos events logged with values",
           "webos: event state_changed value=3" in err and "webos: event position_changed x=10 y=20" in err
@@ -298,6 +313,14 @@ def webos_tests():
                                           env_extra={"WAYLAND_HELLO_LIB_DIR": d_ose})
     found = ops(ev)
     check("opt-in key mask sends OSE back|exit", rc == 0 and any(r == "op3" and a == [0xFFFFFFFE] for i, r, a in found), str(found) + err[-300:])
+
+    (rc, out, err, dt), ev, _ = with_mock(["--webos"], ["--webos-shell", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY", "--duration", "2"],
+                                          env_extra={"WAYLAND_HELLO_LIB_DIR": d_ose})
+    seq = [(e.get("req"), e.get("args")) for e in ev if e.get("iface") == "wl_webos_shell_surface"]
+    check("overlay window type is a set_property before set_state",
+          rc == 0 and any(r == "op2" and a == ["_WEBOS_WINDOW_TYPE", "_WEBOS_WINDOW_TYPE_OVERLAY"] for r, a in seq)
+          and "webos: set_property opcode=2 name=_WEBOS_WINDOW_TYPE value=_WEBOS_WINDOW_TYPE_OVERLAY" in err
+          and "webos: set_state opcode=1 value=3" in err, str(seq) + err[-500:])
 
     (rc, out, err, dt), ev, _ = with_mock(["--webos"], ["--webos-shell", "--webos-key-mask", "--duration", "2"],
                                           env_extra={"WAYLAND_HELLO_LIB_DIR": d_nokey})
