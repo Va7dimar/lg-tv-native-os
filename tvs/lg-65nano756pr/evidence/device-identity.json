@@ -1,26 +1,47 @@
 {
-  "recorded_at": "2026-11-08 04:17 Atlantic/Reykjavik",
-  "gate": "G1-record only; G1-target BLOCKED",
+  "recorded_at": "2026-11-08 15:10 Atlantic/Reykjavik",
+  "gate": "G1-record partial; G1-target still BLOCKED (suffix/board/SoC unknown)",
   "model": {
     "value": "65NANO756PR",
-    "confidence": "live confirmed by earlier worker",
-    "source": "device-facts.md: ordinary system/getSystemInfo, 2026-11-08 03:37 Atlantic/Reykjavik; no new TV call"
+    "confidence": "user-photo-confirmed plus earlier SSAP getSystemInfo",
+    "source": "TV Information photo 2026-11-08 14:59 Atlantic/Reykjavik; earlier device-facts.md 03:37 getSystemInfo"
+  },
+  "deviceName": {
+    "value": "[LG] webOS TV NANO756PR",
+    "confidence": "user-photo-confirmed",
+    "source": "TV Information photo 2026-11-08 14:59 Atlantic/Reykjavik"
   },
   "salesSuffix": {
     "value": null,
-    "status": "unknown"
+    "status": "unknown; not shown on the TV Information screen (model printed as 65NANO756PR only)"
+  },
+  "webOSTvVersion": {
+    "value": "6.5.3-47 (kisscurl-koli)",
+    "confidence": "user-photo-confirmed",
+    "source": "TV Information photo 2026-11-08 14:59 Atlantic/Reykjavik",
+    "note": "This is the on-screen webOS TV Version, not the Support \u2192 Software Update dotted firmware number."
   },
   "installedSoftware": {
-    "value": null,
-    "status": "unknown; earlier firmware-info call401, not retried"
+    "value": "03.53.45",
+    "confidence": "user-photo-confirmed",
+    "source": "Software Update photo 2026-11-08 15:02 Atlantic/Reykjavik",
+    "autoUpdate": "OFF",
+    "offeredUpdate": {
+      "version": "03.53.46",
+      "sizeOnScreen": "1142MB",
+      "downloadAndInstallPressed": false
+    },
+    "note": "Distinct from webOS TV Version 6.5.3-47 (kisscurl-koli). Owner advised not to install 03.53.46 yet."
   },
-  "webOSBuild": {
-    "value": null,
-    "status": "unknown; webOS6 is product generation only"
+  "availableInternalStorage": {
+    "value": "1.07/2.03GB",
+    "confidence": "user-photo-confirmed",
+    "source": "TV Information photo 2026-11-08 14:59 Atlantic/Reykjavik",
+    "note": "On-screen available/total as displayed; not interpreted as full eMMC size."
   },
   "boardAssembly": {
     "value": null,
-    "status": "unknown; seller IDs are candidates only"
+    "status": "unknown; seller IDs remain candidates only"
   },
   "pcbRevision": {
     "value": null,
@@ -32,11 +53,24 @@
   },
   "SoC": {
     "value": null,
-    "status": "unknown; no inference from RTK/UD15D labels"
+    "status": "unknown; kisscurl-koli is not treated as a unique SoC identifier (see webos-6.5.3-47-kisscurl-koli-mapping-2026-11-08.md)"
   },
-  "sensitiveIdentifiers": "Serial/MAC/network identifiers intentionally excluded",
-  "newTVAuthorization": false,
+  "sensitiveIdentifiers": "Serial/MAC/network identifiers from the photo intentionally excluded and not committed. Raw photo not stored in the repo.",
+  "photo_provenance": {
+    "owner_photo_time": "2026-11-08 14:59 Atlantic/Reykjavik",
+    "screen": "TV Information",
+    "raw_photo_in_repo": false,
+    "executor_opened_original_file": false,
+    "note": "Fields recorded from the coordinating agent's visual transcription of the owner's photo. The executor sandbox did not contain the JPEG attachment."
+  },
   "source_configuration_evidence": "evidence/source-configuration-closure.json",
-  "source_configuration_limit": "RTD2875/B3/B7/k6lsourcelabelsNOTmeasuredunitSoC/board;unknownfieldsunchanged",
-  "authorization_note": "HistoricalnewTVAuthorizationfieldappliestoearlierrecord;latestownerpermissionscoordinatedbyparent,thisresearchworkerperformsnoTVactions."
+  "source_configuration_limit": "RTD2875/B3/B7/k6l source labels are not measured unit SoC/board; unknown hardware fields unchanged",
+  "authorization_note": "No TV settings changes, no update check, no 401 bypass, no developer mode or rooting.",
+  "photo_provenance_software_update": {
+    "owner_photo_time": "2026-11-08 15:02 Atlantic/Reykjavik",
+    "screen": "Software Update",
+    "raw_photo_in_repo": false,
+    "executor_opened_original_file": false,
+    "note": "Fields recorded from the coordinating agent visual transcription. JPEG not present in the executor sandbox."
+  }
 }

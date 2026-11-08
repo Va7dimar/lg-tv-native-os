@@ -9,3 +9,33 @@ UNAVAILABLE:
 - Firmware/software version, webOS build, board/SoC id: ssap://com.webos.service.update/getCurrentSWInformation -> 401 insufficient permissions (not bypassed)
 - Exact sales suffix (e.g. .AEK) not reported by device
 How user can get them: TV Settings > General/Support > About This TV (shows software version, webOS TV version, model).
+
+# 2026-11-08 14:59 Atlantic/Reykjavik — TV Information photo
+Owner photographed All Settings → General → Devices → TV Management → TV Information.
+The raw JPEG was not copied into the repository. Serial number and wired MAC were
+visible on the screen and are not recorded here.
+
+User-photo-confirmed (non-sensitive fields):
+- Device Name: `[LG] webOS TV NANO756PR`
+- Model: `65NANO756PR` (no extra sales suffix such as `.AEK` or `.AEU` shown on this screen)
+- webOS TV Version: `6.5.3-47 (kisscurl-koli)`
+- Available Internal Storage: `1.07/2.03GB`
+
+This webOS TV Version is not the dotted Software Version (for example 03.53.xx)
+shown under Support → Software Update. That photo is still pending.
+Sales suffix, board, PCB revision, panel variant, and SoC remain unknown.
+No new SSAP calls, no 401 bypass, no update check.
+
+# 2026-11-08 15:02 Atlantic/Reykjavik — Software Update photo
+Owner photographed All Settings → Support → Software Update. Raw JPEG not
+copied into the repository. No Download and Install, and no update check,
+was performed.
+
+User-photo-confirmed:
+- Software Version: `03.53.45`
+- Auto Update: OFF
+- Banner: an important software update is available `03.53.46` / `1142MB`
+- Download and Install was visible and not pressed
+
+This is the dotted software/firmware number. It is distinct from the
+already-recorded webOS TV Version `6.5.3-47 (kisscurl-koli)`.

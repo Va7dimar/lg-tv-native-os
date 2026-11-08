@@ -245,3 +245,12 @@ Owner may now look at read-only info screens. No SSAP buttons sent (non-determin
 Unchanged documentary no-go: evidence/boot-route.md and evidence/recovery-case.md. Stock 03.53.45/.46 listings are not independent recovery from overwritten boot/system software.
 
 Claude Opus 5.5/high 71.168s read-only review of the binutils/header gap: no version from filenames; recommended libbfd-*.so / package-db / man-page filename search. That second search of the same members.jsonl found no versioned libbfd/libopcodes, manifests, or opkg/dpkg status files. Yocto thud/binutils 2.31.x remains a hypothesis. Raw: research/ai-reviews/claude-binutils-2026-11-08.md.
+
+# TV Information photo 2026-11-08 14:59 Atlantic/Reykjavik
+Owner photographed TV Information. Raw photo and serial/MAC not committed.
+Recorded: Device Name `[LG] webOS TV NANO756PR`; Model `65NANO756PR` (no suffix shown); webOS TV Version `6.5.3-47 (kisscurl-koli)`; storage `1.07/2.03GB`. Software Update photo still pending. Mapping note: evidence/webos-6.5.3-47-kisscurl-koli-mapping-2026-11-08.md. Does not by itself select 03.53.45/.46, SoC, or change the 20190307 vs 20191125 SDK or 4.4.84 source-kernel facts.
+
+# Software Update photo 2026-11-08 15:02 Atlantic/Reykjavik
+Owner photographed Software Update. Software Version `03.53.45`; Auto Update OFF; offered `03.53.46` / `1142MB` not installed. Combined with webOS TV Version `6.5.3-47 (kisscurl-koli)`. Official 03.53.46 notes say only "Fixing minor bugs in software." Recommendation: stay on 03.53.45. See evidence/firmware-03.53.45-to-03.53.46-2026-11-08.md and evidence/software-update-photo-2026-11-08.md. Claude review of the earlier webOS-string mapping (written before this photo arrived) is in research/ai-reviews/claude-kisscurl-koli-2026-11-08.md; its 03.53.45-as-most-likely guess is now confirmed.
+
+Codex and Gemini firmware reviews (2026-11-08 Atlantic/Reykjavik) both agreed with staying on 03.53.45 as a baseline-preservation choice. Gemini's koli=KLP/k7lp and anti-rollback claims were not adopted as facts.

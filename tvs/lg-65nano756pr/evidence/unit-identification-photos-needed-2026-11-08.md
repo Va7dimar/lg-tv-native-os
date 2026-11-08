@@ -53,3 +53,28 @@ board/panel silkscreen is still unauthorized.
 Board assembly, PCB revision, panel variant, and SoC are unlikely to
 appear in the menus above. Those stay unknown unless later legitimate
 documentation or separately authorized physical evidence supplies them.
+
+## Photo 1 status — received 2026-11-08 14:59 Atlantic/Reykjavik
+Owner sent the TV Information photo. Raw image not stored in git. Serial
+and wired MAC were visible and are not recorded.
+
+Recorded non-sensitive fields:
+- Device Name: `[LG] webOS TV NANO756PR`
+- Model: `65NANO756PR` (no extra suffix shown)
+- webOS TV Version: `6.5.3-47 (kisscurl-koli)`
+- Available Internal Storage: `1.07/2.03GB`
+
+These are now in `docs/device-facts.md` and `evidence/device-identity.json`.
+Mapping research: `evidence/webos-6.5.3-47-kisscurl-koli-mapping-2026-11-08.md`.
+
+## Photo 2 status — received 2026-11-08 15:02 Atlantic/Reykjavik
+Owner sent the Software Update photo. Raw image not stored in git.
+
+Recorded:
+- Software Version: `03.53.45`
+- Auto Update: OFF
+- Offered update: `03.53.46` / `1142MB` (Download and Install not pressed)
+
+## Still needed
+- Photo 3 (exterior factory label / suffix) remains optional.
+- Do not install 03.53.46 unless a later explicit decision says to.
