@@ -148,3 +148,23 @@ Agreement among reviewers is still hypothesis.
 ## Explicit stop
 
 No further action toward rooting will be taken by this agent unless a later owner decision asks for something that does **not** require writing or running an exploit (for example more public documentation research, or reading kernel/chip facts by some other already-permitted path). Installing Homebrew, launching unofficial clients at the TV, changing developer-mode state, or plugging a prepared USB stick are all out of scope for this stop point.
+
+## Addendum: README-focused CLI reviews and local hash check (same day, Atlantic/Reykjavik)
+
+After the first decision note, reading and interpretation of the pinned SlopBro README and the two webosbrew pages were pushed to the subscribed CLIs. This agent only did the hash check, wrote the files, and committed.
+
+Local hash check of the published `v0.1.0` asset `slopbro_packed.py` (downloaded to a temp path, hashed, then deleted; not executed, not added to git):
+
+- size: 78142 bytes
+- SHA-256: `b0a7cb1294daf37d0f6eac404604dab468af700462de7a7ed41a0ed8df7f1ad8`
+- matches the GitHub releases API publisher digest recorded earlier: yes
+
+README-focused reviews (still no how-to in this repo):
+
+- Codex fetched the pages itself: `research/ai-reviews/codex-slopbro-readme-2026-11-08.md`
+- Gemini reviewed pasted public text: `research/ai-reviews/gemini-slopbro-readme-2026-11-08.md`
+- Claude did not complete a review: `research/ai-reviews/claude-slopbro-readme-2026-11-08.md`
+
+Both completed reviews agree on the same conceptual usage picture from the README: a pairing prompt is stated as required; USB, Developer Mode app, LG account, and settings toggles are not stated as requirements; success is described as installing Homebrew Channel and enabling persistence; a failed attempt is claimed by the author to be harmless (no warranty); the README gives no undo procedure; webosbrew separately mentions factory reset as losing root and possibly preventing later re-rooting; the client runs on a LAN computer and privileged work then happens on the TV. webOS 6 is inside the author's 4–11 claim; `65NANO756PR`, `03.53.45`, and `kisscurl-koli` are not named in that README.
+
+Session recommendation is unchanged: **no-go for this agent proceeding to change the TV.**
