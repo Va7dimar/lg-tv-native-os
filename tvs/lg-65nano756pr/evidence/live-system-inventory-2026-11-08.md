@@ -63,3 +63,31 @@ boot route AND independent recovery, per the TV's own brick warning.
 ## Excluded secrets (kept out of git)
 serial_number, nduid, wifi_addr (MAC), wired_addr/ethaddr (MAC). Held only in volatile
 session output, not committed.
+
+## Boot/recovery read-only pass (2026-11-08 ~18:00 Atlantic/Reykjavik)
+- Booted bank confirmed: `root=/dev/mmcblk0p27` (Bank A).
+- No `/etc` file references bank selection (`mmcblk0p38`, `active_bank`, `bootbank`, `otacfg`):
+  bank choice is not made by userspace config; it most likely lives in the bootloader/boot
+  partitions (unverified).
+- No `fw_printenv`/`fw_setenv` and no `/etc/fw_env.config`: no standard U-Boot env access from Linux.
+- `/mnt/otycabi` and `/mnt/otncabi` are small read-only overlay trees (`tmp`,`usr`,`var`), dated
+  2025-09-13 (same as the build) — look like OTA/"cabinet" payload overlays, not a bootloader.
+- `/var/run/nyx/os_info.json`: image `starfish-global-secured`, `encryption_key_type: prodkey`,
+  `webos_name: webOS TV Lite`, build 20250913080627, manufacturing version 03.53.45.
+  - **`secured` + `prodkey` is strong evidence of a signed/secure-boot production image.**
+    A modified kernel or rootfs would likely be rejected by the bootloader. This is the main
+    obstacle for a native-OS replacement and is NOT yet characterized.
+- dmesg ring buffer had already rotated past early boot (only Realtek audio/log lines); bootloader
+  messages were not retrievable this way.
+
+## What this means for the custom-OS goal
+1. Flashing a custom kernel/rootfs is **not** a viable next step: signed image (`secured`/`prodkey`)
+   plus no known bank-select mechanism plus no independent recovery = brick risk.
+2. Viable without touching system partitions: run custom userspace from writable storage
+   (`/media/developer`, `/home`, `p58`/`p59`) as root — e.g. a custom full-screen launcher/UI,
+   or a chroot of another Linux userland drawing via the Mali DRM/framebuffer — started at boot
+   through the Homebrew Channel startup hook. This gives a "custom OS experience" on top of the
+   stock signed kernel.
+3. Open questions: how the bootloader verifies images and selects A/B; whether `/dev/dri/card0`
+   is usable while the stock compositor runs; whether the stock UI can be stopped/replaced
+   cleanly and restored on reboot.
