@@ -1,4 +1,13 @@
-# Large / vendor-licensed inputs (recorded by hash in evidence manifests)
+# Large / vendor-licensed inputs (recorded by hash in per-TV SOURCES.md and evidence manifests)
+# Current per-TV locations
+tvs/*/sources/catalog/archives/
+tvs/*/sources/catalog/inspection-*/
+tvs/*/sources/sdk-candidates/**/assets/
+tvs/*/sources/sdk-candidates/**/inspection-*/
+tvs/*/sources/official-webos6-guide.zip
+tvs/*/sources/official-guide-extracted/
+tvs/*/sources/official-guide-eng.txt
+# Legacy top-level locations (still excluded if present)
 source-catalog/archives/
 source-catalog/inspection-*/
 sdk-candidates/**/assets/

@@ -9,9 +9,9 @@ No original LG catalog archive was read, parsed, or hash-rechecked. The prior al
 
 ## Decision records
 
-- Historical proposal (retained, marked historical): `handoff/targeted-inner-source-proposal.md`
+- Historical proposal (retained, marked historical): `tvs/lg-65nano756pr/handoff/targeted-inner-source-proposal.md`
 - Executable addendum: `docs/superpowers/plans/2026-11-08-targeted-core-two-phase.md`
-- Checklist note: `handoff/approval-checklist.md` (2026-11-08 05:06 Atlantic/Reykjavik)
+- Checklist note: `tvs/lg-65nano756pr/handoff/approval-checklist.md` (2026-11-08 05:06 Atlantic/Reykjavik)
 
 ## What was implemented
 

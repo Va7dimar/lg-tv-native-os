@@ -3,10 +3,10 @@
 Owner Continue authorizes this follow-up question; parent requires independent command review then an actual run handoff. Review success is not authority by itself. Preparation only: no archive was read/parsed/rehash/copy attempted; existing staged-file lstat and already-generated metadata checked. No custom extractor or production code changed.
 
 ## Closed inputs and output
-- `/workspace/lg-tv/source-catalog/inspection-core-two-PENDING-REVIEW/staged/kernel-1.0.0-711..4.tar.gz`: 170350960B; expected SHA256 `110f08578519954be3113108ca461d4190d387c3cbb6e50d648274c9dcaf9962` verified in completed CORE TWO phase, not rehashed now.
-- `/workspace/lg-tv/source-catalog/inspection-core-two-PENDING-REVIEW/staged/bootcode-1.0.0-1099.7.tar.gz`: 12014324B; expected SHA256 `b88f252cf9ae4f4535e015959916cd87067f0e6cf551ef0f189cdc2f4365e23e` verified in completed CORE TWO phase, not rehashed now.
+- `/workspace/lg-tv/tvs/lg-65nano756pr/sources/catalog/inspection-core-two-PENDING-REVIEW/staged/kernel-1.0.0-711..4.tar.gz`: 170350960B; expected SHA256 `110f08578519954be3113108ca461d4190d387c3cbb6e50d648274c9dcaf9962` verified in completed CORE TWO phase, not rehashed now.
+- `/workspace/lg-tv/tvs/lg-65nano756pr/sources/catalog/inspection-core-two-PENDING-REVIEW/staged/bootcode-1.0.0-1099.7.tar.gz`: 12014324B; expected SHA256 `b88f252cf9ae4f4535e015959916cd87067f0e6cf551ef0f189cdc2f4365e23e` verified in completed CORE TWO phase, not rehashed now.
 
-Fresh output: `/workspace/lg-tv/source-catalog/inspection-build-guides-2026-11-08`; absent including dangling symlink and no symlink ancestors at preparation. Recheck immediately before run; if present STOP without deleting/overwriting or choosing alternate invocation.
+Fresh output: `/workspace/lg-tv/tvs/lg-65nano756pr/sources/catalog/inspection-build-guides-2026-11-08`; absent including dangling symlink and no symlink ancestors at preparation. Recheck immediately before run; if present STOP without deleting/overwriting or choosing alternate invocation.
 
 ## Exact selections
 - `linux-4.4.3/README_HowToMake.txt` from `kernel-1.0.0-711..4.tar.gz`: 1217B. Existing index says regular file,unselected.
@@ -49,6 +49,6 @@ python3 /workspace/lg-tv/tooling/isolate_inventory.py \
 ```
 
 ## Subscribed documentary reviews completed (not independent code-review replacement)
-Same immutable self-contained packet: `plan-reviews/2026-11-08-build-guides/review-prompt.txt`; all three completed sequentially without timeout. Opus requested5.5high returned a substantive review in60.410s; JSON modelUsage unexpectedly includes5.5AND4.8 and safety_stops2,spawned0,is_errorfalse. No operator fallback/retry was made;exclusive5.5 coverage cannot be claimed. Codex actual headergpt-6.1-sol/high returned in38.541s. Gemini requestedgemini-4-argon-high returned in62.774s;output does not independently report model identity. No blanket code audit or actual-unit verification occurred:reviewers saw supplied quotes/contract/command,not archives.
+Same immutable self-contained packet: `tvs/lg-65nano756pr/research/plan-reviews/2026-11-08-build-guides/review-prompt.txt`; all three completed sequentially without timeout. Opus requested5.5high returned a substantive review in60.410s; JSON modelUsage unexpectedly includes5.5AND4.8 and safety_stops2,spawned0,is_errorfalse. No operator fallback/retry was made;exclusive5.5 coverage cannot be claimed. Codex actual headergpt-6.1-sol/high returned in38.541s. Gemini requestedgemini-4-argon-high returned in62.774s;output does not independently report model identity. No blanket code audit or actual-unit verification occurred:reviewers saw supplied quotes/contract/command,not archives.
 
 Reconciled:manual hash equality gates trust in findings;tool hashes/output freshness/namespace/limits require real preflight,not a reviewer assertion. Corrected all-reviewer shorthand that1217B/member alone bounds exact3442B (it does not). Opus suggestion to read PRJ.inc was rejected as outside the EXACTthree-guides scope. Guide text could document candidate procedures but cannot prove safe,accepted exact-unit boot/recovery;Gemini’s blanket statement that guides “cannot answer” mechanisms was narrowed accordingly. No mapping,architecture or hardware claim added from confidence alone. Parent independent literal-command review and run handoff remain outstanding.

@@ -15,8 +15,8 @@ Fresh preflight clock immediately before the command: 2026-11-08 06:30:12 GMT (e
 - `adaptation_libkadaptor_phase.py` SHA256 `7884236467e1533de7e3ac1266c602845cee35f4acbda11612d7e01dd36842c2`
 - `isolate_adaptation_phase.py` SHA256 `192dce045e47c30379e35e66584f6d21b584ecf6418a9729d1d334777730e55b`
 - helper `bounded_archive_inventory.py` SHA256 `ee7870b95a6603fae3c38d5a9908da559c598fd29a7b69ba7c2b9a369473ae2c` (also `isolate_inventory.py` `eb289faf86523479944275918a2777cf23c429d2b96dd1a8822a2ead2f371915`; CORE TWO files unchanged and unused for this command)
-- Input `/workspace/lg-tv/source-catalog/archives/webOS 6.0 KLP_1.0_2.tar.gz`: regular file, not a symlink, size 511945894 (tool verifies hash `95894dd81e2bb32fd1ced1eb119698f2e1464e6b9b5b5879ea51528d7d5e8832` before parse). mtime observed 2026-11-08 04:20:43.953641368 +0000
-- Output `/workspace/lg-tv/source-catalog/inspection-adaptation-PENDING-REVIEW`: did not exist (no dangling symlink). Ancestors `/workspace/lg-tv/source-catalog`, `/workspace/lg-tv`, `/workspace`, `/` were real directories, not symlinks
+- Input `/workspace/lg-tv/tvs/lg-65nano756pr/sources/catalog/archives/webOS 6.0 KLP_1.0_2.tar.gz`: regular file, not a symlink, size 511945894 (tool verifies hash `95894dd81e2bb32fd1ced1eb119698f2e1464e6b9b5b5879ea51528d7d5e8832` before parse). mtime observed 2026-11-08 04:20:43.953641368 +0000
+- Output `/workspace/lg-tv/tvs/lg-65nano756pr/sources/catalog/inspection-adaptation-PENDING-REVIEW`: did not exist (no dangling symlink). Ancestors `/workspace/lg-tv/source-catalog`, `/workspace/lg-tv`, `/workspace`, `/` were real directories, not symlinks
 - Disk free on `/workspace/lg-tv/source-catalog` at preflight: 116787204096 bytes (>= 10 GiB). After the run: 116594716672 bytes (observation, not a reservation)
 - No tooling source changes between the reviewed hashes and the run (hashes re-checked after analysis; still identical)
 
@@ -52,8 +52,8 @@ The combined selected-text cap (64 MiB) stopped inner plaintext selection after 
 
 ## Where to read results
 
-- Raw run: `/workspace/lg-tv/source-catalog/inspection-adaptation-PENDING-REVIEW/` (`phase.json`, `phase.md`, `launcher-result.json`, `launcher-stdout.txt`, `staged/`, `selected/`)
-- Analysis (admitted metadata + selected plaintext only): `/workspace/lg-tv/evidence/adaptation-inspection.md` and `/workspace/lg-tv/evidence/adaptation-inspection.json`
-- Repro appendix for later Page merge: `/workspace/lg-tv/handoff/adaptation-inspection-repro-appendix.md`
+- Raw run: `/workspace/lg-tv/tvs/lg-65nano756pr/sources/catalog/inspection-adaptation-PENDING-REVIEW/` (`phase.json`, `phase.md`, `launcher-result.json`, `launcher-stdout.txt`, `staged/`, `selected/`)
+- Analysis (admitted metadata + selected plaintext only): `/workspace/lg-tv/tvs/lg-65nano756pr/evidence/adaptation-inspection.md` and `/workspace/lg-tv/tvs/lg-65nano756pr/evidence/adaptation-inspection.json`
+- Repro appendix for later Page merge: `/workspace/lg-tv/tvs/lg-65nano756pr/handoff/adaptation-inspection-repro-appendix.md`
 
 No Page, project log, or shared ledger was edited. No TV/build/source-execution actions. No original-archive re-read after the isolated phase, and no parse of the staged tarball after copy verification.

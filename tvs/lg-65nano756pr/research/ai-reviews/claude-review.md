@@ -1,8 +1,8 @@
-Permission to write `claude-review.md` was denied, so the full review is below. I didn't run anything and there's no PowerShell here, so the proposed code is untested. Labels: **[lib]** = library behaviour I'm confident of, **[evidence]** = from your runs or the code, **[hyp]** = untested guess, **[unsure]** = I don't reliably know how webOS 6 behaves here.
+Permission to write `tvs/lg-65nano756pr/research/ai-reviews/claude-review.md` was denied, so the full review is below. I didn't run anything and there's no PowerShell here, so the proposed code is untested. Labels: **[lib]** = library behaviour I'm confident of, **[evidence]** = from your runs or the code, **[hyp]** = untested guess, **[unsure]** = I don't reliably know how webOS 6 behaves here.
 
 ## 1. Framing, and ENTER vs click
 
-- **[lib]** Your framing is correct. `type:button\nname:X\n\n`, sent as a text frame on the `getPointerInputSocket` path, is what lgtv2, aiowebostv, bscpylgtv and PyWebOSTV all use. `lgtv.ps1:23` matches it, and the navigation that worked confirms it **[evidence]**.
+- **[lib]** Your framing is correct. `type:button\nname:X\n\n`, sent as a text frame on the `getPointerInputSocket` path, is what lgtv2, aiowebostv, bscpylgtv and PyWebOSTV all use. `tvs/lg-65nano756pr/control/lgtv.ps1:23` matches it, and the navigation that worked confirms it **[evidence]**.
 - **[lib]** `ENTER` is the right name for OK; PyWebOSTV's `ok()` sends it. `type:click` is a different kind of event: it clicks wherever the pointer is, even if the pointer is hidden. **Keep ENTER** for moving through menus.
 - **Bug:** line 23 splits `LGKEYS` on commas without trimming. `"ENTER, LEFT"` sends the name `" LEFT"` with a leading space, which the TV probably ignores. Trim the names and only allow known ones.
 

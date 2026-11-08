@@ -1,5 +1,5 @@
 # CORE TWO handoff
-Inspection completed once, not a rerun request. Exact reviewed invocation and production hash match recorded under evidence/core-two-execution-2026-11-08/. Full findings with source-line quotes and selected-file hashes: evidence/kernel-bootcode-inspection.json / .md.
+Inspection completed once, not a rerun request. Exact reviewed invocation and production hash match recorded under tvs/lg-65nano756pr/evidence/core-two-execution-2026-11-08/. Full findings with source-line quotes and selected-file hashes: tvs/lg-65nano756pr/evidence/kernel-bootcode-inspection.json / .md.
 
 StatusOK,exit0,11.368s;64180members;4802selected files/12467926B. Kernel4.4.84 (directory named4.4.3),real RTK driver tree with HDMI RX/scaler/audio/CEC/IR/thermal metadata and conditional build integration. U-Boot2012.07 source plus LG_TOOLCHAIN_PATH/sysroot dependency. Multiple platform candidates,not actualunit identity. No compiler/toolchain supply or complete BSP established.
 

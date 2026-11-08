@@ -2,7 +2,7 @@
 
 Date: 2026-11-08 05:06 Atlantic/Reykjavik
 Approval: owner t68u quoted in full as `Continue`. Parent adopts CORE TWO ONLY (kernel + bootcode) after stating that targeted kernel/bootcode/adaptor inspection required a reviewed new scope and was paused. Optional `libkadaptor` is not included.
-Historical proposal (not the executable contract): `handoff/targeted-inner-source-proposal.md`
+Historical proposal (not the executable contract): `tvs/lg-65nano756pr/handoff/targeted-inner-source-proposal.md`
 Parent metadata reader (unchanged, separately reviewed): `docs/superpowers/plans/2026-11-08-bounded-source-inventory.md` and `tooling/bounded_archive_inventory.py`
 Status: implementable box-only synthetic-fixture tooling. This does **not** authorize reading, parsing, or hash-rechecking original LG catalog archives; TV/hardware/account actions; firmware; flashing; builds; downloaded-code execution; package installation; network requests; recursive extraction; a Chromium/all-three retry; or a self-approved inspection handoff.
 
