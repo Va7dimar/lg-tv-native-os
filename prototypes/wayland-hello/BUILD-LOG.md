@@ -52,3 +52,18 @@ Record the outputs here, including any failure. Things that could go wrong and n
 - `-nostdinc` plus the cross gcc's own `include` dir: check that no 2.36 headers leak in, using `link.map` and `-H` if you have doubts.
 - libgcc from a newer cross gcc could add NEEDED entries or symbol versions. `abi-check.sh` fails if it does.
 - `crt1.o`, `crti.o` and `crtn.o` must come from the sysroot. Check `build/arm/link.map`. A 2.34+ leak shows up as `__libc_start_main@GLIBC_2.34`, which `abi-check.sh` rejects.
+
+## 2026-11-08 ~18:40 Atlantic/Reykjavik: ARM cross-build (off-TV)
+- Host build: GCC 14.2.0, all 45 tests pass (mock compositor dry-run, surface lifecycle, bounded exit).
+- ARM toolchain: openlgtv buildroot-nc4 `2026.08-webos` (GCC 16.2.0, glibc 2.12.2 sysroot, Wayland 1.11.0),
+  SDK archive SHA256 matched GitHub's published digest. Unpacked outside the repo at /workspace/toolchains/webos-2026.08/.
+- Result: ARM build succeeded. ELF32 ARM EABI5, e_flags 0x05000200 (soft-float, same as TV binaries),
+  no Tag_ABI_VFP_args, max symbol version GLIBC_2.4 (well under the TV's 2.28).
+  NEEDED: libc.so.6, libdl.so.2, librt.so.1. Reports in abi/.
+- The repo's own ABI checker still fails because it doesn't allow librt; that's a checker allowlist question.
+  This is **not** an ABI PASS yet.
+- SDK libwayland-client SONAME libwayland-client.so.0 (file .so.0.3.0), matching the TV's filename.
+  Identical behavior isn't proven.
+- QEMU 7.2.0 static user mode segfaults (139) on **even a trivial hello-world** built with the same toolchain,
+  so the crash is an emulator/old-glibc issue, not this app. Emulated runtime remains untested.
+- No Weston test, and nothing copied to or run on the TV.
