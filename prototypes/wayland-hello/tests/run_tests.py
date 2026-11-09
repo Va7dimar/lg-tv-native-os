@@ -468,12 +468,37 @@ def telemetry_tests():
         check("close during the poll loop exits before the safety cap",
               rc == 0 and dt < 6.0 and "exiting (luna-close)" in err, "rc=%d dt=%.2f" % (rc, dt))
 
-        (rc, out, err, dt), ev, _ = luna_case("silent", "silent", ["--luna-register", "--duration", "2"])
-        check("silent bus is marked and still unregisters",
-              rc == 0 and "luna: no registerApp reply after" in err and "luna_replies=0" in err
-              and "exiting (deadline)" in err
+        (rc, out, err, dt), ev, _ = luna_case("silent", "silent", ["--luna-register", "--duration", "6"], timeout=15)
+        check("silent bus fails closed",
+              rc == 10 and "exiting (luna-reject)" in err and "luna: no registerApp reply after" in err
+              and "luna_replies=0" in err and 1.2 < dt < 3.5
               and err.find("fixture: LSUnregister") > err.find("no registerApp reply after"),
-              "rc=%d %s" % (rc, err[-500:]))
+              "rc=%d dt=%.2f %s" % (rc, dt, err[-500:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("nesta", "nest-close-inside", ["--luna-register", "--duration", "2"])
+        check("nested event=close does not end a top-level relaunch",
+              rc == 0 and dt > 1.2 and "luna: event=relaunch" in err and "luna-close" not in err,
+              "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+        (rc, out, err, dt), ev, _ = luna_case("nestb", "nest-close-outside", ["--luna-register", "--duration", "2"])
+        check("top-level relaunch wins when nested close comes first",
+              rc == 0 and dt > 1.2 and "luna: event=relaunch" in err and "luna-close" not in err,
+              "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+        (rc, out, err, dt), ev, _ = luna_case("nestrv", "nest-true-then-false", ["--luna-register", "--duration", "4"])
+        check("top-level returnValue false is not masked by a nested true",
+              rc == 10 and "exiting (luna-reject)" in err and not any(e.get("req") == "bind" for e in ev),
+              "rc=%d %s" % (rc, err[-400:]))
+        (rc, out, err, dt), ev, _ = luna_case("nestrv2", "nest-false-then-true", ["--luna-register", "--duration", "2"])
+        check("nested returnValue false does not mask a top-level registered",
+              rc == 0 and dt > 1.2 and "luna: event=registered" in err and "luna-reject" not in err,
+              "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = with_mock(
+            ["--stall"], ["--luna-register", "--duration", "3"], timeout=10,
+            env_extra={"WAYLAND_HELLO_LIB_DIR": fix, "WAYLAND_HELLO_LUNA_SCRIPT": "close-startup"})
+        check("stalled startup roundtrip aborts on luna close",
+              rc == 0 and dt < 0.8 and "exiting (luna-close)" in err
+              and "roundtrip deadline exceeded" not in err,
+              "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
 
         (rc, out, err, dt), ev, _ = luna_case("late", "late-reject", ["--luna-register", "--duration", "6"], timeout=20)
         check("mid-run reject exits as luna-reject",

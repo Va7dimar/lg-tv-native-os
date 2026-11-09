@@ -122,6 +122,46 @@ int g_main_context_iteration(void *ctx, int may_block)
 	iterations++;
 	if (!saved_cb) return 0;
 	if (!strcmp(script, "silent")) return 0;
+	if (!strcmp(script, "nest-close-inside")) {
+		if (iterations == 1) {
+			saved_cb((void *)1, (void *)1, NULL);
+		} else if (iterations == 2) {
+			snprintf(saved_payload, sizeof saved_payload,
+			         "{\"returnValue\":true,\"event\":\"relaunch\",\"parameters\":{\"event\":\"close\"}}");
+			saved_cb((void *)1, (void *)1, NULL);
+			saved_cb = NULL;
+		}
+		return 0;
+	}
+	if (!strcmp(script, "nest-close-outside")) {
+		if (iterations == 1) {
+			saved_cb((void *)1, (void *)1, NULL);
+		} else if (iterations == 2) {
+			snprintf(saved_payload, sizeof saved_payload,
+			         "{\"parameters\":{\"event\":\"close\"},\"returnValue\":true,\"event\":\"relaunch\"}");
+			saved_cb((void *)1, (void *)1, NULL);
+			saved_cb = NULL;
+		}
+		return 0;
+	}
+	if (!strcmp(script, "nest-true-then-false")) {
+		if (iterations == 1) {
+			snprintf(saved_payload, sizeof saved_payload,
+			         "{\"parameters\":{\"returnValue\":true},\"returnValue\":false}");
+			saved_cb((void *)1, (void *)1, NULL);
+			saved_cb = NULL;
+		}
+		return 0;
+	}
+	if (!strcmp(script, "nest-false-then-true")) {
+		if (iterations == 1) {
+			snprintf(saved_payload, sizeof saved_payload,
+			         "{\"parameters\":{\"returnValue\":false},\"returnValue\":true,\"event\":\"registered\"}");
+			saved_cb((void *)1, (void *)1, NULL);
+			saved_cb = NULL;
+		}
+		return 0;
+	}
 	if (!strcmp(script, "reject-roundtrip")) {
 		if (iterations == 2) {
 			snprintf(saved_payload, sizeof saved_payload,

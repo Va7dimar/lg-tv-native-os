@@ -138,6 +138,7 @@ static void elog(const char *fmt, ...);
 static void olog(const char *fmt, ...);
 static void arm_countdown(const char *trigger);
 static void luna_iterate(void);
+static void luna_check_ack(int at_deadline);
 static void cleanup(void);
 
 static void usage(FILE *f)
@@ -151,6 +152,8 @@ static void usage(FILE *f)
 "                       runs until BACK or EXIT; --duration is the safety cap\n"
 "                       (default %d, max %d). Without --demo the cap stays %d.\n"
 "  --luna-register      dlopen libluna-service2; subscribe to registerApp\n"
+"                       exit 10 unless a top-level registered reply arrives\n"
+"                       within 2s (OSE sends that reply in the same call)\n"
 "  --heartbeat-ms N     shm redraw every N ms while idle (100..60000)\n"
 "  --webos-shell        wl_webos_shell instead of wl_shell (fail closed)\n"
 "  --webos-key-mask     with --webos-shell, set_key_mask for BACK and EXIT\n"
@@ -535,6 +538,7 @@ static struct {
 	int64_t heartbeat_next;
 	int luna_polls;
 	int luna_replies;
+	int luna_acked;
 	int model_key_set;
 	uint32_t model_key;
 	int64_t model_log_ms;
@@ -683,7 +687,11 @@ static int roundtrip_bounded(void)
 	}
 	W.proxy_marshal((struct wl_proxy *)S.display, DISPLAY_SYNC, cb);
 	while (!done) {
-		int ms = remaining_ms();
+		int ms;
+		if (S.quit || S.fatal) { W.proxy_destroy(cb); return -1; }
+		luna_check_ack(0);
+		if (S.quit || S.fatal) { W.proxy_destroy(cb); return -1; }
+		ms = remaining_ms();
 		if (ms == 0 || g_stop) { elog("error: roundtrip deadline exceeded\n"); W.proxy_destroy(cb); return -1; }
 		if (pump_once(ms > 100 ? 100 : ms) < 0) { W.proxy_destroy(cb); return -1; }
 	}
@@ -1312,7 +1320,11 @@ static struct {
 	void (*loop_unref)(void *);
 	int (*iterate)(void *, int);
 	int up;
+	int noted_no_reply;
+	int64_t call_ms;
 } Luna;
+
+#define LUNA_REGISTER_ACK_MS 2000
 
 static const char *luna_skip_ws(const char *p)
 {
@@ -1320,50 +1332,94 @@ static const char *luna_skip_ws(const char *p)
 	return p;
 }
 
-/* True if any "event" string in the payload equals event. A nested
- * parameters.event must not hide a later top-level close. */
-static int luna_has_event(const char *payload, const char *event)
+/* Skip one JSON value. Strings and nested objects/arrays are not searched. */
+static const char *luna_skip_value(const char *p)
+{
+	if (*p == '"') {
+		p++;
+		while (*p && *p != '"') {
+			if (*p == '\\' && p[1]) p += 2;
+			else p++;
+		}
+		if (*p == '"') p++;
+		return p;
+	}
+	if (*p == '{' || *p == '[') {
+		char open = *p;
+		char close = (open == '{') ? '}' : ']';
+		int depth = 1;
+		p++;
+		while (*p && depth) {
+			if (*p == '"') {
+				p = luna_skip_value(p);
+				continue;
+			}
+			if (*p == open) depth++;
+			else if (*p == close) depth--;
+			if (*p) p++;
+		}
+		return p;
+	}
+	while (*p && *p != ',' && *p != '}' && *p != ']' &&
+	       *p != ' ' && *p != '\t' && *p != '\n' && *p != '\r')
+		p++;
+	return p;
+}
+
+/* Value of a top-level key, or NULL. Nested keys do not match. */
+static const char *luna_top_value(const char *payload, const char *key)
 {
 	const char *p;
-	size_t en;
-	if (!payload || !event) return 0;
-	en = strlen(event);
-	for (p = payload; (p = strstr(p, "\"event\"")) != NULL; p += 7) {
-		const char *q = luna_skip_ws(p + 7);
-		size_t n;
-		if (*q != ':') continue;
-		q = luna_skip_ws(q + 1);
-		if (*q != '"') continue;
-		q++;
-		n = 0;
-		while (q[n] && q[n] != '"') n++;
-		if (q[n] == '"' && n == en && memcmp(q, event, en) == 0) return 1;
+	size_t klen;
+	if (!payload || !key) return NULL;
+	p = luna_skip_ws(payload);
+	if (*p != '{') return NULL;
+	p++;
+	klen = strlen(key);
+	while (*p) {
+		const char *ks, *ke;
+		p = luna_skip_ws(p);
+		if (*p == '}' || *p == '\0') return NULL;
+		if (*p == ',') { p++; continue; }
+		if (*p != '"') return NULL;
+		ks = ++p;
+		while (*p && *p != '"') {
+			if (*p == '\\' && p[1]) p += 2;
+			else p++;
+		}
+		if (*p != '"') return NULL;
+		ke = p++;
+		p = luna_skip_ws(p);
+		if (*p != ':') return NULL;
+		p = luna_skip_ws(p + 1);
+		if ((size_t)(ke - ks) == klen && memcmp(ks, key, klen) == 0)
+			return p;
+		p = luna_skip_value(p);
 	}
-	return 0;
+	return NULL;
 }
 
-/* The first returnValue boolean. false means SAM rejected the call. */
-static int luna_return_false(const char *payload)
+static int luna_top_string_is(const char *payload, const char *key, const char *lit)
 {
-	const char *p, *q;
-	if (!payload) return 0;
-	p = strstr(payload, "\"returnValue\"");
-	if (!p) return 0;
-	q = luna_skip_ws(p + 13);
-	if (*q != ':') return 0;
-	q = luna_skip_ws(q + 1);
-	return strncmp(q, "false", 5) == 0 &&
-	       (q[5] == '\0' || q[5] == ',' || q[5] == '}' || q[5] == ' ' || q[5] == '\n' || q[5] == '\r' || q[5] == '\t');
+	const char *v = luna_top_value(payload, key);
+	size_t n;
+	if (!v || *v != '"' || !lit) return 0;
+	v++;
+	n = strlen(lit);
+	return strncmp(v, lit, n) == 0 && v[n] == '"';
 }
 
-/* Hub-style failure with no lifecycle event. Close still wins in the caller. */
-static int luna_hub_error(const char *payload)
+static int luna_top_false(const char *payload, const char *key)
 {
-	if (!payload) return 0;
-	if (luna_has_event(payload, "close") || luna_has_event(payload, "registered") ||
-	    luna_has_event(payload, "relaunch") || luna_has_event(payload, "pause"))
-		return 0;
-	return strstr(payload, "\"errorCode\"") != NULL || strstr(payload, "\"errorText\"") != NULL;
+	const char *v = luna_top_value(payload, key);
+	if (!v || strncmp(v, "false", 5) != 0) return 0;
+	return v[5] == '\0' || v[5] == ',' || v[5] == '}' ||
+	       v[5] == ' ' || v[5] == '\n' || v[5] == '\r' || v[5] == '\t';
+}
+
+static int luna_top_key(const char *payload, const char *key)
+{
+	return luna_top_value(payload, key) != NULL;
 }
 
 static bool luna_on_reply(struct ls_handle *sh, struct ls_message *msg, void *ctx)
@@ -1382,20 +1438,25 @@ static bool luna_on_reply(struct ls_handle *sh, struct ls_message *msg, void *ct
 	memcpy(buf, payload, n);
 	buf[n] = 0;
 	elog("luna: reply %s%s\n", buf, payload[n] ? "..." : "");
-	if (luna_has_event(payload, "close")) {
+	if (luna_top_string_is(payload, "event", "close")) {
 		elog("luna: event=close\n");
 		S.quit = 1;
 		S.reason = REASON_LUNA_CLOSE;
-	} else if (luna_return_false(payload) || luna_hub_error(payload)) {
+	} else if (luna_top_false(payload, "returnValue") ||
+	           ((luna_top_key(payload, "errorCode") || luna_top_key(payload, "errorText")) &&
+	            !luna_top_string_is(payload, "event", "registered") &&
+	            !luna_top_string_is(payload, "event", "relaunch") &&
+	            !luna_top_string_is(payload, "event", "pause"))) {
 		elog("luna: reply rejected\n");
 		S.quit = 1;
 		S.fatal = EX_NOLUNA;
 		S.reason = REASON_LUNA_REJECT;
-	} else if (luna_has_event(payload, "relaunch")) {
+	} else if (luna_top_string_is(payload, "event", "relaunch")) {
 		elog("luna: event=relaunch\n");
-	} else if (luna_has_event(payload, "registered")) {
+	} else if (luna_top_string_is(payload, "event", "registered")) {
 		elog("luna: event=registered\n");
-	} else if (luna_has_event(payload, "pause")) {
+		S.luna_acked = 1;
+	} else if (luna_top_string_is(payload, "event", "pause")) {
 		elog("luna: event=pause\n");
 	}
 	return true;
@@ -1408,6 +1469,25 @@ static void luna_iterate(void)
 	/* Non-blocking. NULL is the default context, the same one
 	 * g_main_loop_new(NULL, FALSE) attached via LSGmainAttach. */
 	Luna.iterate(NULL, 0);
+}
+
+/* OSE RunningApp::registerApp replies in that call with event=registered.
+ * No public path was found where a successful registerApp stays silent,
+ * so a missing top-level ack is fail-closed rather than a flag. */
+static void luna_check_ack(int at_deadline)
+{
+	long long waited;
+	if (!Luna.up || S.luna_acked || S.quit || S.fatal) return;
+	if (!S.o || !S.o->luna_register) return;
+	waited = (long long)(elapsed_ms() - Luna.call_ms);
+	if (waited < LUNA_REGISTER_ACK_MS && !at_deadline) return;
+	if (!Luna.noted_no_reply) {
+		elog("luna: no registerApp reply after %lldms\n", waited);
+		Luna.noted_no_reply = 1;
+	}
+	S.quit = 1;
+	S.fatal = EX_NOLUNA;
+	S.reason = REASON_LUNA_REJECT;
 }
 
 static void luna_shutdown(void)
@@ -1559,8 +1639,10 @@ static int luna_start(const char *app_id)
 		return -1;
 	}
 	Luna.error_free(&err);
+	Luna.call_ms = elapsed_ms();
 	Luna.up = 1;
 	luna_iterate();
+	luna_check_ack(0);
 	return 0;
 }
 
@@ -2035,8 +2117,6 @@ static const char *reason_text(void)
 
 static void log_summary(void)
 {
-	if (S.o && S.o->luna_register && Luna.up && S.luna_replies == 0)
-		elog("luna: no registerApp reply after %lldms\n", (long long)elapsed_ms());
 	elog("summary: commits=%d frame_done=%d frame_pending=%d releases=%d deferred_redraws=%d redraws_queued=%d focus_enter=%d focus_leave=%d model_repeats_suppressed=%d luna_replies=%d luna_polls=%d\n",
 	     S.n_commits, S.n_frame_done, S.frame_cb ? 1 : 0, S.n_releases, S.n_deferred,
 	     S.n_redraws, S.n_focus_enter, S.n_focus_leave, S.model_suppressed,
@@ -2352,6 +2432,8 @@ int main(int argc, char **argv)
 		int ms = remaining_ms();
 		int slice = S.egl_on ? 16 : 100;
 		int64_t now_hb;
+		luna_check_ack(0);
+		if (S.quit || S.fatal) break;
 		if (ms == 0) break;
 		if (o.heartbeat_ms && !S.egl_on) {
 			now_hb = elapsed_ms();
@@ -2387,6 +2469,7 @@ int main(int argc, char **argv)
 		}
 		if (S.egl_on) egl_draw();
 	}
+	if (S.reason == REASON_DEADLINE && !g_stop) luna_check_ack(1);
 	if (S.fatal && rc == EX_OK) rc = S.fatal;
 	elog("info: exiting (%s)\n", reason_text());
 	log_summary();

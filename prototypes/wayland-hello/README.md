@@ -171,13 +171,17 @@ launcher. With no buffer release it still stops at the spare-buffer cap.
 
 Host tests of `--luna-register` use a stand-in library. They do not show
 that registration stops the 31 s Home relaunch. No v0.7 `registerApp` reply
-has been seen on the TV.
+has been seen on the TV. OSE `RunningApp::registerApp` answers in that
+call with top-level `event` `registered`. If that reply is missing for 2 s,
+or the process would otherwise exit on the safety cap with no ack, this
+client unregisters and exits 10. A nested `event` or `returnValue` does not
+count. Only top-level fields do.
 
-SDK binary SHA256 `cd2c04978798dbcf5110a9230a7496fa62da228964c90c42aaebafabca9729cd`.
-Default IPK SHA256 `c02f98bba74d7c87ff2c1eea32689655bcac77bf66fe83c44cb07ebe8f13701c`
+SDK binary SHA256 `673dfb9b98a8d170bb1be328af426afa4e966e06393b05b6c4beeb70359f1c30`.
+Default IPK SHA256 `2fabc28a1bc35847111c5227af0b369c13ce6c43c599a16f3fa422121c0718d1`
 (`nativeLifeCycleInterfaceVersion` omitted; launcher does not pass
 `--luna-register`). Lifecycle-2 IPK SHA256
-`e1679f75e0b2f9e01dcb1b73b971b7ebd9bcd50c17afefa4913dc6354ed7b019`
+`888e96b0e705bec22c4852dd7e1d7eea2b54ea8ff2b2d4cfcbcfe6735a7cf7b1`
 (the field is 2; the launcher passes `--luna-register`). The binary inside
 both IPKs matches the SDK binary. None of those three files is committed.
 `abi/wayland-hello-v7-ABI-REPORT.txt` records the binary.

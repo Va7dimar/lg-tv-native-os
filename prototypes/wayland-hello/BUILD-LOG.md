@@ -196,15 +196,32 @@ Host `make test`: **163 tests, 0 failed**, plus `tests/test_ipk.py` (0 failed).
 Review fixes: a rejected reply logs `exiting (luna-reject)` and returns 10;
 `LSRegister`/`LSGmainAttach`/`LSCall` log the luna error code and message;
 `--dry-run` does not return 0 after a reject; `close` during startup does
-not commit a surface; a silent bus logs `no registerApp reply after` plus
-`luna_replies=0`. That does not show the 31 s Home relaunch is fixed.
+not commit a surface. That does not show the 31 s Home relaunch is fixed.
+
+A later host-only review of `71f07e5` held on three points, each with a
+test that failed on that binary and passed after the change. Lifecycle
+`event`, `returnValue`, `errorCode`, and `errorText` are read only at the
+top level of the reply. A startup Wayland roundtrip returns as soon as
+`quit` or `fatal` is set, so a luna close during a stalled sync keeps
+`exiting (luna-close)` instead of waiting out the safety cap. `--luna-register`
+requires a top-level `event` `registered` within 2 s (`LUNA_REGISTER_ACK_MS`).
+OSE `RunningApp::registerApp` sends that reply in the same call; no public
+path was found where a successful register stays silent, so there is no
+fail-open flag. A missing ack unregisters and exits 10
+(`luna: no registerApp reply after`, `exiting (luna-reject)`).
+
+Host `make test` after that change: **168 tests, 0 failed**, plus
+`tests/test_ipk.py` (0 failed). The six new checks failed on the
+pre-change host binary (168 run, 6 failed) and pass on this one.
 
 SDK binary SHA256
-`cd2c04978798dbcf5110a9230a7496fa62da228964c90c42aaebafabca9729cd`.
+`673dfb9b98a8d170bb1be328af426afa4e966e06393b05b6c4beeb70359f1c30`.
 Default IPK SHA256
-`c02f98bba74d7c87ff2c1eea32689655bcac77bf66fe83c44cb07ebe8f13701c`.
+`2fabc28a1bc35847111c5227af0b369c13ce6c43c599a16f3fa422121c0718d1`.
 Lifecycle-2 IPK SHA256
-`e1679f75e0b2f9e01dcb1b73b971b7ebd9bcd50c17afefa4913dc6354ed7b019`.
+`888e96b0e705bec22c4852dd7e1d7eea2b54ea8ff2b2d4cfcbcfe6735a7cf7b1`.
+The binary inside both IPKs matches the SDK binary.
 `abi/wayland-hello-v7-ABI-REPORT.txt` ABI CHECK PASS, `e_flags 0x5000200`,
 max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`. No 0.7
-binary or IPK was copied to or run on the TV.
+binary or IPK was copied to or run on the TV. These hashes replace
+`cd2c0497…`, `c02f98bb…`, and `e1679f75…`. Do not install those.
