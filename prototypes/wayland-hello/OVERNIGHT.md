@@ -1,12 +1,12 @@
 # Overnight ledger (wayland-hello)
 
-Authority: owner, 2026-11-09 01:01 Atlantic/Reykjavik: "use agents to continue working on the repo even if we cant access the tv right now ... testing can be done later. work via agents trough the night". Window ends 2026-11-09 08:00 Atlantic/Reykjavik. No TV access. No merges.
+Authority: owner, 2026-11-09 01:01 Atlantic/Reykjavik: "use agents to continue working on the repo even if we cant access the tv right now ... testing can be done later. work via agents trough the night". Follow-up 01:21: research the ~30 s `last_input_handler` relaunch from public sources. Window ends 2026-11-09 08:00 Atlantic/Reykjavik. No TV access. No merges.
 
 | Item | State |
 | --- | --- |
-| Tested SHA before this patch | `133aba1` (box rebuild matched binary `3e608448…`, default IPK `ea3a5c14…`, lifecycle-2 IPK `40264851…`). No `registerApp` reply. v0.6 remove succeeded; v0.7 install overlapped and failed `-5 duplicate command`. TV then unreachable. Evidence: `tvs/lg-65nano756pr/evidence/luna-register-test-2026-11-08.md` on main `3138def`. |
-| Review of `b113f77` | Approve-with-nits, host-only. Not evidence the ~31 s reclaim is fixed. |
-| This patch | F1–F3 and F7 on that review: reject logs `exiting (luna-reject)` and returns 10; luna error code/message logged; dry-run and startup `close` do not commit a surface; summary has `luna_replies` and `no registerApp reply after`. Fixture covers silent bus, late reject, hub error, unregister order. Still does not claim the 31 s Home relaunch is fixed. |
-| Pending live gates | TV reachable. Wait for `NL_APP_REMOVED` before `dev/install` of the lifecycle-2 IPK of the head after this patch. Launch once. Read `/tmp/wh6.log` (`scripts/classify_wh6_log.py` is host-side only). Close with `applicationmanager/close`, not `closeByAppId` via `luna-send-pub`. |
+| Live SHA | `133aba1` rebuilt on the box (binary `3e608448…`, default IPK `ea3a5c14…`, lifecycle-2 IPK `40264851…`). No `registerApp` reply. v0.6 remove succeeded; v0.7 install overlapped (`-5 duplicate command`). TV then unreachable. `luna-register-test-2026-11-08.md` on main `3138def`. |
+| Host head accepted, unmerged | `8275abd` on PR #8. Host-only. Not evidence the 31 s reclaim is fixed. Do not install `133aba1`, `b113f77`, or `8275abd` until the live gate below. |
+| This research | `tvs/lg-65nano756pr/evidence/last-input-30s-mechanisms-2026-11-09.md`. OSE SAM `96161d3` has no `last_input_handler` and does not start the 10 s kill timer for `LAUNCHING`. Empty LSM `app_id` is skipped by OSE SAM. The ~2 s Home relaunch when the foreground is empty is documented from LG TV logs by webosbrew/home-chooser, and matches the 1.5 s unlaunched-client capture. The 31 s hide while the process stayed alive is not that path and is not an OSE timer. No new client flag. |
+| Pending live gates | TV reachable. Wait for `NL_APP_REMOVED` before `dev/install` of the lifecycle-2 IPK from PR #8 head `8275abd`. One launch. Keep `/tmp/wh6.log`. Distinguish with the single lines in the research note. Close with `applicationmanager/close`, not `closeByAppId` via `luna-send-pub`. |
 | Owner | repo owner (GitHub `Va7dimar`) |
-| Next action | Review this host patch before any lifecycle-2 install. Do not reinstall `133aba1` or `b113f77`. |
+| Next action | Review the research note. Do not start another client experiment before that one lifecycle-2 run. |
