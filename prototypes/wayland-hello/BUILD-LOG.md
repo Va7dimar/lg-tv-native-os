@@ -192,15 +192,18 @@ adds `--luna-register` (dlopen of libluna-service2 and libglib, `registerApp`
 with subscribe, `LS2_NAME` when set) and `--heartbeat-ms`. NEEDED stays
 libc/libdl/librt.
 
-Host `make test` equivalent: **147 tests, 0 failed**, plus `tests/test_ipk.py`
-(0 failed).
+Host `make test`: **156 tests, 0 failed**, plus `tests/test_ipk.py` (0 failed).
+A mocked library covers `returnValue: false`, `LSRegister`/`LSCall` failure,
+a missing `LSGmainAttach`, relaunch that does not exit, close during the
+poll loop, cleanup `LSUnregister` after close, and `g_main_context_iteration(NULL, 0)`.
+That does not show the 31 s Home relaunch is fixed. No TV run of this binary.
 
 SDK binary SHA256
-`3e608448426e5546d9a032ce8042d5f5e178ab231f35736437cda40978efe046`.
+`df1481e40ec04be942b508d89ca4da3b9edda4693c57cdf93b16b863605ca830`.
 Default IPK SHA256
-`ea3a5c14fbfef8eb9dfb24c0efe5badcd5748f19c35373112f5e23767149a12b`.
+`4a62851d138c861d59332fb3e6fba1a8bd2a3bb21417c623cd4c11cda04239d0`.
 Lifecycle-2 IPK SHA256
-`402648517e9e1e6f13d3606cd81b1c3bac1387d6a444c8e4d5c2e6aabe84e3a7`.
+`c78bec7b2489488f8e7a1607e87db3a27d90c41b30c268a085430c1aab6d5fb5`.
 `abi/wayland-hello-v7-ABI-REPORT.txt` ABI CHECK PASS, `e_flags 0x5000200`,
 max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`. No 0.7
 binary or IPK was copied to or run on the TV.

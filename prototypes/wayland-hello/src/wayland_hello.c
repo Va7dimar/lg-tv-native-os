@@ -531,6 +531,7 @@ static struct {
 	int n_focus_enter, n_focus_leave, model_suppressed;
 	int n_heartbeat;
 	int64_t heartbeat_next;
+	int luna_polls;
 	int model_key_set;
 	uint32_t model_key;
 	int64_t model_log_ms;
@@ -1310,25 +1311,46 @@ static struct {
 	int up;
 } Luna;
 
-static int luna_event_is(const char *payload, const char *event)
+static const char *luna_skip_ws(const char *p)
+{
+	while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') p++;
+	return p;
+}
+
+/* True if any "event" string in the payload equals event. A nested
+ * parameters.event must not hide a later top-level close. */
+static int luna_has_event(const char *payload, const char *event)
+{
+	const char *p;
+	size_t en;
+	if (!payload || !event) return 0;
+	en = strlen(event);
+	for (p = payload; (p = strstr(p, "\"event\"")) != NULL; p += 7) {
+		const char *q = luna_skip_ws(p + 7);
+		size_t n;
+		if (*q != ':') continue;
+		q = luna_skip_ws(q + 1);
+		if (*q != '"') continue;
+		q++;
+		n = 0;
+		while (q[n] && q[n] != '"') n++;
+		if (q[n] == '"' && n == en && memcmp(q, event, en) == 0) return 1;
+	}
+	return 0;
+}
+
+/* The first returnValue boolean. false means SAM rejected the call. */
+static int luna_return_false(const char *payload)
 {
 	const char *p, *q;
-	size_t n, en;
-	if (!payload || !event) return 0;
-	p = strstr(payload, "\"event\"");
+	if (!payload) return 0;
+	p = strstr(payload, "\"returnValue\"");
 	if (!p) return 0;
-	p += 7;
-	while (*p == ' ' || *p == '\t') p++;
-	if (*p != ':') return 0;
-	p++;
-	while (*p == ' ' || *p == '\t') p++;
-	if (*p != '"') return 0;
-	p++;
-	q = strchr(p, '"');
-	if (!q) return 0;
-	n = (size_t)(q - p);
-	en = strlen(event);
-	return n == en && memcmp(p, event, n) == 0;
+	q = luna_skip_ws(p + 13);
+	if (*q != ':') return 0;
+	q = luna_skip_ws(q + 1);
+	return strncmp(q, "false", 5) == 0 &&
+	       (q[5] == '\0' || q[5] == ',' || q[5] == '}' || q[5] == ' ' || q[5] == '\n' || q[5] == '\r' || q[5] == '\t');
 }
 
 static bool luna_on_reply(struct ls_handle *sh, struct ls_message *msg, void *ctx)
@@ -1346,23 +1368,31 @@ static bool luna_on_reply(struct ls_handle *sh, struct ls_message *msg, void *ct
 	memcpy(buf, payload, n);
 	buf[n] = 0;
 	elog("luna: reply %s%s\n", buf, payload[n] ? "..." : "");
-	if (luna_event_is(payload, "registered"))
-		elog("luna: event=registered\n");
-	else if (luna_event_is(payload, "relaunch"))
-		elog("luna: event=relaunch\n");
-	else if (luna_event_is(payload, "pause"))
-		elog("luna: event=pause\n");
-	else if (luna_event_is(payload, "close")) {
+	if (luna_has_event(payload, "close")) {
 		elog("luna: event=close\n");
 		S.quit = 1;
 		S.reason = REASON_LUNA_CLOSE;
+	} else if (luna_return_false(payload)) {
+		elog("luna: reply rejected\n");
+		S.quit = 1;
+		S.fatal = EX_NOLUNA;
+	} else if (luna_has_event(payload, "relaunch")) {
+		elog("luna: event=relaunch\n");
+	} else if (luna_has_event(payload, "registered")) {
+		elog("luna: event=registered\n");
+	} else if (luna_has_event(payload, "pause")) {
+		elog("luna: event=pause\n");
 	}
 	return true;
 }
 
 static void luna_iterate(void)
 {
-	if (Luna.iterate) Luna.iterate(NULL, 0);
+	if (!Luna.iterate) return;
+	S.luna_polls++;
+	/* Non-blocking. NULL is the default context, the same one
+	 * g_main_loop_new(NULL, FALSE) attached via LSGmainAttach. */
+	Luna.iterate(NULL, 0);
 }
 
 static void luna_shutdown(void)
@@ -1965,9 +1995,9 @@ static const char *reason_text(void)
 
 static void log_summary(void)
 {
-	elog("summary: commits=%d frame_done=%d frame_pending=%d releases=%d deferred_redraws=%d redraws_queued=%d focus_enter=%d focus_leave=%d model_repeats_suppressed=%d\n",
+	elog("summary: commits=%d frame_done=%d frame_pending=%d releases=%d deferred_redraws=%d redraws_queued=%d focus_enter=%d focus_leave=%d model_repeats_suppressed=%d luna_polls=%d\n",
 	     S.n_commits, S.n_frame_done, S.frame_cb ? 1 : 0, S.n_releases, S.n_deferred,
-	     S.n_redraws, S.n_focus_enter, S.n_focus_leave, S.model_suppressed);
+	     S.n_redraws, S.n_focus_enter, S.n_focus_leave, S.model_suppressed, S.luna_polls);
 }
 
 static void cleanup(void)
@@ -2075,7 +2105,21 @@ int main(int argc, char **argv)
 		elog("error: libwayland-client is missing wl_seat, wl_keyboard or wl_pointer\n");
 		return EX_LIB;
 	}
-	if (o.luna_register && luna_start(o.app_id) < 0) return EX_NOLUNA;
+	if (o.luna_register) {
+		if (luna_start(o.app_id) < 0) return EX_NOLUNA;
+		/* A reply can arrive on the first non-blocking poll, before connect. */
+		if (S.fatal) {
+			int code = S.fatal;
+			cleanup();
+			return code;
+		}
+		if (S.quit) {
+			elog("info: exiting (%s)\n", reason_text());
+			log_summary();
+			cleanup();
+			return EX_OK;
+		}
+	}
 
 	/* libwayland 1.x only resolves a relative name against XDG_RUNTIME_DIR. */
 	if (setenv("XDG_RUNTIME_DIR", o.runtime_dir, 1) < 0) return EX_CONNECT;

@@ -417,7 +417,68 @@ def telemetry_tests():
               rc == 0 and "luna: register name=org.va7dimar.waylandhello-3 source=LS2_NAME" in err
               and "luna: LSCall luna://com.webos.service.applicationmanager/registerApp {\"subscribe\":true}" in err
               and "luna: event=registered" in err and "luna: event=relaunch" in err
-              and "luna: event=close" in err and "exiting (luna-close)" in err, err[-1200:])
+              and "luna: event=close" in err and "exiting (luna-close)" in err
+              and "fixture: iterate ctx=null block=0" in err
+              and err.find("fixture: LSUnregister") > err.find("luna: event=close"), err[-1500:])
+
+        def luna_case(name, script, args, timeout=40):
+            env = {"WAYLAND_HELLO_LIB_DIR": fix}
+            if script:
+                env["WAYLAND_HELLO_LUNA_SCRIPT"] = script
+            return with_mock([], args, timeout=timeout, env_extra=env)
+
+        (rc, out, err, dt), ev, _ = luna_case("reject", "reject", ["--luna-register", "--duration", "4"])
+        check("rejected registerApp fails closed before a surface",
+              rc == 10 and "luna: reply rejected" in err and "returnValue\":false" in err
+              and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-500:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("regfail", "register-fail", ["--luna-register", "--duration", "4"])
+        check("LSRegister failure fails closed",
+              rc == 10 and "LSRegister(" in err and "Failing closed" in err
+              and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("callfail", "call-fail", ["--luna-register", "--duration", "4"])
+        check("LSCall failure fails closed and still unregisters",
+              rc == 10 and "LSCall registerApp failed" in err and "fixture: LSUnregister" in err
+              and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("nested", "nested-close", ["--luna-register", "--duration", "4"])
+        check("top-level close wins over a nested event",
+              rc == 0 and "exiting (luna-close)" in err and "event=relaunch" not in err, err[-500:])
+
+        (rc, out, err, dt), ev, _ = luna_case("relaunch", "relaunch-only", ["--luna-register", "--duration", "2"])
+        polls = 0
+        for line in err.splitlines():
+            if "luna_polls=" in line:
+                polls = int(line.split("luna_polls=")[1].split()[0])
+        check("relaunch does not exit and polling continues",
+              rc == 0 and dt > 1.2 and "luna: event=relaunch" in err and "luna-close" not in err
+              and "exiting (deadline)" in err and polls >= 5 and "fixture: LSUnregister" in err,
+              "rc=%d dt=%.2f polls=%d %s" % (rc, dt, polls, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("late", "close-late", ["--luna-register", "--duration", "8"], timeout=20)
+        check("close during the poll loop exits before the safety cap",
+              rc == 0 and dt < 6.0 and "exiting (luna-close)" in err, "rc=%d dt=%.2f" % (rc, dt))
+
+        (rc, out, err, dt), ev, _ = with_mock([], ["--luna-register", "--duration", "2"],
+                                              env_extra={"WAYLAND_HELLO_LIB_DIR": fix, "LS2_NAME": "bad name"})
+        check("unusable LS2_NAME falls back to the app id",
+              rc == 0 and "source=app-id" in err and "not a usable service name" in err, err[-500:])
+
+        partial = tempfile.mkdtemp(prefix="wlh-luna-partial-")
+        partial_so = os.path.join(partial, "libluna-service2.so.3")
+        partial_build = subprocess.run(
+            ["gcc", "-shared", "-fPIC", "-std=c99", "-DLUNA_OMIT_ATTACH", "-o", partial_so,
+             os.path.join(HERE, "luna_fixture.c")],
+            capture_output=True, text=True)
+        check("partial luna fixture builds", partial_build.returncode == 0, partial_build.stderr)
+        if partial_build.returncode == 0:
+            os.symlink("libluna-service2.so.3", os.path.join(partial, "libglib-2.0.so.0"))
+            (rc, out, err, dt), ev, _ = with_mock([], ["--luna-register", "--duration", "2"],
+                                                  env_extra={"WAYLAND_HELLO_LIB_DIR": partial})
+            check("missing LSGmainAttach fails closed",
+                  rc == 10 and "missing symbol LSGmainAttach" in err
+                  and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
 
     (rc, out, err, dt), ev, _ = with_mock([], ["--heartbeat-ms", "400", "--duration", "2"])
     check("heartbeat ticks while idle", rc == 0 and "heartbeat: tick n=2" in err, err[-500:])
