@@ -138,6 +138,7 @@ static void elog(const char *fmt, ...);
 static void olog(const char *fmt, ...);
 static void arm_countdown(const char *trigger);
 static void luna_iterate(void);
+static void cleanup(void);
 
 static void usage(FILE *f)
 {
@@ -500,7 +501,8 @@ enum {
 	REASON_EXITKEY,
 	REASON_WEBOS_CLOSE,
 	REASON_KB_LEAVE,
-	REASON_LUNA_CLOSE
+	REASON_LUNA_CLOSE,
+	REASON_LUNA_REJECT
 };
 
 static struct {
@@ -532,6 +534,7 @@ static struct {
 	int n_heartbeat;
 	int64_t heartbeat_next;
 	int luna_polls;
+	int luna_replies;
 	int model_key_set;
 	uint32_t model_key;
 	int64_t model_log_ms;
@@ -1353,12 +1356,23 @@ static int luna_return_false(const char *payload)
 	       (q[5] == '\0' || q[5] == ',' || q[5] == '}' || q[5] == ' ' || q[5] == '\n' || q[5] == '\r' || q[5] == '\t');
 }
 
+/* Hub-style failure with no lifecycle event. Close still wins in the caller. */
+static int luna_hub_error(const char *payload)
+{
+	if (!payload) return 0;
+	if (luna_has_event(payload, "close") || luna_has_event(payload, "registered") ||
+	    luna_has_event(payload, "relaunch") || luna_has_event(payload, "pause"))
+		return 0;
+	return strstr(payload, "\"errorCode\"") != NULL || strstr(payload, "\"errorText\"") != NULL;
+}
+
 static bool luna_on_reply(struct ls_handle *sh, struct ls_message *msg, void *ctx)
 {
 	const char *payload = Luna.payload ? Luna.payload(msg) : NULL;
 	char buf[513];
 	size_t n;
 	(void)sh; (void)ctx;
+	S.luna_replies++;
 	if (!payload) {
 		elog("luna: reply (null)\n");
 		return true;
@@ -1372,10 +1386,11 @@ static bool luna_on_reply(struct ls_handle *sh, struct ls_message *msg, void *ct
 		elog("luna: event=close\n");
 		S.quit = 1;
 		S.reason = REASON_LUNA_CLOSE;
-	} else if (luna_return_false(payload)) {
+	} else if (luna_return_false(payload) || luna_hub_error(payload)) {
 		elog("luna: reply rejected\n");
 		S.quit = 1;
 		S.fatal = EX_NOLUNA;
+		S.reason = REASON_LUNA_REJECT;
 	} else if (luna_has_event(payload, "relaunch")) {
 		elog("luna: event=relaunch\n");
 	} else if (luna_has_event(payload, "registered")) {
@@ -1408,10 +1423,34 @@ static void luna_shutdown(void)
 		Luna.loop_unref(Luna.loop);
 		Luna.loop = NULL;
 	}
+	Luna.error_init = NULL;
+	Luna.error_free = NULL;
+	Luna.ls_register = NULL;
+	Luna.ls_attach = NULL;
+	Luna.ls_call = NULL;
+	Luna.payload = NULL;
+	Luna.ls_unregister = NULL;
+	Luna.loop_new = NULL;
+	Luna.loop_unref = NULL;
 	Luna.iterate = NULL;
 	if (Luna.h_luna) { dlclose(Luna.h_luna); Luna.h_luna = NULL; }
 	if (Luna.h_glib) { dlclose(Luna.h_glib); Luna.h_glib = NULL; }
 	Luna.up = 0;
+}
+
+static void luna_log_lserror(const char *what, struct ls_error *err)
+{
+	char msg[160];
+	const char *src;
+	size_t i, o = 0;
+	int code = err ? err->error_code : -1;
+	src = (err && err->message) ? err->message : "-";
+	for (i = 0; src[i] && o + 1 < sizeof msg; i++) {
+		unsigned char c = (unsigned char)src[i];
+		if (c >= 32 && c < 127) msg[o++] = (char)c;
+	}
+	msg[o] = 0;
+	elog("luna: %s failed code=%d message=%s. Failing closed.\n", what, code, msg[0] ? msg : "-");
 }
 
 static int luna_name_ok(const char *s)
@@ -1500,21 +1539,21 @@ static int luna_start(const char *app_id)
 	}
 	Luna.error_init(&err);
 	if (!Luna.ls_register(reg_name, &Luna.sh, &err) || !Luna.sh) {
-		elog("error: LSRegister(%s) failed. Failing closed.\n", reg_name);
+		luna_log_lserror("LSRegister", &err);
 		Luna.error_free(&err);
 		luna_shutdown();
 		return -1;
 	}
 	Luna.loop = Luna.loop_new(NULL, 0);
 	if (!Luna.loop || !Luna.ls_attach(Luna.sh, Luna.loop, &err)) {
-		elog("error: LSGmainAttach failed. Failing closed.\n");
+		luna_log_lserror(Luna.loop ? "LSGmainAttach" : "g_main_loop_new", &err);
 		Luna.error_free(&err);
 		luna_shutdown();
 		return -1;
 	}
 	elog("luna: LSCall %s %s\n", uri, body);
 	if (!Luna.ls_call(Luna.sh, uri, body, luna_on_reply, NULL, &token, &err)) {
-		elog("error: LSCall registerApp failed. Failing closed.\n");
+		luna_log_lserror("LSCall", &err);
 		Luna.error_free(&err);
 		luna_shutdown();
 		return -1;
@@ -1989,15 +2028,32 @@ static const char *reason_text(void)
 	if (S.reason == REASON_WEBOS_CLOSE) return "webos-close";
 	if (S.reason == REASON_KB_LEAVE) return "keyboard-leave";
 	if (S.reason == REASON_LUNA_CLOSE) return "luna-close";
+	if (S.reason == REASON_LUNA_REJECT) return "luna-reject";
 	if (S.reason == REASON_SIGNAL || g_stop) return "signal";
 	return "deadline";
 }
 
 static void log_summary(void)
 {
-	elog("summary: commits=%d frame_done=%d frame_pending=%d releases=%d deferred_redraws=%d redraws_queued=%d focus_enter=%d focus_leave=%d model_repeats_suppressed=%d luna_polls=%d\n",
+	if (S.o && S.o->luna_register && Luna.up && S.luna_replies == 0)
+		elog("luna: no registerApp reply after %lldms\n", (long long)elapsed_ms());
+	elog("summary: commits=%d frame_done=%d frame_pending=%d releases=%d deferred_redraws=%d redraws_queued=%d focus_enter=%d focus_leave=%d model_repeats_suppressed=%d luna_replies=%d luna_polls=%d\n",
 	     S.n_commits, S.n_frame_done, S.frame_cb ? 1 : 0, S.n_releases, S.n_deferred,
-	     S.n_redraws, S.n_focus_enter, S.n_focus_leave, S.model_suppressed, S.luna_polls);
+	     S.n_redraws, S.n_focus_enter, S.n_focus_leave, S.model_suppressed,
+	     S.luna_replies, S.luna_polls);
+}
+
+/* -1 = keep going. Otherwise the process should return this code.
+ * Used when a luna reply arrives before a surface exists. */
+static int finish_luna_stop(void)
+{
+	int code;
+	if (!S.fatal && !S.quit) return -1;
+	code = S.fatal ? S.fatal : EX_OK;
+	elog("info: exiting (%s)\n", reason_text());
+	log_summary();
+	cleanup();
+	return code;
 }
 
 static void cleanup(void)
@@ -2108,16 +2164,9 @@ int main(int argc, char **argv)
 	if (o.luna_register) {
 		if (luna_start(o.app_id) < 0) return EX_NOLUNA;
 		/* A reply can arrive on the first non-blocking poll, before connect. */
-		if (S.fatal) {
-			int code = S.fatal;
-			cleanup();
-			return code;
-		}
-		if (S.quit) {
-			elog("info: exiting (%s)\n", reason_text());
-			log_summary();
-			cleanup();
-			return EX_OK;
+		{
+			int stop = finish_luna_stop();
+			if (stop >= 0) return stop;
 		}
 	}
 
@@ -2134,7 +2183,19 @@ int main(int argc, char **argv)
 	if (!S.registry) return fail_alloc("wl_registry");
 	if (LISTEN(S.registry, registry_listener, NULL) != 0) return fail_listener("wl_registry");
 	W.proxy_marshal((struct wl_proxy *)S.display, DISPLAY_GET_REGISTRY, S.registry);
-	if (roundtrip_bounded() < 0) { report_display_error(); cleanup(); return EX_PROTO; }
+	if (roundtrip_bounded() < 0) {
+		report_display_error();
+		{
+			int stop = finish_luna_stop();
+			if (stop >= 0) return stop;
+		}
+		cleanup();
+		return EX_PROTO;
+	}
+	{
+		int stop = finish_luna_stop();
+		if (stop >= 0) return stop;
+	}
 
 	olog("globals: %d%s\n", S.nglobals, S.globals_truncated ? " (truncated)" : "");
 	for (i = 0; i < S.nglobals; i++)
@@ -2198,8 +2259,18 @@ int main(int argc, char **argv)
 		if (rc != 0) return rc;
 	}
 
-	if (roundtrip_bounded() < 0 || S.fatal) {
-		report_display_error(); cleanup(); return S.fatal ? S.fatal : EX_PROTO;
+	if (roundtrip_bounded() < 0) {
+		report_display_error();
+		{
+			int stop = finish_luna_stop();
+			if (stop >= 0) return stop;
+		}
+		cleanup();
+		return EX_PROTO;
+	}
+	{
+		int stop = finish_luna_stop();
+		if (stop >= 0) return stop;
 	}
 	if (!S.have_xrgb)
 		elog("warn: compositor did not announce XRGB8888 (mandatory format); continuing\n");

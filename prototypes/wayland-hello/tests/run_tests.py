@@ -430,16 +430,24 @@ def telemetry_tests():
         (rc, out, err, dt), ev, _ = luna_case("reject", "reject", ["--luna-register", "--duration", "4"])
         check("rejected registerApp fails closed before a surface",
               rc == 10 and "luna: reply rejected" in err and "returnValue\":false" in err
+              and "exiting (luna-reject)" in err
               and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-500:]))
 
         (rc, out, err, dt), ev, _ = luna_case("regfail", "register-fail", ["--luna-register", "--duration", "4"])
-        check("LSRegister failure fails closed",
-              rc == 10 and "LSRegister(" in err and "Failing closed" in err
+        check("LSRegister failure logs the luna error",
+              rc == 10 and "luna: LSRegister failed code=1 message=register refused" in err
+              and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("attachfail", "attach-fail", ["--luna-register", "--duration", "4"])
+        check("LSGmainAttach failure logs the luna error",
+              rc == 10 and "luna: LSGmainAttach failed code=2 message=attach refused" in err
+              and "fixture: LSUnregister" in err
               and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
 
         (rc, out, err, dt), ev, _ = luna_case("callfail", "call-fail", ["--luna-register", "--duration", "4"])
-        check("LSCall failure fails closed and still unregisters",
-              rc == 10 and "LSCall registerApp failed" in err and "fixture: LSUnregister" in err
+        check("LSCall failure logs the luna error and still unregisters",
+              rc == 10 and "luna: LSCall failed code=3 message=call refused" in err
+              and err.find("fixture: LSUnregister") > err.find("luna: LSCall failed")
               and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
 
         (rc, out, err, dt), ev, _ = luna_case("nested", "nested-close", ["--luna-register", "--duration", "4"])
@@ -460,6 +468,35 @@ def telemetry_tests():
         check("close during the poll loop exits before the safety cap",
               rc == 0 and dt < 6.0 and "exiting (luna-close)" in err, "rc=%d dt=%.2f" % (rc, dt))
 
+        (rc, out, err, dt), ev, _ = luna_case("silent", "silent", ["--luna-register", "--duration", "2"])
+        check("silent bus is marked and still unregisters",
+              rc == 0 and "luna: no registerApp reply after" in err and "luna_replies=0" in err
+              and "exiting (deadline)" in err
+              and err.find("fixture: LSUnregister") > err.find("no registerApp reply after"),
+              "rc=%d %s" % (rc, err[-500:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("late", "late-reject", ["--luna-register", "--duration", "6"], timeout=20)
+        check("mid-run reject exits as luna-reject",
+              rc == 10 and "exiting (luna-reject)" in err and "exiting (deadline)" not in err
+              and "commit-queued" in err, "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("hub", "hub", ["--luna-register", "--duration", "4"])
+        check("hub error fails closed",
+              rc == 10 and "exiting (luna-reject)" in err and "Unknown method" in err
+              and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("dryreject", "reject-roundtrip",
+                                              ["--dry-run", "--luna-register", "--duration", "4"])
+        check("dry-run does not return 0 after a reject",
+              rc == 10 and "exiting (luna-reject)" in err and "dry-run: no surfaces created" not in out,
+              "rc=%d out=%s err=%s" % (rc, out[-200:], err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("closestart", "close-startup", ["--luna-register", "--duration", "4"])
+        check("close during startup does not commit a surface",
+              rc == 0 and "exiting (luna-close)" in err
+              and not any(e.get("req") in ("commit", "create_surface") for e in ev),
+              "rc=%d %s" % (rc, err[-400:]))
+
         (rc, out, err, dt), ev, _ = with_mock([], ["--luna-register", "--duration", "2"],
                                               env_extra={"WAYLAND_HELLO_LIB_DIR": fix, "LS2_NAME": "bad name"})
         check("unusable LS2_NAME falls back to the app id",
@@ -479,6 +516,22 @@ def telemetry_tests():
             check("missing LSGmainAttach fails closed",
                   rc == 10 and "missing symbol LSGmainAttach" in err
                   and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
+
+    sample = (
+        "luna: LSCall luna://com.webos.service.applicationmanager/registerApp {\"subscribe\":true}\n"
+        "luna: no registerApp reply after 2000ms\n"
+        "info: exiting (deadline)\n"
+        "summary: commits=1 luna_replies=0 luna_polls=4\n"
+    )
+    logf = os.path.join(tempfile.mkdtemp(prefix="wlh-wh6-"), "wh6.log")
+    with open(logf, "w", encoding="utf-8") as fh:
+        fh.write(sample)
+    classified = subprocess.run(
+        ["python3", "-I", os.path.join(os.path.dirname(HERE), "scripts", "classify_wh6_log.py"), logf],
+        capture_output=True, text=True)
+    check("wh6 classifier names a silent bus",
+          classified.returncode == 0 and classified.stdout == "replies=0\nreply=none\nexit=deadline\nmarker=yes\n",
+          classified.stdout + classified.stderr)
 
     (rc, out, err, dt), ev, _ = with_mock([], ["--heartbeat-ms", "400", "--duration", "2"])
     check("heartbeat ticks while idle", rc == 0 and "heartbeat: tick n=2" in err, err[-500:])

@@ -27,6 +27,13 @@ static const char *script_name(void)
 	return (s && s[0]) ? s : "default";
 }
 
+static void set_err(struct ls_error *e, int code, const char *message)
+{
+	if (!e) return;
+	e->error_code = code;
+	e->message = (char *)message;
+}
+
 bool LSErrorInit(struct ls_error *e)
 {
 	if (e) memset(e, 0, sizeof *e);
@@ -42,7 +49,10 @@ bool LSRegister(const char *name, void **sh, struct ls_error *e)
 {
 	(void)e;
 	fprintf(stderr, "fixture: LSRegister %s\n", name ? name : "(null)");
-	if (!strcmp(script_name(), "register-fail")) return false;
+	if (!strcmp(script_name(), "register-fail")) {
+		set_err(e, 1, "register refused");
+		return false;
+	}
 	if (sh) *sh = (void *)1;
 	return true;
 }
@@ -52,6 +62,10 @@ bool LSGmainAttach(void *sh, void *loop, struct ls_error *e)
 {
 	(void)sh; (void)loop; (void)e;
 	fprintf(stderr, "fixture: LSGmainAttach\n");
+	if (!strcmp(script_name(), "attach-fail")) {
+		set_err(e, 2, "attach refused");
+		return false;
+	}
 	return true;
 }
 #endif
@@ -62,7 +76,11 @@ bool LSCall(void *sh, const char *uri, const char *payload,
 {
 	(void)sh; (void)user; (void)e;
 	fprintf(stderr, "fixture: LSCall %s %s\n", uri ? uri : "", payload ? payload : "");
-	if (!strcmp(script_name(), "call-fail")) return false;
+	if (!strcmp(script_name(), "call-fail")) {
+		set_err(e, 3, "call refused");
+		return false;
+	}
+	if (!strcmp(script_name(), "silent")) return true;
 	saved_cb = cb;
 	if (token) *token = 7;
 	snprintf(saved_payload, sizeof saved_payload,
@@ -103,6 +121,43 @@ int g_main_context_iteration(void *ctx, int may_block)
 	}
 	iterations++;
 	if (!saved_cb) return 0;
+	if (!strcmp(script, "silent")) return 0;
+	if (!strcmp(script, "reject-roundtrip")) {
+		if (iterations == 2) {
+			snprintf(saved_payload, sizeof saved_payload,
+			         "{\"returnValue\":false,\"errorText\":\"not running\"}");
+			saved_cb((void *)1, (void *)1, NULL);
+			saved_cb = NULL;
+		}
+		return 0;
+	}
+	if (!strcmp(script, "close-startup")) {
+		if (iterations == 2) {
+			snprintf(saved_payload, sizeof saved_payload,
+			         "{\"returnValue\":true,\"event\":\"close\"}");
+			saved_cb((void *)1, (void *)1, NULL);
+			saved_cb = NULL;
+		}
+		return 0;
+	}
+	if (!strcmp(script, "late-reject")) {
+		if (iterations == 1) {
+			saved_cb((void *)1, (void *)1, NULL);
+		} else if (iterations == 20) {
+			snprintf(saved_payload, sizeof saved_payload,
+			         "{\"returnValue\":false,\"errorText\":\"not running\"}");
+			saved_cb((void *)1, (void *)1, NULL);
+			saved_cb = NULL;
+		}
+		return 0;
+	}
+	if (iterations == 1 && !strcmp(script, "hub")) {
+		snprintf(saved_payload, sizeof saved_payload,
+		         "{\"errorCode\":-1,\"errorText\":\"Unknown method\"}");
+		saved_cb((void *)1, (void *)1, NULL);
+		saved_cb = NULL;
+		return 0;
+	}
 	if (iterations == 1 && !strcmp(script, "reject")) {
 		snprintf(saved_payload, sizeof saved_payload,
 		         "{\"returnValue\":false,\"errorText\":\"not running\"}");

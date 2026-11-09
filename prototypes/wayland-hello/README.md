@@ -173,11 +173,11 @@ Host tests of `--luna-register` use a stand-in library. They do not show
 that registration stops the 31 s Home relaunch. No v0.7 `registerApp` reply
 has been seen on the TV.
 
-SDK binary SHA256 `df1481e40ec04be942b508d89ca4da3b9edda4693c57cdf93b16b863605ca830`.
-Default IPK SHA256 `4a62851d138c861d59332fb3e6fba1a8bd2a3bb21417c623cd4c11cda04239d0`
+SDK binary SHA256 `cd2c04978798dbcf5110a9230a7496fa62da228964c90c42aaebafabca9729cd`.
+Default IPK SHA256 `c02f98bba74d7c87ff2c1eea32689655bcac77bf66fe83c44cb07ebe8f13701c`
 (`nativeLifeCycleInterfaceVersion` omitted; launcher does not pass
 `--luna-register`). Lifecycle-2 IPK SHA256
-`c78bec7b2489488f8e7a1607e87db3a27d90c41b30c268a085430c1aab6d5fb5`
+`e1679f75e0b2f9e01dcb1b73b971b7ebd9bcd50c17afefa4913dc6354ed7b019`
 (the field is 2; the launcher passes `--luna-register`). The binary inside
 both IPKs matches the SDK binary. None of those three files is committed.
 `abi/wayland-hello-v7-ABI-REPORT.txt` records the binary.
