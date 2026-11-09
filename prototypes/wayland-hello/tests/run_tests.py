@@ -5,7 +5,7 @@ Runs (1) option-parser tests via --parse-only, (2) mock-compositor protocol
 tests over a private socket in a temp dir. Never touches a real compositor:
 XDG_RUNTIME_DIR/WAYLAND_DISPLAY are always forced to the temp mock socket.
 """
-import json, os, subprocess, sys, tempfile, time
+import json, os, shutil, subprocess, sys, tempfile, time
 
 BIN = os.path.abspath(sys.argv[1])
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -46,12 +46,12 @@ def parser_tests():
     rc, out, _, _ = run(["--parse-only", "--duration", "30", "--size", "1920x1080", "--max-size", "800x600"])
     check("size clamped to max-size", rc == 0 and "size=800x600" in out and "duration_s=30" in out, out)
     rc, out, _, _ = run(["--help"])
-    check("--help exit 0", rc == 0 and "--dry-run" in out and "--input" in out and "--webos-shell" in out and "--egl" in out, out)
+    check("--help exit 0", rc == 0 and "--dry-run" in out and "--input" in out and "--webos-shell" in out and "--egl" in out and "--menu" in out, out)
     rc, out, _, _ = run(["--parse-only", "--input", "--webos-shell", "--egl", "--app-id", "wayland-hello-prototype"])
     check("v2 flags parse", rc == 0 and "input=1" in out and "webos_shell=1" in out and "egl=1" in out
           and "app_id=wayland-hello-prototype" in out, out)
     rc, out, _, _ = run(["--version"])
-    check("version 0.8", rc == 0 and "0.8-prototype" in out, out)
+    check("version 0.9", rc == 0 and "0.9-prototype" in out, out)
     rc, _, err, _ = run(["--parse-only", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY"])
     check("window-type requires webos shell", rc == 2, "rc=%d %s" % (rc, err))
     rc, _, err, _ = run(["--parse-only", "--webos-shell", "--window-type", "OVERLAY"])
@@ -95,6 +95,56 @@ def parser_tests():
     check("luna and heartbeat parse", rc == 0 and "luna_register=1" in out and "heartbeat_ms=500" in out, out + err)
     rc, _, err, _ = run(["--parse-only", "--heartbeat-ms", "50"])
     check("reject heartbeat below 100", rc == 2 and "100..60000" in err, err)
+    side = tempfile.mkdtemp(prefix="wlh-menu-side-")
+    try:
+        bin2 = os.path.join(side, "wayland-hello")
+        shutil.copy(BIN, bin2)
+        with open(os.path.join(side, "menu"), "w", encoding="ascii") as fh:
+            fh.write("1\n")
+        p = subprocess.run(
+            [bin2, launch, "--parse-only"],
+            env={"PATH": os.environ.get("PATH", "/usr/bin:/bin")},
+            capture_output=True, text=True, timeout=40)
+        check("sam menu sidecar selects menu not demo on lifecycle-2",
+              p.returncode == 0 and "menu=1" in p.stdout and "demo=0" in p.stdout
+              and "luna_register=1" in p.stdout and "webos_shell=1" in p.stdout
+              and "window_type=_WEBOS_WINDOW_TYPE_OVERLAY" in p.stdout,
+              p.stdout + p.stderr)
+    finally:
+        shutil.rmtree(side)
+    rc, out, err, _ = run(["--parse-only", "--menu"])
+    check("menu is input with a 120s cap",
+          rc == 0 and "menu=1" in out and "demo=0" in out and "input=1" in out
+          and "webos_shell=0" in out and "duration_s=120" in out
+          and "menu_tiles=Demo,About,Exit" in out, out)
+    check("menu keymap marks arrows confirmed",
+          "menu_key name=KEY_UP code=103 class=up status=confirmed" in out
+          and "menu_key name=KEY_LEFT code=105 class=left status=confirmed" in out
+          and "menu_key name=KEY_RIGHT code=106 class=right status=confirmed" in out
+          and "menu_key name=KEY_DOWN code=108 class=down status=confirmed" in out, out)
+    check("menu keymap marks OK/ENTER/BACK as hypothesis",
+          "menu_key name=KEY_OK code=352 class=activate status=hypothesis" in out
+          and "menu_key name=KEY_ENTER code=28 class=activate status=hypothesis" in out
+          and "menu_key name=KEY_BACK code=158 class=back status=hypothesis" in out
+          and "menu_key name=KEY_ESC code=1 class=back status=hypothesis" in out
+          and "menu_key name=KEY_EXIT code=174 class=exit status=hypothesis" in out, out)
+    check("menu tile layout is deterministic at default size",
+          "menu_tile index=0 rect=40,135,173,90" in out
+          and "menu_tile index=1 rect=233,135,173,90" in out
+          and "menu_tile index=2 rect=426,135,173,90" in out, out)
+    rc, out, _, _ = run(["--parse-only", "--menu", "--duration", "45"])
+    check("menu duration can exceed 30", rc == 0 and "duration_s=45" in out, out)
+    rc, out, err, _ = run(["--parse-only", "--menu", "--webos-shell", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY"])
+    check("menu allows webos-shell overlay",
+          rc == 0 and "menu=1" in out and "webos_shell=1" in out
+          and "window_type=_WEBOS_WINDOW_TYPE_OVERLAY" in out, out + err)
+    rc, _, err, _ = run(["--parse-only", "--menu", "--demo"])
+    check("menu rejects demo flag", rc == 2 and "cannot be combined" in err, err)
+    rc, _, err, _ = run(["--parse-only", "--menu", "--egl"])
+    check("menu rejects egl", rc == 2 and "SHM-only" in err, err)
+    rc, out, err, _ = run(["--parse-only", "--menu", "--size", "1x1"])
+    check("menu accepts tiny size without emitting tile rects",
+          rc == 0 and "menu=1" in out and "size=1x1" in out and "menu_tile " not in out, out + err)
     rc, _, err, _ = run(["--parse-only", "--duration", "45"])
     check("reject duration 45 without demo", rc == 2 and "1..30" in err, err)
     rc, _, err, _ = run(["--parse-only", "--webos-key-mask"])
@@ -685,6 +735,138 @@ def telemetry_tests():
     check("leave names the surface", "keyboard leave seat=0 surface=ours" in err and "keyboard enter seat=0 surface=ours" in err, err[-500:])
 
 
+FOCUS = 0xffd4a017
+UNFOCUS = 0xff2a3a55
+MENU_BG = 0xff101820
+ABOUT_BG = 0xff081018
+
+
+def menu_tests():
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1"], ["--menu", "--duration", "2"])
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("menu default rc=0", rc == 0, "rc=%d %s" % (rc, err[-400:]))
+    check("menu dumps keymap with evidence labels",
+          "menu: keymap name=KEY_UP code=103 class=up status=confirmed" in err
+          and "menu: keymap name=KEY_OK code=352 class=activate status=hypothesis" in err
+          and "menu: keymap name=KEY_BACK code=158 class=back status=hypothesis" in err, err)
+    check("menu notes it is independent and has no luna",
+          "independent module" in err and "no luna" in err, err)
+    check("menu default focus is Demo (gold) and About is unfocused",
+          pix and pix[-1].get("50,147") == FOCUS and pix[-1].get("243,147") == UNFOCUS
+          and pix[-1].get("16,16") == MENU_BG, str(pix[-1]) if pix else "no pixels")
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p106"],
+                                          ["--menu", "--duration", "2"])
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("menu RIGHT moves focus to About",
+          rc == 0 and "menu: screen=tiles focus=ABOUT" in err, err[-500:])
+    check("menu About tile is gold after RIGHT",
+          pix and pix[-1].get("243,147") == FOCUS and pix[-1].get("50,147") == UNFOCUS, str(pix[-1]) if pix else "")
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p105"],
+                                          ["--menu", "--duration", "2"])
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("menu LEFT wraps focus to Exit",
+          rc == 0 and "menu: screen=tiles focus=EXIT" in err, err[-400:])
+    check("menu Exit tile is gold after wrap",
+          pix and pix[-1].get("436,147") == FOCUS and pix[-1].get("50,147") == UNFOCUS, str(pix[-1]) if pix else "")
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p108,p103"],
+                                          ["--menu", "--duration", "2"])
+    up_at = err.rfind("class=up")
+    check("menu DOWN then UP restores Demo focus",
+          rc == 0 and "focus=ABOUT" in err and up_at != -1 and "focus=DEMO" in err[up_at:], err[-500:])
+    check("menu UP/DOWN cycle logged", "class=down" in err and "class=up" in err, err[-500:])
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p106,p352"],
+                                          ["--menu", "--duration", "2"])
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("OK hypothesis 352 opens About",
+          rc == 0 and "menu: screen=about" in err and "class=activate status=hypothesis" in err, err[-600:])
+    check("About screen uses the about background",
+          pix and pix[-1].get("16,16") == ABOUT_BG, str(pix[-1]) if pix else "")
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p106,p28,p158"],
+                                          ["--menu", "--duration", "2"])
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("ENTER opens About and BACK returns to tiles",
+          rc == 0 and dt > 1.5 and "menu: screen=about" in err
+          and "menu: screen=tiles focus=ABOUT" in err and "exiting (deadline)" in err, "rc=%d dt=%.2f %s" % (rc, dt, err[-500:]))
+    check("BACK from About restores tile chrome",
+          pix and pix[-1].get("16,16") == MENU_BG and pix[-1].get("243,147") == FOCUS, str(pix[-1]) if pix else "")
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p158"],
+                                          ["--menu", "--duration", "6"])
+    check("BACK from tiles exits 0",
+          rc == 0 and dt < 4.0 and "exiting (back-key)" in err and "menu: exit reason=back-key" in err, "rc=%d dt=%.2f" % (rc, dt))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p105,p352"],
+                                          ["--menu", "--duration", "6"])
+    check("OK on Exit tile exits 0",
+          rc == 0 and dt < 4.0 and "exiting (menu-exit)" in err and "menu: exit reason=menu-exit" in err, "rc=%d dt=%.2f %s" % (rc, dt, err[-300:]))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p174"],
+                                          ["--menu", "--duration", "6"])
+    check("EXIT hypothesis key exits from menu",
+          rc == 0 and dt < 4.0 and "exiting (menu-exit)" in err, "rc=%d dt=%.2f" % (rc, dt))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p352,p105"],
+                                          ["--menu", "--duration", "2"])
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("OK on Demo enters existing demo and arrows move the square",
+          rc == 0 and "menu: activate Demo" in err and "input: model square x=60 y=100 size=40" in err, err[-700:])
+    check("demo pixels after menu activation",
+          pix and pix[-1].get("80,120") == 0xff00ff00 and pix[-1].get("120,120") != 0xff00ff00, str(pix[-1]) if pix else "")
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p352,p158"],
+                                          ["--menu", "--duration", "2"])
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("BACK from demo returns to the tile menu (does not exit)",
+          rc == 0 and dt > 1.5 and "menu: back from demo" in err and "exiting (deadline)" in err
+          and "exiting (back-key)" not in err, "rc=%d dt=%.2f %s" % (rc, dt, err[-500:]))
+    check("tiles restored after BACK from demo",
+          pix and pix[-1].get("50,147") == FOCUS and pix[-1].get("16,16") == MENU_BG, str(pix[-1]) if pix else "")
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p106", "--no-release"],
+                                          ["--menu", "--duration", "2"])
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("menu allocates a spare buffer when none are released",
+          rc == 0 and "buf: spare gen=2" in err and "redraw: queued gen=2" in err
+          and "releases=0" in err and "redraw: deferred" not in err, err[-900:])
+    check("menu paints the new focus into the spare buffer",
+          pix and pix[-1].get("243,147") == FOCUS and pix[-1].get("50,147") == UNFOCUS, str(pix[-1]) if pix else "")
+
+    rights9 = ",".join(["p106"] * 9)
+    (rc, out, err, dt), ev, _ = with_mock(
+        ["--seats", "1", "--input-script", rights9 + ",p352", "--no-release"],
+        ["--menu", "--duration", "6"])
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("menu spare exhaustion holds shown==selected (9 RIGHT > DEMO_MAX_BUFS=8)",
+          rc == 0 and dt < 4.0
+          and "redraw: deferred spare-cap=8" in err
+          and "menu: selection held spare-cap=8 shown=EXIT" in err
+          and "nspare=8 cap=8" in err
+          and "exiting (menu-exit)" in err
+          and "menu: activate Demo" not in err,
+          "rc=%d dt=%.2f %s" % (rc, dt, err[-900:]))
+    check("exhausted menu still shows Exit, the tile OK activates",
+          pix and pix[-1].get("436,147") == FOCUS and pix[-1].get("50,147") == UNFOCUS,
+          str(pix[-1]) if pix else "")
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1"], ["--menu", "--size", "1x1", "--duration", "2"])
+    check("menu --size 1x1 fails closed on paint, not UB",
+          rc == 0 and dt > 1.5, "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+
+    (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p461"],
+                                          ["--menu", "--duration", "2"])
+    check("unknown keycode is logged and does not leave the menu",
+          rc == 0 and dt > 1.5 and "menu: unknown-keycode raw=461" in err
+          and "assumed_evdev=unknown" in err and "exiting (deadline)" in err, "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+
+    (rc, out, err, dt), ev, _ = with_mock([], ["--menu", "--duration", "3"])
+    check("menu without wl_seat fails closed rc=8", rc == 8, "rc=%d %s" % (rc, err))
+
+
 def egl_tests():
     empty = tempfile.mkdtemp(prefix="wlh-egl-")
     (rc, out, err, dt), ev, _ = with_mock([], ["--egl", "--duration", "2"], env_extra={"WAYLAND_HELLO_LIB_DIR": empty})
@@ -721,6 +903,7 @@ if __name__ == "__main__":
     input_tests()
     webos_tests()
     telemetry_tests()
+    menu_tests()
     egl_tests()
     linkage_tests()
     n_fail = sum(1 for _, ok, _ in results if not ok)

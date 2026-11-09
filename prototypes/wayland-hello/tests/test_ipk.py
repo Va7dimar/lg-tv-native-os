@@ -195,7 +195,7 @@ def main():
             check("exec keeps the SAM json argv", args.strip() == payload, args)
             check("launcher does not invent client flags",
                   "--demo" not in args and "--luna-register" not in args
-                  and "--webos-shell" not in args, args)
+                  and "--webos-shell" not in args and "--menu" not in args, args)
         if os.path.exists(log):
             os.remove(log)
 
@@ -237,6 +237,20 @@ def main():
         hb_data = Archive(hb_members["data.tar.gz"])
         check("heartbeat sidecar is packaged next to the ELF",
               hb_data.read(prefix + "heartbeat-ms") == b"1000\n", "")
+
+        out_menu = os.path.join(tmp, "menu.ipk")
+        build_ipk(binary, out_menu, menu=True)
+        with open(out_menu, "rb") as fh:
+            menu_members = dict(parse_ar(fh.read()))
+        menu_data = Archive(menu_members["data.tar.gz"])
+        check("menu IPK ships a sidecar next to the ELF",
+              menu_data.read(prefix + "menu") == b"1\n", "")
+        check("default IPK does not ship a menu sidecar",
+              prefix + "menu" not in data_tar.files(), str(data_tar.files()))
+        menu_launch = menu_data.read(prefix + "wayland-hello-launch.sh").decode("utf-8")
+        check("menu IPK launcher still execs the ELF with argv",
+              'exec "$APP_DIR/wayland-hello"' in menu_launch and "--menu" not in menu_launch,
+              menu_launch[-400:])
 
         if shutil.which("ar") and shutil.which("tar"):
             listing = subprocess.run(["ar", "t", out_a], capture_output=True, text=True)

@@ -76,7 +76,10 @@ class Client:
         self.keymap = b'xkb_keymap {\n\txkb_keycodes "(evdev)";\n};\n'
 
     def send(self, data):
-        self.c.sendall(data)
+        try:
+            self.c.sendall(data)
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            return
 
     def emit(self, **kw):
         self.log.write(json.dumps(kw) + "\n"); self.log.flush()
@@ -155,7 +158,8 @@ class Client:
             return
         pts = {}
         w, h, stride, off = self.last_buf
-        for x, y in ((16, 16), (80, 120), (120, 120), (160, 120)):
+        for x, y in ((16, 16), (80, 120), (120, 120), (160, 120),
+                     (50, 147), (243, 147), (436, 147), (320, 45)):
             if 0 <= x < w and 0 <= y < h:
                 o = off + y * stride + x * 4
                 if 0 <= o <= len(self.mem) - 4:

@@ -282,3 +282,26 @@ Lifecycle-2 IPK SHA256
 `e940723ab82be2cebcd1e02639abdcf1317afba960524ebe4dd2a8069fef39dc`.
 The binary inside both IPKs matches the SDK binary. None of those files
 is committed. Do not install `888e96b0…` / `0452e5e3…`.
+
+## 2026-11-13: wayland-hello 0.9 (`--menu` on current main, off-TV)
+
+Rebased the 0.8 `--menu` tile launcher onto current main (0.8 ELF-as-main,
+lifecycle-2 luna register, overlay persist). Version is **0.9.0** so the
+IPK name does not collide with main's 0.8.0 packages.
+
+`src/menu.c` still has no Wayland/luna symbols. Host wiring keeps
+registration / overlay persist. `build_ipk.py --menu` ships a `menu`
+sidecar next to the ELF; SAM launch then selects `--menu` instead of
+`--demo`. Spare-buffer exhaustion no longer lets logical selection
+advance past the last painted tile (this TV: `releases=0`). Tiny
+`--size` no longer paints tiles from uninitialized geometry.
+
+Host `make test`: **219 tests, 0 failed**, plus `tests/test_ipk.py`
+(**0 failed**; `main` is the ELF, no sysbus members, version 0.9.0, menu
+sidecar). New host cases: spare-buffer exhaustion (9 RIGHT + OK with
+`--no-release`, shown Exit is the tile OK activates), `--size 1x1` does
+not paint uninitialized tiles, SAM JSON + `menu` sidecar selects `--menu`
+instead of `--demo` while keeping lifecycle-2 overlay persist.
+
+Not copied to or run on the TV. 0.8 ABI report
+`abi/wayland-hello-v8-ABI-REPORT.txt` is unchanged (main's 0.8 binary).
