@@ -1,7 +1,12 @@
 # 0.8 persist-past-31s plan — 65NANO756PR — 2026-11-13
 
-Host-only. No TV run of this IPK yet. Labels below are **verified** (this TV
-or a cited public source) versus **hypothesis** (needs the next launch).
+Written host-only, before the TV run. **Update 2026-11-13:** the lifecycle-2
+IPK below was run on the TV; see
+[`persist-90s-tv-run-2026-11-13.md`](persist-90s-tv-run-2026-11-13.md)
+(log-based: registered cleanly and survived the 90 s cap past the ~31 s
+reclaim; on-screen visibility **not yet confirmed**). Labels below are
+**verified** (this TV or a cited public source) versus **hypothesis** (as of
+writing, before that run).
 
 Do not copy serial, nduid, or MAC into this note. Do not write system
 partitions. Install only under `/media/developer` via Homebrew
