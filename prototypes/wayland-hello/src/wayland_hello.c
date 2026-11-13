@@ -29,6 +29,7 @@
  *    2026-11-08 probe shows those nodes are owned by surface-manager.
  */
 #define _GNU_SOURCE
+#include "menu.h"
 #include <dlfcn.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -48,7 +49,7 @@
 #include <unistd.h>
 #include <link.h>
 
-#define HELLO_VERSION "0.8-prototype"
+#define HELLO_VERSION "0.9-prototype"
 
 /* ---- limits ------------------------------------------------------------ */
 #define DEFAULT_DURATION_S 10
@@ -117,6 +118,7 @@ struct opts {
 	int dry_run;
 	int parse_only;
 	int demo;
+	int menu;
 	int luna_register;
 	int heartbeat_ms;
 	int input;
@@ -154,10 +156,16 @@ static void usage(FILE *f)
 "  --demo               interactive mode (implies --input)\n"
 "                       spare SHM buffer so a redraw does not wait for release;\n"
 "                       runs until BACK or EXIT; --duration is the safety cap\n"
-"                       (default %d, max %d). Without --demo the cap stays %d.\n"
+"                       (default %d, max %d). Without --demo/--menu the cap stays %d.\n"
 "                       SAM launch JSON as argv[1] also selects --demo;\n"
 "                       lifecycle v2 (interfaceMethod registerApp) adds\n"
 "                       --luna-register, --webos-shell overlay, 90s cap.\n"
+"                       A packaged menu sidecar selects --menu instead of --demo.\n"
+"  --menu               full-screen tile menu (implies --input). Arrows move\n"
+"                       focus; OK/ENTER activate (hypothesis); BACK returns or\n"
+"                       exits. Demo tile enters --demo; About is static; Exit\n"
+"                       exits 0. Same spare-buffer redraw as --demo. Selection\n"
+"                       does not advance when a redraw cannot be shown.\n"
 "  --luna-register      dlopen libluna-service2; subscribe to registerApp\n"
 "                       exit 10 unless a top-level registered reply arrives\n"
 "                       within 2s (OSE sends that reply in the same call)\n"
@@ -363,6 +371,28 @@ static int read_heartbeat_sidecar(void)
 	return v;
 }
 
+/* Opt-in menu IPK: a sidecar next to the ELF, same pattern as heartbeat-ms.
+ * SAM launches the ELF (appinfo main), so the old launch.sh --menu rewrite
+ * cannot select the tile launcher. Presence of the file is enough. */
+static int read_menu_sidecar(void)
+{
+	char path[512];
+	ssize_t n;
+	int fd;
+	n = readlink("/proc/self/exe", path, sizeof path - 1);
+	if (n <= 0) return 0;
+	path[n] = 0;
+	{
+		char *slash = strrchr(path, '/');
+		if (!slash || slash - path + 5 >= (ssize_t)sizeof path) return 0;
+		memcpy(slash + 1, "menu", 5);
+	}
+	fd = open(path, O_RDONLY);
+	if (fd < 0) return 0;
+	close(fd);
+	return 1;
+}
+
 static void apply_sam_launch(struct opts *o, const char *launch_json)
 {
 	char method[40];
@@ -402,7 +432,12 @@ static void apply_sam_launch(struct opts *o, const char *launch_json)
 		snprintf(g_app_id_buf, sizeof g_app_id_buf, "%s", from_json);
 		o->app_id = g_app_id_buf;
 	}
-	if (!o->demo) o->demo = 1;
+	if (read_menu_sidecar())
+		o->menu = 1;
+	if (o->menu)
+		o->demo = 0;
+	else if (!o->demo)
+		o->demo = 1;
 	o->input = 1;
 	if (!o->duration_cli)
 		o->duration_s = o->sam_lifecycle2 ? SAM_DURATION_S : DEMO_DURATION_S;
@@ -465,6 +500,7 @@ static int parse_opts(int argc, char **argv, struct opts *o, int allow_long_dura
 		if (!strcmp(a, "--dry-run")) o->dry_run = 1;
 		else if (!strcmp(a, "--parse-only")) o->parse_only = 1;
 		else if (!strcmp(a, "--demo")) o->demo = 1;
+		else if (!strcmp(a, "--menu")) o->menu = 1;
 		else if (!strcmp(a, "--luna-register")) o->luna_register = 1;
 		else if (!strcmp(a, "--heartbeat-ms")) {
 			if (parse_int(v, 100, 60000, &o->heartbeat_ms)) {
@@ -569,7 +605,18 @@ static int parse_opts(int argc, char **argv, struct opts *o, int allow_long_dura
 	}
 	if (o->webos_shell && !o->window_type)
 		o->window_type = "_WEBOS_WINDOW_TYPE_CARD";
+	if (o->demo && o->menu) {
+		elog("error: --menu and --demo cannot be combined; use Demo from the menu\n");
+		return -1;
+	}
+	if (o->menu && o->egl) {
+		elog("error: --menu is SHM-only; omit --egl\n");
+		return -1;
+	}
 	if (o->demo) {
+		o->input = 1;
+		o->duration_s = duration_set ? duration_val : DEMO_DURATION_S;
+	} else if (o->menu) {
 		o->input = 1;
 		o->duration_s = duration_set ? duration_val : DEMO_DURATION_S;
 	} else if (duration_set) {
@@ -747,7 +794,8 @@ enum {
 	REASON_WEBOS_CLOSE,
 	REASON_KB_LEAVE,
 	REASON_LUNA_CLOSE,
-	REASON_LUNA_REJECT
+	REASON_LUNA_REJECT,
+	REASON_MENU_EXIT
 };
 
 static struct {
@@ -799,6 +847,8 @@ static struct {
 	int egl_on;
 	float nudge_x, nudge_y;
 	int frame;
+	struct menu_state menu;
+	int menu_keymap_logged;
 } S;
 
 /* registry listener */
@@ -992,10 +1042,33 @@ static int make_shm_file(const char *dir, size_t size)
 	return fd;
 }
 
+static int use_spare_bufs(void)
+{
+	return S.o && (S.o->demo || S.o->menu);
+}
+
+static void log_menu_keymap_once(void)
+{
+	int i, n;
+	const struct menu_key_map *tab;
+	if (S.menu_keymap_logged) return;
+	S.menu_keymap_logged = 1;
+	tab = menu_keymap(&n);
+	elog("menu: independent module; host supplies SHM pixels, wl_seat keys, spare-buffer redraw; no luna\n");
+	for (i = 0; i < n; i++)
+		elog("menu: keymap name=%s code=%u class=%s status=%s note=%s\n",
+		     tab[i].name, tab[i].code, menu_key_class_name(tab[i].klass),
+		     tab[i].status, tab[i].note);
+}
+
 static void paint(struct buf *b, uint32_t rgb)
 {
 	uint32_t *px = b->data;
 	int x, y;
+	if (S.o && S.o->menu && S.menu.screen != MENU_SCREEN_DEMO) {
+		menu_paint(&S.menu, px, b->w, b->h);
+		return;
+	}
 	for (y = 0; y < b->h; y++)
 		for (x = 0; x < b->w; x++) {
 			uint32_t c = 0xff000000u | rgb;
@@ -1184,25 +1257,26 @@ static struct buf *demo_buffer(void)
 	return b;
 }
 
-static void request_redraw(void)
+/* 1 if a buffer was painted and committed, 0 if the redraw was deferred. */
+static int request_redraw(void)
 {
 	struct buf *b;
-	if (S.o && S.o->demo) {
+	if (use_spare_bufs()) {
 		b = demo_buffer();
 		if (!b) {
-			if (S.fatal) return;
+			if (S.fatal) return 0;
 			S.dirty = 1;
 			S.n_deferred++;
 			elog("redraw: deferred spare-cap=%d\n", DEMO_MAX_BUFS);
-			return;
+			return 0;
 		}
 	} else {
-		if (!S.buf.buffer || !S.buf.data) return;
+		if (!S.buf.buffer || !S.buf.data) return 0;
 		if (S.buf.busy) {
 			S.dirty = 1;
 			S.n_deferred++;
 			elog("redraw: deferred gen=%d busy=1\n", S.buf.gen);
-			return;
+			return 0;
 		}
 		b = &S.buf;
 	}
@@ -1211,6 +1285,22 @@ static void request_redraw(void)
 	paint(b, S.bg);
 	present_buf(b);
 	S.dirty = 0;
+	return 1;
+}
+
+/* Keep shown tile == logical selection. On this TV releases=0, so after
+ * DEMO_MAX_BUFS spares a deferred redraw would otherwise leave OK acting
+ * on a tile the compositor is not displaying. Revert and drop dirty: the
+ * last committed frame already matches the held state. */
+static int menu_commit_visual(const struct menu_state *prev)
+{
+	if (request_redraw())
+		return 1;
+	S.menu = *prev;
+	S.dirty = 0;
+	elog("menu: selection held spare-cap=%d shown=%s screen=%s\n",
+	     DEMO_MAX_BUFS, menu_focus_label(&S.menu), menu_screen_name(S.menu.screen));
+	return 0;
 }
 
 /* buffer release — defined above as a listener; redraw if input changed while busy */
@@ -1227,14 +1317,27 @@ static void buf_release(void *data, struct wl_proxy *b)
 /* ---- main ------------------------------------------------------------- */
 static void print_config(const struct opts *o)
 {
-	printf("dry_run=%d\ndemo=%d\nluna_register=%d\nheartbeat_ms=%d\ninput=%d\nwebos_shell=%d\nwebos_key_mask=%d\nexit_on_leave=%d\negl=%d\nsam_launch=%d\nsam_lifecycle2=%d\napp_id=%s\nwindow_type=%s\nduration_s=%d\n"
+	int i, n, tx, ty, tw, th;
+	const struct menu_key_map *tab;
+	printf("dry_run=%d\ndemo=%d\nmenu=%d\nluna_register=%d\nheartbeat_ms=%d\ninput=%d\nwebos_shell=%d\nwebos_key_mask=%d\nexit_on_leave=%d\negl=%d\nsam_launch=%d\nsam_lifecycle2=%d\napp_id=%s\nwindow_type=%s\nduration_s=%d\n"
 	       "size=%dx%d\nmax_size=%dx%d\ncolor=%06x\nfullscreen=%d\n"
 	       "runtime_dir=%s\ndisplay=%s\n",
-	       o->dry_run, o->demo, o->luna_register, o->heartbeat_ms, o->input, o->webos_shell, o->webos_key_mask, o->exit_on_leave, o->egl,
+	       o->dry_run, o->demo, o->menu, o->luna_register, o->heartbeat_ms, o->input, o->webos_shell, o->webos_key_mask, o->exit_on_leave, o->egl,
 	       o->sam_launch, o->sam_lifecycle2, o->app_id,
 	       o->window_type ? o->window_type : "-",
 	       o->duration_s, o->width, o->height, o->max_w, o->max_h,
 	       (unsigned)o->color, !o->no_fullscreen, o->runtime_dir, o->display_name);
+	if (!o->menu) return;
+	printf("menu_tiles=Demo,About,Exit\n");
+	tab = menu_keymap(&n);
+	for (i = 0; i < n; i++)
+		printf("menu_key name=%s code=%u class=%s status=%s note=%s\n",
+		       tab[i].name, tab[i].code, menu_key_class_name(tab[i].klass),
+		       tab[i].status, tab[i].note);
+	for (i = 0; i < MENU_TILE_COUNT; i++) {
+		if (menu_tile_rect(o->width, o->height, i, &tx, &ty, &tw, &th) == 0)
+			printf("menu_tile index=%d rect=%d,%d,%d,%d\n", i, tx, ty, tw, th);
+	}
 }
 
 /* ---- input (wl_seat only; never opens /dev/input) ---------------------- */
@@ -1304,6 +1407,56 @@ static void on_key(struct seat_slot *seat, uint32_t code, uint32_t state, uint32
 	        seat->index, label, code, code + 8u, st, name, serial, time);
 	fflush(stderr);
 	if (state != 1) return;
+	if (S.o && S.o->menu) {
+		const struct menu_key_map *hit = NULL;
+		enum menu_key_class klass = menu_classify_key(code, &hit);
+		enum menu_action act;
+		struct menu_state prev = S.menu;
+		if (klass == MENU_KEY_UNKNOWN)
+			elog("menu: unknown-keycode raw=%u (not in keymap table)\n", code);
+		else
+			elog("menu: key name=%s code=%u class=%s status=%s screen=%s focus=%s\n",
+			     hit->name, hit->code, menu_key_class_name(klass), hit->status,
+			     menu_screen_name(S.menu.screen), menu_focus_label(&S.menu));
+		act = menu_handle_key(&S.menu, code);
+		if (act == MENU_ACTION_EXIT) {
+			S.quit = 1;
+			S.reason = (klass == MENU_KEY_BACK) ? REASON_BACK : REASON_MENU_EXIT;
+			elog("menu: exit reason=%s\n", S.reason == REASON_BACK ? "back-key" : "menu-exit");
+			return;
+		}
+		if (act == MENU_ACTION_ENTER_DEMO) {
+			elog("menu: activate Demo; entering existing demo (arrows move square; BACK returns)\n");
+			menu_commit_visual(&prev);
+			return;
+		}
+		if (act == MENU_ACTION_LEAVE_DEMO) {
+			elog("menu: back from demo; screen=tiles focus=%s\n", menu_focus_label(&S.menu));
+			menu_commit_visual(&prev);
+			return;
+		}
+		if (act == MENU_ACTION_REDRAW) {
+			elog("menu: screen=%s focus=%s\n", menu_screen_name(S.menu.screen), menu_focus_label(&S.menu));
+			menu_commit_visual(&prev);
+			return;
+		}
+		if (S.menu.screen == MENU_SCREEN_DEMO) {
+			if (code == KEY_LEFT_EVDEV || code == KEY_RIGHT_EVDEV || code == KEY_UP_EVDEV || code == KEY_DOWN_EVDEV) {
+				if (S.buf.w > 0) {
+					if (code == KEY_LEFT_EVDEV) S.sq_x -= SQ_STEP;
+					if (code == KEY_RIGHT_EVDEV) S.sq_x += SQ_STEP;
+					if (code == KEY_UP_EVDEV) S.sq_y -= SQ_STEP;
+					if (code == KEY_DOWN_EVDEV) S.sq_y += SQ_STEP;
+					clamp_square(S.buf.w, S.buf.h);
+					if (model_log_ok(code))
+						elog("input: model square x=%d y=%d size=%d\n", S.sq_x, S.sq_y, S.sq);
+					request_redraw();
+				}
+			}
+			return;
+		}
+		return;
+	}
 	if (code == KEY_BACK_EVDEV) { S.quit = 1; S.reason = REASON_BACK; return; }
 	if (code == KEY_ESC_EVDEV) { S.quit = 1; S.reason = REASON_ESC; return; }
 	if (code == KEY_EXIT_EVDEV) { S.quit = 1; S.reason = REASON_EXITKEY; return; }
@@ -2397,6 +2550,7 @@ static const char *reason_text(void)
 	if (S.reason == REASON_BACK) return "back-key";
 	if (S.reason == REASON_ESC) return "escape";
 	if (S.reason == REASON_EXITKEY) return "exit-key";
+	if (S.reason == REASON_MENU_EXIT) return "menu-exit";
 	if (S.reason == REASON_WEBOS_CLOSE) return "webos-close";
 	if (S.reason == REASON_KB_LEAVE) return "keyboard-leave";
 	if (S.reason == REASON_LUNA_CLOSE) return "luna-close";
@@ -2523,6 +2677,7 @@ int main(int argc, char **argv)
 	S.sq = SQ_SIZE;
 	S.sq_x = 100;
 	S.sq_y = 100;
+	if (o.menu) menu_init(&S.menu);
 
 	/* 1. Hard exit armed BEFORE anything touches the compositor. */
 	memset(&sa, 0, sizeof sa);
@@ -2730,7 +2885,18 @@ int main(int argc, char **argv)
 		else if (o.demo)
 			elog("info: demo plain wl_shell; running until BACK (%u) or EXIT (%u); safety cap %ds; spare cap %d\n",
 			     (unsigned)KEY_BACK_EVDEV, (unsigned)KEY_EXIT_EVDEV, o.duration_s, DEMO_MAX_BUFS);
-		else
+		else if (o.menu) {
+			int i, tx, ty, tw, th;
+			log_menu_keymap_once();
+			elog("info: menu plain wl_shell; tiles Demo/About/Exit; safety cap %ds; spare cap %d\n",
+			     o.duration_s, DEMO_MAX_BUFS);
+			for (i = 0; i < MENU_TILE_COUNT; i++) {
+				if (menu_tile_rect(S.buf.w, S.buf.h, i, &tx, &ty, &tw, &th) == 0)
+					elog("menu: tile index=%d label=%s rect=%d,%d,%d,%d\n",
+					     i, i == 0 ? "DEMO" : (i == 1 ? "ABOUT" : "EXIT"), tx, ty, tw, th);
+			}
+			elog("menu: screen=%s focus=%s\n", menu_screen_name(S.menu.screen), menu_focus_label(&S.menu));
+		} else
 			elog("info: surface committed %dx%d; running until deadline\n", S.buf.w, S.buf.h);
 		if (S.need_restore) persist_restore_foreground("surface-ready");
 	}

@@ -49,6 +49,9 @@ without a manual `/var` edit, and on a SAM lifecycle-2 launch uses
 (`tvs/lg-65nano756pr/evidence/persist-past-31s-2026-11-13.md`). The jailed
 SAM process cannot see `/var/luna-service2*` and must not self-install
 LS2 files (`tvs/lg-65nano756pr/evidence/ls2-roles-retest-2026-11-13.md`).
+Version 0.9 adds opt-in `--menu` (tile launcher) on top of that 0.8 path.
+A packaged `menu` sidecar next to the ELF selects it on SAM launch.
+**`--menu` has not been run on the TV.**
 
 ## What it does
 - Connects to `$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY`. Defaults: `/tmp/xdg` and `wayland-0`. Override with `--runtime-dir` / `--display`. The name must not contain `/`.
@@ -56,6 +59,7 @@ LS2 files (`tvs/lg-65nano756pr/evidence/ls2-roles-retest-2026-11-13.md`).
 - Default mode: binds `wl_compositor`, `wl_shm` and `wl_shell`, all at **version 1**. Then it creates a surface and a `wl_shell_surface`, calls `set_fullscreen` (or `set_toplevel` with `--no-fullscreen`), and attaches one XRGB8888 SHM buffer: a 640x360 checker pattern with a white border. It answers `ping` and handles `configure` by reallocating, clamped to `--max-size` (≤1920x1080, ≤8 MiB). Only one buffer exists at a time.
 - **wl_shell by default.** The 2026-11-08 probe showed `wl_shell` v1, and the follow-up 10 s run put a full-screen SHM surface on screen. If `wl_shell` is absent the client **fails closed** (exit 5). There is no xdg-shell path and no DRM/fbdev fallback. It never opens `/dev/dri`, `/dev/fb*`, or `/dev/input/*`, and it never stops services.
 - **`--input`.** Binds every advertised `wl_seat` (at most 8), capped at version 3, and takes keyboard and pointer from the capability bits. The input-device probe (`tvs/lg-65nano756pr/evidence/input-devices-2026-11-08.md`) shows the IR remote `LGE RCU` on event1 and the Magic Remote `LGE M-RCU` on event3–5 (pointer as well). Those nodes are `root:composit` mode `0660` and surface-manager owns them. This client does not open them. Which of the three `wl_seat` v3 globals is which remote is not known until a run logs it. Arrow keys move a green square (SHM) or nudge the triangle (EGL). Any other key changes the background color. Press of the assumed exit codes returns immediately and still runs cleanup.
+- **`--menu`.** Opt-in. Independent module `src/menu.c` (no Wayland, no luna). The host still owns the SHM path, spare-buffer redraw, `wl_seat` keys, and (from 0.8) luna registration / overlay persist. Full-screen tiles **Demo / About / Exit**, labels from a built-in 5x7 bitmap font. Arrows move focus (confirmed evdev 103/105/106/108). **OK/ENTER activate, BACK returns or exits** — those codes are **hypotheses** (see the keymap table dumped on stderr and on `--parse-only --menu`). About is a static info screen. Exit exits 0. Demo enters the existing `--demo` square. BACK from About or Demo returns to the tiles; BACK from the tiles exits 0. Unknown keycodes are logged (`menu: unknown-keycode raw=`). No luna calls from the menu module, no launching other apps. Rejects `--egl`. Same 120 s safety cap and spare-buffer cap as `--demo`. If a redraw cannot be shown (spare pool exhausted and the compositor holds buffers), the logical selection is **not** advanced, so OK always activates the tile on screen. `scripts/build_ipk.py --menu` ships a `menu` sidecar; SAM launch then selects `--menu` instead of `--demo` while keeping lifecycle-2 overlay persist. **Not run on the TV.**
 - **Raw key log on stdout.** Every `wl_keyboard.key` value is printed, pressed and released, including codes this client does not name:
   `keycode raw=<u> state=pressed|released|other seat=<n> name=<wl_seat name or ->`
   A header line records the assumption: the protocol key field is the Linux evdev code (`linux/input-event-codes.h`), and the XKB keycode is that value plus 8. Assumed exit codes, press only: **KEY_ESC = 1** (XKB 9), **KEY_BACK = 158** (XKB 166), **KEY_EXIT = 174** (XKB 182). **KEY_OK = 352** and **KEY_ENTER = 28** are named on stderr and do not exit. The webOS DOM key code 461 is a different numbering; if the compositor sends it, stdout shows `raw=461` and stderr says `assumed_evdev=unknown`, and the process waits for the deadline. That stdout log is how the first 0.2 run should map BACK, EXIT, and OK.
@@ -91,11 +95,11 @@ The fetch script **fails closed**. If gpgv or a Debian archive keyring is missin
 bypass flag. If the buster key is not in any keyring on the build host, the fix is to get
 a trusted keyring, not to skip verification.
 
-The tests never touch a real compositor: each one forces a private temp socket served by `tests/mock_compositor.py`. They cover the parser, dry-run, no-wl_shell fail-closed, a stalled compositor, surface mode (including the 5000x3000 configure clamp), and a missing socket. 0.2 added seat, key, BACK/Escape/EXIT, webOS opcode, and EGL fallback coverage. 0.4 adds frame-before-commit, a done callback whose server timestamp is not treated as local time, a missing callback that still exits 0, deferred redraws that do not write a busy buffer, and resize logs that name old and new generations when a busy buffer is destroyed. They still do not exercise every NULL-proxy or `posix_fallocate` failure.
+The tests never touch a real compositor: each one forces a private temp socket served by `tests/mock_compositor.py`. They cover the parser, dry-run, no-wl_shell fail-closed, a stalled compositor, surface mode (including the 5000x3000 configure clamp), and a missing socket. 0.2 added seat, key, BACK/Escape/EXIT, webOS opcode, and EGL fallback coverage. 0.4 adds frame-before-commit, a done callback whose server timestamp is not treated as local time, a missing callback that still exits 0, deferred redraws that do not write a busy buffer, and resize logs that name old and new generations when a busy buffer is destroyed. 0.9 adds `--menu` focus navigation, OK/ENTER activation, BACK return/exit, unknown-keycode logging, spare-buffer reuse, and spare-pool **exhaustion** (more keypresses than `DEMO_MAX_BUFS=8` with `--no-release`) so shown tile and OK target cannot diverge. They still do not exercise every NULL-proxy or `posix_fallocate` failure.
 
 `build/` and `build-cache/` are git-ignored.
 
-## Native Homebrew IPK (0.8)
+## Native Homebrew IPK (0.9)
 
 `scripts/build_ipk.py` writes an `ar` archive with the same member order as
 ares-cli `package.js`: `debian-binary` (`2.0\n`), `control.tar.gz`,
@@ -118,10 +122,12 @@ checks that layout. The ARM package is:
 
 ```sh
 python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello \
-  --out build/ipk/org.va7dimar.waylandhello_0.8.0_arm.ipk
+  --out build/ipk/org.va7dimar.waylandhello_0.9.0_arm.ipk
 python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --lifecycle 2 \
-  --out build/ipk/org.va7dimar.waylandhello_0.8.0_arm-lifecycle2.ipk
-# optional: --lifecycle omit|1|2   --default-window-type card|overlay   --heartbeat-ms 1000
+  --out build/ipk/org.va7dimar.waylandhello_0.9.0_arm-lifecycle2.ipk
+python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --menu \
+  --out build/ipk/org.va7dimar.waylandhello_0.9.0_arm-menu.ipk
+# optional: --lifecycle omit|1|2   --default-window-type card|overlay   --heartbeat-ms 1000   --menu
 ```
 
 `appinfo.json` id is `org.va7dimar.waylandhello`, type `native`, main
@@ -149,8 +155,9 @@ On this TV the lifecycle-2 document includes
 `interfaceMethod":"registerApp"` and `interfaceVersion":2`
 (`tvs/lg-65nano756pr/evidence/luna-register-live-2026-11-13.md`). The ELF
 recognises that document: it selects `--demo` (input + spare SHM buffers),
-takes `APPID` then `appId` then appinfo `id`, and if the launch is
-lifecycle 2 it also selects `--luna-register`, `--webos-shell`, and
+or `--menu` if a `menu` sidecar sits next to the ELF, takes `APPID` then
+`appId` then appinfo `id`, and if the launch is lifecycle 2 it also
+selects `--luna-register`, `--webos-shell`, and
 `_WEBOS_WINDOW_TYPE_OVERLAY`, with a 90 s safety cap. `--duration` still
 wins when passed. BACK (evdev 158) or EXIT (174) ends it. The hard alarm
 is the cap plus 5 s. The process does **not** exit on `pause` or keyboard
@@ -203,17 +210,19 @@ exits 10. A nested `event` or `returnValue` does not count. Only top-level
 fields do. The client logs `luna: exe=` from `/proc/self/exe` so a live
 run can be compared with the installer-generated role `exeName`.
 
-SDK binary SHA256 `ef27b70fcdca93f4a71e92c530d2fefd803d5c8f8a62f078919a45c30ff00f2b`.
-Default IPK SHA256 `1f774ab06df06fe5b31b712fa63fbb5c377f95e11e14c9afd5df06a3ac61d054`
+0.8 SDK binary SHA256 `ef27b70fcdca93f4a71e92c530d2fefd803d5c8f8a62f078919a45c30ff00f2b`.
+0.8 default IPK SHA256 `1f774ab06df06fe5b31b712fa63fbb5c377f95e11e14c9afd5df06a3ac61d054`
 (`nativeLifeCycleInterfaceVersion` omitted; SAM JSON without
-`registerApp` stays on plain `wl_shell`). Lifecycle-2 IPK SHA256
+`registerApp` stays on plain `wl_shell`). 0.8 lifecycle-2 IPK SHA256
 `e940723ab82be2cebcd1e02639abdcf1317afba960524ebe4dd2a8069fef39dc`
 (the field is 2; `defaultWindowType` overlay; SAM JSON selects luna +
 `wl_webos_shell` overlay). The binary inside both IPKs matches the SDK
 binary. None of those three files is committed.
-`abi/wayland-hello-v8-ABI-REPORT.txt` records the binary. Do not install
+`abi/wayland-hello-v8-ABI-REPORT.txt` records the 0.8 binary. Do not install
 the previous lifecycle-2 hashes `888e96b0e705bec22c4852dd7e1d7eea2b54ea8ff2b2d4cfcbcfe6735a7cf7b1`
 or `0452e5e3956f38aa4f2edad529e0b4804230add8059d2da3ecd5cf555d2b9890`.
+0.9 IPK names use version `0.9.0` so they do not collide with those 0.8
+packages. 0.9 hashes are not committed.
 
 ### Install, launch, uninstall
 
@@ -232,13 +241,13 @@ Homebrew Channel calls that method with `luna-send-pub`
 and `tools/install.sh`).
 
 ```sh
-luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.8.0_arm.ipk","subscribe":true}' </dev/null
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.9.0_arm.ipk","subscribe":true}' </dev/null
 ```
 
-The persist build is the same command with `org.va7dimar.waylandhello_0.8.0_arm-lifecycle2.ipk`. Uninstall the first id before installing the second; OSE `dev/install` ignores a second install of the same id.
+The persist build is the same command with `org.va7dimar.waylandhello_0.9.0_arm-lifecycle2.ipk`. Uninstall the first id before installing the second; OSE `dev/install` ignores a second install of the same id.
 
 ```sh
-luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.8.0_arm-lifecycle2.ipk","subscribe":true}' </dev/null
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.9.0_arm-lifecycle2.ipk","subscribe":true}' </dev/null>
 ```
 
 Launch uses OSE `com.webos.service.applicationmanager/launch` with `{"id":"..."}`
@@ -276,6 +285,23 @@ Arrows should move the green square (`buf: spare` when the compositor has
 not released). BACK or EXIT should end it before the 90 s cap. Pixels on
 screen are a separate observation. Overlay keeping Home from covering the
 surface is **hypothesis**.
+
+### TV-only checks for `--menu` (not run)
+
+**NEEDS OWNER NOTICE.** `--menu` has no TV evidence. Off-TV tests cover focus,
+activation, BACK, and spare-buffer reuse against the mock compositor only.
+Do not claim these on hardware until a SAM-launched run logs them:
+
+- Whether the compositor delivers **KEY_OK (352)** or **KEY_ENTER (28)** for
+  the remote OK key. If the log shows a different `keycode raw=`, that value
+  is the one to add to the hypothesis table. Unknown codes are already logged.
+- Whether **KEY_BACK (158)** arrives. 0.2 did not log 158; it may be consumed
+  by SAM/LSM. If BACK never arrives, the Exit tile and the 120 s cap still end
+  the process.
+- Whether the bitmap labels are readable at the TV's 1920x1080 configure.
+- Whether SAM still relaunches Home at ~31 s. A menu IPK with `--lifecycle 2`
+  still uses luna `registerApp` and overlay persist from 0.8; the menu module
+  itself makes no luna calls.
 
 ## PROPOSED on-TV runs for 0.4
 0.1, 0.2, and 0.3 already ran with owner approval. **None of the steps below

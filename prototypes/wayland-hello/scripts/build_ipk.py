@@ -26,7 +26,7 @@ import sys
 import tarfile
 
 APP_ID = "org.va7dimar.waylandhello"
-VERSION = "0.8.0"
+VERSION = "0.9.0"
 ARCH = "arm"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PACKAGING = os.path.join(ROOT, "packaging")
@@ -127,7 +127,7 @@ def render_appinfo(lifecycle="omit", default_window_type="card"):
     return (json.dumps(info, indent=2) + "\n").encode("utf-8")
 
 
-def build_ipk(binary_path, out_path, mtime=0, lifecycle="omit", default_window_type=None, heartbeat_ms=0):
+def build_ipk(binary_path, out_path, mtime=0, lifecycle="omit", default_window_type=None, heartbeat_ms=0, menu=False):
     if not os.path.isfile(binary_path):
         raise SystemExit("binary not found: %s" % binary_path)
     if default_window_type is None:
@@ -155,6 +155,11 @@ def build_ipk(binary_path, out_path, mtime=0, lifecycle="omit", default_window_t
         hb = ("%d\n" % int(heartbeat_ms)).encode("ascii")
         payload += len(hb)
         members.append((APP_PREFIX + "/heartbeat-ms", hb, 0o644))
+    if menu:
+        # SAM launches the ELF (appinfo main). A sidecar next to the ELF
+        # selects --menu; rewriting launch.sh cannot, because it is not main.
+        payload += 2
+        members.append((APP_PREFIX + "/menu", b"1\n", 0o644))
     members.sort(key=lambda item: item[0])
     installed = max(1, (payload + 1023) // 1024)
     control_gz = _tar_gzip([("control", _control(installed), 0o644)], mtime)
@@ -201,6 +206,11 @@ def main(argv):
         default=0,
         help="write heartbeat-ms next to the ELF; the client reads it on SAM launch (0 omits it)",
     )
+    parser.add_argument(
+        "--menu",
+        action="store_true",
+        help="package a menu sidecar so SAM launch selects --menu instead of --demo",
+    )
     args = parser.parse_args(argv)
     if args.heartbeat_ms and not 100 <= args.heartbeat_ms <= 60000:
         raise SystemExit("--heartbeat-ms must be 0 or 100..60000")
@@ -210,6 +220,7 @@ def main(argv):
         lifecycle=args.lifecycle,
         default_window_type=args.default_window_type,
         heartbeat_ms=args.heartbeat_ms,
+        menu=args.menu,
     )
     print(path)
     return 0
