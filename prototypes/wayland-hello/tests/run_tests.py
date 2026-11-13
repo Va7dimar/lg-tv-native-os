@@ -415,6 +415,7 @@ def telemetry_tests():
                                               env_extra={"WAYLAND_HELLO_LIB_DIR": fix, "LS2_NAME": "org.va7dimar.waylandhello-3"})
         check("luna register uses LS2_NAME and exits on close",
               rc == 0 and "luna: register name=org.va7dimar.waylandhello-3 source=LS2_NAME" in err
+              and "luna: exe=" in err
               and "luna: LSCall luna://com.webos.service.applicationmanager/registerApp {\"subscribe\":true}" in err
               and "luna: event=registered" in err and "luna: event=relaunch" in err
               and "luna: event=close" in err and "exiting (luna-close)" in err

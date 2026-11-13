@@ -225,3 +225,30 @@ The binary inside both IPKs matches the SDK binary.
 max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`. No 0.7
 binary or IPK was copied to or run on the TV. These hashes replace
 `cd2c0497…`, `c02f98bb…`, and `e1679f75…`. Do not install those.
+
+## 2026-11-13: LS2 role/client-permission grant (lifecycle-2)
+
+The `888e96b0…` lifecycle-2 IPK was installed on the TV. `LSRegister`
+failed `-1027 Invalid permissions for org.va7dimar.waylandhello` and the
+client exited 10
+(`tvs/lg-65nano756pr/evidence/luna-register-live-2026-11-13.md`). This
+change ships `sysbus/` templates in the IPK and, on lifecycle 2, writes
+them into `/var/luna-service2-dev` (else `/var/luna-service2`) with the
+ELF path as `exeName`, then `ls-control scan-services`. System paths are
+refused. The client logs `luna: exe=` from `/proc/self/exe`.
+
+Host `make test`: **168 tests, 0 failed**, plus `tests/test_ipk.py`
+(**0 failed**; packaging now includes the three sysbus files and the
+lifecycle-2 launcher install/fail-closed paths).
+`sh scripts/abi-check.sh` / `make sdk-abi`: ABI CHECK PASS,
+`e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`,
+`librt.so.1`.
+
+SDK binary SHA256
+`a4fa3165822002a4989acaea2c4b0997e4c855e4036c8c0a9cf75636f3f96220`.
+Default IPK SHA256
+`dc2340822e7554b52f702f8781355923cafb61ca609fc31771380f95714f6e95`.
+Lifecycle-2 IPK SHA256
+`0452e5e3956f38aa4f2edad529e0b4804230add8059d2da3ecd5cf555d2b9890`.
+The binary inside both IPKs matches the SDK binary. None of those files
+is committed. Do not install `888e96b0…` / `673dfb9b…`.

@@ -1,0 +1,10 @@
+{
+  "id": "org.va7dimar.waylandhello",
+  "version": "0.7.0",
+  "roleFiles": [
+    "__LUNA_ROOT__/roles.d/org.va7dimar.waylandhello.app.json"
+  ],
+  "clientPermissionFiles": [
+    "__LUNA_ROOT__/client-permissions.d/org.va7dimar.waylandhello.app.json"
+  ]
+}

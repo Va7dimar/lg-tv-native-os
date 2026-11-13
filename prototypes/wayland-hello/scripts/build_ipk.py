@@ -134,6 +134,9 @@ def build_ipk(binary_path, out_path, mtime=0, lifecycle="omit", default_window_t
         "appinfo.json": (render_appinfo(lifecycle, default_window_type), 0o644),
         "icon.png": (None, 0o644),
         "wayland-hello-launch.sh": (None, 0o755),
+        "sysbus/org.va7dimar.waylandhello.role.json": (None, 0o644),
+        "sysbus/org.va7dimar.waylandhello.perm.json": (None, 0o644),
+        "sysbus/org.va7dimar.waylandhello.manifest.json": (None, 0o644),
     }
     members = []
     payload = 0

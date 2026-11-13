@@ -1593,6 +1593,16 @@ static int luna_start(const char *app_id)
 		if (env_name && *env_name)
 			elog("luna: LS2_NAME is set but not a usable service name; using the app id\n");
 	}
+	{
+		char exe[256];
+		ssize_t n = readlink("/proc/self/exe", exe, sizeof exe - 1);
+		if (n > 0) {
+			exe[n] = '\0';
+			elog("luna: exe=%s\n", exe);
+		} else {
+			elog("luna: exe=unknown\n");
+		}
+	}
 	Luna.h_glib = luna_dlopen_named("libglib-2.0.so.0", "/usr/lib/libglib-2.0.so.0");
 	Luna.h_luna = luna_dlopen_named("libluna-service2.so.3", "/usr/lib/libluna-service2.so.3");
 	if (!Luna.h_glib || !Luna.h_luna) {
