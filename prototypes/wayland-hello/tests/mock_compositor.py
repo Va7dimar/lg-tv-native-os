@@ -158,8 +158,12 @@ class Client:
             return
         pts = {}
         w, h, stride, off = self.last_buf
-        for x, y in ((16, 16), (80, 120), (120, 120), (160, 120),
-                     (50, 147), (243, 147), (436, 147), (320, 45)):
+        samples = [(16, 16), (80, 120), (120, 120), (160, 120),
+                   (50, 147), (243, 147), (436, 147), (320, 45),
+                   (0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1),
+                   (2, 2), (w - 3, 2), (2, h - 3), (w - 3, h - 3),
+                   (200, h // 2 if h >= 2 else 0)]
+        for x, y in samples:
             if 0 <= x < w and 0 <= y < h:
                 o = off + y * stride + x * 4
                 if 0 <= o <= len(self.mem) - 4:
@@ -209,6 +213,13 @@ class Client:
             elif biface == "wl_seat":
                 self.send(msg(nid, 0, struct.pack("<I", 3)))
                 self.send(msg(nid, 1, pack_str("seat-%d" % nid)))
+            elif biface == "wl_output":
+                if not self.args.get("no_output_mode"):
+                    ow, oh = self.args.get("output") or (1920, 1080)
+                    geom = (struct.pack("<iiiii", 0, 0, 160, 90, 0)
+                            + pack_str("Mock") + pack_str("Panel") + struct.pack("<i", 0))
+                    self.send(msg(nid, 0, geom))
+                    self.send(msg(nid, 1, struct.pack("<Iiii", 1, ow, oh, 60000)))
             return
         if newtype is not None:
             self.objs[args[0]] = newtype
@@ -276,9 +287,13 @@ def main():
     a = sys.argv[1:]
     path, logp = a[0], a[1]
     args = {"no_shell": "--no-shell" in a, "stall": "--stall" in a, "webos": "--webos" in a,
-            "frame_done": "--frame-done" in a, "no_release": "--no-release" in a}
+            "frame_done": "--frame-done" in a, "no_release": "--no-release" in a,
+            "no_output_mode": "--no-output-mode" in a}
     if "--seats" in a:
         args["seats"] = int(a[a.index("--seats") + 1])
+    if "--output" in a:
+        w, h = a[a.index("--output") + 1].split("x")
+        args["output"] = (int(w), int(h))
     if "--input-script" in a:
         script = []
         for part in a[a.index("--input-script") + 1].split(","):

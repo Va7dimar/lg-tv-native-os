@@ -46,12 +46,12 @@ def parser_tests():
     rc, out, _, _ = run(["--parse-only", "--duration", "30", "--size", "1920x1080", "--max-size", "800x600"])
     check("size clamped to max-size", rc == 0 and "size=800x600" in out and "duration_s=30" in out, out)
     rc, out, _, _ = run(["--help"])
-    check("--help exit 0", rc == 0 and "--dry-run" in out and "--input" in out and "--webos-shell" in out and "--egl" in out and "--menu" in out, out)
+    check("--help exit 0", rc == 0 and "--dry-run" in out and "--input" in out and "--webos-shell" in out and "--egl" in out and "--menu" in out and "--photo-frame" in out, out)
     rc, out, _, _ = run(["--parse-only", "--input", "--webos-shell", "--egl", "--app-id", "wayland-hello-prototype"])
     check("v2 flags parse", rc == 0 and "input=1" in out and "webos_shell=1" in out and "egl=1" in out
           and "app_id=wayland-hello-prototype" in out, out)
     rc, out, _, _ = run(["--version"])
-    check("version 0.9", rc == 0 and "0.9-prototype" in out, out)
+    check("version 0.10", rc == 0 and "0.10-prototype" in out, out)
     rc, _, err, _ = run(["--parse-only", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY"])
     check("window-type requires webos shell", rc == 2, "rc=%d %s" % (rc, err))
     rc, _, err, _ = run(["--parse-only", "--webos-shell", "--window-type", "OVERLAY"])
@@ -112,6 +112,43 @@ def parser_tests():
               p.stdout + p.stderr)
     finally:
         shutil.rmtree(side)
+    side_a = tempfile.mkdtemp(prefix="wlh-photo-a-")
+    try:
+        bin2 = os.path.join(side_a, "wayland-hello")
+        shutil.copy(BIN, bin2)
+        with open(os.path.join(side_a, "photo-frame"), "w", encoding="ascii") as fh:
+            fh.write("A\n")
+        p = subprocess.run(
+            [bin2, launch, "--parse-only"],
+            env={"PATH": os.environ.get("PATH", "/usr/bin:/bin")},
+            capture_output=True, text=True, timeout=40)
+        check("sam photo-frame A sidecar selects focusable fullscreen not overlay",
+              p.returncode == 0 and "photo_frame=A" in p.stdout and "demo=0" in p.stdout
+              and "menu=0" in p.stdout and "luna_register=1" in p.stdout
+              and "webos_shell=0" in p.stdout and "duration_s=120" in p.stdout
+              and "heartbeat_ms=1000" in p.stdout
+              and "photo_frame_window=wl_shell-fullscreen" in p.stdout,
+              p.stdout + p.stderr)
+    finally:
+        shutil.rmtree(side_a)
+    side_b = tempfile.mkdtemp(prefix="wlh-photo-b-")
+    try:
+        bin2 = os.path.join(side_b, "wayland-hello")
+        shutil.copy(BIN, bin2)
+        with open(os.path.join(side_b, "photo-frame"), "w", encoding="ascii") as fh:
+            fh.write("B\n")
+        p = subprocess.run(
+            [bin2, launch, "--parse-only"],
+            env={"PATH": os.environ.get("PATH", "/usr/bin:/bin")},
+            capture_output=True, text=True, timeout=40)
+        check("sam photo-frame B sidecar keeps overlay at 120s cap",
+              p.returncode == 0 and "photo_frame=B" in p.stdout and "demo=0" in p.stdout
+              and "luna_register=1" in p.stdout and "webos_shell=1" in p.stdout
+              and "window_type=_WEBOS_WINDOW_TYPE_OVERLAY" in p.stdout
+              and "duration_s=120" in p.stdout,
+              p.stdout + p.stderr)
+    finally:
+        shutil.rmtree(side_b)
     rc, out, err, _ = run(["--parse-only", "--menu"])
     check("menu is input with a 120s cap",
           rc == 0 and "menu=1" in out and "demo=0" in out and "input=1" in out
@@ -145,6 +182,29 @@ def parser_tests():
     rc, out, err, _ = run(["--parse-only", "--menu", "--size", "1x1"])
     check("menu accepts tiny size without emitting tile rects",
           rc == 0 and "menu=1" in out and "size=1x1" in out and "menu_tile " not in out, out + err)
+    rc, out, err, _ = run(["--parse-only", "--photo-frame", "A"])
+    check("photo-frame A is focusable wl_shell with 120s cap and 1s heartbeat",
+          rc == 0 and "photo_frame=A" in out and "demo=0" in out and "menu=0" in out
+          and "input=1" in out and "webos_shell=0" in out and "duration_s=120" in out
+          and "heartbeat_ms=1000" in out and "fullscreen=1" in out
+          and "photo_frame_label=FOCUSABLE FULLSCREEN" in out
+          and "photo_frame_window=wl_shell-fullscreen" in out, out + err)
+    rc, out, err, _ = run(["--parse-only", "--photo-frame", "B"])
+    check("photo-frame B is overlay webos-shell with 120s cap",
+          rc == 0 and "photo_frame=B" in out and "demo=0" in out
+          and "webos_shell=1" in out and "window_type=_WEBOS_WINDOW_TYPE_OVERLAY" in out
+          and "duration_s=120" in out and "heartbeat_ms=1000" in out
+          and "photo_frame_label=NON-FOCUSABLE OVERLAY" in out, out + err)
+    rc, out, _, _ = run(["--parse-only", "--photo-frame", "A", "--duration", "45"])
+    check("photo-frame duration can exceed 30", rc == 0 and "duration_s=45" in out, out)
+    rc, _, err, _ = run(["--parse-only", "--photo-frame", "A", "--demo"])
+    check("photo-frame rejects demo", rc == 2 and "cannot be combined" in err, err)
+    rc, _, err, _ = run(["--parse-only", "--photo-frame", "A", "--menu"])
+    check("photo-frame rejects menu", rc == 2 and "cannot be combined" in err, err)
+    rc, _, err, _ = run(["--parse-only", "--photo-frame", "A", "--egl"])
+    check("photo-frame rejects egl", rc == 2 and "SHM-only" in err, err)
+    rc, _, err, _ = run(["--parse-only", "--photo-frame", "C"])
+    check("photo-frame rejects C", rc == 2 and "must be A or B" in err, err)
     rc, _, err, _ = run(["--parse-only", "--duration", "45"])
     check("reject duration 45 without demo", rc == 2 and "1..30" in err, err)
     rc, _, err, _ = run(["--parse-only", "--webos-key-mask"])
@@ -867,6 +927,139 @@ def menu_tests():
     check("menu without wl_seat fails closed rc=8", rc == 8, "rc=%d %s" % (rc, err))
 
 
+PHOTO_A_BG = 0xffff00d0
+PHOTO_B_BG = 0xff00c8ff
+PHOTO_CORNER = 0xfffff200
+
+
+def photo_frame_unit_tests():
+    tmp = tempfile.mkdtemp(prefix="wlh-pf-unit-")
+    try:
+        dest = os.path.join(tmp, "test_photo_frame")
+        p = subprocess.run(
+            ["gcc", "-std=c99", "-Wall", "-Wextra",
+             "-I", os.path.join(HERE, "..", "src"), "-o", dest,
+             os.path.join(HERE, "test_photo_frame.c"),
+             os.path.join(HERE, "..", "src", "photo_frame.c")],
+            capture_output=True, text=True, timeout=30)
+        check("photo_frame unit test compiles", p.returncode == 0, p.stderr)
+        if p.returncode != 0:
+            return
+        r = subprocess.run([dest], capture_output=True, text=True, timeout=30)
+        check("photo_frame unit tests exit 0", r.returncode == 0, r.stdout + r.stderr)
+        check("photo_frame unit tests report 0 failed", "0 failed" in r.stdout, r.stdout)
+        for line in r.stdout.splitlines():
+            if line.startswith("ok  ") or line.startswith("FAIL "):
+                check("unit " + line[4:].strip(), line.startswith("ok"), line)
+    finally:
+        shutil.rmtree(tmp)
+
+
+def photo_frame_tests():
+    (rc, out, err, dt), ev, _ = with_mock(
+        ["--seats", "1", "--input-script", "p106"],
+        ["--photo-frame", "A", "--duration", "2"])
+    bufs = [e["args"] for e in ev if e.get("req") == "create_buffer"]
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("photo-frame A rc=0", rc == 0, "rc=%d %s" % (rc, err[-500:]))
+    check("photo-frame A binds wl_output",
+          any(e.get("req") == "bind" and e.get("args", [None, None])[1] == "wl_output" for e in ev),
+          str(reqs(ev)))
+    check("photo-frame A first buffer is 1920x1080 from wl_output",
+          bufs and bufs[0][2] == 1920 and bufs[0][3] == 1080 and bufs[0][4] == 1920 * 4,
+          str(bufs))
+    check("photo-frame A logs output-mode and pick source",
+          "photo-frame: output-mode" in err and "source=wl_output" in err
+          and "pick 1920x1080" in err, err)
+    check("photo-frame A stays on wl_shell fullscreen",
+          any(e.get("req") == "set_fullscreen" for e in ev)
+          and not any(e.get("req") == "bind" and e.get("args", [None, None])[1] == "wl_webos_shell" for e in ev),
+          str(reqs(ev)))
+    check("photo-frame A paints magenta fill and yellow corners",
+          pix and pix[-1].get("200,%d" % 540) == PHOTO_A_BG
+          and pix[-1].get("0,0") == PHOTO_CORNER
+          and pix[-1].get("1919,0") == PHOTO_CORNER
+          and pix[-1].get("0,1079") == PHOTO_CORNER
+          and pix[-1].get("1919,1079") == PHOTO_CORNER,
+          str(pix[-1]) if pix else "no pixels")
+    check("photo-frame A logs focus_enter and last key",
+          "photo-frame: focus_enter=" in err and "input: keyboard enter" in err
+          and "photo-frame: key code=106 name=KEY_RIGHT" in err
+          and "photo-frame: summary" in err and "kb_enter=" in err, err[-1200:])
+    check("photo-frame A timer tick is logged",
+          "photo-frame: tick " in err and "buf=1920x1080" in err, err)
+
+    (rc, out, err, dt), ev, _ = with_mock(
+        ["--seats", "1", "--output", "1280x720"],
+        ["--photo-frame", "A", "--duration", "2"])
+    bufs = [e["args"] for e in ev if e.get("req") == "create_buffer"]
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    check("photo-frame detects 1280x720 from wl_output",
+          rc == 0 and bufs and bufs[0][2] == 1280 and bufs[0][3] == 720
+          and "source=wl_output" in err and "pick 1280x720" in err, str(bufs) + err[-400:])
+    check("photo-frame 1280x720 still paints every corner",
+          pix and pix[-1].get("0,0") == PHOTO_CORNER
+          and pix[-1].get("1279,0") == PHOTO_CORNER
+          and pix[-1].get("0,719") == PHOTO_CORNER
+          and pix[-1].get("1279,719") == PHOTO_CORNER,
+          str(pix[-1]) if pix else "no pixels")
+
+    (rc, out, err, dt), ev, _ = with_mock(
+        ["--seats", "1", "--no-output-mode"],
+        ["--photo-frame", "A", "--duration", "2"])
+    bufs = [e["args"] for e in ev if e.get("req") == "create_buffer"]
+    check("photo-frame falls back to 1920x1080 without output mode",
+          rc == 0 and bufs and bufs[0][2] == 1920 and bufs[0][3] == 1080
+          and "source=fallback" in err, str(bufs) + err[-400:])
+
+    (rc, out, err, dt), ev, _ = with_mock(
+        ["--seats", "1", "--no-output-mode"],
+        ["--photo-frame", "A", "--size", "800x600", "--duration", "2"])
+    bufs = [e["args"] for e in ev if e.get("req") == "create_buffer"]
+    check("photo-frame --size is the fallback when output is silent",
+          rc == 0 and bufs and bufs[0][2] == 800 and bufs[0][3] == 600
+          and "source=fallback" in err, str(bufs) + err[-400:])
+
+    (rc, out, err, dt), ev, _ = with_mock(
+        ["--seats", "1", "--input-script", "p158"],
+        ["--photo-frame", "A", "--duration", "6"])
+    check("photo-frame BACK exits before the cap",
+          rc == 0 and dt < 4.0 and "exiting (back-key)" in err
+          and "photo-frame: key code=158 name=KEY_BACK" in err, "rc=%d dt=%.2f %s" % (rc, dt, err[-300:]))
+
+    (rc, out, err, dt), ev, _ = with_mock([], ["--photo-frame", "A", "--duration", "3"])
+    check("photo-frame without wl_seat fails closed rc=8", rc == 8, "rc=%d %s" % (rc, err))
+
+    ose = webos_src(
+        [("get_system_pip", ""), ("get_shell_surface", "no")],
+        [("set_location_hint", "u"), ("set_state", "u"), ("set_property", "ss"), ("set_key_mask", "u")])
+    d_ose = tempfile.mkdtemp(prefix="wlh-pf-webos-")
+    build_so(ose, os.path.join(d_ose, "libwayland-webos-client.so.1"))
+    (rc, out, err, dt), ev, _ = with_mock(
+        ["--webos", "--seats", "1"],
+        ["--photo-frame", "B", "--duration", "2"],
+        env_extra={"WAYLAND_HELLO_LIB_DIR": d_ose})
+    bufs = [e["args"] for e in ev if e.get("req") == "create_buffer"]
+    pix = [e for e in ev if e.get("event") == "pixels"]
+    seq = [(e.get("req"), e.get("args")) for e in ev if e.get("iface") == "wl_webos_shell_surface"]
+    check("photo-frame B rc=0", rc == 0, "rc=%d %s" % (rc, err[-500:]))
+    check("photo-frame B first buffer is fullscreen 1920x1080",
+          bufs and bufs[0][2] == 1920 and bufs[0][3] == 1080, str(bufs))
+    check("photo-frame B sends overlay before set_state",
+          any(r == "op2" and a == ["_WEBOS_WINDOW_TYPE", "_WEBOS_WINDOW_TYPE_OVERLAY"] for r, a in seq)
+          and "webos: set_property opcode=2 name=_WEBOS_WINDOW_TYPE value=_WEBOS_WINDOW_TYPE_OVERLAY" in err,
+          str(seq) + err[-400:])
+    check("photo-frame B paints cyan fill and yellow corners",
+          pix and pix[-1].get("200,%d" % 540) == PHOTO_B_BG
+          and pix[-1].get("0,0") == PHOTO_CORNER
+          and pix[-1].get("1919,1079") == PHOTO_CORNER,
+          str(pix[-1]) if pix else "no pixels")
+    check("photo-frame B logs window type and buffer size",
+          "photo-frame: pick 1920x1080" in err
+          and "type=_WEBOS_WINDOW_TYPE_OVERLAY" in err
+          and "buf=1920x1080" in err, err[-800:])
+
+
 def egl_tests():
     empty = tempfile.mkdtemp(prefix="wlh-egl-")
     (rc, out, err, dt), ev, _ = with_mock([], ["--egl", "--duration", "2"], env_extra={"WAYLAND_HELLO_LIB_DIR": empty})
@@ -904,6 +1097,8 @@ if __name__ == "__main__":
     webos_tests()
     telemetry_tests()
     menu_tests()
+    photo_frame_unit_tests()
+    photo_frame_tests()
     egl_tests()
     linkage_tests()
     n_fail = sum(1 for _, ok, _ in results if not ok)

@@ -5,15 +5,16 @@ reads the remote's keys, and registers with SAM (the webOS application manager) 
 lifecycle-2 native app. Validated on an LG 65NANO756PR (webOS 6.5.3-47). Prototype only:
 no hardware compatibility guarantee for other models.
 
-## Status (v0.9.0)
+## Status (v0.10.0)
 
 | Feature | State |
 |---|---|
 | Full-screen SHM surface via `wl_shell`, remote arrow keys | TV-validated |
 | IPK install via `dev/install`, launch via SAM | TV-validated |
 | Lifecycle-2 `registerApp` (appinfo `main` = the ELF, so the auto-generated LS2 role matches `/proc/self/exe`) | TV-validated |
-| `wl_webos_shell` overlay staying up past SAM's ~31 s Home reclaim | Logs show the full 90 s cap reached; on-screen visibility not yet confirmed ([run note](../../tvs/lg-65nano756pr/evidence/persist-90s-tv-run-2026-11-13.md)) |
+| `wl_webos_shell` overlay staying up past SAM's ~31 s Home reclaim | Logs show the full 90 s cap reached; on-screen visibility not yet confirmed ([run note](../../tvs/lg-65nano756pr/evidence/persist-90s-tv-run-2026-11-13.md)). The overlay buffer was 640x360. |
 | `--menu` tile launcher (Demo / About / Exit) | Host-tested only, never run on a TV |
+| `--photo-frame A\|B` fullscreen photograph-test (edge-to-edge fill, corner markers, large timer) | Host-tested only. MODE A is focusable `wl_shell` fullscreen; MODE B is the proven overlay path at panel resolution. Not run on a TV. |
 
 ## Quick start
 
@@ -23,17 +24,40 @@ Off-TV (any Linux host with gcc, make, python3, gpgv):
 make test                                   # host build + mock-compositor tests, no TV needed
 python3 -I scripts/fetch_openlgtv_sdk.py    # pinned openlgtv SDK; fails closed on digest/signature mismatch
 make sdk-abi                                # ARM soft-float build + ABI report
-python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --lifecycle 2 \
-  --out build/ipk/org.va7dimar.waylandhello_0.9.0_arm-lifecycle2.ipk
+python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --photo-frame A \
+  --out build/ipk/org.va7dimar.waylandhello_0.10.0_arm-photo-a.ipk
+python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --photo-frame B \
+  --out build/ipk/org.va7dimar.waylandhello_0.10.0_arm-photo-b.ipk
 ```
+
+### Photograph-test (0.10) — SAM launch, owner photographs the panel
+
+Off-TV only in this repo. The owner copies one IPK to the TV (`scp … root@192.168.x.x:/tmp/`) and runs the luna commands below. Uninstall the same id before switching modes. `appinfo.json` `main` is the ELF so `dev/install` auto-generates the LS2 role. Each process self-exits after 120 s. Log: `/tmp/wh6.log`.
+
+MODE A (focusable `wl_shell` fullscreen — magenta fill, `TL`/`TR`/`BL`/`BR` boxes, large `T=<seconds>S` timer, overlays `FOCUS ENTER` / last key):
+
+```sh
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.10.0_arm-photo-a.ipk","subscribe":true}' </dev/null
+luna-send-pub -n 1 luna://com.webos.service.applicationmanager/launch '{"id":"org.va7dimar.waylandhello"}' </dev/null
+```
+
+MODE B (proven `_WEBOS_WINDOW_TYPE_OVERLAY` path at panel resolution — cyan fill, same markers/timer):
+
+```sh
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"org.va7dimar.waylandhello","subscribe":true}' </dev/null
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.10.0_arm-photo-b.ipk","subscribe":true}' </dev/null
+luna-send-pub -n 1 luna://com.webos.service.applicationmanager/launch '{"id":"org.va7dimar.waylandhello"}' </dev/null
+```
+
+A phone photo of all four corner labels plus a timer past 31 s (and past 90 s) is the visibility proof. Grep `/tmp/wh6.log` for `photo-frame: pick`, `buf=`, `photo-frame: tick`, `focus_enter`, and `keycode raw=`.
 
 On the TV (already rooted, Homebrew Channel + root SSH; this repo contains no rooting steps):
 copy the IPK to `/tmp`, then
 
 ```sh
-luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.9.0_arm-lifecycle2.ipk","subscribe":true}' </dev/null
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.10.0_arm-photo-a.ipk","subscribe":true}' </dev/null
 luna-send-pub -n 1 luna://com.webos.service.applicationmanager/launch '{"id":"org.va7dimar.waylandhello"}' </dev/null
-# BACK/EXIT or the 90 s cap ends it; log: /tmp/wh6.log
+# BACK/EXIT or the 120 s cap ends it; log: /tmp/wh6.log
 luna-send-pub -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"org.va7dimar.waylandhello","subscribe":true}' </dev/null
 ```
 
@@ -109,6 +133,7 @@ A packaged `menu` sidecar next to the ELF selects it on SAM launch.
 - Default mode: binds `wl_compositor`, `wl_shm` and `wl_shell`, all at **version 1**. Then it creates a surface and a `wl_shell_surface`, calls `set_fullscreen` (or `set_toplevel` with `--no-fullscreen`), and attaches one XRGB8888 SHM buffer: a 640x360 checker pattern with a white border. It answers `ping` and handles `configure` by reallocating, clamped to `--max-size` (≤1920x1080, ≤8 MiB). Only one buffer exists at a time.
 - **wl_shell by default.** The 2026-11-08 probe showed `wl_shell` v1, and the follow-up 10 s run put a full-screen SHM surface on screen. If `wl_shell` is absent the client **fails closed** (exit 5). There is no xdg-shell path and no DRM/fbdev fallback. It never opens `/dev/dri`, `/dev/fb*`, or `/dev/input/*`, and it never stops services.
 - **`--input`.** Binds every advertised `wl_seat` (at most 8), capped at version 3, and takes keyboard and pointer from the capability bits. The input-device probe (`tvs/lg-65nano756pr/evidence/input-devices-2026-11-08.md`) shows the IR remote `LGE RCU` on event1 and the Magic Remote `LGE M-RCU` on event3–5 (pointer as well). Those nodes are `root:composit` mode `0660` and surface-manager owns them. This client does not open them. Which of the three `wl_seat` v3 globals is which remote is not known until a run logs it. Arrow keys move a green square (SHM) or nudge the triangle (EGL). Any other key changes the background color. Press of the assumed exit codes returns immediately and still runs cleanup.
+- **`--photo-frame A|B`.** Opt-in photograph-test. Independent module `src/photo_frame.c` (no Wayland, no luna). Binds `wl_output` (version 1) and sizes the SHM buffer from the current mode, then a compositor configure, then `--size` if given, else 1920x1080, clamped to `--max-size`. Paints an edge-to-edge solid fill (MODE A magenta, MODE B cyan), labeled corner boxes `TL`/`TR`/`BL`/`BR` that touch every edge, a large seconds timer, the mode name, and the window-type token. Spare-buffer redraw and a 1 s heartbeat keep the timer moving even if the compositor never releases. Safety cap 120 s. MODE A is plain `wl_shell` `set_fullscreen` (the 30 s focusable SAM path) and overlays `FOCUS ENTER` / last key. MODE B is `wl_webos_shell` `_WEBOS_WINDOW_TYPE_OVERLAY` (the 90 s persist path) at panel resolution instead of 640x360. A packaged `photo-frame` sidecar (`A\n` or `B\n`) selects the mode on SAM launch while keeping appinfo `main` = the ELF. Rejects `--menu`, `--demo`, and `--egl`. **Not run on the TV.**
 - **`--menu`.** Opt-in. Independent module `src/menu.c` (no Wayland, no luna). The host still owns the SHM path, spare-buffer redraw, `wl_seat` keys, and (from 0.8) luna registration / overlay persist. Full-screen tiles **Demo / About / Exit**, labels from a built-in 5x7 bitmap font. Arrows move focus (confirmed evdev 103/105/106/108). **OK/ENTER activate, BACK returns or exits** — those codes are **hypotheses** (see the keymap table dumped on stderr and on `--parse-only --menu`). About is a static info screen. Exit exits 0. Demo enters the existing `--demo` square. BACK from About or Demo returns to the tiles; BACK from the tiles exits 0. Unknown keycodes are logged (`menu: unknown-keycode raw=`). No luna calls from the menu module, no launching other apps. Rejects `--egl`. Same 120 s safety cap and spare-buffer cap as `--demo`. If a redraw cannot be shown (spare pool exhausted and the compositor holds buffers), the logical selection is **not** advanced, so OK always activates the tile on screen. `scripts/build_ipk.py --menu` ships a `menu` sidecar; SAM launch then selects `--menu` instead of `--demo` while keeping lifecycle-2 overlay persist. **Not run on the TV.**
 - **Raw key log on stdout.** Every `wl_keyboard.key` value is printed, pressed and released, including codes this client does not name:
   `keycode raw=<u> state=pressed|released|other seat=<n> name=<wl_seat name or ->`
@@ -145,11 +170,11 @@ The fetch script **fails closed**. If gpgv or a Debian archive keyring is missin
 bypass flag. If the buster key is not in any keyring on the build host, the fix is to get
 a trusted keyring, not to skip verification.
 
-The tests never touch a real compositor: each one forces a private temp socket served by `tests/mock_compositor.py`. They cover the parser, dry-run, no-wl_shell fail-closed, a stalled compositor, surface mode (including the 5000x3000 configure clamp), and a missing socket. 0.2 added seat, key, BACK/Escape/EXIT, webOS opcode, and EGL fallback coverage. 0.4 adds frame-before-commit, a done callback whose server timestamp is not treated as local time, a missing callback that still exits 0, deferred redraws that do not write a busy buffer, and resize logs that name old and new generations when a busy buffer is destroyed. 0.9 adds `--menu` focus navigation, OK/ENTER activation, BACK return/exit, unknown-keycode logging, spare-buffer reuse, and spare-pool **exhaustion** (more keypresses than `DEMO_MAX_BUFS=8` with `--no-release`) so shown tile and OK target cannot diverge. They still do not exercise every NULL-proxy or `posix_fallocate` failure.
+The tests never touch a real compositor: each one forces a private temp socket served by `tests/mock_compositor.py`. They cover the parser, dry-run, no-wl_shell fail-closed, a stalled compositor, surface mode (including the 5000x3000 configure clamp), and a missing socket. 0.2 added seat, key, BACK/Escape/EXIT, webOS opcode, and EGL fallback coverage. 0.4 adds frame-before-commit, a done callback whose server timestamp is not treated as local time, a missing callback that still exits 0, deferred redraws that do not write a busy buffer, and resize logs that name old and new generations when a busy buffer is destroyed. 0.9 adds `--menu` focus navigation, OK/ENTER activation, BACK return/exit, unknown-keycode logging, spare-buffer reuse, and spare-pool **exhaustion** (more keypresses than `DEMO_MAX_BUFS=8` with `--no-release`) so shown tile and OK target cannot diverge. 0.10 adds `--photo-frame` mode selection (CLI and SAM sidecar), `wl_output` panel-size detection, corner-marker/timer painting, and MODE A focus/key overlay logs. They still do not exercise every NULL-proxy or `posix_fallocate` failure.
 
 `build/` and `build-cache/` are git-ignored.
 
-## Native Homebrew IPK (0.9)
+## Native Homebrew IPK (0.10)
 
 `scripts/build_ipk.py` writes an `ar` archive with the same member order as
 ares-cli `package.js`: `debian-binary` (`2.0\n`), `control.tar.gz`,
@@ -172,12 +197,16 @@ checks that layout. The ARM package is:
 
 ```sh
 python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello \
-  --out build/ipk/org.va7dimar.waylandhello_0.9.0_arm.ipk
+  --out build/ipk/org.va7dimar.waylandhello_0.10.0_arm.ipk
 python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --lifecycle 2 \
-  --out build/ipk/org.va7dimar.waylandhello_0.9.0_arm-lifecycle2.ipk
+  --out build/ipk/org.va7dimar.waylandhello_0.10.0_arm-lifecycle2.ipk
 python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --menu \
-  --out build/ipk/org.va7dimar.waylandhello_0.9.0_arm-menu.ipk
-# optional: --lifecycle omit|1|2   --default-window-type card|overlay   --heartbeat-ms 1000   --menu
+  --out build/ipk/org.va7dimar.waylandhello_0.10.0_arm-menu.ipk
+python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --photo-frame A \
+  --out build/ipk/org.va7dimar.waylandhello_0.10.0_arm-photo-a.ipk
+python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --photo-frame B \
+  --out build/ipk/org.va7dimar.waylandhello_0.10.0_arm-photo-b.ipk
+# optional: --lifecycle omit|1|2   --default-window-type card|overlay   --heartbeat-ms 1000   --menu   --photo-frame A|B
 ```
 
 `appinfo.json` id is `org.va7dimar.waylandhello`, type `native`, main
@@ -276,12 +305,13 @@ packages. 0.9 hashes are not committed.
 
 ### Install, launch, uninstall
 
-**NEEDS OWNER NOTICE** for this package. The hand-built IPK already ran; these
-commands are the same shape, with `</dev/null` because `luna-send-pub` reads
-stdin and will swallow a `sh -s` script
+**NEEDS OWNER NOTICE** for this package. For the 0.10 photograph-test, use
+the MODE A / MODE B commands in the quick-start section (120 s cap). The
+commands below are the same shape for the older default / lifecycle-2
+packages, with `</dev/null` because `luna-send-pub` reads stdin and will
+swallow a `sh -s` script
 (`tvs/lg-65nano756pr/evidence/sam-launch-success-2026-11-08.md`). Copy the
-IPK to `/tmp` first. The lifecycle-2 package is the persist-past-31s
-experiment. Developer mode has to already be on.
+IPK to `/tmp` first. Developer mode has to already be on.
 
 Install uses OSE `com.webos.appInstallService/dev/install` (`id`, absolute
 `ipkUrl`, `subscribe`;

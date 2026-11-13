@@ -30,6 +30,7 @@
  */
 #define _GNU_SOURCE
 #include "menu.h"
+#include "photo_frame.h"
 #include <dlfcn.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -49,7 +50,7 @@
 #include <unistd.h>
 #include <link.h>
 
-#define HELLO_VERSION "0.9-prototype"
+#define HELLO_VERSION "0.10-prototype"
 
 /* ---- limits ------------------------------------------------------------ */
 #define DEFAULT_DURATION_S 10
@@ -110,7 +111,7 @@ static struct {
 	/* interface objects */
 	const struct wl_interface *i_registry, *i_callback, *i_compositor, *i_shm,
 		*i_shm_pool, *i_buffer, *i_surface, *i_shell, *i_shell_surface,
-		*i_seat, *i_keyboard, *i_pointer;
+		*i_seat, *i_keyboard, *i_pointer, *i_output;
 } W;
 
 /* ---- options ----------------------------------------------------------- */
@@ -119,6 +120,8 @@ struct opts {
 	int parse_only;
 	int demo;
 	int menu;
+	int photo_frame;            /* PHOTO_FRAME_OFF / A / B */
+	int size_cli;
 	int luna_register;
 	int heartbeat_ms;
 	int input;
@@ -161,6 +164,17 @@ static void usage(FILE *f)
 "                       lifecycle v2 (interfaceMethod registerApp) adds\n"
 "                       --luna-register, --webos-shell overlay, 90s cap.\n"
 "                       A packaged menu sidecar selects --menu instead of --demo.\n"
+"                       A packaged photo-frame sidecar (A or B) selects the\n"
+"                       fullscreen photograph-test instead of --demo/--menu.\n"
+"  --photo-frame A|B    fullscreen photograph-test (implies --input).\n"
+"                       MODE A: focusable wl_shell fullscreen. MODE B: the\n"
+"                       proven wl_webos_shell OVERLAY path. Both detect the\n"
+"                       panel size from wl_output (fallback 1920x1080), paint\n"
+"                       edge-to-edge color + corner markers + a large timer,\n"
+"                       and self-exit after 120s. MODE A overlays focus_enter\n"
+"                       and the last key. A packaged sidecar selects the mode\n"
+"                       on SAM launch. SHM-only; cannot combine with --menu,\n"
+"                       --demo, or --egl.\n"
 "  --menu               full-screen tile menu (implies --input). Arrows move\n"
 "                       focus; OK/ENTER activate (hypothesis); BACK returns or\n"
 "                       exits. Demo tile enters --demo; About is static; Exit\n"
@@ -393,6 +407,54 @@ static int read_menu_sidecar(void)
 	return 1;
 }
 
+/* Opt-in photograph-test IPK: sidecar next to the ELF, body A or B.
+ * Presence+parse is enough; SAM launches the ELF (appinfo main). */
+static int read_photo_frame_sidecar(int *mode)
+{
+	char path[512], buf[16];
+	ssize_t n;
+	int fd;
+	if (mode) *mode = PHOTO_FRAME_OFF;
+	n = readlink("/proc/self/exe", path, sizeof path - 1);
+	if (n <= 0) return 0;
+	path[n] = 0;
+	{
+		char *slash = strrchr(path, '/');
+		if (!slash || slash - path + 12 >= (ssize_t)sizeof path) return 0;
+		memcpy(slash + 1, "photo-frame", 12);
+	}
+	fd = open(path, O_RDONLY);
+	if (fd < 0) return 0;
+	n = read(fd, buf, sizeof buf - 1);
+	close(fd);
+	if (n <= 0) return 0;
+	buf[n] = 0;
+	return photo_frame_parse_mode(buf, mode) == 0;
+}
+
+static void apply_photo_frame_mode(struct opts *o)
+{
+	if (!o || !o->photo_frame) return;
+	o->demo = 0;
+	o->menu = 0;
+	o->input = 1;
+	o->egl = 0;
+	o->no_fullscreen = 0;
+	if (!o->duration_cli)
+		o->duration_s = DEMO_DURATION_S;
+	if (!o->heartbeat_ms)
+		o->heartbeat_ms = 1000;
+	if (o->photo_frame == PHOTO_FRAME_A) {
+		o->webos_shell = 0;
+		o->window_type = NULL;
+	} else if (o->photo_frame == PHOTO_FRAME_B) {
+		o->webos_shell = 1;
+		snprintf(g_window_type_buf, sizeof g_window_type_buf, "%s",
+		         "_WEBOS_WINDOW_TYPE_OVERLAY");
+		o->window_type = g_window_type_buf;
+	}
+}
+
 static void apply_sam_launch(struct opts *o, const char *launch_json)
 {
 	char method[40];
@@ -434,7 +496,15 @@ static void apply_sam_launch(struct opts *o, const char *launch_json)
 	}
 	if (read_menu_sidecar())
 		o->menu = 1;
-	if (o->menu)
+	{
+		int pm = PHOTO_FRAME_OFF;
+		if (read_photo_frame_sidecar(&pm))
+			o->photo_frame = pm;
+	}
+	if (o->photo_frame) {
+		o->menu = 0;
+		o->demo = 0;
+	} else if (o->menu)
 		o->demo = 0;
 	else if (!o->demo)
 		o->demo = 1;
@@ -449,6 +519,8 @@ static void apply_sam_launch(struct opts *o, const char *launch_json)
 			o->window_type = g_window_type_buf;
 		}
 	}
+	if (o->photo_frame)
+		apply_photo_frame_mode(o);
 	if (!o->heartbeat_ms)
 		o->heartbeat_ms = read_heartbeat_sidecar();
 	if (!getenv("XDG_RUNTIME_DIR") || !getenv("XDG_RUNTIME_DIR")[0])
@@ -501,6 +573,15 @@ static int parse_opts(int argc, char **argv, struct opts *o, int allow_long_dura
 		else if (!strcmp(a, "--parse-only")) o->parse_only = 1;
 		else if (!strcmp(a, "--demo")) o->demo = 1;
 		else if (!strcmp(a, "--menu")) o->menu = 1;
+		else if (!strcmp(a, "--photo-frame")) {
+			int m = PHOTO_FRAME_OFF;
+			if (photo_frame_parse_mode(v, &m)) {
+				elog("error: --photo-frame must be A or B\n");
+				return -1;
+			}
+			o->photo_frame = m;
+			i++;
+		}
 		else if (!strcmp(a, "--luna-register")) o->luna_register = 1;
 		else if (!strcmp(a, "--heartbeat-ms")) {
 			if (parse_int(v, 100, 60000, &o->heartbeat_ms)) {
@@ -528,6 +609,7 @@ static int parse_opts(int argc, char **argv, struct opts *o, int allow_long_dura
 			if (parse_size(v, MAX_W, MAX_H, &o->width, &o->height)) {
 				elog("error: --size must be WxH within %dx%d\n", MAX_W, MAX_H); return -1;
 			}
+			o->size_cli = 1;
 			i++;
 		} else if (!strcmp(a, "--max-size")) {
 			if (parse_size(v, MAX_W, MAX_H, &o->max_w, &o->max_h)) {
@@ -609,15 +691,31 @@ static int parse_opts(int argc, char **argv, struct opts *o, int allow_long_dura
 		elog("error: --menu and --demo cannot be combined; use Demo from the menu\n");
 		return -1;
 	}
+	if (o->photo_frame && o->menu) {
+		elog("error: --photo-frame and --menu cannot be combined\n");
+		return -1;
+	}
+	if (o->photo_frame && o->demo) {
+		elog("error: --photo-frame and --demo cannot be combined\n");
+		return -1;
+	}
 	if (o->menu && o->egl) {
 		elog("error: --menu is SHM-only; omit --egl\n");
 		return -1;
 	}
+	if (o->photo_frame && o->egl) {
+		elog("error: --photo-frame is SHM-only; omit --egl\n");
+		return -1;
+	}
+	if (o->photo_frame)
+		apply_photo_frame_mode(o);
 	if (o->demo) {
 		o->input = 1;
 		o->duration_s = duration_set ? duration_val : DEMO_DURATION_S;
 	} else if (o->menu) {
 		o->input = 1;
+		o->duration_s = duration_set ? duration_val : DEMO_DURATION_S;
+	} else if (o->photo_frame) {
 		o->duration_s = duration_set ? duration_val : DEMO_DURATION_S;
 	} else if (duration_set) {
 		if (duration_val > MAX_DURATION_S && !allow_long_duration) {
@@ -726,6 +824,7 @@ static int load_wayland(void)
 	OPT(i_seat, "wl_seat_interface");
 	OPT(i_keyboard, "wl_keyboard_interface");
 	OPT(i_pointer, "wl_pointer_interface");
+	OPT(i_output, "wl_output_interface");
 	if (!(W.display_prepare_read && W.display_read_events && W.display_cancel_read))
 		W.display_prepare_read = NULL; /* use all-or-nothing */
 	return 0;
@@ -804,9 +903,9 @@ static struct {
 	struct wl_proxy *registry;
 	struct global globals[MAX_GLOBALS];
 	int nglobals, globals_truncated;
-	uint32_t compositor_name, shm_name, shell_name;
+	uint32_t compositor_name, shm_name, shell_name, output_name;
 	uint32_t webos_name, webos_advertised;
-	struct wl_proxy *compositor, *shm, *shell, *surface, *shell_surface;
+	struct wl_proxy *compositor, *shm, *shell, *surface, *shell_surface, *output;
 	struct wl_proxy *webos_shell, *webos_shell_surface;
 	const struct wl_interface *webos_shell_iface, *webos_surf_iface;
 	void *webos_dl;
@@ -823,7 +922,10 @@ static struct {
 	struct wl_proxy *frame_cb; /* at most one SHM wl_surface.frame callback */
 	int buf_gen_next;
 	int n_commits, n_frame_done, n_releases, n_deferred, n_redraws;
-	int n_focus_enter, n_focus_leave, model_suppressed;
+	int n_focus_enter, n_focus_leave, n_ptr_enter, n_ptr_leave, model_suppressed;
+	int output_w, output_h;
+	uint32_t last_key;
+	char last_key_name[32];
 	int n_heartbeat;
 	int64_t heartbeat_next;
 	int luna_polls;
@@ -864,6 +966,7 @@ static void reg_global(void *data, struct wl_proxy *r, uint32_t name, const char
 	if (!strcmp(iface, "wl_compositor") && !S.compositor_name) S.compositor_name = name;
 	else if (!strcmp(iface, "wl_shm") && !S.shm_name) S.shm_name = name;
 	else if (!strcmp(iface, "wl_shell") && !S.shell_name) S.shell_name = name;
+	else if (!strcmp(iface, "wl_output") && !S.output_name) S.output_name = name;
 	else if (!strcmp(iface, "wl_webos_shell") && !S.webos_name) {
 		S.webos_name = name; S.webos_advertised = ver;
 	} else if (!strcmp(iface, "wl_seat")) {
@@ -892,6 +995,30 @@ static void *callback_listener[] = { (void *)cb_done };
 static void shm_format(void *data, struct wl_proxy *shm, uint32_t fmt)
 { (void)data; (void)shm; if (fmt == WL_SHM_FORMAT_XRGB8888) S.have_xrgb = 1; }
 static void *shm_listener[] = { (void *)shm_format };
+
+/* wl_output. Bound at version 1 (geometry + mode). CURRENT flag is 0x1. */
+static void output_geometry(void *data, struct wl_proxy *output, int32_t x, int32_t y,
+                            int32_t pw, int32_t ph, int32_t subpixel,
+                            const char *make, const char *model, int32_t transform)
+{
+	(void)data; (void)output;
+	elog("photo-frame: output-geometry x=%d y=%d phys=%dx%d subpixel=%d make=%s model=%s transform=%d\n",
+	     (int)x, (int)y, (int)pw, (int)ph, (int)subpixel,
+	     make ? make : "-", model ? model : "-", (int)transform);
+}
+static void output_mode(void *data, struct wl_proxy *output, uint32_t flags,
+                        int32_t width, int32_t height, int32_t refresh)
+{
+	(void)data; (void)output;
+	elog("photo-frame: output-mode flags=%u %dx%d refresh=%d current=%d\n",
+	     flags, (int)width, (int)height, (int)refresh, (flags & 1u) ? 1 : 0);
+	if (width < 1 || height < 1) return;
+	if ((flags & 1u) || S.output_w == 0 || S.output_h == 0) {
+		S.output_w = (int)width;
+		S.output_h = (int)height;
+	}
+}
+static void *output_listener[] = { (void *)output_geometry, (void *)output_mode };
 
 /* buffer release is defined after present(); the listener only needs a declaration */
 static void buf_release(void *data, struct wl_proxy *b);
@@ -1044,7 +1171,7 @@ static int make_shm_file(const char *dir, size_t size)
 
 static int use_spare_bufs(void)
 {
-	return S.o && (S.o->demo || S.o->menu);
+	return S.o && (S.o->demo || S.o->menu || S.o->photo_frame);
 }
 
 static void log_menu_keymap_once(void)
@@ -1065,6 +1192,27 @@ static void paint(struct buf *b, uint32_t rgb)
 {
 	uint32_t *px = b->data;
 	int x, y;
+	if (S.o && S.o->photo_frame) {
+		struct photo_frame_state st;
+		memset(&st, 0, sizeof st);
+		st.mode = S.o->photo_frame;
+		st.seconds = (int)(elapsed_ms() / 1000);
+		if (st.seconds < 0) st.seconds = 0;
+		st.buf_w = b->w;
+		st.buf_h = b->h;
+		st.focus_enter = S.n_focus_enter;
+		st.focus_leave = S.n_focus_leave;
+		st.ptr_enter = S.n_ptr_enter;
+		st.ptr_leave = S.n_ptr_leave;
+		st.last_key = S.last_key;
+		st.last_key_name = S.last_key_name[0] ? S.last_key_name : "-";
+		if (S.o->photo_frame == PHOTO_FRAME_B && S.o->window_type)
+			st.window_type = S.o->window_type;
+		else
+			st.window_type = photo_frame_window_type(S.o->photo_frame);
+		photo_frame_paint(&st, px, b->w, b->h);
+		return;
+	}
 	if (S.o && S.o->menu && S.menu.screen != MENU_SCREEN_DEMO) {
 		menu_paint(&S.menu, px, b->w, b->h);
 		return;
@@ -1319,14 +1467,18 @@ static void print_config(const struct opts *o)
 {
 	int i, n, tx, ty, tw, th;
 	const struct menu_key_map *tab;
-	printf("dry_run=%d\ndemo=%d\nmenu=%d\nluna_register=%d\nheartbeat_ms=%d\ninput=%d\nwebos_shell=%d\nwebos_key_mask=%d\nexit_on_leave=%d\negl=%d\nsam_launch=%d\nsam_lifecycle2=%d\napp_id=%s\nwindow_type=%s\nduration_s=%d\n"
+	printf("dry_run=%d\ndemo=%d\nmenu=%d\nphoto_frame=%s\nluna_register=%d\nheartbeat_ms=%d\ninput=%d\nwebos_shell=%d\nwebos_key_mask=%d\nexit_on_leave=%d\negl=%d\nsam_launch=%d\nsam_lifecycle2=%d\napp_id=%s\nwindow_type=%s\nduration_s=%d\n"
 	       "size=%dx%d\nmax_size=%dx%d\ncolor=%06x\nfullscreen=%d\n"
 	       "runtime_dir=%s\ndisplay=%s\n",
-	       o->dry_run, o->demo, o->menu, o->luna_register, o->heartbeat_ms, o->input, o->webos_shell, o->webos_key_mask, o->exit_on_leave, o->egl,
+	       o->dry_run, o->demo, o->menu, photo_frame_mode_name(o->photo_frame), o->luna_register, o->heartbeat_ms, o->input, o->webos_shell, o->webos_key_mask, o->exit_on_leave, o->egl,
 	       o->sam_launch, o->sam_lifecycle2, o->app_id,
-	       o->window_type ? o->window_type : "-",
+	       o->window_type ? o->window_type : (o->photo_frame ? photo_frame_window_type(o->photo_frame) : "-"),
 	       o->duration_s, o->width, o->height, o->max_w, o->max_h,
 	       (unsigned)o->color, !o->no_fullscreen, o->runtime_dir, o->display_name);
+	if (o->photo_frame)
+		printf("photo_frame_label=%s\nphoto_frame_window=%s\n",
+		       photo_frame_mode_label(o->photo_frame),
+		       photo_frame_window_type(o->photo_frame));
 	if (!o->menu) return;
 	printf("menu_tiles=Demo,About,Exit\n");
 	tab = menu_keymap(&n);
@@ -1407,6 +1559,17 @@ static void on_key(struct seat_slot *seat, uint32_t code, uint32_t state, uint32
 	        seat->index, label, code, code + 8u, st, name, serial, time);
 	fflush(stderr);
 	if (state != 1) return;
+	if (S.o && S.o->photo_frame) {
+		S.last_key = code;
+		snprintf(S.last_key_name, sizeof S.last_key_name, "%s", name);
+		elog("photo-frame: key code=%u name=%s kb_enter=%d kb_leave=%d ptr_enter=%d\n",
+		     code, name, S.n_focus_enter, S.n_focus_leave, S.n_ptr_enter);
+		if (code == KEY_BACK_EVDEV) { S.quit = 1; S.reason = REASON_BACK; return; }
+		if (code == KEY_ESC_EVDEV) { S.quit = 1; S.reason = REASON_ESC; return; }
+		if (code == KEY_EXIT_EVDEV) { S.quit = 1; S.reason = REASON_EXITKEY; return; }
+		request_redraw();
+		return;
+	}
 	if (S.o && S.o->menu) {
 		const struct menu_key_map *hit = NULL;
 		enum menu_key_class klass = menu_classify_key(code, &hit);
@@ -1529,6 +1692,11 @@ static void kb_enter(void *data, struct wl_proxy *kb, uint32_t serial, struct wl
 	S.n_focus_enter++;
 	elog("input: keyboard enter seat=%d surface=%s name=%s serial=%u\n",
 	     seat->index, surface_whose(surface), seat->label, serial);
+	if (S.o && S.o->photo_frame) {
+		elog("photo-frame: focus_enter=%d focus_leave=%d ptr_enter=%d\n",
+		     S.n_focus_enter, S.n_focus_leave, S.n_ptr_enter);
+		request_redraw();
+	}
 }
 static void kb_leave(void *data, struct wl_proxy *kb, uint32_t serial, struct wl_proxy *surface)
 {
@@ -1537,6 +1705,11 @@ static void kb_leave(void *data, struct wl_proxy *kb, uint32_t serial, struct wl
 	S.n_focus_leave++;
 	elog("input: keyboard leave seat=%d surface=%s name=%s serial=%u entered=%d\n",
 	     seat->index, surface_whose(surface), seat->label, serial, seat->kb_entered);
+	if (S.o && S.o->photo_frame) {
+		elog("photo-frame: focus_enter=%d focus_leave=%d ptr_enter=%d\n",
+		     S.n_focus_enter, S.n_focus_leave, S.n_ptr_enter);
+		request_redraw();
+	}
 	if (S.o && S.o->exit_on_leave && seat->kb_entered) {
 		S.quit = 1;
 		S.reason = REASON_KB_LEAVE;
@@ -1575,15 +1748,25 @@ static void ptr_enter(void *data, struct wl_proxy *p, uint32_t serial, struct wl
 	int xw, xm, yw, ym;
 	(void)p; (void)surf;
 	split_fixed(x, &xw, &xm); split_fixed(y, &yw, &ym);
+	S.n_ptr_enter++;
 	elog("input: pointer enter seat=%d serial=%u x=%d.%03d y=%d.%03d raw_x=%d raw_y=%d\n",
 	        seat->index, serial, xw, xm, yw, ym, (int)x, (int)y);
+	if (S.o && S.o->photo_frame) {
+		elog("photo-frame: ptr_enter=%d ptr_leave=%d kb_enter=%d\n",
+		     S.n_ptr_enter, S.n_ptr_leave, S.n_focus_enter);
+		request_redraw();
+	}
 	fflush(stderr);
 }
 static void ptr_leave(void *data, struct wl_proxy *p, uint32_t serial, struct wl_proxy *surf)
 {
 	struct seat_slot *seat = data;
 	(void)p; (void)surf;
+	S.n_ptr_leave++;
 	elog("input: pointer leave seat=%d serial=%u\n", seat->index, serial);
+	if (S.o && S.o->photo_frame)
+		elog("photo-frame: ptr_enter=%d ptr_leave=%d kb_enter=%d\n",
+		     S.n_ptr_enter, S.n_ptr_leave, S.n_focus_enter);
 }
 static void ptr_motion(void *data, struct wl_proxy *p, uint32_t time, int32_t x, int32_t y)
 {
@@ -2565,6 +2748,13 @@ static void log_summary(void)
 	     S.n_commits, S.n_frame_done, S.frame_cb ? 1 : 0, S.n_releases, S.n_deferred,
 	     S.n_redraws, S.n_focus_enter, S.n_focus_leave, S.model_suppressed,
 	     S.luna_replies, S.luna_polls, S.n_restore, S.n_persist_alive);
+	if (S.o && S.o->photo_frame)
+		elog("photo-frame: summary mode=%s type=%s buf=%dx%d kb_enter=%d kb_leave=%d ptr_enter=%d ptr_leave=%d last_key=%u name=%s\n",
+		     photo_frame_mode_name(S.o->photo_frame),
+		     photo_frame_window_type(S.o->photo_frame),
+		     S.buf.w, S.buf.h, S.n_focus_enter, S.n_focus_leave,
+		     S.n_ptr_enter, S.n_ptr_leave,
+		     S.last_key, S.last_key_name[0] ? S.last_key_name : "-");
 }
 
 /* -1 = keep going. Otherwise the process should return this code.
@@ -2605,6 +2795,7 @@ static void cleanup(void)
 	}
 	if (S.webos_shell && W.proxy_destroy) W.proxy_destroy(S.webos_shell);
 	if (S.shell) W.proxy_destroy(S.shell);
+	if (S.output && W.proxy_destroy) W.proxy_destroy(S.output);
 	if (S.shm) W.proxy_destroy(S.shm);
 	if (S.compositor) W.proxy_destroy(S.compositor);
 	if (S.registry) W.proxy_destroy(S.registry);
@@ -2667,9 +2858,9 @@ int main(int argc, char **argv)
 		if (open_wh6_log() != 0)
 			elog("warn: could not open /tmp/wh6.log; continuing on current stdout\n");
 		elog("----- wayland-hello sam-launch -----\n");
-		elog("sam: lifecycle2=%d app_id=%s window_type=%s duration_s=%d webos_shell=%d luna_register=%d\n",
-		     o.sam_lifecycle2, o.app_id, o.window_type ? o.window_type : "-",
-		     o.duration_s, o.webos_shell, o.luna_register);
+		elog("sam: lifecycle2=%d app_id=%s window_type=%s duration_s=%d webos_shell=%d luna_register=%d photo_frame=%s\n",
+		     o.sam_lifecycle2, o.app_id, o.window_type ? o.window_type : (o.photo_frame ? photo_frame_window_type(o.photo_frame) : "-"),
+		     o.duration_s, o.webos_shell, o.luna_register, photo_frame_mode_name(o.photo_frame));
 		if (launch_json) elog("sam: argv1=%s\n", launch_json);
 	}
 	S.o = &o;
@@ -2678,6 +2869,8 @@ int main(int argc, char **argv)
 	S.sq_x = 100;
 	S.sq_y = 100;
 	if (o.menu) menu_init(&S.menu);
+	S.last_key_name[0] = '-';
+	S.last_key_name[1] = 0;
 
 	/* 1. Hard exit armed BEFORE anything touches the compositor. */
 	memset(&sa, 0, sizeof sa);
@@ -2780,6 +2973,18 @@ int main(int argc, char **argv)
 	if (LISTEN(S.shm, shm_listener, NULL) != 0) return fail_listener("wl_shm");
 	W.proxy_marshal(S.registry, REGISTRY_BIND, S.shm_name, W.i_shm->name, 1u, S.shm);
 
+	if (o.photo_frame) {
+		if (S.output_name && W.i_output) {
+			S.output = new_obj(S.registry, W.i_output);
+			if (!S.output) return fail_alloc("wl_output");
+			if (LISTEN(S.output, output_listener, NULL) != 0) return fail_listener("wl_output");
+			W.proxy_marshal(S.registry, REGISTRY_BIND, S.output_name, W.i_output->name, 1u, S.output);
+			elog("info: bind wl_output global=%u version=1\n", S.output_name);
+		} else {
+			elog("photo-frame: no wl_output advertised; using fallback size\n");
+		}
+	}
+
 	if (!o.webos_shell) {
 		S.shell = new_obj(S.registry, W.i_shell);
 		if (!S.shell) return fail_alloc("wl_shell");
@@ -2813,6 +3018,19 @@ int main(int argc, char **argv)
 	}
 	if (!S.have_xrgb)
 		elog("warn: compositor did not announce XRGB8888 (mandatory format); continuing\n");
+
+	if (o.photo_frame) {
+		const char *src = NULL;
+		int fw = o.size_cli ? o.width : 0;
+		int fh = o.size_cli ? o.height : 0;
+		int pw = 0, ph = 0;
+		photo_frame_pick_size(S.output_w, S.output_h, 0, 0, fw, fh,
+		                      o.max_w, o.max_h, &pw, &ph, &src);
+		o.width = pw;
+		o.height = ph;
+		elog("photo-frame: pick %dx%d source=%s output=%dx%d max=%dx%d size_cli=%d\n",
+		     pw, ph, src ? src : "-", S.output_w, S.output_h, o.max_w, o.max_h, o.size_cli);
+	}
 
 	S.surface = new_obj(S.compositor, W.i_surface);
 	if (!S.surface) return fail_alloc("wl_surface");
@@ -2878,7 +3096,13 @@ int main(int argc, char **argv)
 		rc = create_buf(&S.buf, o.width, o.height);
 		if (rc != 0) { cleanup(); return rc; }
 		present();
-		if (o.demo && o.webos_shell)
+		if (o.photo_frame)
+			elog("info: photo-frame mode=%s type=%s buf=%dx%d output=%dx%d heartbeat_ms=%d safety=%ds spare cap %d\n",
+			     photo_frame_mode_name(o.photo_frame),
+			     photo_frame_window_type(o.photo_frame),
+			     S.buf.w, S.buf.h, S.output_w, S.output_h,
+			     o.heartbeat_ms, o.duration_s, DEMO_MAX_BUFS);
+		else if (o.demo && o.webos_shell)
 			elog("info: demo wl_webos_shell type=%s; running until BACK (%u) or EXIT (%u); safety cap %ds; spare cap %d\n",
 			     o.window_type ? o.window_type : "-", (unsigned)KEY_BACK_EVDEV,
 			     (unsigned)KEY_EXIT_EVDEV, o.duration_s, DEMO_MAX_BUFS);
@@ -2923,6 +3147,13 @@ int main(int argc, char **argv)
 			if (now_hb >= S.heartbeat_next) {
 				S.n_heartbeat++;
 				S.heartbeat_next = now_hb + o.heartbeat_ms;
+				if (o.photo_frame)
+					elog("photo-frame: tick t=%lld s=%d mode=%s type=%s buf=%dx%d kb_enter=%d kb_leave=%d last_key=%u name=%s\n",
+					     (long long)now_hb, (int)(now_hb / 1000),
+					     photo_frame_mode_name(o.photo_frame),
+					     photo_frame_window_type(o.photo_frame),
+					     S.buf.w, S.buf.h, S.n_focus_enter, S.n_focus_leave,
+					     S.last_key, S.last_key_name[0] ? S.last_key_name : "-");
 				elog("heartbeat: tick n=%d\n", S.n_heartbeat);
 				request_redraw();
 				if (S.fatal) { rc = S.fatal; break; }

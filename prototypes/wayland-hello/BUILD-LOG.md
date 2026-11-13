@@ -305,3 +305,38 @@ instead of `--demo` while keeping lifecycle-2 overlay persist.
 
 Not copied to or run on the TV. 0.8 ABI report
 `abi/wayland-hello-v8-ABI-REPORT.txt` is unchanged (main's 0.8 binary).
+
+## 2026-11-13: wayland-hello 0.10 (fullscreen photograph-test, off-TV)
+
+Closes the two gaps from the 0.8/0.9 overlay run: the buffer was 640x360,
+and `focus_enter=0`. 0.10 adds `--photo-frame A|B` (`src/photo_frame.c`, no
+Wayland/luna) plus a packaged `photo-frame` sidecar so SAM launch can pick
+the mode without a shell.
+
+- MODE A: focusable `wl_shell` fullscreen (lifecycle-2 `registerApp`, no
+  overlay). Magenta fill, corner markers, large timer, on-screen
+  `FOCUS ENTER` / last key.
+- MODE B: proven `wl_webos_shell` `_WEBOS_WINDOW_TYPE_OVERLAY` at the
+  detected panel size instead of 640x360. Cyan fill, same markers/timer.
+- Resolution: bind `wl_output` v1, use current mode, else configure, else
+  `--size`, else 1920x1080 (clamped to 1920x1080 / 8 MiB).
+- 120 s safety cap, 1 s heartbeat redraw, spare SHM buffers. Existing
+  default / `--demo` / `--menu` / overlay persist paths are unchanged.
+
+Host `make test`: **288 tests, 0 failed**, plus `tests/test_ipk.py`
+(**123 ok, 0 failed**; version 0.10.0, photo-frame A/B sidecars, A is
+lifecycle-2 card, B is lifecycle-2 overlay, `main` stays the ELF, no
+sysbus). `make sdk-abi`: ABI CHECK PASS, `e_flags 0x5000200`, max
+`GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`.
+`abi/wayland-hello-v10-ABI-REPORT.txt`.
+
+SDK binary SHA256
+`fd9d3eb8129e6364be80d69cb3b10a9301f629df2246071c60547a33ecd09078`.
+MODE A IPK SHA256
+`4c34cf5aa678ff6eefa65672ce710aeb020f5627e81c715edc59b1639b523cc2`
+(`org.va7dimar.waylandhello_0.10.0_arm-photo-a.ipk`).
+MODE B IPK SHA256
+`0d953babfc5440c940e75c31f63eb89ad3f6679a0f43dd4c5ed5d1b91fc5cea0`
+(`org.va7dimar.waylandhello_0.10.0_arm-photo-b.ipk`).
+The binary inside both IPKs matches the SDK binary. None of those three
+files is committed. Not copied to or run on the TV.

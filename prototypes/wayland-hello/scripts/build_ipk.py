@@ -26,7 +26,7 @@ import sys
 import tarfile
 
 APP_ID = "org.va7dimar.waylandhello"
-VERSION = "0.9.0"
+VERSION = "0.10.0"
 ARCH = "arm"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PACKAGING = os.path.join(ROOT, "packaging")
@@ -127,9 +127,20 @@ def render_appinfo(lifecycle="omit", default_window_type="card"):
     return (json.dumps(info, indent=2) + "\n").encode("utf-8")
 
 
-def build_ipk(binary_path, out_path, mtime=0, lifecycle="omit", default_window_type=None, heartbeat_ms=0, menu=False):
+def build_ipk(binary_path, out_path, mtime=0, lifecycle="omit", default_window_type=None, heartbeat_ms=0, menu=False, photo_frame=None):
     if not os.path.isfile(binary_path):
         raise SystemExit("binary not found: %s" % binary_path)
+    if photo_frame:
+        token = str(photo_frame).strip().upper()
+        if token not in ("A", "B"):
+            raise SystemExit("photo_frame must be A or B")
+        photo_frame = token
+        # Photograph-test IPKs are SAM lifecycle-2 so registerApp matches
+        # appinfo main=the ELF. MODE A is a focusable CARD; MODE B is overlay.
+        if lifecycle == "omit":
+            lifecycle = "2"
+        if default_window_type is None:
+            default_window_type = "overlay" if photo_frame == "B" else "card"
     if default_window_type is None:
         # Lifecycle-2 persist experiment uses overlay so Home's CARD does not
         # cover the surface. Plain packages stay card (the 30 s SAM-launch path).
@@ -160,6 +171,10 @@ def build_ipk(binary_path, out_path, mtime=0, lifecycle="omit", default_window_t
         # selects --menu; rewriting launch.sh cannot, because it is not main.
         payload += 2
         members.append((APP_PREFIX + "/menu", b"1\n", 0o644))
+    if photo_frame:
+        body = (photo_frame + "\n").encode("ascii")
+        payload += len(body)
+        members.append((APP_PREFIX + "/photo-frame", body, 0o644))
     members.sort(key=lambda item: item[0])
     installed = max(1, (payload + 1023) // 1024)
     control_gz = _tar_gzip([("control", _control(installed), 0o644)], mtime)
@@ -211,9 +226,17 @@ def main(argv):
         action="store_true",
         help="package a menu sidecar so SAM launch selects --menu instead of --demo",
     )
+    parser.add_argument(
+        "--photo-frame",
+        choices=("A", "B"),
+        default=None,
+        help="package a photo-frame sidecar (A=focusable fullscreen, B=overlay fullscreen)",
+    )
     args = parser.parse_args(argv)
     if args.heartbeat_ms and not 100 <= args.heartbeat_ms <= 60000:
         raise SystemExit("--heartbeat-ms must be 0 or 100..60000")
+    if args.menu and args.photo_frame:
+        raise SystemExit("--menu and --photo-frame cannot be combined")
     path = build_ipk(
         args.binary,
         args.out,
@@ -221,6 +244,7 @@ def main(argv):
         default_window_type=args.default_window_type,
         heartbeat_ms=args.heartbeat_ms,
         menu=args.menu,
+        photo_frame=args.photo_frame,
     )
     print(path)
     return 0
