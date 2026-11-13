@@ -118,48 +118,22 @@ def main():
         expect = sorted([
             prefix + "appinfo.json",
             prefix + "icon.png",
-            prefix + "sysbus/org.va7dimar.waylandhello.manifest.json",
-            prefix + "sysbus/org.va7dimar.waylandhello.perm.json",
-            prefix + "sysbus/org.va7dimar.waylandhello.role.json",
             prefix + "wayland-hello",
             prefix + "wayland-hello-launch.sh",
         ])
         check("data paths", data_tar.files() == expect, str(data_tar.files()))
+        check("ipk does not ship sysbus members",
+              not any("sysbus" in name for name in data_tar.files()), str(data_tar.files()))
         info = json.loads(data_tar.read(prefix + "appinfo.json").decode("utf-8"))
         check("appinfo id", info.get("id") == APP_ID, str(info))
         check("appinfo type native", info.get("type") == "native", str(info))
-        check("appinfo main is the launcher", info.get("main") == "wayland-hello-launch.sh", str(info))
+        check("appinfo main is the ELF", info.get("main") == "wayland-hello", str(info))
         check("appinfo icon", info.get("icon") == "icon.png", str(info))
         check("default window type is card", info.get("defaultWindowType") == "card", str(info))
         check("no splash on launch", info.get("noSplashOnLaunch") is True, str(info))
         check("lifecycle field omitted", "nativeLifeCycleInterfaceVersion" not in info, str(info))
         check("requiredPermissions is application.operation",
               info.get("requiredPermissions") == ["application.operation"], str(info))
-        role = json.loads(data_tar.read(prefix + "sysbus/org.va7dimar.waylandhello.role.json").decode("utf-8"))
-        perm = json.loads(data_tar.read(prefix + "sysbus/org.va7dimar.waylandhello.perm.json").decode("utf-8"))
-        manifest = json.loads(data_tar.read(prefix + "sysbus/org.va7dimar.waylandhello.manifest.json").decode("utf-8"))
-        check("packaged role exeName is a launch-time placeholder",
-              role.get("exeName") == "__EXE_NAME__", str(role))
-        check("packaged role type is regular", role.get("type") == "regular", str(role))
-        check("packaged role trustLevel is oem", role.get("trustLevel") == "oem", str(role))
-        allowed = role.get("allowedNames") or []
-        check("packaged role allows the exact bus name", APP_ID in allowed, str(allowed))
-        check("packaged role allows the native wildcard", APP_ID + "*" in allowed, str(allowed))
-        check("packaged role allows the instance wildcard", APP_ID + "-*" in allowed, str(allowed))
-        services = [p.get("service") for p in role.get("permissions") or []]
-        check("packaged role permissions cover the exact name", APP_ID in services, str(services))
-        check("client perm grants application.operation to the exact name",
-              "application.operation" in (perm.get(APP_ID) or []), str(perm))
-        check("client perm grants all to the native wildcard",
-              "all" in (perm.get(APP_ID + "*") or []), str(perm))
-        check("manifest id matches the app", manifest.get("id") == APP_ID, str(manifest))
-        check("manifest roleFiles uses luna-root placeholder",
-              manifest.get("roleFiles") == ["__LUNA_ROOT__/roles.d/" + APP_ID + ".app.json"],
-              str(manifest))
-        check("manifest clientPermissionFiles uses luna-root placeholder",
-              manifest.get("clientPermissionFiles") == [
-                  "__LUNA_ROOT__/client-permissions.d/" + APP_ID + ".app.json"
-              ], str(manifest))
         icon = data_tar.read(prefix + "icon.png")
         check("icon is a png", icon.startswith(b"\x89PNG\r\n\x1a\n"), repr(icon[:8]))
         packed = data_tar.read(prefix + "wayland-hello")
@@ -170,16 +144,14 @@ def main():
         check("launcher is executable", launch_info.mode & 0o111 == 0o111, oct(launch_info.mode))
         check("binary is executable", bin_info.mode & 0o111 == 0o111, oct(bin_info.mode))
         for needle in (
-            "--demo",
-            '--app-id "$APPID_VALUE"',
+            "Not SAM's main",
             "/tmp/wh6.log",
             "----- environment -----",
-            "/var/luna-service2-dev",
-            "ls-control",
-            "scan-services",
-            "Failing closed",
+            'exec "$APP_DIR/wayland-hello"',
         ):
             check("launcher contains " + needle, needle in launch, "")
+        for needle in ("ls-control", "scan-services", "scan-volatile-dirs", "__EXE_NAME__"):
+            check("launcher does not call " + needle, needle not in launch, "")
         script = os.path.join(tmp, "launch.sh")
         with open(script, "w", encoding="utf-8") as fh:
             fh.write(launch)
@@ -190,26 +162,6 @@ def main():
         os.mkdir(app)
         for name in ("appinfo.json", "wayland-hello-launch.sh"):
             shutil.copy(os.path.join(ROOT, "packaging", name), os.path.join(app, name))
-        shutil.copytree(os.path.join(ROOT, "packaging", "sysbus"), os.path.join(app, "sysbus"))
-
-        def write_ls_control(bindir, services_rc=0, volatile_rc=0):
-            os.makedirs(bindir, exist_ok=True)
-            path = os.path.join(bindir, "ls-control")
-            log_path = os.path.join(bindir, "ls-control.log")
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write("#!/bin/sh\n")
-                fh.write('echo "$*" >> "%s"\n' % log_path)
-                fh.write('if [ "$1" = scan-services ]; then exit %d; fi\n' % int(services_rc))
-                fh.write('if [ "$1" = scan-volatile-dirs ]; then exit %d; fi\n' % int(volatile_rc))
-                fh.write("exit 1\n")
-            os.chmod(path, 0o755)
-            return path, log_path
-
-        def scan_args(log_path):
-            if not os.path.exists(log_path):
-                return []
-            with open(log_path, encoding="utf-8") as fh:
-                return [line.strip() for line in fh if line.strip()]
         stub_bin = os.path.join(app, "wayland-hello")
         with open(stub_bin, "w", encoding="utf-8") as fh:
             fh.write("#!/bin/sh\nprintf '%s\\n' \"$*\" > /tmp/wh6-args.$$\n")
@@ -221,9 +173,7 @@ def main():
         env = os.environ.copy()
         env["APPID"] = "org.va7dimar.fromenv"
         env.pop("APP_ID", None)
-        env.pop("XDG_RUNTIME_DIR", None)
-        env.pop("WAYLAND_DISPLAY", None)
-        payload = '{"event":"launch","appId":"org.va7dimar.fromjson","parameters":{}}'
+        payload = '{"event":"launch","appId":"org.va7dimar.fromjson","interfaceVersion":2,"interfaceMethod":"registerApp"}'
         run = subprocess.run(
             ["sh", os.path.join(app, "wayland-hello-launch.sh"), payload],
             cwd=app, env=env, capture_output=True, text=True,
@@ -232,56 +182,32 @@ def main():
         with open(log, encoding="utf-8", errors="replace") as fh:
             logged = fh.read()
         check("log dumps env", "----- environment -----" in logged and "APPID=org.va7dimar.fromenv" in logged
-              and "XDG_RUNTIME_DIR=/tmp/xdg" in logged and "WAYLAND_DISPLAY=wayland-0" in logged, logged[-600:])
-        check("APPID wins over argv appId",
-              "app_id=org.va7dimar.fromenv" in logged and "app_id_source=APPID" in logged
-              and payload in logged, logged[:800])
+              and payload in logged, logged[-800:])
+        check("launcher does not install ls2",
+              "----- ls2 -----" not in logged and "ls2: root=" not in logged
+              and "ls-control" not in logged, logged)
         arg_files = [n for n in os.listdir("/tmp") if n.startswith("wh6-args.")]
         check("client was exec'd", len(arg_files) == 1, str(arg_files))
         if arg_files:
             with open(os.path.join("/tmp", arg_files[0]), encoding="utf-8") as fh:
                 args = fh.read()
             os.remove(os.path.join("/tmp", arg_files[0]))
-            check("exec args",
-                  args.strip() == "--demo --app-id org.va7dimar.fromenv",
-                  args)
-            check("launcher does not pass webos-shell", "--webos-shell" not in args, args)
-            check("default launcher does not register", "--luna-register" not in args, args)
+            check("exec keeps the SAM json argv", args.strip() == payload, args)
+            check("launcher does not invent client flags",
+                  "--demo" not in args and "--luna-register" not in args
+                  and "--webos-shell" not in args, args)
         if os.path.exists(log):
             os.remove(log)
 
-        env.pop("APPID", None)
+        env["WAYLAND_HELLO_LS2_ROOT"] = os.path.join(tmp, "luna-dev")
+        os.makedirs(env["WAYLAND_HELLO_LS2_ROOT"])
         run = subprocess.run(
-            ["sh", os.path.join(app, "wayland-hello-launch.sh"),
-             '{"event":"launch","appId":"org.va7dimar.fromjson","parameters":{}}'],
+            ["sh", os.path.join(app, "wayland-hello-launch.sh"), payload],
             cwd=app, env=env, capture_output=True, text=True,
         )
-        check("json appId used when APPID is unset", run.returncode == 0, run.stderr)
-        with open(log, encoding="utf-8", errors="replace") as fh:
-            logged = fh.read()
-        check("argv1.appId is the source",
-              "app_id=org.va7dimar.fromjson" in logged and "app_id_source=argv1.appId" in logged, logged[:500])
-        for name in os.listdir("/tmp"):
-            if name.startswith("wh6-args."):
-                os.remove(os.path.join("/tmp", name))
-        if os.path.exists(log):
-            os.remove(log)
-
-        env["XDG_RUNTIME_DIR"] = "/tmp/keep-xdg"
-        env["WAYLAND_DISPLAY"] = "wayland-9"
-        run = subprocess.run(
-            ["sh", os.path.join(app, "wayland-hello-launch.sh"), '{"event":"launch","parameters":{}}'],
-            cwd=app, env=env, capture_output=True, text=True,
-        )
-        check("launcher falls back to appinfo id", run.returncode == 0, run.stderr)
-        with open(log, encoding="utf-8", errors="replace") as fh:
-            logged = fh.read()
-        check("appinfo id when argv has no appId",
-              "app_id=org.va7dimar.waylandhello" in logged and "app_id_source=appinfo.json" in logged, logged[:500])
-        check("preset wayland env is kept",
-              "XDG_RUNTIME_DIR=/tmp/keep-xdg" in logged and "WAYLAND_DISPLAY=wayland-9" in logged, logged[-500:])
-        check("default launcher does not install ls2",
-              "----- ls2 -----" not in logged and "ls2: root=" not in logged, logged)
+        check("launcher ignores a writable luna root", run.returncode == 0, run.stderr)
+        check("no role files under the luna root",
+              os.listdir(env["WAYLAND_HELLO_LS2_ROOT"]) == [], env["WAYLAND_HELLO_LS2_ROOT"])
         for name in os.listdir("/tmp"):
             if name.startswith("wh6-args."):
                 os.remove(os.path.join("/tmp", name))
@@ -289,198 +215,28 @@ def main():
             os.remove(log)
 
         out_v2 = os.path.join(tmp, "v2.ipk")
-        build_ipk(binary, out_v2, lifecycle="2", default_window_type="overlay")
+        build_ipk(binary, out_v2, lifecycle="2")
         with open(out_v2, "rb") as fh:
             v2_members = dict(parse_ar(fh.read()))
         v2_data = Archive(v2_members["data.tar.gz"])
         v2_info = json.loads(v2_data.read(prefix + "appinfo.json").decode("utf-8"))
-        v2_role = json.loads(v2_data.read(prefix + "sysbus/org.va7dimar.waylandhello.role.json").decode("utf-8"))
-        check("lifecycle 2 ipk still ships the role template",
-              v2_role.get("exeName") == "__EXE_NAME__", str(v2_role))
-        with open(os.path.join(app, "appinfo.json"), "w", encoding="utf-8") as fh:
-            json.dump(v2_info, fh)
-        with open(os.path.join(app, "heartbeat-ms"), "w", encoding="utf-8") as fh:
-            fh.write("1000\n")
-        ls2_root = os.path.join(tmp, "luna-dev")
-        os.makedirs(ls2_root)
-        ctl, scanlog = write_ls_control(os.path.join(tmp, "bin"))
-        env["WAYLAND_HELLO_LS2_ROOT"] = ls2_root
-        env["WAYLAND_HELLO_LS_CONTROL"] = ctl
-        run = subprocess.run(
-            ["sh", os.path.join(app, "wayland-hello-launch.sh")],
-            cwd=app, env=env, capture_output=True, text=True,
-        )
-        check("lifecycle 2 launcher exits 0", run.returncode == 0, run.stderr)
-        arg_files = [n for n in os.listdir("/tmp") if n.startswith("wh6-args.")]
-        check("lifecycle 2 launcher passes luna and heartbeat", len(arg_files) == 1, str(arg_files))
-        if arg_files:
-            with open(os.path.join("/tmp", arg_files[0]), encoding="utf-8") as fh:
-                args = fh.read().strip()
-            os.remove(os.path.join("/tmp", arg_files[0]))
-            check("lifecycle 2 exec args",
-                  args == "--demo --luna-register --heartbeat-ms 1000 --app-id org.va7dimar.waylandhello",
-                  args)
-        with open(log, encoding="utf-8", errors="replace") as fh:
-            logged = fh.read()
-        installed_role = os.path.join(ls2_root, "roles.d", APP_ID + ".app.json")
-        installed_perm = os.path.join(ls2_root, "client-permissions.d", APP_ID + ".app.json")
-        installed_manifest = os.path.join(ls2_root, "manifests.d", APP_ID + ".json")
-        check("lifecycle 2 writes role/perm/manifest",
-              os.path.isfile(installed_role) and os.path.isfile(installed_perm)
-              and os.path.isfile(installed_manifest), ls2_root)
-        installed = json.loads(open(installed_role, encoding="utf-8").read())
-        exe_path = os.path.realpath(stub_bin)
-        check("installed role exeName is the ELF", installed.get("exeName") == exe_path, str(installed))
-        check("__EXE_NAME__ is not left in the installed role",
-              "__EXE_NAME__" not in open(installed_role, encoding="utf-8").read(), "")
-        installed_m = json.loads(open(installed_manifest, encoding="utf-8").read())
-        check("installed manifest points at the writable luna root",
-              installed_m.get("roleFiles") == [ls2_root + "/roles.d/" + APP_ID + ".app.json"]
-              and installed_m.get("clientPermissionFiles") == [
-                  ls2_root + "/client-permissions.d/" + APP_ID + ".app.json"
-              ], str(installed_m))
-        check("lifecycle 2 logs the luna root and scan",
-              "ls2: root=" + ls2_root in logged and "ls2: scan-services ok" in logged, logged[-800:])
-        check("first lifecycle 2 launch rescans the hub",
-              scan_args(scanlog) == ["scan-services"], str(scan_args(scanlog)))
-        if os.path.exists(log):
-            os.remove(log)
-
-        run = subprocess.run(
-            ["sh", os.path.join(app, "wayland-hello-launch.sh")],
-            cwd=app, env=env, capture_output=True, text=True,
-        )
-        check("second lifecycle 2 launch still exits 0", run.returncode == 0, run.stderr)
-        with open(log, encoding="utf-8", errors="replace") as fh:
-            logged = fh.read()
-        check("unchanged files skip the hub rescan",
-              "ls2: already installed, no rescan" in logged
-              and scan_args(scanlog) == ["scan-services"],
-              logged[-500:] + " scans=" + str(scan_args(scanlog)))
-        for name in os.listdir("/tmp"):
-            if name.startswith("wh6-args."):
-                os.remove(os.path.join("/tmp", name))
-        if os.path.exists(log):
-            os.remove(log)
-
-        env["WAYLAND_HELLO_LS2_ROOT"] = "/usr/share/luna-service2"
-        run = subprocess.run(
-            ["sh", os.path.join(app, "wayland-hello-launch.sh")],
-            cwd=app, env=env, capture_output=True, text=True,
-        )
-        check("system luna path is refused", run.returncode == 10, "rc=%d" % run.returncode)
-        with open(log, encoding="utf-8", errors="replace") as fh:
-            logged = fh.read()
-        check("system path fail-closed log",
-              "refusing to write system path /usr/share/luna-service2" in logged
-              and "Failing closed" in logged, logged[-500:])
-        if os.path.exists(log):
-            os.remove(log)
-
-        env["WAYLAND_HELLO_LS2_ROOT"] = os.path.join(tmp, "missing-luna")
-        run = subprocess.run(
-            ["sh", os.path.join(app, "wayland-hello-launch.sh")],
-            cwd=app, env=env, capture_output=True, text=True,
-        )
-        check("missing luna root fails closed", run.returncode == 10, "rc=%d" % run.returncode)
-        with open(log, encoding="utf-8", errors="replace") as fh:
-            logged = fh.read()
-        check("missing root log", "luna root does not exist" in logged, logged[-400:])
-        if os.path.exists(log):
-            os.remove(log)
-
-        env["WAYLAND_HELLO_LS2_ROOT"] = "/var/palm/ls2-dev"
-        run = subprocess.run(
-            ["sh", os.path.join(app, "wayland-hello-launch.sh")],
-            cwd=app, env=env, capture_output=True, text=True,
-        )
-        check("legacy /var/palm path is refused", run.returncode == 10, "rc=%d" % run.returncode)
-        with open(log, encoding="utf-8", errors="replace") as fh:
-            logged = fh.read()
-        check("legacy palm path fail-closed log",
-              "refusing to write system path /var/palm/ls2-dev" in logged, logged[-400:])
-        if os.path.exists(log):
-            os.remove(log)
-
-        palm_ok_root = os.path.join(tmp, "luna-dev-2")
-        os.makedirs(palm_ok_root)
-        env["WAYLAND_HELLO_LS2_ROOT"] = palm_ok_root
-        env["WAYLAND_HELLO_LS_CONTROL"] = ""
-        run = subprocess.run(
-            ["sh", os.path.join(app, "wayland-hello-launch.sh")],
-            cwd=app, env=env, capture_output=True, text=True,
-        )
-        check("missing ls-control fails closed after write", run.returncode == 10, "rc=%d" % run.returncode)
-        with open(log, encoding="utf-8", errors="replace") as fh:
-            logged = fh.read()
-        check("missing ls-control log", "ls-control not found" in logged, logged[-400:])
-        check("role was still written before the failed scan",
-              os.path.isfile(os.path.join(palm_ok_root, "roles.d", APP_ID + ".app.json")),
-              palm_ok_root)
-        if os.path.exists(log):
-            os.remove(log)
-
-        fail_root = os.path.join(tmp, "luna-dev-3")
-        os.makedirs(fail_root)
-        fail_ctl, fail_log = write_ls_control(os.path.join(tmp, "bin-fail"), services_rc=1, volatile_rc=1)
-        env["WAYLAND_HELLO_LS2_ROOT"] = fail_root
-        env["WAYLAND_HELLO_LS_CONTROL"] = fail_ctl
-        run = subprocess.run(
-            ["sh", os.path.join(app, "wayland-hello-launch.sh")],
-            cwd=app, env=env, capture_output=True, text=True,
-        )
-        check("failed hub scan fails closed", run.returncode == 10, "rc=%d" % run.returncode)
-        with open(log, encoding="utf-8", errors="replace") as fh:
-            logged = fh.read()
-        check("failed scan tries both ls-control verbs",
-              scan_args(fail_log) == ["scan-services", "scan-volatile-dirs"]
-              and "hub rescan failed" in logged, str(scan_args(fail_log)) + logged[-400:])
-        if os.path.exists(log):
-            os.remove(log)
-
-        vol_root = os.path.join(tmp, "luna-dev-4")
-        os.makedirs(vol_root)
-        vol_ctl, vol_log = write_ls_control(os.path.join(tmp, "bin-vol"), services_rc=1, volatile_rc=0)
-        env["WAYLAND_HELLO_LS2_ROOT"] = vol_root
-        env["WAYLAND_HELLO_LS_CONTROL"] = vol_ctl
-        run = subprocess.run(
-            ["sh", os.path.join(app, "wayland-hello-launch.sh")],
-            cwd=app, env=env, capture_output=True, text=True,
-        )
-        check("scan-volatile-dirs is the fallback", run.returncode == 0, run.stderr)
-        check("fallback scan order",
-              scan_args(vol_log) == ["scan-services", "scan-volatile-dirs"], str(scan_args(vol_log)))
-        for name in os.listdir("/tmp"):
-            if name.startswith("wh6-args."):
-                os.remove(os.path.join("/tmp", name))
-        if os.path.exists(log):
-            os.remove(log)
-
-        missing_sys = os.path.join(tmp, "app-nosys")
-        os.makedirs(missing_sys)
-        shutil.copy(os.path.join(app, "appinfo.json"), os.path.join(missing_sys, "appinfo.json"))
-        shutil.copy(os.path.join(app, "wayland-hello-launch.sh"), os.path.join(missing_sys, "wayland-hello-launch.sh"))
-        shutil.copy(stub_bin, os.path.join(missing_sys, "wayland-hello"))
-        os.chmod(os.path.join(missing_sys, "wayland-hello"), 0o755)
-        os.chmod(os.path.join(missing_sys, "wayland-hello-launch.sh"), 0o755)
-        env["WAYLAND_HELLO_LS2_ROOT"] = ls2_root
-        env["WAYLAND_HELLO_LS_CONTROL"] = ctl
-        run = subprocess.run(
-            ["sh", os.path.join(missing_sys, "wayland-hello-launch.sh")],
-            cwd=missing_sys, env=env, capture_output=True, text=True,
-        )
-        check("missing packaged sysbus fails closed", run.returncode == 10, "rc=%d" % run.returncode)
-        with open(log, encoding="utf-8", errors="replace") as fh:
-            logged = fh.read()
-        check("missing sysbus log", "packaged role/perm/manifest missing" in logged, logged[-400:])
-        if os.path.exists(log):
-            os.remove(log)
-
+        v2_files = v2_data.files()
+        check("lifecycle 2 ipk has no sysbus members",
+              not any("sysbus" in name for name in v2_files), str(v2_files))
+        check("lifecycle 2 main stays the ELF", v2_info.get("main") == "wayland-hello", str(v2_info))
         check("lifecycle 2 is written", v2_info.get("nativeLifeCycleInterfaceVersion") == 2, str(v2_info))
-        check("window type flag is written", v2_info.get("defaultWindowType") == "overlay", str(v2_info))
+        check("lifecycle 2 defaults to overlay", v2_info.get("defaultWindowType") == "overlay", str(v2_info))
         check("splash stays off when flags change", v2_info.get("noSplashOnLaunch") is True, str(v2_info))
         check("lifecycle 2 keeps requiredPermissions",
               v2_info.get("requiredPermissions") == ["application.operation"], str(v2_info))
+
+        out_hb = os.path.join(tmp, "hb.ipk")
+        build_ipk(binary, out_hb, lifecycle="2", heartbeat_ms=1000)
+        with open(out_hb, "rb") as fh:
+            hb_members = dict(parse_ar(fh.read()))
+        hb_data = Archive(hb_members["data.tar.gz"])
+        check("heartbeat sidecar is packaged next to the ELF",
+              hb_data.read(prefix + "heartbeat-ms") == b"1000\n", "")
 
         if shutil.which("ar") and shutil.which("tar"):
             listing = subprocess.run(["ar", "t", out_a], capture_output=True, text=True)

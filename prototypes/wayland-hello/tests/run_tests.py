@@ -19,7 +19,7 @@ def check(name, cond, detail=""):
 
 
 def run(args, env_extra=None, timeout=40):
-    env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin")}
+    env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "WAYLAND_HELLO_LOG": "-"}
     env.update(env_extra or {})
     t0 = time.monotonic()
     p = subprocess.run([BIN] + args, env=env, capture_output=True, text=True, timeout=timeout)
@@ -51,7 +51,7 @@ def parser_tests():
     check("v2 flags parse", rc == 0 and "input=1" in out and "webos_shell=1" in out and "egl=1" in out
           and "app_id=wayland-hello-prototype" in out, out)
     rc, out, _, _ = run(["--version"])
-    check("version 0.7", rc == 0 and "0.7-prototype" in out, out)
+    check("version 0.8", rc == 0 and "0.8-prototype" in out, out)
     rc, _, err, _ = run(["--parse-only", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY"])
     check("window-type requires webos shell", rc == 2, "rc=%d %s" % (rc, err))
     rc, _, err, _ = run(["--parse-only", "--webos-shell", "--window-type", "OVERLAY"])
@@ -65,8 +65,32 @@ def parser_tests():
           rc == 0 and "demo=1" in out and "input=1" in out and "webos_shell=0" in out and "duration_s=120" in out, out)
     rc, out, _, _ = run(["--parse-only", "--demo", "--duration", "45"])
     check("demo duration can exceed 30", rc == 0 and "duration_s=45" in out, out)
-    rc, _, err, _ = run(["--parse-only", "--demo", "--webos-shell"])
-    check("demo rejects webos-shell", rc == 2 and "plain wl_shell" in err, err)
+    rc, out, err, _ = run(["--parse-only", "--demo", "--webos-shell", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY"])
+    check("demo allows webos-shell overlay",
+          rc == 0 and "demo=1" in out and "webos_shell=1" in out
+          and "window_type=_WEBOS_WINDOW_TYPE_OVERLAY" in out, out + err)
+    launch = '{"event":"launch","appId":"org.va7dimar.waylandhello","interfaceVersion":2,"interfaceMethod":"registerApp","@system_native_app":true}'
+    rc, out, err, _ = run([launch, "--parse-only"])
+    check("sam lifecycle-2 json selects overlay luna and 90s cap",
+          rc == 0 and "sam_launch=1" in out and "sam_lifecycle2=1" in out
+          and "luna_register=1" in out and "webos_shell=1" in out
+          and "window_type=_WEBOS_WINDOW_TYPE_OVERLAY" in out
+          and "duration_s=90" in out and "demo=1" in out
+          and "app_id=org.va7dimar.waylandhello" in out, out + err)
+    rc, out, err, _ = run(['{"event":"launch","appId":"org.va7dimar.fromjson"}', "--parse-only"])
+    check("sam json without registerApp stays on wl_shell",
+          rc == 0 and "sam_launch=1" in out and "sam_lifecycle2=0" in out
+          and "webos_shell=0" in out and "luna_register=0" in out
+          and "duration_s=120" in out and "app_id=org.va7dimar.fromjson" in out, out + err)
+    rc, out, err, _ = run([launch, "--parse-only", "--duration", "45"])
+    check("sam duration flag wins over the 90s default",
+          rc == 0 and "duration_s=45" in out and "sam_lifecycle2=1" in out, out + err)
+    rc, out, _, _ = run(["--parse-only"], {"APPID": "org.va7dimar.fromenv"})
+    check("APPID without json is not a sam launch",
+          rc == 0 and "sam_launch=0" in out and "app_id=wayland-hello-prototype" in out, out)
+    rc, out, _, _ = run([launch, "--parse-only"], {"APPID": "org.va7dimar.fromenv"})
+    check("APPID wins over sam json appId",
+          rc == 0 and "sam_launch=1" in out and "app_id=org.va7dimar.fromenv" in out, out)
     rc, out, err, _ = run(["--parse-only", "--luna-register", "--heartbeat-ms", "500"])
     check("luna and heartbeat parse", rc == 0 and "luna_register=1" in out and "heartbeat_ms=500" in out, out + err)
     rc, _, err, _ = run(["--parse-only", "--heartbeat-ms", "50"])
@@ -347,6 +371,58 @@ def webos_tests():
     (rc, out, err, dt), ev, _ = with_mock([], ["--webos-shell", "--duration", "2"])
     check("absent wl_webos_shell fails closed", rc == 9 and "not advertised" in err, err[-300:])
 
+    combo = tempfile.mkdtemp(prefix="wlh-sam-")
+    luna_so = os.path.join(combo, "libluna-service2.so.3")
+    built = subprocess.run(["gcc", "-shared", "-fPIC", "-std=c99", "-o", luna_so,
+                            os.path.join(HERE, "luna_fixture.c")],
+                           capture_output=True, text=True)
+    check("sam persist luna fixture builds", built.returncode == 0, built.stderr)
+    if built.returncode == 0:
+        os.symlink("libluna-service2.so.3", os.path.join(combo, "libglib-2.0.so.0"))
+        os.symlink(os.path.join(d_ose, "libwayland-webos-client.so.1"),
+                   os.path.join(combo, "libwayland-webos-client.so.1"))
+        launch = ('{"event":"launch","appId":"org.va7dimar.waylandhello",'
+                  '"interfaceVersion":2,"interfaceMethod":"registerApp"}')
+        (rc, out, err, dt), ev, _ = with_mock(
+            ["--webos", "--seats", "1", "--input-script", "L"],
+            [launch, "--duration", "6"],
+            env_extra={"WAYLAND_HELLO_LIB_DIR": combo, "WAYLAND_HELLO_LUNA_SCRIPT": "relaunch-only"})
+        seq = [(e.get("req"), e.get("args")) for e in ev if e.get("iface") == "wl_webos_shell_surface"]
+        check("sam lifecycle-2 uses overlay and stays past keyboard leave",
+              rc == 0 and dt > 5.0 and "sam: lifecycle2=1" in err
+              and "window_type=_WEBOS_WINDOW_TYPE_OVERLAY" in err
+              and "luna: event=registered" in err
+              and "persist: restore-foreground event=relaunch" in err
+              and "persist: alive t=" in err
+              and "keyboard leave" in err and "exiting (keyboard-leave)" not in err
+              and "exiting (deadline)" in err
+              and any(r == "op2" and a == ["_WEBOS_WINDOW_TYPE", "_WEBOS_WINDOW_TYPE_OVERLAY"] for r, a in seq)
+              and any(r == "op2" and a == ["appId", "org.va7dimar.waylandhello"] for r, a in seq),
+              "rc=%d dt=%.2f %s %s" % (rc, dt, seq, err[-800:]))
+        (rc, out, err, dt), ev, _ = with_mock(
+            ["--seats", "1"], [launch, "--duration", "2"],
+            env_extra={"WAYLAND_HELLO_LIB_DIR": combo, "WAYLAND_HELLO_LUNA_SCRIPT": "relaunch-only"})
+        check("sam lifecycle-2 fails closed without wl_webos_shell",
+              rc == 9 and "not advertised" in err and "failing closed" in err
+              and "luna: event=registered" in err, "rc=%d %s" % (rc, err[-400:]))
+        luna_only = tempfile.mkdtemp(prefix="wlh-sam-luna-")
+        os.symlink(luna_so, os.path.join(luna_only, "libluna-service2.so.3"))
+        os.symlink("libluna-service2.so.3", os.path.join(luna_only, "libglib-2.0.so.0"))
+        (rc, out, err, dt), ev, _ = with_mock(
+            ["--webos", "--seats", "1"], [launch, "--duration", "2"],
+            env_extra={"WAYLAND_HELLO_LIB_DIR": luna_only, "WAYLAND_HELLO_LUNA_SCRIPT": "relaunch-only"})
+        check("sam lifecycle-2 fails closed without webos client lib",
+              rc == 9 and "libwayland-webos-client.so.1" in err and "Failing closed" in err,
+              "rc=%d %s" % (rc, err[-400:]))
+
+    (rc, out, err, dt), ev, _ = with_mock(
+        ["--webos", "--seats", "1", "--input-script", "p105"],
+        ["--demo", "--webos-shell", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY", "--duration", "2"],
+        env_extra={"WAYLAND_HELLO_LIB_DIR": d_ose})
+    check("demo plus webos overlay still moves the square",
+          rc == 0 and "demo wl_webos_shell type=_WEBOS_WINDOW_TYPE_OVERLAY" in err
+          and "input: model square x=60" in err, err[-600:])
+
     xml_tests()
 
 
@@ -418,6 +494,7 @@ def telemetry_tests():
               and "luna: exe=" in err
               and "luna: LSCall luna://com.webos.service.applicationmanager/registerApp {\"subscribe\":true}" in err
               and "luna: event=registered" in err and "luna: event=relaunch" in err
+              and "persist: restore-foreground event=relaunch" in err
               and "luna: event=close" in err and "exiting (luna-close)" in err
               and "fixture: iterate ctx=null block=0" in err
               and err.find("fixture: LSUnregister") > err.find("luna: event=close"), err[-1500:])
@@ -462,8 +539,13 @@ def telemetry_tests():
                 polls = int(line.split("luna_polls=")[1].split()[0])
         check("relaunch does not exit and polling continues",
               rc == 0 and dt > 1.2 and "luna: event=relaunch" in err and "luna-close" not in err
+              and "persist: restore-foreground event=relaunch" in err
               and "exiting (deadline)" in err and polls >= 5 and "fixture: LSUnregister" in err,
               "rc=%d dt=%.2f polls=%d %s" % (rc, dt, polls, err[-400:]))
+        (rc, out, err, dt), ev, _ = luna_case("pause", "pause-only", ["--luna-register", "--duration", "2"])
+        check("pause is logged and does not exit",
+              rc == 0 and dt > 1.2 and "luna: event=pause" in err and "luna-close" not in err
+              and "exiting (deadline)" in err, "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
 
         (rc, out, err, dt), ev, _ = luna_case("late", "close-late", ["--luna-register", "--duration", "8"], timeout=20)
         check("close during the poll loop exits before the safety cap",
@@ -556,11 +638,32 @@ def telemetry_tests():
         ["python3", "-I", os.path.join(os.path.dirname(HERE), "scripts", "classify_wh6_log.py"), logf],
         capture_output=True, text=True)
     check("wh6 classifier names a silent bus",
-          classified.returncode == 0 and classified.stdout == "replies=0\nreply=none\nexit=deadline\nmarker=yes\n",
+          classified.returncode == 0 and classified.stdout == (
+              "replies=0\nreply=none\nexit=deadline\nmarker=yes\n"
+              "persist=no\nrestore=no\noverlay=no\n"),
+          classified.stdout + classified.stderr)
+    persist_sample = sample + (
+        "persist: alive t=5000 enter=1 leave=0 restores=1 luna_replies=2\n"
+        "persist: restore-foreground event=relaunch webos set_state=3 n=1\n"
+        "webos: set_property opcode=2 name=_WEBOS_WINDOW_TYPE value=_WEBOS_WINDOW_TYPE_OVERLAY\n"
+    )
+    with open(logf, "w", encoding="utf-8") as fh:
+        fh.write(persist_sample)
+    classified = subprocess.run(
+        ["python3", "-I", os.path.join(os.path.dirname(HERE), "scripts", "classify_wh6_log.py"), logf],
+        capture_output=True, text=True)
+    check("wh6 classifier names persist restore overlay",
+          classified.returncode == 0 and classified.stdout == (
+              "replies=0\nreply=none\nexit=deadline\nmarker=yes\n"
+              "persist=yes\nrestore=yes\noverlay=yes\n"),
           classified.stdout + classified.stderr)
 
     (rc, out, err, dt), ev, _ = with_mock([], ["--heartbeat-ms", "400", "--duration", "2"])
     check("heartbeat ticks while idle", rc == 0 and "heartbeat: tick n=2" in err, err[-500:])
+    (rc, out, err, dt), ev, _ = with_mock([], ["--duration", "6"])
+    check("persist alive ticks past 5s",
+          rc == 0 and dt > 5.0 and "persist: alive t=" in err
+          and "persist_alive=" in err and "persist_alive=0" not in err, err[-500:])
 
     (rc, out, err, dt), ev, _ = with_mock(["--configure", "800x600", "--no-release"], ["--duration", "2"])
     check("resize logs generations and busy destruction",
