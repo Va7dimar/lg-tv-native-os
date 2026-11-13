@@ -1,0 +1,27 @@
+{
+  "exeName": "__EXE_NAME__",
+  "type": "regular",
+  "trustLevel": "oem",
+  "allowedNames": [
+    "org.va7dimar.waylandhello",
+    "org.va7dimar.waylandhello*",
+    "org.va7dimar.waylandhello-*"
+  ],
+  "permissions": [
+    {
+      "service": "org.va7dimar.waylandhello",
+      "inbound": ["*"],
+      "outbound": ["*"]
+    },
+    {
+      "service": "org.va7dimar.waylandhello*",
+      "inbound": ["*"],
+      "outbound": ["*"]
+    },
+    {
+      "service": "org.va7dimar.waylandhello-*",
+      "inbound": ["*"],
+      "outbound": ["*"]
+    }
+  ]
+}

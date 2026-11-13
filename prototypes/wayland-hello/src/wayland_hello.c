@@ -48,12 +48,13 @@
 #include <unistd.h>
 #include <link.h>
 
-#define HELLO_VERSION "0.7-prototype"
+#define HELLO_VERSION "0.8-prototype"
 
 /* ---- limits ------------------------------------------------------------ */
 #define DEFAULT_DURATION_S 10
 #define MAX_DURATION_S     30
 #define DEMO_DURATION_S    120
+#define SAM_DURATION_S     90  /* safety cap: past the ~31s Home reclaim, always ends */
 #define DEMO_MAX_BUFS      8
 #define DEFAULT_W          640
 #define DEFAULT_H          360
@@ -123,6 +124,9 @@ struct opts {
 	int webos_key_mask;
 	int exit_on_leave;
 	int egl;
+	int sam_launch;
+	int sam_lifecycle2;
+	int duration_cli;
 	int duration_s;
 	int width, height;          /* initial buffer */
 	int max_w, max_h;           /* cap for configure-driven resize */
@@ -147,13 +151,17 @@ static void usage(FILE *f)
 "usage: wayland-hello [options]\n"
 "  --dry-run            connect, print registry globals, exit (no surfaces)\n"
 "  --input              bind wl_seat; log keys/pointer; arrows move a square\n"
-"  --demo               plain wl_shell interactive mode (implies --input)\n"
+"  --demo               interactive mode (implies --input)\n"
 "                       spare SHM buffer so a redraw does not wait for release;\n"
 "                       runs until BACK or EXIT; --duration is the safety cap\n"
 "                       (default %d, max %d). Without --demo the cap stays %d.\n"
+"                       SAM launch JSON as argv[1] also selects --demo;\n"
+"                       lifecycle v2 (interfaceMethod registerApp) adds\n"
+"                       --luna-register, --webos-shell overlay, 90s cap.\n"
 "  --luna-register      dlopen libluna-service2; subscribe to registerApp\n"
 "                       exit 10 unless a top-level registered reply arrives\n"
 "                       within 2s (OSE sends that reply in the same call)\n"
+"                       relaunch re-asserts fullscreen; pause is logged; close exits\n"
 "  --heartbeat-ms N     shm redraw every N ms while idle (100..60000)\n"
 "  --webos-shell        wl_webos_shell instead of wl_shell (fail closed)\n"
 "  --webos-key-mask     with --webos-shell, set_key_mask for BACK and EXIT\n"
@@ -198,8 +206,244 @@ static int parse_size(const char *s, int maxw, int maxh, int *w, int *h)
 	return 0;
 }
 
-/* returns 0 ok, 1 exit-success (help/version), -1 usage error */
-static int parse_opts(int argc, char **argv, struct opts *o)
+/* SAM native launch: argv[1] is a JSON document. First-match is enough:
+ * the live launch document puts appId / interfaceMethod at the top level. */
+static char g_app_id_buf[65];
+static char g_window_type_buf[80];
+static char *g_argv_store[64];
+
+static int looks_like_json_object(const char *s)
+{
+	if (!s) return 0;
+	while (*s == ' ' || *s == '\t' || *s == '\n' || *s == '\r') s++;
+	return *s == '{';
+}
+
+static int json_copy_string(const char *json, const char *key, char *out, size_t cap)
+{
+	char pat[80];
+	const char *p, *q;
+	size_t n = 0;
+	if (!json || !key || !out || cap < 2) return -1;
+	if (snprintf(pat, sizeof pat, "\"%s\"", key) >= (int)sizeof pat) return -1;
+	p = strstr(json, pat);
+	if (!p) return -1;
+	q = p + strlen(pat);
+	while (*q == ' ' || *q == '\t') q++;
+	if (*q != ':') return -1;
+	q++;
+	while (*q == ' ' || *q == '\t') q++;
+	if (*q != '"') return -1;
+	q++;
+	while (*q && *q != '"' && n + 1 < cap) {
+		if (*q == '\\' && q[1]) q++;
+		out[n++] = *q++;
+	}
+	if (*q != '"') return -1;
+	out[n] = 0;
+	return 0;
+}
+
+static int json_top_int(const char *json, const char *key, int *out)
+{
+	char pat[80];
+	const char *p, *q;
+	char *end;
+	long v;
+	if (!json || !key || !out) return -1;
+	if (snprintf(pat, sizeof pat, "\"%s\"", key) >= (int)sizeof pat) return -1;
+	p = strstr(json, pat);
+	if (!p) return -1;
+	q = p + strlen(pat);
+	while (*q == ' ' || *q == '\t') q++;
+	if (*q != ':') return -1;
+	q++;
+	while (*q == ' ' || *q == '\t') q++;
+	if (*q == '"' || !*q) return -1;
+	errno = 0;
+	v = strtol(q, &end, 10);
+	if (errno || end == q || v < 0 || v > 100) return -1;
+	*out = (int)v;
+	return 0;
+}
+
+static int app_id_token_ok(const char *s)
+{
+	const char *p;
+	int n = 0;
+	if (!s || !*s) return 0;
+	for (p = s; *p; p++, n++) {
+		unsigned char c = (unsigned char)*p;
+		if (n >= 64 || !(c == '.' || c == '_' || c == '-' ||
+		    (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')))
+			return 0;
+	}
+	return 1;
+}
+
+static int strip_sam_json_argv(int argc, char **argv, char ***out_argv, const char **launch_json)
+{
+	int i, n = 0;
+	*launch_json = NULL;
+	if (argc < 2 || !looks_like_json_object(argv[1])) {
+		*out_argv = argv;
+		return argc;
+	}
+	if (argc > (int)(sizeof g_argv_store / sizeof g_argv_store[0]) - 1)
+		argc = (int)(sizeof g_argv_store / sizeof g_argv_store[0]) - 1;
+	*launch_json = argv[1];
+	g_argv_store[n++] = argv[0];
+	for (i = 2; i < argc; i++)
+		g_argv_store[n++] = argv[i];
+	g_argv_store[n] = NULL;
+	*out_argv = g_argv_store;
+	return n;
+}
+
+static int read_appinfo_sidecar(int *lifecycle, char *id_out, size_t id_cap)
+{
+	char path[512], buf[2048];
+	ssize_t n;
+	int fd, ver = 0;
+	if (lifecycle) *lifecycle = 0;
+	if (id_out && id_cap) id_out[0] = 0;
+	n = readlink("/proc/self/exe", path, sizeof path - 1);
+	if (n <= 0) return -1;
+	path[n] = 0;
+	{
+		char *slash = strrchr(path, '/');
+		if (!slash || slash - path + 13 >= (ssize_t)sizeof path) return -1;
+		memcpy(slash + 1, "appinfo.json", 13);
+	}
+	fd = open(path, O_RDONLY);
+	if (fd < 0) return -1;
+	n = read(fd, buf, sizeof buf - 1);
+	close(fd);
+	if (n <= 0) return -1;
+	buf[n] = 0;
+	if (lifecycle) {
+		json_top_int(buf, "nativeLifeCycleInterfaceVersion", &ver);
+		*lifecycle = ver;
+	}
+	if (id_out && id_cap)
+		json_copy_string(buf, "id", id_out, id_cap);
+	return 0;
+}
+
+static int read_heartbeat_sidecar(void)
+{
+	char path[512], buf[16];
+	ssize_t n, i;
+	int fd, v = 0;
+	n = readlink("/proc/self/exe", path, sizeof path - 1);
+	if (n <= 0) return 0;
+	path[n] = 0;
+	{
+		char *slash = strrchr(path, '/');
+		if (!slash || slash - path + 14 >= (ssize_t)sizeof path) return 0;
+		memcpy(slash + 1, "heartbeat-ms", 13);
+	}
+	fd = open(path, O_RDONLY);
+	if (fd < 0) return 0;
+	n = read(fd, buf, sizeof buf - 1);
+	close(fd);
+	if (n <= 0) return 0;
+	buf[n] = 0;
+	for (i = 0; i < n; i++) {
+		if (buf[i] >= '0' && buf[i] <= '9') {
+			v = v * 10 + (buf[i] - '0');
+			if (v > 60000) return 0;
+		} else if (buf[i] == '\n' || buf[i] == '\r' || buf[i] == ' ') {
+			break;
+		} else {
+			return 0;
+		}
+	}
+	if (v < 100 || v > 60000) return 0;
+	return v;
+}
+
+static void apply_sam_launch(struct opts *o, const char *launch_json)
+{
+	char method[40];
+	char from_json[65];
+	const char *env_appid;
+	int ver = 0;
+	if (!launch_json) return;
+	o->sam_launch = 1;
+	method[0] = 0;
+	from_json[0] = 0;
+	json_copy_string(launch_json, "interfaceMethod", method, sizeof method);
+	json_top_int(launch_json, "interfaceVersion", &ver);
+	if (ver != 2)
+		json_top_int(launch_json, "nativeLifeCycleInterfaceVersion", &ver);
+	if (ver == 2 || strcmp(method, "registerApp") == 0)
+		o->sam_lifecycle2 = 1;
+	{
+		int app_ver = 0;
+		char from_app[65];
+		from_app[0] = 0;
+		if (read_appinfo_sidecar(&app_ver, from_app, sizeof from_app) == 0) {
+			if (!o->sam_lifecycle2 && app_ver == 2)
+				o->sam_lifecycle2 = 1;
+			if (app_id_token_ok(from_app) && !from_json[0])
+				snprintf(from_json, sizeof from_json, "%s", from_app);
+		}
+	}
+	env_appid = getenv("APPID");
+	if (app_id_token_ok(env_appid)) {
+		snprintf(g_app_id_buf, sizeof g_app_id_buf, "%s", env_appid);
+		o->app_id = g_app_id_buf;
+	} else if (json_copy_string(launch_json, "appId", from_json, sizeof from_json) == 0 &&
+	           app_id_token_ok(from_json)) {
+		snprintf(g_app_id_buf, sizeof g_app_id_buf, "%s", from_json);
+		o->app_id = g_app_id_buf;
+	} else if (app_id_token_ok(from_json)) {
+		snprintf(g_app_id_buf, sizeof g_app_id_buf, "%s", from_json);
+		o->app_id = g_app_id_buf;
+	}
+	if (!o->demo) o->demo = 1;
+	o->input = 1;
+	if (!o->duration_cli)
+		o->duration_s = o->sam_lifecycle2 ? SAM_DURATION_S : DEMO_DURATION_S;
+	if (o->sam_lifecycle2) {
+		o->luna_register = 1;
+		o->webos_shell = 1;
+		if (!o->window_type || !strcmp(o->window_type, "_WEBOS_WINDOW_TYPE_CARD")) {
+			snprintf(g_window_type_buf, sizeof g_window_type_buf, "%s", "_WEBOS_WINDOW_TYPE_OVERLAY");
+			o->window_type = g_window_type_buf;
+		}
+	}
+	if (!o->heartbeat_ms)
+		o->heartbeat_ms = read_heartbeat_sidecar();
+	if (!getenv("XDG_RUNTIME_DIR") || !getenv("XDG_RUNTIME_DIR")[0])
+		o->runtime_dir = "/tmp/xdg";
+	if (!getenv("WAYLAND_DISPLAY") || !getenv("WAYLAND_DISPLAY")[0])
+		o->display_name = "wayland-0";
+}
+
+static int open_wh6_log(void)
+{
+	const char *path = getenv("WAYLAND_HELLO_LOG");
+	int fd;
+	if (path && (!path[0] || strcmp(path, "-") == 0)) return 0;
+	if (!path) path = "/tmp/wh6.log";
+	fd = open(path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+	if (fd < 0) return -1;
+	if (dup2(fd, STDOUT_FILENO) < 0 || dup2(fd, STDERR_FILENO) < 0) {
+		close(fd);
+		return -1;
+	}
+	if (fd > STDERR_FILENO) close(fd);
+	setvbuf(stdout, NULL, _IOLBF, 0);
+	setvbuf(stderr, NULL, _IOLBF, 0);
+	return 0;
+}
+
+/* returns 0 ok, 1 exit-success (help/version), -1 usage error.
+ * allow_long_duration is set when argv[1] was SAM launch JSON, so --duration
+ * may use the demo range before apply_sam_launch runs. */
+static int parse_opts(int argc, char **argv, struct opts *o, int allow_long_duration)
 {
 	const char *e;
 	int i, duration_set = 0, duration_val = DEFAULT_DURATION_S;
@@ -209,6 +453,7 @@ static int parse_opts(int argc, char **argv, struct opts *o)
 	o->max_w = MAX_W; o->max_h = MAX_H;
 	o->color = 0x204080;
 	o->app_id = "wayland-hello-prototype";
+	o->duration_cli = 0;
 	e = getenv("XDG_RUNTIME_DIR");
 	o->runtime_dir = (e && *e) ? e : "/tmp/xdg";
 	e = getenv("WAYLAND_DISPLAY");
@@ -241,6 +486,7 @@ static int parse_opts(int argc, char **argv, struct opts *o)
 				elog("error: --duration must be 1..%d\n", DEMO_DURATION_S); return -1;
 			}
 			duration_set = 1;
+			o->duration_cli = 1;
 			i++;
 		} else if (!strcmp(a, "--size")) {
 			if (parse_size(v, MAX_W, MAX_H, &o->width, &o->height)) {
@@ -323,15 +569,11 @@ static int parse_opts(int argc, char **argv, struct opts *o)
 	}
 	if (o->webos_shell && !o->window_type)
 		o->window_type = "_WEBOS_WINDOW_TYPE_CARD";
-	if (o->demo && o->webos_shell) {
-		elog("error: --demo uses plain wl_shell; omit --webos-shell\n");
-		return -1;
-	}
 	if (o->demo) {
 		o->input = 1;
 		o->duration_s = duration_set ? duration_val : DEMO_DURATION_S;
 	} else if (duration_set) {
-		if (duration_val > MAX_DURATION_S) {
+		if (duration_val > MAX_DURATION_S && !allow_long_duration) {
 			elog("error: --duration must be 1..%d\n", MAX_DURATION_S); return -1;
 		}
 		o->duration_s = duration_val;
@@ -539,6 +781,10 @@ static struct {
 	int luna_polls;
 	int luna_replies;
 	int luna_acked;
+	int n_restore;
+	int need_restore;
+	int n_persist_alive;
+	int64_t persist_next;
 	int model_key_set;
 	uint32_t model_key;
 	int64_t model_log_ms;
@@ -981,10 +1227,11 @@ static void buf_release(void *data, struct wl_proxy *b)
 /* ---- main ------------------------------------------------------------- */
 static void print_config(const struct opts *o)
 {
-	printf("dry_run=%d\ndemo=%d\nluna_register=%d\nheartbeat_ms=%d\ninput=%d\nwebos_shell=%d\nwebos_key_mask=%d\nexit_on_leave=%d\negl=%d\napp_id=%s\nwindow_type=%s\nduration_s=%d\n"
+	printf("dry_run=%d\ndemo=%d\nluna_register=%d\nheartbeat_ms=%d\ninput=%d\nwebos_shell=%d\nwebos_key_mask=%d\nexit_on_leave=%d\negl=%d\nsam_launch=%d\nsam_lifecycle2=%d\napp_id=%s\nwindow_type=%s\nduration_s=%d\n"
 	       "size=%dx%d\nmax_size=%dx%d\ncolor=%06x\nfullscreen=%d\n"
 	       "runtime_dir=%s\ndisplay=%s\n",
-	       o->dry_run, o->demo, o->luna_register, o->heartbeat_ms, o->input, o->webos_shell, o->webos_key_mask, o->exit_on_leave, o->egl, o->app_id,
+	       o->dry_run, o->demo, o->luna_register, o->heartbeat_ms, o->input, o->webos_shell, o->webos_key_mask, o->exit_on_leave, o->egl,
+	       o->sam_launch, o->sam_lifecycle2, o->app_id,
 	       o->window_type ? o->window_type : "-",
 	       o->duration_s, o->width, o->height, o->max_w, o->max_h,
 	       (unsigned)o->color, !o->no_fullscreen, o->runtime_dir, o->display_name);
@@ -1422,6 +1669,33 @@ static int luna_top_key(const char *payload, const char *key)
 	return luna_top_value(payload, key) != NULL;
 }
 
+static void persist_restore_foreground(const char *event)
+{
+	uint32_t st;
+	if (!event) event = "?";
+	S.n_restore++;
+	if (!S.o) {
+		elog("persist: restore-foreground event=%s deferred n=%d\n", event, S.n_restore);
+		S.need_restore = 1;
+		return;
+	}
+	st = S.o->no_fullscreen ? 0u : 3u;
+	if (S.webos_shell_surface && S.op_set_state >= 0 && W.proxy_marshal) {
+		W.proxy_marshal(S.webos_shell_surface, (uint32_t)S.op_set_state, st);
+		elog("persist: restore-foreground event=%s webos set_state=%u n=%d\n", event, st, S.n_restore);
+	} else if (S.shell_surface && W.proxy_marshal) {
+		if (S.o->no_fullscreen) W.proxy_marshal(S.shell_surface, SHSURF_SET_TOPLEVEL);
+		else W.proxy_marshal(S.shell_surface, SHSURF_SET_FULLSCREEN, 0u, 0u, (struct wl_proxy *)NULL);
+		elog("persist: restore-foreground event=%s wl_shell n=%d\n", event, S.n_restore);
+	} else {
+		elog("persist: restore-foreground event=%s deferred (no surface yet) n=%d\n", event, S.n_restore);
+		S.need_restore = 1;
+		return;
+	}
+	S.need_restore = 0;
+	if (!S.egl_on) request_redraw();
+}
+
 static bool luna_on_reply(struct ls_handle *sh, struct ls_message *msg, void *ctx)
 {
 	const char *payload = Luna.payload ? Luna.payload(msg) : NULL;
@@ -1453,11 +1727,17 @@ static bool luna_on_reply(struct ls_handle *sh, struct ls_message *msg, void *ct
 		S.reason = REASON_LUNA_REJECT;
 	} else if (luna_top_string_is(payload, "event", "relaunch")) {
 		elog("luna: event=relaunch\n");
+		/* OSE nativeqt showFullScreen() on relaunch; no client ack is required
+		 * (RunningApp::sendEvent just responds on the subscription). */
+		persist_restore_foreground("relaunch");
 	} else if (luna_top_string_is(payload, "event", "registered")) {
 		elog("luna: event=registered\n");
 		S.luna_acked = 1;
 	} else if (luna_top_string_is(payload, "event", "pause")) {
 		elog("luna: event=pause\n");
+		/* Stay mapped. Overlay is what should keep pixels above Home. */
+	} else {
+		elog("luna: event=other\n");
 	}
 	return true;
 }
@@ -1592,6 +1872,16 @@ static int luna_start(const char *app_id)
 		elog("luna: register name=%s source=app-id\n", reg_name);
 		if (env_name && *env_name)
 			elog("luna: LS2_NAME is set but not a usable service name; using the app id\n");
+	}
+	{
+		char exe[256];
+		ssize_t n = readlink("/proc/self/exe", exe, sizeof exe - 1);
+		if (n > 0) {
+			exe[n] = '\0';
+			elog("luna: exe=%s\n", exe);
+		} else {
+			elog("luna: exe=unknown\n");
+		}
 	}
 	Luna.h_glib = luna_dlopen_named("libglib-2.0.so.0", "/usr/lib/libglib-2.0.so.0");
 	Luna.h_luna = luna_dlopen_named("libluna-service2.so.3", "/usr/lib/libluna-service2.so.3");
@@ -2117,10 +2407,10 @@ static const char *reason_text(void)
 
 static void log_summary(void)
 {
-	elog("summary: commits=%d frame_done=%d frame_pending=%d releases=%d deferred_redraws=%d redraws_queued=%d focus_enter=%d focus_leave=%d model_repeats_suppressed=%d luna_replies=%d luna_polls=%d\n",
+	elog("summary: commits=%d frame_done=%d frame_pending=%d releases=%d deferred_redraws=%d redraws_queued=%d focus_enter=%d focus_leave=%d model_repeats_suppressed=%d luna_replies=%d luna_polls=%d persist_restore=%d persist_alive=%d\n",
 	     S.n_commits, S.n_frame_done, S.frame_cb ? 1 : 0, S.n_releases, S.n_deferred,
 	     S.n_redraws, S.n_focus_enter, S.n_focus_leave, S.model_suppressed,
-	     S.luna_replies, S.luna_polls);
+	     S.luna_replies, S.luna_polls, S.n_restore, S.n_persist_alive);
 }
 
 /* -1 = keep going. Otherwise the process should return this code.
@@ -2206,14 +2496,28 @@ int main(int argc, char **argv)
 	struct opts o;
 	struct sigaction sa;
 	int rc, i;
+	char **opt_argv = argv;
+	int opt_argc = argc;
+	const char *launch_json = NULL;
 
 	g_t0 = now_ms();
 	setvbuf(stdout, NULL, _IOLBF, 0);
 	setvbuf(stderr, NULL, _IOLBF, 0);
-	rc = parse_opts(argc, argv, &o);
+	opt_argc = strip_sam_json_argv(argc, argv, &opt_argv, &launch_json);
+	rc = parse_opts(opt_argc, opt_argv, &o, launch_json != NULL);
 	if (rc > 0) return EX_OK;
 	if (rc < 0) return EX_USAGE;
+	if (launch_json) apply_sam_launch(&o, launch_json);
 	if (o.parse_only) { print_config(&o); return EX_OK; }
+	if (o.sam_launch) {
+		if (open_wh6_log() != 0)
+			elog("warn: could not open /tmp/wh6.log; continuing on current stdout\n");
+		elog("----- wayland-hello sam-launch -----\n");
+		elog("sam: lifecycle2=%d app_id=%s window_type=%s duration_s=%d webos_shell=%d luna_register=%d\n",
+		     o.sam_lifecycle2, o.app_id, o.window_type ? o.window_type : "-",
+		     o.duration_s, o.webos_shell, o.luna_register);
+		if (launch_json) elog("sam: argv1=%s\n", launch_json);
+	}
 	S.o = &o;
 	S.bg = o.color;
 	S.sq = SQ_SIZE;
@@ -2419,15 +2723,21 @@ int main(int argc, char **argv)
 		rc = create_buf(&S.buf, o.width, o.height);
 		if (rc != 0) { cleanup(); return rc; }
 		present();
-		if (o.demo)
+		if (o.demo && o.webos_shell)
+			elog("info: demo wl_webos_shell type=%s; running until BACK (%u) or EXIT (%u); safety cap %ds; spare cap %d\n",
+			     o.window_type ? o.window_type : "-", (unsigned)KEY_BACK_EVDEV,
+			     (unsigned)KEY_EXIT_EVDEV, o.duration_s, DEMO_MAX_BUFS);
+		else if (o.demo)
 			elog("info: demo plain wl_shell; running until BACK (%u) or EXIT (%u); safety cap %ds; spare cap %d\n",
 			     (unsigned)KEY_BACK_EVDEV, (unsigned)KEY_EXIT_EVDEV, o.duration_s, DEMO_MAX_BUFS);
 		else
 			elog("info: surface committed %dx%d; running until deadline\n", S.buf.w, S.buf.h);
+		if (S.need_restore) persist_restore_foreground("surface-ready");
 	}
 
 	rc = EX_OK;
 	if (o.heartbeat_ms) S.heartbeat_next = elapsed_ms() + o.heartbeat_ms;
+	S.persist_next = elapsed_ms() + 5000;
 	while (!g_stop && !S.quit && !S.fatal) {
 		int ms = remaining_ms();
 		int slice = S.egl_on ? 16 : 100;
@@ -2435,6 +2745,13 @@ int main(int argc, char **argv)
 		luna_check_ack(0);
 		if (S.quit || S.fatal) break;
 		if (ms == 0) break;
+		now_hb = elapsed_ms();
+		if (now_hb >= S.persist_next) {
+			S.n_persist_alive++;
+			S.persist_next = now_hb + 5000;
+			elog("persist: alive t=%lld enter=%d leave=%d restores=%d luna_replies=%d\n",
+			     (long long)now_hb, S.n_focus_enter, S.n_focus_leave, S.n_restore, S.luna_replies);
+		}
 		if (o.heartbeat_ms && !S.egl_on) {
 			now_hb = elapsed_ms();
 			if (now_hb >= S.heartbeat_next) {

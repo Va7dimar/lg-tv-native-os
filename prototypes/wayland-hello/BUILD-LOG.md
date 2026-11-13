@@ -225,3 +225,60 @@ The binary inside both IPKs matches the SDK binary.
 max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`. No 0.7
 binary or IPK was copied to or run on the TV. These hashes replace
 `cd2c0497…`, `c02f98bb…`, and `e1679f75…`. Do not install those.
+
+## 2026-11-13: LS2 role/client-permission grant (lifecycle-2)
+
+The `888e96b0…` lifecycle-2 IPK was installed on the TV. `LSRegister`
+failed `-1027 Invalid permissions for org.va7dimar.waylandhello` and the
+client exited 10
+(`tvs/lg-65nano756pr/evidence/luna-register-live-2026-11-13.md`). This
+change ships `sysbus/` templates in the IPK and, on lifecycle 2, writes
+them into `/var/luna-service2-dev` (else `/var/luna-service2`) with the
+ELF path as `exeName`, then `ls-control scan-services`. System paths are
+refused. The client logs `luna: exe=` from `/proc/self/exe`.
+
+Host `make test`: **168 tests, 0 failed**, plus `tests/test_ipk.py`
+(**0 failed**; packaging now includes the three sysbus files and the
+lifecycle-2 launcher install/fail-closed paths).
+`sh scripts/abi-check.sh` / `make sdk-abi`: ABI CHECK PASS,
+`e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`,
+`librt.so.1`.
+
+SDK binary SHA256
+`a4fa3165822002a4989acaea2c4b0997e4c855e4036c8c0a9cf75636f3f96220`.
+Default IPK SHA256
+`dc2340822e7554b52f702f8781355923cafb61ca609fc31771380f95714f6e95`.
+Lifecycle-2 IPK SHA256
+`0452e5e3956f38aa4f2edad529e0b4804230add8059d2da3ecd5cf555d2b9890`.
+The binary inside both IPKs matches the SDK binary. None of those files
+is committed. Do not install `888e96b0…` / `673dfb9b…`.
+
+## 2026-11-13: 0.8 ELF main + overlay persist (lifecycle-2)
+
+On-TV proof the same day: `registerApp` works once the installer-generated
+role names the ELF; registration does not stop the ~31 s Home reclaim
+(`tvs/lg-65nano756pr/evidence/ls2-register-proof-2026-11-13.md`). The
+jailed SAM process cannot see `/var/luna-service2*`
+(`tvs/lg-65nano756pr/evidence/ls2-roles-retest-2026-11-13.md`).
+
+0.8 sets appinfo `main` to `wayland-hello` so `dev/install` should emit
+`exeName` = `/proc/self/exe`. The IPK no longer ships `sysbus/`. The
+wrapper only dumps env and `exec`s the ELF. A SAM lifecycle-2 launch
+document selects `--luna-register`, `--webos-shell` overlay, relaunch
+restore, 5 s `persist: alive` ticks, and a 90 s safety cap. Missing
+`wl_webos_shell` fails closed (exit 9). Overlay persist is **hypothesis**.
+
+Host `make test`: **181 tests, 0 failed**, plus `tests/test_ipk.py`
+(**0 failed**; `main` is the ELF, no sysbus members, lifecycle-2 defaults
+to overlay). `make sdk-abi`: ABI CHECK PASS, `e_flags 0x5000200`, max
+`GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`.
+`abi/wayland-hello-v8-ABI-REPORT.txt`.
+
+SDK binary SHA256
+`ef27b70fcdca93f4a71e92c530d2fefd803d5c8f8a62f078919a45c30ff00f2b`.
+Default IPK SHA256
+`1f774ab06df06fe5b31b712fa63fbb5c377f95e11e14c9afd5df06a3ac61d054`.
+Lifecycle-2 IPK SHA256
+`e940723ab82be2cebcd1e02639abdcf1317afba960524ebe4dd2a8069fef39dc`.
+The binary inside both IPKs matches the SDK binary. None of those files
+is committed. Do not install `888e96b0…` / `0452e5e3…`.

@@ -214,10 +214,19 @@ int g_main_context_iteration(void *ctx, int may_block)
 	}
 	if (iterations == 1) {
 		saved_cb((void *)1, (void *)1, NULL);
-	} else if (iterations == 4 && strcmp(script, "close-late") != 0) {
+	} else if (iterations == 4 && strcmp(script, "close-late") != 0
+	           && strcmp(script, "pause-only") != 0) {
 		snprintf(saved_payload, sizeof saved_payload,
 		         "{\"returnValue\":true,\"event\":\"relaunch\",\"parameters\":{}}");
 		saved_cb((void *)1, (void *)1, NULL);
+	}
+	if (!strcmp(script, "pause-only")) {
+		if (iterations == 4) {
+			snprintf(saved_payload, sizeof saved_payload,
+			         "{\"returnValue\":true,\"event\":\"pause\"}");
+			saved_cb((void *)1, (void *)1, NULL);
+		}
+		return 0;
 	}
 	if (!strcmp(script, "relaunch-only")) return 0;
 	if ((!strcmp(script, "default") && iterations == 8) ||

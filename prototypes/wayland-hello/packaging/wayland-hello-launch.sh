@@ -1,86 +1,29 @@
 #!/bin/sh
-# Native launcher for org.va7dimar.waylandhello.
+# Optional helper. Not SAM's main.
 #
-# webOS OSE "Developing Built-in Native Apps" says SAM passes its launch
-# document as argv[1]. The lifecycle event in that document is "launch",
-# and values from the launch method's params arrive under "parameters".
-# The same tutorial reads the target display from the DISPLAY_ID environment
-# variable, defaulting to "0" when it is unset.
-# https://www.webosose.org/docs/guides/development/configuration/developing-built-in-native-apps/
+# On this TV, com.webos.appInstallService/dev/install generates the LS2 role
+# at /var/palm/ls2-dev/roles/{pub,prv}/<id>.json from appinfo.json "main".
+# ls-hubd keys that role by /proc/self/exe. appinfo.json main is therefore
+# the ELF (wayland-hello), not this script. A SAM-launched process cannot
+# see /var/luna-service2* and must not try to write LS2 files
+# (tvs/lg-65nano756pr/evidence/ls2-roles-retest-2026-11-13.md,
+# tvs/lg-65nano756pr/evidence/ls2-register-proof-2026-11-13.md).
 #
-# On this TV, SAM-launched services have APPID=<id>. That value is the app
-# id passed to the client. If APPID is unset, appId inside argv[1] is used.
-# The id in appinfo.json is the last fallback.
-# The client is plain wl_shell --demo. A SAM-launched webOS shell was not
-# shown. XDG_RUNTIME_DIR and WAYLAND_DISPLAY are set only when unset, to
-# /tmp/xdg and wayland-0. Stock processes on this TV use XDG_DIR=/tmp/xdg;
-# this client reads XDG_RUNTIME_DIR.
+# This script only dumps env to /tmp/wh6.log and execs the ELF with the
+# same argv. The ELF itself recognises a SAM launch JSON document as argv[1].
 
 LOG=/tmp/wh6.log
-FALLBACK_ID=org.va7dimar.waylandhello
 APP_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd) || exit 1
 
-json_string_field() {
-	printf '%s\n' "$1" | sed -n "s/.*\"$2\" *: *\"\\([^\"]*\\)\".*/\\1/p" | head -n 1
-}
-
-ENV_APPID=${APPID-}
-ARG1=${1-}
-APPINFO=
-if [ -f "$APP_DIR/appinfo.json" ]; then
-	APPINFO=$(cat "$APP_DIR/appinfo.json")
-fi
-APPID_VALUE=
-APPID_SOURCE=
-
-if [ -n "$ENV_APPID" ]; then
-	APPID_VALUE=$ENV_APPID
-	APPID_SOURCE=APPID
-fi
-if [ -z "$APPID_VALUE" ]; then
-	FROM_ARG=$(json_string_field "$ARG1" appId)
-	if [ -n "$FROM_ARG" ]; then
-		APPID_VALUE=$FROM_ARG
-		APPID_SOURCE=argv1.appId
-	fi
-fi
-if [ -z "$APPID_VALUE" ]; then
-	FROM_INFO=$(json_string_field "$APPINFO" id)
-	if [ -n "$FROM_INFO" ]; then
-		APPID_VALUE=$FROM_INFO
-		APPID_SOURCE=appinfo.json
-	fi
-fi
-if [ -z "$APPID_VALUE" ]; then
-	APPID_VALUE=$FALLBACK_ID
-	APPID_SOURCE=fallback
-fi
-
-# nativeLifeCycleInterfaceVersion is a number. 2 means SAM's registerApp path.
-LIFE=$(printf '%s\n' "$APPINFO" | sed -n 's/.*"nativeLifeCycleInterfaceVersion" *: *\([0-9][0-9]*\).*/\1/p' | head -n 1)
-HB=
-if [ -f "$APP_DIR/heartbeat-ms" ]; then
-	HB=$(tr -cd '0-9' < "$APP_DIR/heartbeat-ms" | head -c 6)
-fi
-
-XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/tmp/xdg}
-WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
-export XDG_RUNTIME_DIR WAYLAND_DISPLAY
-
 {
-	echo "----- wayland-hello launcher -----"
+	echo "----- wayland-hello launcher (not main) -----"
 	if command -v date >/dev/null 2>&1; then
 		date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
 	fi
 	echo "app_dir=$APP_DIR"
-	echo "app_id=$APPID_VALUE"
-	echo "app_id_source=$APPID_SOURCE"
-	echo "lifecycle=${LIFE:-omit}"
-	echo "xdg_runtime_dir=$XDG_RUNTIME_DIR"
-	echo "wayland_display=$WAYLAND_DISPLAY"
 	echo "argv_count=$#"
-	n=0
 	echo "argv_0=$0"
+	n=0
 	for arg in "$@"; do
 		n=$((n + 1))
 		echo "argv_$n=$arg"
@@ -94,12 +37,4 @@ export XDG_RUNTIME_DIR WAYLAND_DISPLAY
 	echo "----- client -----"
 } >>"$LOG" 2>&1
 
-set -- --demo
-if [ "$LIFE" = "2" ]; then
-	set -- "$@" --luna-register
-fi
-if [ -n "$HB" ]; then
-	set -- "$@" --heartbeat-ms "$HB"
-fi
-set -- "$@" --app-id "$APPID_VALUE"
 exec "$APP_DIR/wayland-hello" "$@" >>"$LOG" 2>&1
