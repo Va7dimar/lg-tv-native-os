@@ -3,7 +3,7 @@
 Research, evidence, tooling and plans for investigating an internal OS replacement on an owned LG TV. Method is generic and the repo holds several TVs.
 
 - [`tvs/`](tvs/README.md): index of TVs, plus **Adding a new TV** and [`tvs/_template/`](tvs/_template/)
-- [`tvs/lg-65nano756pr/`](tvs/lg-65nano756pr/README.md): this unit (facts, evidence, control, sources, handoff)
+- [`tvs/lg-65nano756pr/`](tvs/lg-65nano756pr/README.md): this unit (facts, evidence, control, sources, handoff). Owner-run root and Homebrew Channel confirmed 2026-11-08; nothing flashed; custom/native OS remains the goal.
 - [`SOURCES.md`](SOURCES.md): where excluded downloads are recorded
 - [`playbooks/tv-os-research.md`](playbooks/tv-os-research.md), [`REPRODUCING.md`](REPRODUCING.md), [`tooling/`](tooling/): generic method and read-only inspection tools
 

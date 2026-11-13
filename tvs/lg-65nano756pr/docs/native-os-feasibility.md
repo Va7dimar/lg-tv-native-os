@@ -1,3 +1,5 @@
+> Current unit 2026-11-08 ~17:46 Atlantic/Reykjavik: owner-run root confirmed; Homebrew Channel present. Agent did not run the tool. Nothing flashed. Custom-OS boot/recovery still no-go/blocked (`evidence/root-result-2026-11-08.md`, `evidence/boot-route.md`, `evidence/recovery-case.md`). Homebrew apps are not the goal.
+
 > CurrentSDKresult 2026-11-08T13:34:18.275035+00:00 Atlantic/Reykjavik: ALL3metadataSUCCESS,73838headers/66880records/0selected. GCC8.2.0/glibc2.28filenamehints;binutils/kernelheaderversionsunknown. Priorpartial/reviewpendingstatementsbelowarehistorical. NoSDKinstallation/build/TVaction.
 
 > Current SDK result 2026-11-08T13:15:56.697882+00:00 Atlantic/Reykjavik: latest one-shotSDKphasePARTIAL(unsafe link target),289headers/269records;all3pinsverified,native/targetparseSKIPPED. EarlierUTF8failure andfixpendingstatementsarehistorical. No retry/policychange.

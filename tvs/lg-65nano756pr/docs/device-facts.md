@@ -45,6 +45,25 @@ Keep Software Version `03.53.45`. Leave Auto Update OFF. Do not install the
 offered `03.53.46` / `1142MB` update. Sales suffix, board, PCB revision, panel
 variant, and SoC remain unknown. No serial or MAC recorded in later notes.
 
+# 2026-11-08 ~17:43–17:46 Atlantic/Reykjavik — owner-run root + Homebrew Channel
+Owner photographed (1) a SlopBro “Rooting complete” reboot prompt and (2)
+Homebrew Channel after choosing Reboot now. Raw JPEGs are not in the
+repository. This agent did not run the client.
+
+User-photo-confirmed:
+- SlopBro by throwaway96: “Rooting complete. You may need to reboot for
+  Homebrew Channel to appear.” Owner chose Reboot now.
+- Homebrew Channel open, branded webosbrew.org, catalog visible. No catalog
+  title is recorded as installed.
+
+Not re-photographed after reboot: Software Version, Auto Update, offered
+`03.53.46`. Last those values are still the 15:02 Software Update photo.
+Standing hold above is unchanged.
+
+This does not identify board/SoC/suffix, does not document a custom-OS boot
+route, and does not fill recovery gates. Goal remains an internal OS, not
+Homebrew apps. See `evidence/root-result-2026-11-08.md`.
+
 # 2026-11-08 later Atlantic/Reykjavik — sales suffix research
 Official firmware applicable-model lists use the base name
 `65NANO756PR` with no dotted suffix. Regional support pages publish

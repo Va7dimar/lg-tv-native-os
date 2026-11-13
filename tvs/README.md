@@ -4,7 +4,7 @@ Generic method lives in [`playbooks/tv-os-research.md`](../playbooks/tv-os-resea
 
 | TV | Folder | Status |
 |---|---|---|
-| LG 65NANO756PR (webOS 6.0, KLP 1.0) | [lg-65nano756pr](lg-65nano756pr/README.md) | Research and static inspection; nothing flashed |
+| LG 65NANO756PR (webOS 6.0, KLP 1.0) | [lg-65nano756pr](lg-65nano756pr/README.md) | Owner-rooted + Homebrew Channel 2026-11-08; nothing flashed; custom-OS boot still no-go |
 
 ## Adding a new TV
 1. `cp -r tvs/_template tvs/<vendor>-<model>` (lowercase, e.g. `samsung-qe55q80`).

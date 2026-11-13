@@ -289,3 +289,13 @@ not document exploit steps.
   unchanged. Reviews: `research/ai-reviews/claude-official-recovery-2026-11-08.md`,
   `codex-official-recovery-2026-11-08.md`,
   `gemini-official-recovery-2026-11-08.md`.
+
+# Owner-run root confirmed — 2026-11-08 ~17:43–17:46 Atlantic/Reykjavik
+Owner, not this agent, completed SlopBro on this exact `65NANO756PR`. Photos:
+rooting-complete reboot prompt (Reboot now), then Homebrew Channel
+(`webosbrew.org`) catalog. No procedure, payload, or flash is recorded.
+Software Version / Auto Update were not re-shot after reboot; hold remains
+`03.53.45`, Auto Update OFF, do not install `03.53.46` until checked.
+Custom-OS boot and independent recovery stay no-go / blocked. Next research
+(not install) frontiers: `handoff/post-root-research-2026-11-08.md`.
+Evidence: `evidence/root-result-2026-11-08.md`.

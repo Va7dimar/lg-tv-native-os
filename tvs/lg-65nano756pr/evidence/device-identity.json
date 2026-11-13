@@ -1,6 +1,6 @@
 {
-  "recorded_at": "2026-11-08 15:10 Atlantic/Reykjavik",
-  "gate": "G1-record partial; G1-target still BLOCKED (suffix/board/SoC unknown)",
+  "recorded_at": "2026-11-08 17:50 Atlantic/Reykjavik",
+  "gate": "G1-record partial; G1-target still BLOCKED (suffix/board/SoC unknown). Root/Homebrew Channel does not pass G1-target, G3-D, or G3-V.",
   "model": {
     "value": "65NANO756PR",
     "confidence": "user-photo-confirmed plus earlier SSAP getSystemInfo",
@@ -31,7 +31,29 @@
       "sizeOnScreen": "1142MB",
       "downloadAndInstallPressed": false
     },
-    "note": "Distinct from webOS TV Version 6.5.3-47 (kisscurl-koli). Owner advised not to install 03.53.46 yet."
+    "note": "Distinct from webOS TV Version 6.5.3-47 (kisscurl-koli). Last photographed 15:02 Atlantic/Reykjavik; not re-checked after the ~17:43 owner-run root reboot. Standing hold: do not install 03.53.46 until checked. Auto Update last seen OFF."
+  },
+  "rootAndHomebrew": {
+    "status": "owner-run root confirmed; Homebrew Channel present after reboot",
+    "confidence": "user-photo-confirmed",
+    "agentRanTool": false,
+    "rootCompleteDialog": {
+      "approxTime": "2026-11-08 17:43 Atlantic/Reykjavik",
+      "onScreenTitle": "SlopBro",
+      "onScreenAuthor": "throwaway96",
+      "onScreenStatus": "service launched successfully",
+      "dialog": "Rooting complete. You may need to reboot for Homebrew Channel to appear. Would you like to reboot now?",
+      "ownerChoice": "Reboot now"
+    },
+    "homebrewChannel": {
+      "approxTime": "2026-11-08 17:46 Atlantic/Reykjavik",
+      "title": "HOMEBREW CHANNEL",
+      "branding": "webosbrew.org",
+      "catalogVisible": true,
+      "catalogTitlesRecordedAsInstalled": false
+    },
+    "source": "evidence/root-result-2026-11-08.md",
+    "doesNotEstablish": "custom-OS boot, bootloader unlock, independent recovery, SoC/board identity, or post-reboot software-version/auto-update state"
   },
   "availableInternalStorage": {
     "value": "1.07/2.03GB",
@@ -65,12 +87,26 @@
   },
   "source_configuration_evidence": "evidence/source-configuration-closure.json",
   "source_configuration_limit": "RTD2875/B3/B7/k6l source labels are not measured unit SoC/board; unknown hardware fields unchanged",
-  "authorization_note": "No TV settings changes, no update check, no 401 bypass, no developer mode or rooting.",
+  "authorization_note": "This agent made no TV settings changes, no update check, no 401 bypass, and did not run a root client. Owner independently ran a community client on the home LAN; see rootAndHomebrew. No flash, no USB custom image, no serial/MAC committed.",
   "photo_provenance_software_update": {
     "owner_photo_time": "2026-11-08 15:02 Atlantic/Reykjavik",
     "screen": "Software Update",
     "raw_photo_in_repo": false,
     "executor_opened_original_file": false,
     "note": "Fields recorded from the coordinating agent visual transcription. JPEG not present in the executor sandbox."
+  },
+  "photo_provenance_root_complete": {
+    "owner_photo_time": "2026-11-08 ~17:43 Atlantic/Reykjavik",
+    "screen": "SlopBro rooting-complete reboot prompt",
+    "raw_photo_in_repo": false,
+    "executor_opened_original_file": true,
+    "note": "Transcribed from the owner photo attached to this session. JPEG not committed."
+  },
+  "photo_provenance_homebrew_channel": {
+    "owner_photo_time": "2026-11-08 ~17:46 Atlantic/Reykjavik",
+    "screen": "Homebrew Channel catalog home",
+    "raw_photo_in_repo": false,
+    "executor_opened_original_file": true,
+    "note": "Transcribed from the owner photo attached to this session. JPEG not committed."
   }
 }

@@ -4,8 +4,10 @@ On-screen value from this unit's TV Information photo
 (2026-11-08 14:59 Atlantic/Reykjavik): **webOS TV Version `6.5.3-47 (kisscurl-koli)`**.
 This is not the Support → Software Update dotted number. That photo is still
 pending. No firmware ZIP was downloaded. Community rooting/homebrew threads
-are cited only as version-pairing reports, not as instructions, and no
-developer-mode or rooting step is authorized or recommended.
+are cited only as version-pairing reports, not as instructions.
+Owner-run root on this unit was later photo-confirmed
+(`root-result-2026-11-08.md`); this mapping note still does not document
+how that was done.
 
 ## Confirmed
 - This TV displays webOS TV Version `6.5.3-47 (kisscurl-koli)`.

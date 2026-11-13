@@ -70,3 +70,34 @@ forward-only when the stock UI can show that prompt.
 
 It still does not document acceptance of a custom image, a bootloader
 unlock, or a replacement OS. Deployment no-go is unchanged.
+
+# Follow-up — owner-run root does not create a custom boot route (2026-11-08 ~17:50 Atlantic/Reykjavik)
+
+Owner-run SlopBro succeeded on this unit; Homebrew Channel is present
+after reboot (`root-result-2026-11-08.md`). That is stock-webOS userspace
+persistence plus a community app catalog. It is **not** documented
+acceptance of a custom image, a bootloader unlock, or a replacement OS.
+
+Bounded public re-check (desk-only; no firmware download, no USB media):
+
+1. WebSearch: `LG 65NANO756PR custom OS boot recovery bootloader unlock 2026`.
+2. WebSearch: `webOS 6 NANO756 custom firmware bootloader U-Boot USB recovery official`.
+
+| Source | Direct finding | Limit |
+| --- | --- | --- |
+| https://www.lg.com/uk/support/product-support/cs-55NANO756PR.AEK/ (sibling 55" NANO756PR support; same listed `Software_File` 03.53.45 / 03.53.46 + `TV_Software_Update_Guide_v3.pdf`) | Official consumer path remains stock signed updates for specific models. | Sibling listing, not this 65" unit’s suffix. No arbitrary-image boot. |
+| Already-cited exact-base-model 65" pages in this file | Unchanged stock 03.53.45 / 03.53.46 USB packages. | Still not custom-OS boot. |
+| https://tv.slada.sk/guides/rooting-guide | Third-party claim that the bootloader is signed and that modifications sit on top of webOS. | Unofficial; **not** adopted as this unit’s measured boot policy. Rooting-guide how-to content is not copied here. |
+| Android LG custom-ROM / phone bootloader-unlock hits | Phones/watches, not this TV. | Irrelevant to 65NANO756PR webOS. |
+
+No public exact-board route with applicable revision, acceptance format,
+limits, and independently recoverable failure coverage appeared. Source
+U-Boot 2012.07 / k6l labels in the GPL drop remain **source** labels, not
+live boot acceptance (`kernel-bootcode-inspection.md`).
+
+## Stop/go
+Unchanged: **DEPLOYMENT NO-GO under presently verified evidence.** Root
+plus Homebrew Channel does not fill U0 / G3-D. Reconsider only on a public
+exact-board legitimate custom-OS boot route as already stated above. No
+architecture selected; internal OS goal unchanged. No flash, no USB custom
+image.
