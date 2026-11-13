@@ -1,0 +1,16 @@
+SDK libc feature macros
+#define __GLIBC__ 2
+#define __GLIBC_HAVE_LONG_LONG 1
+#define __GLIBC_MINOR__ 12
+#define __GLIBC_PREREQ(maj,min) ((__GLIBC__ << 16) + __GLIBC_MINOR__ >= ((maj) << 16) + (min))
+Wayland version metadata
+Version: 1.11.0
+ 0x00000001 (NEEDED)                     Shared library: [libffi.so.8]
+ 0x00000001 (NEEDED)                     Shared library: [librt.so.1]
+ 0x00000001 (NEEDED)                     Shared library: [libm.so.6]
+ 0x00000001 (NEEDED)                     Shared library: [libpthread.so.0]
+ 0x00000001 (NEEDED)                     Shared library: [libc.so.6]
+ 0x0000000e (SONAME)                     Library soname: [libwayland-client.so.0]
+Artifacts
+be28a8fdcc89dfc3b341403b40eccdb07f1c0eac8719f90144f586f184a5581a  build/arm/wayland-hello
+9f07762a3cd0f8a199cb5471a92402a4765f8e2fcb7fe91a87ee75da9616a806  /workspace/toolchains/qemu-arm-static

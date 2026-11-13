@@ -1,12 +1,8 @@
 # Root research and decision — 2026-11-08
 
-Status: **owner-run root succeeded on this unit; this agent still did not run the tool.**
-See `root-result-2026-11-08.md` for the ~17:43 / ~17:46 Atlantic/Reykjavik
-photos (SlopBro “Rooting complete” then Homebrew Channel). Historical text
-below is the earlier desk assessment (no-go for *this agent* changing the TV).
-It is not a how-to. Custom/native OS remains the goal; Homebrew apps are not.
+Status: **SUPERSEDED — owner rooted this unit on 2026-11-08 via SlopBro.** Homebrew Channel 0.7.3 and root SSH are available. See the [post-root plan](../plan-2026-11-08-post-root.md), [live inventory](live-system-inventory-2026-11-08.md) and [SSH evidence](ssh-access-2026-11-08.md). No exploit reproduction steps are added here.
 
-Keep Auto Update **OFF**. Do **not** install offered `03.53.46` until checked.
+The assessment below is historical, pre-root research; its “STOPPED”, “no-go from this session” and network-access statements are not the present state. Root access does not establish custom boot or independent recovery. Original status: **STOPPED before any TV change.** No apps were installed, no exploit was run, no USB payload was prepared, no settings were changed, and the offered `03.53.46` update was not started.
 
 This file is a compatibility and risk assessment, not a reproduction procedure. It does not include commands, script flags, payloads, launcher app identities, or button-by-button steps.
 
@@ -16,8 +12,8 @@ This file is a compatibility and risk assessment, not a reproduction procedure. 
 
 Two separate questions were asked. They have different answers:
 
-1. **Is a current community method *reported* to apply to firmware `03.53.45` / webOS `6.5.3-47 (kisscurl-koli)`?** Yes, as unverified third-party reports plus the author's claimed webOS 4–11 range. At the time this paragraph was written it was **not** confirmed on this exact sales model `65NANO756PR`. Same-day owner photos later confirmed this unit (`root-result-2026-11-08.md`).
-2. **Should this agent now run a community root tool against the TV?** **No.** This agent will not write or execute unofficial exploit procedures. The research box also has no useful network path to the living-room TV. That agent-side no-go still holds even after the owner-run success.
+1. **Is a current community method *reported* to apply to firmware `03.53.45` / webOS `6.5.3-47 (kisscurl-koli)`?** Yes, as unverified third-party reports plus the author's claimed webOS 4–11 range. It is **not** confirmed on this exact sales model `65NANO756PR`.
+2. **Should this agent now run a community root tool against the TV?** **No.** This agent will not write or execute unofficial exploit procedures. The research box also has no useful network path to the living-room TV.
 
 This is **not** a "no applicable method" finding, and it is **not** a finding of a documented hard-brick pattern for a failed software attempt. webOS Homebrew's public rooting guide and the current-method author's README both describe failed software attempts as usually uneventful; they also warn that later privileged system changes can damage a TV, that warranty may be affected, and that remote shells (if enabled) are a security exposure.
 
@@ -174,25 +170,3 @@ README-focused reviews (still no how-to in this repo):
 Both completed reviews agree on the same conceptual usage picture from the README: a pairing prompt is stated as required; USB, Developer Mode app, LG account, and settings toggles are not stated as requirements; success is described as installing Homebrew Channel and enabling persistence; a failed attempt is claimed by the author to be harmless (no warranty); the README gives no undo procedure; webosbrew separately mentions factory reset as losing root and possibly preventing later re-rooting; the client runs on a LAN computer and privileged work then happens on the TV. webOS 6 is inside the author's 4–11 claim; `65NANO756PR`, `03.53.45`, and `kisscurl-koli` are not named in that README.
 
 Session recommendation is unchanged: **no-go for this agent proceeding to change the TV.**
-
-## Addendum: owner-run outcome (same day, ~17:43–17:46 Atlantic/Reykjavik)
-
-The owner, not this agent, later ran the community client on the home LAN.
-This file is not updated into a procedure. Outcome only:
-
-- **Confirmed:** SlopBro on-TV dialog reported rooting complete and asked to
-  reboot for Homebrew Channel; owner chose Reboot now. After reboot, Homebrew
-  Channel (`webosbrew.org`) was open with its installable catalog.
-- **Confirmed unit:** `65NANO756PR`, webOS `6.5.3-47 (kisscurl-koli)`, last
-  photographed Software Version `03.53.45`. Exact-model confirmation that the
-  earlier survey lacked.
-- **Still true:** this agent did not execute the client; no exploit steps are
-  recorded here; no USB/custom image; nothing flashed.
-- **Unverified after reboot:** Auto Update and `03.53.45` were last photographed
-  at 15:02, not after the reboot. Hold remains: leave Auto Update OFF; do not
-  install `03.53.46` until checked.
-- **Does not follow:** custom-OS boot, independent recovery, or architecture
-  readiness. Those gates stay in `boot-route.md` / `recovery-case.md`.
-
-Full photo transcription and next research (not install) frontiers:
-`root-result-2026-11-08.md`, `../handoff/post-root-research-2026-11-08.md`.

@@ -1,0 +1,14 @@
+{
+  "id": "org.va7dimar.waylandhello",
+  "version": "0.8.0",
+  "vendor": "va7dimar",
+  "type": "native",
+  "main": "wayland-hello",
+  "title": "wayland-hello",
+  "icon": "icon.png",
+  "defaultWindowType": "card",
+  "noSplashOnLaunch": true,
+  "requiredPermissions": [
+    "application.operation"
+  ]
+}

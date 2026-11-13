@@ -1,0 +1,284 @@
+# Build / toolchain log — 2026-11-08 (session 1)
+
+**Status: NOTHING WAS COMPILED OR TESTED IN THIS SESSION.** Source, scripts and
+tests are written but have never run. Treat every file here as untested.
+
+## What the session's permission layer allowed / blocked
+The agent ran non-interactively, so any command that needed approval failed outright.
+
+| Attempt | Result |
+|---|---|
+| Read `SOURCES.md`, `tvs/lg-65nano756pr/SOURCES.md`, `evidence/display-stack-mapping-2026-11-08.md`, SDK audit evidence | **Blocked** (reads outside prototype dir need approval). They were **not read**, so the constraints below come only from the task brief (compositor `e_flags=0x05000200`; `readelf -A` never captured on the TV). |
+| `which arm-linux-gnueabi-gcc gcc clang weston readelf objdump wayland-scanner pkg-config qemu-arm` | Ran. Found only `/usr/bin/gcc`, `/usr/bin/readelf`, `/usr/bin/objdump`. **No ARM cross compiler, no weston, no wayland-scanner, no qemu-arm.** |
+| `gcc --version`, `make host`, `python3 -I -m py_compile ...` | **Blocked** (needed approval) |
+| `sudo -n true`, `apt-cache policy gcc-arm-linux-gnueabi` | **Blocked** |
+| `curl -sI https://archive.debian.org/...` | **Blocked**. No network fetch happened. No sysroot downloaded, so no URLs/hashes/versions to record yet. |
+| Previously acquired SDK | Not used: could not read the audit evidence to confirm it is safe to use. Installers were not run and archives were not expanded. |
+
+## Static review reconciliation — 2026-11-08 (session 2)
+
+**Status: STILL NOTHING COMPILED, TESTED OR RUN.** This session only edited existing
+files. It ran no shell, build, test, download, network or TV actions. The previous
+headless run's compile and test commands were denied, and they were **not** retried. Every
+fix below is a source edit **checked by reading only**. None of them is a verified fix.
+
+Findings from the static (Codex) review, and how each was handled:
+
+| # | Finding | Change (untested) |
+|---|---|---|
+| 1 | `src/wayland_hello.c` `on_alarm` wrote to stderr before `_exit`; it can block forever on a full pipe | Handler now does no I/O at all and calls `_exit(124)` immediately. |
+| 2 | `tests/run_tests.py` `create_buffer` assertions used the wrong indices | The mock logs `[new_id, offset, width, height, stride, format]`. Assertions now use `b[2]`/`b[3]` for width/height and also check offset 0, stride `w*4` and format 1 (XRGB8888). |
+| 3 | Constructor/bind proxies in `main` (and the helpers) were not checked before marshal/add_listener; listener return values were ignored | Every `wl_proxy_create` result (registry, callback, compositor, shm, shell, surface, shell_surface, shm_pool, buffer) is NULL-checked before marshal. Listeners are installed before the creating request and their return values are checked. Failures go through `fail_alloc` (exit 7 `EX_ALLOC`) or `fail_listener` (exit 4), both with cleanup. `create_buf` now returns an exit code, and on failure it destroys the pool and buffer it created. |
+| 4 | `ftruncate`-only SHM plus `mmap` can SIGBUS on an exhausted tmpfs | `make_shm_file` reserves backing with `posix_fallocate` (retrying only on EINTR, within the deadline) and checks the size with `fstat`. **Any** non-zero result, unsupported filesystem included, fails closed (exit 7). There is no sparse fallback. Size is capped at `MAX_SHM_BYTES` (8 MiB) and `INT32_MAX` in both `make_shm_file` and `create_buf`. |
+| 5 | README implied a power cycle is a recovery path | README now says a power cycle is **not** a proven restore, because of snapshot boot, and that no run (including `--dry-run`) is permitted until the documented restore gates are fulfilled. |
+| 6 | README build section read like a finished build | It is now marked PROSPECTIVE / unbuilt: no sysroot fetched, no toolchain acquired, no outputs exist. |
+| 7 | `--allow-unsigned` bypass in the fetch script and docs | Removed from the script, its docstring, README and this log. The script fails closed on a missing keyring/gpgv, a gpgv error or timeout, or a bad signature, and it rejects any argument. |
+
+Open items from this reconciliation (not resolved by editing):
+- None of the new failure paths (NULL proxy, listener failure, `posix_fallocate` failure) is exercised by `tests/run_tests.py` or the mock. They would need fault injection, for example an `LD_PRELOAD` shim or a full-tmpfs fixture.
+- `posix_fallocate` availability and behaviour on the TV kernel's tmpfs are unknown. If it fails there, surface mode always exits 7.
+- `posix_fallocate` is expected to resolve to an old `GLIBC_2.x` version (≤ 2.28), but `abi-check.sh` has not been run to confirm it.
+- The compositor holds the SHM fd and could shrink it, which would still cause SIGBUS. That is out of scope for a prototype; it is documented in README.
+
+## To finish (on a box where these commands are permitted)
+```sh
+sudo apt-get install gcc-arm-linux-gnueabi binutils-arm-linux-gnueabi libwayland-client0 file
+python3 -I scripts/fetch_buster_armel_sysroot.py      # writes build-cache/sysroot-manifest.json (URLs, versions, sha256, gpgv result)
+make test                                            # host build + parser + mock-compositor tests
+make abi                                             # ARM build + build/arm/ABI-REPORT.txt + checks
+```
+Record the outputs here, including any failure. Things that could go wrong and need checking:
+- The buster archive key may only be in `debian-archive-removed-keys.gpg`, or in no keyring at all, on a newer host. If so the script stops. That is intended: there is **no bypass**. Get a trusted keyring instead.
+- `-nostdinc` plus the cross gcc's own `include` dir: check that no 2.36 headers leak in, using `link.map` and `-H` if you have doubts.
+- libgcc from a newer cross gcc could add NEEDED entries or symbol versions. `abi-check.sh` fails if it does.
+- `crt1.o`, `crti.o` and `crtn.o` must come from the sysroot. Check `build/arm/link.map`. A 2.34+ leak shows up as `__libc_start_main@GLIBC_2.34`, which `abi-check.sh` rejects.
+
+## 2026-11-08 ~18:40 Atlantic/Reykjavik: ARM cross-build (off-TV)
+- Host build: GCC 14.2.0, all 45 tests pass (mock compositor dry-run, surface lifecycle, bounded exit).
+- ARM toolchain: openlgtv buildroot-nc4 `2026.08-webos` (GCC 16.2.0, glibc 2.12.2 sysroot, Wayland 1.11.0),
+  SDK archive SHA256 matched GitHub's published digest. Unpacked outside the repo at /workspace/toolchains/webos-2026.08/.
+- Result: ARM build succeeded. ELF32 ARM EABI5, e_flags 0x05000200 (soft-float, same as TV binaries),
+  no Tag_ABI_VFP_args, max symbol version GLIBC_2.4 (well under the TV's 2.28).
+  NEEDED: libc.so.6, libdl.so.2, librt.so.1. Reports in abi/.
+- The repo's own ABI checker still fails because it doesn't allow librt; that's a checker allowlist question.
+  This is **not** an ABI PASS yet.
+- SDK libwayland-client SONAME libwayland-client.so.0 (file .so.0.3.0), matching the TV's filename.
+  Identical behavior isn't proven.
+- QEMU 7.2.0 static user mode segfaults (139) on **even a trivial hello-world** built with the same toolchain,
+  so the crash is an emulator/old-glibc issue, not this app. Emulated runtime remains untested.
+- No Weston test, and nothing copied to or run on the TV.
+
+## 2026-11-08: wayland-hello 0.2 (input, webOS shell, EGL)
+
+Host `make test`: **97 tests, 0 failed** (gcc, mock compositor). The new cases cover
+wl_seat keyboard/pointer events, stdout `keycode raw=` lines, BACK (evdev 158) /
+Escape (1) / EXIT (174) clean exit, unknown code 461 staying until the deadline,
+two seats, SHM pixels, webOS opcodes taken from a fixture `wl_interface` (OSE
+order and a shifted opcode), signature and missing-library fail-closed (exit 9),
+and EGL dlopen fallback to SHM.
+
+SDK: openlgtv `buildroot-nc4` tag `2026.08-webos`, asset
+`arm-webos-linux-gnueabi_sdk-buildroot-x86_64.tar.gz`. GitHub asset digest and the
+pin in `scripts/fetch_openlgtv_sdk.py` are both
+`sha256:2230a6351e5cce6fcb9d4fdcb4697335f223995401ef969c81744aaeb14c5344`.
+The file hash matched. The toolchain was unpacked under `build-cache/` (gitignored)
+and is not committed. `make sdk-abi` passed.
+
+`abi/wayland-hello-v2-ABI-REPORT.txt`: ELF32 ARM, `e_flags 0x5000200` (EABI5,
+soft-float), no `Tag_ABI_VFP_args: VFP registers`, max `GLIBC_2.4`, interpreter
+`/lib/ld-linux.so.3`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`. `librt` is
+allowed because this SDK's glibc 2.12 still exports `clock_gettime` from librt
+at `GLIBC_2.4`. The v1 report failed the checker only on that allowlist; 0.2
+updates the checker and passes. `Tag_FP_arch: VFPv3` is present, as it was on
+the v1 binary; the calling-convention flag is still soft-float.
+
+`third_party/webos-wayland-extensions/protocol/webos-shell.xml` is the OSE file
+at commit `4b243378b451bd139466c242ae1e58753fea0fbf` (git blob
+`cb3cabcef35810be06d881f373a62d67afa79ccd`). Opcodes are resolved at runtime from
+`libwayland-webos-client.so.1`. No 0.2 binary was copied to or run on the TV.
+Input still comes only from `wl_seat`; the client does not open evdev nodes.
+
+## 2026-11-08: wayland-hello 0.3 (timestamps, on-screen countdown, leave)
+
+Written after `tvs/lg-65nano756pr/evidence/wayland-input-2026-11-08.md`. That
+0.2 run delivered arrows on seat 1 and then lost keyboard focus on every seat
+while the process waited out a deadline that had started at connect.
+
+Host `make test`: **112 tests, 0 failed**. New coverage: `t=` prefixes,
+countdown armed on the first frame, ping/pong and configure logging,
+`--exit-on-leave`, webOS shell events with values, and opt-in
+`--webos-key-mask` (including fail-closed when the runtime interface lacks
+`set_key_mask`, and a check that the mask bits match the vendored XML).
+
+`make sdk-abi` with the same openlgtv `2026.08-webos` SDK already unpacked
+under `build-cache/` (not committed). `abi/wayland-hello-v3-ABI-REPORT.txt`:
+ABI CHECK PASS, `e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`,
+`libdl.so.2`, `librt.so.1`. Hard alarm is now `duration+5` (max 35 s). No 0.3
+binary was copied to or run on the TV.
+
+## 2026-11-08: wayland-hello 0.4 (SHM frame and buffer telemetry)
+
+Base revision before this commit: `a8f051ded78ff34042f8a439f233ddf914b8ccb2`.
+No protocol registration change. `set_state` 3 stays the logged OSE assumption.
+Resize still destroys the current buffer without waiting for release, and logs
+`destroy-before-release` when that buffer is busy. That is not claimed as the
+focus-loss cause.
+
+Host `make test`: **123 tests, 0 failed**.
+
+`make sdk-abi` with the openlgtv `2026.08-webos` SDK under `build-cache/`
+(not committed). `abi/wayland-hello-v4-ABI-REPORT.txt` ends in ABI CHECK PASS:
+`e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`,
+`librt.so.1`. SDK binary SHA256
+`87ce383a48dae7e3cb870af4a4c9cb5845392d29cfacc027ea833194877274cf`
+(`build/sdk/wayland-hello`, not committed). No 0.4 binary was copied to or
+run on the TV.
+
+## 2026-11-08: wayland-hello 0.5 (app id and window type)
+
+The focus-loss log shows a plain `wl_shell` surface as a CARD with an empty
+`app_id`, then SAM `last_input_handler` relaunching `com.webos.app.home`.
+The 0.4 webOS path sent `set_state` (OSE fullscreen 3) before `appId`. 0.5
+sends `appId`, optional `_WEBOS_WINDOW_TYPE`, and `displayAffinity` 0 before
+`set_state`, still before the first commit. Fullscreen stays 3; maximized is
+2 in the OSE XML and was not substituted. Plain `wl_shell` now passes the
+same app id to `set_title` and `set_class`.
+
+Host `make test`: **130 tests, 0 failed**.
+
+SDK binary SHA256
+`c2132928fc2b06f42972c20a3aa767a2721e7bb365abdcf919387d7ff1e6c33a`
+(`build/sdk/wayland-hello`, not committed). `abi/wayland-hello-v5-ABI-REPORT.txt`
+ABI CHECK PASS, `e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`,
+`libdl.so.2`, `librt.so.1`. No 0.5 binary was copied to or run on the TV.
+
+## 2026-11-08: wayland-hello 0.6 (native Homebrew IPK)
+
+The owner ran 0.5. Plain `wl_shell` `set_title`/`set_class` still left LSM
+`app_id` empty, and home reclaimed the CARD after about 1.5 s. The webOS path
+with appId, OVERLAY or CARD, `displayAffinity` 0, and `set_state` 3 never
+mapped: no configure, no state events, no frame callback, no LSM line. 0.6
+packages the client as native app `org.va7dimar.waylandhello` so SAM is the
+process that launches that id. `--webos-shell` now defaults the window type
+to `_WEBOS_WINDOW_TYPE_CARD`. The launcher passes that type and `--duration 30`.
+The client default duration is still 10.
+
+Host `make test`: **132 tests, 0 failed**, plus `tests/test_ipk.py` (0 failed).
+
+The hand-built 0.5 IPK, SAM-launched in plain `wl_shell`, held the screen
+for 30 s (`tvs/lg-65nano756pr/evidence/sam-launch-success-2026-11-08.md`).
+`--webos-shell` was not shown. The packaged launcher now runs `--demo`
+(plain `wl_shell`, spare buffer, BACK/EXIT, 120 s cap). Archive member
+names are space-padded with no GNU `/`.
+
+SDK binary SHA256
+`54bcb2f27a59a3ff79161d989217a982f577619aa06820d1bb6264263b166bbc`
+(`build/sdk/wayland-hello`, not committed). IPK SHA256
+`1132d137dbe86236ff44f594cc0698697e0d3a3bec61c05d219eacb8439981fe`
+(`build/ipk/org.va7dimar.waylandhello_0.6.0_arm.ipk`, not committed). The
+default appinfo sets `defaultWindowType` to `card` and `noSplashOnLaunch`
+to true, and omits `nativeLifeCycleInterfaceVersion`. `--lifecycle 2` and
+`--default-window-type` change those fields only. The binary inside the IPK
+matches the SDK binary. `abi/wayland-hello-v6-ABI-REPORT.txt`
+ABI CHECK PASS, `e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`,
+`libdl.so.2`, `librt.so.1`. No 0.6 binary or IPK was copied to or run on the TV.
+
+## 2026-11-08: wayland-hello 0.7 (luna register and heartbeat)
+
+The 0.6 demo stayed on screen until about 31 s, when SAM
+`last_input_handler` relaunched Home and hid the surface. The process kept
+running (`tvs/lg-65nano756pr/evidence/interactive-demo-2026-11-08.md`). 0.7
+adds `--luna-register` (dlopen of libluna-service2 and libglib, `registerApp`
+with subscribe, `LS2_NAME` when set) and `--heartbeat-ms`. NEEDED stays
+libc/libdl/librt.
+
+Host `make test`: **163 tests, 0 failed**, plus `tests/test_ipk.py` (0 failed).
+Review fixes: a rejected reply logs `exiting (luna-reject)` and returns 10;
+`LSRegister`/`LSGmainAttach`/`LSCall` log the luna error code and message;
+`--dry-run` does not return 0 after a reject; `close` during startup does
+not commit a surface. That does not show the 31 s Home relaunch is fixed.
+
+A later host-only review of `71f07e5` held on three points, each with a
+test that failed on that binary and passed after the change. Lifecycle
+`event`, `returnValue`, `errorCode`, and `errorText` are read only at the
+top level of the reply. A startup Wayland roundtrip returns as soon as
+`quit` or `fatal` is set, so a luna close during a stalled sync keeps
+`exiting (luna-close)` instead of waiting out the safety cap. `--luna-register`
+requires a top-level `event` `registered` within 2 s (`LUNA_REGISTER_ACK_MS`).
+OSE `RunningApp::registerApp` sends that reply in the same call; no public
+path was found where a successful register stays silent, so there is no
+fail-open flag. A missing ack unregisters and exits 10
+(`luna: no registerApp reply after`, `exiting (luna-reject)`).
+
+Host `make test` after that change: **168 tests, 0 failed**, plus
+`tests/test_ipk.py` (0 failed). The six new checks failed on the
+pre-change host binary (168 run, 6 failed) and pass on this one.
+
+SDK binary SHA256
+`673dfb9b98a8d170bb1be328af426afa4e966e06393b05b6c4beeb70359f1c30`.
+Default IPK SHA256
+`2fabc28a1bc35847111c5227af0b369c13ce6c43c599a16f3fa422121c0718d1`.
+Lifecycle-2 IPK SHA256
+`888e96b0e705bec22c4852dd7e1d7eea2b54ea8ff2b2d4cfcbcfe6735a7cf7b1`.
+The binary inside both IPKs matches the SDK binary.
+`abi/wayland-hello-v7-ABI-REPORT.txt` ABI CHECK PASS, `e_flags 0x5000200`,
+max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`. No 0.7
+binary or IPK was copied to or run on the TV. These hashes replace
+`cd2c0497…`, `c02f98bb…`, and `e1679f75…`. Do not install those.
+
+## 2026-11-13: LS2 role/client-permission grant (lifecycle-2)
+
+The `888e96b0…` lifecycle-2 IPK was installed on the TV. `LSRegister`
+failed `-1027 Invalid permissions for org.va7dimar.waylandhello` and the
+client exited 10
+(`tvs/lg-65nano756pr/evidence/luna-register-live-2026-11-13.md`). This
+change ships `sysbus/` templates in the IPK and, on lifecycle 2, writes
+them into `/var/luna-service2-dev` (else `/var/luna-service2`) with the
+ELF path as `exeName`, then `ls-control scan-services`. System paths are
+refused. The client logs `luna: exe=` from `/proc/self/exe`.
+
+Host `make test`: **168 tests, 0 failed**, plus `tests/test_ipk.py`
+(**0 failed**; packaging now includes the three sysbus files and the
+lifecycle-2 launcher install/fail-closed paths).
+`sh scripts/abi-check.sh` / `make sdk-abi`: ABI CHECK PASS,
+`e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`,
+`librt.so.1`.
+
+SDK binary SHA256
+`a4fa3165822002a4989acaea2c4b0997e4c855e4036c8c0a9cf75636f3f96220`.
+Default IPK SHA256
+`dc2340822e7554b52f702f8781355923cafb61ca609fc31771380f95714f6e95`.
+Lifecycle-2 IPK SHA256
+`0452e5e3956f38aa4f2edad529e0b4804230add8059d2da3ecd5cf555d2b9890`.
+The binary inside both IPKs matches the SDK binary. None of those files
+is committed. Do not install `888e96b0…` / `673dfb9b…`.
+
+## 2026-11-13: 0.8 ELF main + overlay persist (lifecycle-2)
+
+On-TV proof the same day: `registerApp` works once the installer-generated
+role names the ELF; registration does not stop the ~31 s Home reclaim
+(`tvs/lg-65nano756pr/evidence/ls2-register-proof-2026-11-13.md`). The
+jailed SAM process cannot see `/var/luna-service2*`
+(`tvs/lg-65nano756pr/evidence/ls2-roles-retest-2026-11-13.md`).
+
+0.8 sets appinfo `main` to `wayland-hello` so `dev/install` should emit
+`exeName` = `/proc/self/exe`. The IPK no longer ships `sysbus/`. The
+wrapper only dumps env and `exec`s the ELF. A SAM lifecycle-2 launch
+document selects `--luna-register`, `--webos-shell` overlay, relaunch
+restore, 5 s `persist: alive` ticks, and a 90 s safety cap. Missing
+`wl_webos_shell` fails closed (exit 9). Overlay persist is **hypothesis**.
+
+Host `make test`: **181 tests, 0 failed**, plus `tests/test_ipk.py`
+(**0 failed**; `main` is the ELF, no sysbus members, lifecycle-2 defaults
+to overlay). `make sdk-abi`: ABI CHECK PASS, `e_flags 0x5000200`, max
+`GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`.
+`abi/wayland-hello-v8-ABI-REPORT.txt`.
+
+SDK binary SHA256
+`ef27b70fcdca93f4a71e92c530d2fefd803d5c8f8a62f078919a45c30ff00f2b`.
+Default IPK SHA256
+`1f774ab06df06fe5b31b712fa63fbb5c377f95e11e14c9afd5df06a3ac61d054`.
+Lifecycle-2 IPK SHA256
+`e940723ab82be2cebcd1e02639abdcf1317afba960524ebe4dd2a8069fef39dc`.
+The binary inside both IPKs matches the SDK binary. None of those files
+is committed. Do not install `888e96b0…` / `0452e5e3…`.

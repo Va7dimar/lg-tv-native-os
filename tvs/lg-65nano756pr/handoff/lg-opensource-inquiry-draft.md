@@ -3,7 +3,35 @@
 Recorded 2026-11-08 later, Atlantic/Reykjavik (UTC+0).
 
 This is a draft only. It has not been emailed, submitted through the
-inquiry form, or otherwise sent. The parent should use
+inquiry form, or otherwise sent.
+
+## Public-source check — 2026-11-08 later, Atlantic/Reykjavik (UTC+0)
+
+Gemini (`agy --model gemini-4-argon-high`) searched these questions
+first (knowledge-only after headless tools failed). Codex
+cross-checked. Reconciled notes:
+`research/ai-reviews/opensource-inquiry-public-answers-2026-11-08.md`.
+
+**Still needed from LG Open Source (questions 1–3, and the matching
+toolchain/kernel manifest for 03.53.45):** public pages identify the
+model-level drop `webOS 6.0 KLP 1.0` / sequence 510320 and name
+installer `…5.0.0-20190307.sh`, but they do not confirm that drop or
+installer against software 03.53.45 / webOS 6.5.3-47 (kisscurl-koli).
+The public `…5.0.0-20191125.sh` copy is attributed to a webOS 5 / OLED
+CX inquiry, not this set. This unit’s running kernel extraversion has
+not been published.
+
+**Already answered publicly (can be shortened):** sales-suffix
+listings use the base model name on both the OSS catalog and regional
+firmware pages; `TV_Software_Update_Guide_v3.pdf` says a same-or-lower
+USB package does not show the install prompt.
+
+**Better asked of local LG support, not `opensource@lge.com`:**
+authorized recovery if the TV cannot boot or reach the USB updater,
+and whether service would restore 03.53.45 or only a later version.
+
+Do not send this draft from the public-source check alone.
+ The parent should use
 `DraftExternalMessage` if the owner later approves a send.
 
 Do not attach serial numbers, MAC addresses, pairing keys, or photos
@@ -119,3 +147,7 @@ If approved later:
 - Do not include serial, MAC, pairing data, or exploit/root discussion
 - Do not promise a custom operating system or request flashing help
 - Status as of this file: **not sent**
+- Public-source check 2026-11-08 later: source/toolchain match still
+  unanswered; recovery belongs on local support. See
+  `research/ai-reviews/opensource-inquiry-public-answers-2026-11-08.md`.
+  Do not send from that check alone.
