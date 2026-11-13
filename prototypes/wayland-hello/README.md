@@ -28,7 +28,27 @@ A hand-built IPK of the 0.5 binary, launched by SAM in plain `wl_shell`
 mode, held the full screen and keyboard focus for 30 s
 (`tvs/lg-65nano756pr/evidence/sam-launch-success-2026-11-08.md`). The same
 launch with `--webos-shell` was not shown. Version 0.6 packages that plain
-path as `--demo`. **This package has not been installed on the TV.**
+path as `--demo`. That demo was run: arrows move the square and redraws reach
+the screen. About 31 s after launch, SAM `last_input_handler` relaunches
+Home and hides the surface while the process keeps running
+(`tvs/lg-65nano756pr/evidence/interactive-demo-2026-11-08.md`). Version 0.7
+adds optional luna registration and an idle redraw. The lifecycle-2 IPK
+from PR #8 was installed on this TV on 2026-11-13: SAM launched it with
+`interfaceMethod registerApp`, then `LSRegister` failed
+`code=-1027 Invalid permissions for org.va7dimar.waylandhello` and the
+client exited 10 before drawing
+(`tvs/lg-65nano756pr/evidence/luna-register-live-2026-11-13.md`). A later
+root-side proof showed that `registerApp` **does** succeed once the
+installer-generated LS2 role names the ELF (`/proc/self/exe`), and that
+registration alone does **not** stop the ~31 s Home reclaim
+(`tvs/lg-65nano756pr/evidence/ls2-register-proof-2026-11-13.md`). Version
+0.8 sets appinfo `main` to the ELF so `dev/install` generates that role
+without a manual `/var` edit, and on a SAM lifecycle-2 launch uses
+`wl_webos_shell` overlay plus relaunch restore. That persist path is
+**hypothesis** until the next on-TV run
+(`tvs/lg-65nano756pr/evidence/persist-past-31s-2026-11-13.md`). The jailed
+SAM process cannot see `/var/luna-service2*` and must not self-install
+LS2 files (`tvs/lg-65nano756pr/evidence/ls2-roles-retest-2026-11-13.md`).
 
 ## What it does
 - Connects to `$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY`. Defaults: `/tmp/xdg` and `wayland-0`. Override with `--runtime-dir` / `--display`. The name must not contain `/`.
@@ -50,7 +70,7 @@ path as `--demo`. **This package has not been installed on the TV.**
 - **Controlled failure on allocation.** Every constructor or bind proxy (`wl_registry`, `wl_callback`, `wl_compositor`, `wl_shm`, `wl_shell`, `wl_surface`, `wl_shell_surface`, `wl_shm_pool`, `wl_buffer`) is NULL-checked before it is marshalled or given a listener. Every `wl_proxy_add_listener` return value is checked, and listeners are installed before the creating request goes out. A NULL proxy exits 7 (`EX_ALLOC`). A failed listener install exits 4. Both run cleanup.
 - **SHM backing.** Each buffer is bounded to ≤1920x1080x4 (8 MiB) and ≤`INT32_MAX`. Its unlinked temp file is backed by `posix_fallocate()`, and the size is checked with `fstat()` before `mmap()`. Any non-zero `posix_fallocate` result fails closed with exit 7: ENOSPC, EFBIG, EINVAL, ENODEV, or EOPNOTSUPP/unsupported filesystem. There is no sparse `ftruncate` fallback. This prevents SIGBUS when the program paints into a full tmpfs. It does **not** stop a hostile compositor from truncating the shared fd.
 
-Exit codes: 0 ok, 2 usage, 3 connect, 4 protocol/timeout/listener-install failure, 5 no wl_shell, 6 libwayland load, 7 proxy allocation or SHM allocation/backing failure, 8 `--input` but no `wl_seat`, 9 `--webos-shell` but the global or the runtime interface is unusable, 124 hard deadline.
+Exit codes: 0 ok, 2 usage, 3 connect, 4 protocol/timeout/listener-install failure, 5 no wl_shell, 6 libwayland load, 7 proxy allocation or SHM allocation/backing failure, 8 `--input` but no `wl_seat`, 9 `--webos-shell` but the global or the runtime interface is unusable, 10 `--luna-register` but libluna-service2 or libglib did not load or `registerApp` could not be sent, 124 hard deadline.
 
 ## ABI strategy
 - Target: ELF32 ARM, EABI5, **soft-float calling convention** (`-march=armv5te -marm -mfloat-abi=soft`, the Debian armel baseline). The TV compositor's captured `e_flags=0x05000200` shows EABI5 soft-float. Its build attributes (`readelf -A`) were **never captured**, so nothing beyond that is claimed about it.
@@ -75,7 +95,7 @@ The tests never touch a real compositor: each one forces a private temp socket s
 
 `build/` and `build-cache/` are git-ignored.
 
-## Native Homebrew IPK (0.6)
+## Native Homebrew IPK (0.8)
 
 `scripts/build_ipk.py` writes an `ar` archive with the same member order as
 ares-cli `package.js`: `debian-binary` (`2.0\n`), `control.tar.gz`,
@@ -84,22 +104,37 @@ ares-cli `package.js`: `debian-binary` (`2.0\n`), `control.tar.gz`,
 `ipk verified failed` (errorCode -5); see the evidence note above. The data
 archive is `usr/palm/applications/org.va7dimar.waylandhello/`
 (`appinfo.json`, `icon.png`, `wayland-hello-launch.sh`, `wayland-hello`).
-It does not call the LG SDK. `make test` builds a stub IPK and checks that
-layout. The ARM package is:
+It does **not** ship `sysbus/` members. `dev/install` on this TV generates
+the LS2 role at `/var/palm/ls2-dev/roles/{pub,prv}/<id>.json` from
+appinfo `main`, and ls-hubd keys that role by `/proc/self/exe`. appinfo
+`main` is therefore the ELF `wayland-hello`, not the wrapper script
+(`tvs/lg-65nano756pr/evidence/ls2-register-proof-2026-11-13.md`). A
+SAM-jailed process cannot see `/var/luna-service2*` and must not write
+LS2 files itself
+(`tvs/lg-65nano756pr/evidence/ls2-roles-retest-2026-11-13.md`). The
+optional `wayland-hello-launch.sh` only dumps env to `/tmp/wh6.log` and
+`exec`s the ELF with the same argv. `make test` builds a stub IPK and
+checks that layout. The ARM package is:
 
 ```sh
 python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello \
-  --out build/ipk/org.va7dimar.waylandhello_0.6.0_arm.ipk
-# optional: --lifecycle omit|1|2   --default-window-type card
+  --out build/ipk/org.va7dimar.waylandhello_0.8.0_arm.ipk
+python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --lifecycle 2 \
+  --out build/ipk/org.va7dimar.waylandhello_0.8.0_arm-lifecycle2.ipk
+# optional: --lifecycle omit|1|2   --default-window-type card|overlay   --heartbeat-ms 1000
 ```
 
 `appinfo.json` id is `org.va7dimar.waylandhello`, type `native`, main
-`wayland-hello-launch.sh`. The default build sets `defaultWindowType` to
-`card` and `noSplashOnLaunch` to true, and leaves
-`nativeLifeCycleInterfaceVersion` out. `--lifecycle 1` or `--lifecycle 2`
-writes that integer. `--default-window-type overlay` (or another short
-token) replaces `card`. Homebrew's appinfo notes say `defaultWindowType`
-defaults to `card` and `noSplashOnLaunch` defaults to false
+`wayland-hello`. It also sets `requiredPermissions` to
+`["application.operation"]`, the ACG the OSE nativeqt sample and the
+[registerApp docs](https://www.webosose.org/docs/reference/ls2-api/com-webos-service-applicationmanager/)
+declare for `com.webos.service.applicationmanager/registerApp`. The default
+build sets `defaultWindowType` to `card` and `noSplashOnLaunch` to true, and
+leaves `nativeLifeCycleInterfaceVersion` out. `--lifecycle 1` or
+`--lifecycle 2` writes that integer. Lifecycle 2 defaults
+`defaultWindowType` to `overlay` (override with `--default-window-type`).
+Homebrew's appinfo notes say `defaultWindowType` defaults to `card` and
+`noSplashOnLaunch` defaults to false
 ([webosbrew.org/pages/appinfojson](https://www.webosbrew.org/pages/appinfojson)).
 Moonlight's packaged appinfo omits all three
 ([mariotaku/moonlight-tv deploy/webos/appinfo.json](https://github.com/mariotaku/moonlight-tv/blob/cf96ecc72cdab3aae7ba0698f463b89065ae7e3b/deploy/webos/appinfo.json)).
@@ -108,46 +143,77 @@ The webosbrew native template does too
 id, type, main, icon, title, version). Stock `com.webos.app.factorywin` on
 this TV sets the lifecycle field to 2 and `defaultWindowType` to `overlay`.
 
-The launcher writes `/tmp/wh6.log`: `env`, then the client's existing `t=`
-lines. If `XDG_RUNTIME_DIR` or `WAYLAND_DISPLAY` is unset it sets them to
-`/tmp/xdg` and `wayland-0`. Stock processes on this TV export
-`XDG_DIR=/tmp/xdg`; this client reads `XDG_RUNTIME_DIR`. The app id passed
-to the client is the `APPID` environment variable when SAM set it, otherwise
-`appId` in the first argument. On the successful launch, argv[1] was
-`{"@system_native_app":true,"nid":"org.va7dimar.waylandhello"}` and `APPID`
-was set. webOS OSE "Developing Built-in Native Apps" says argv[1] is the
-document SAM passes on first launch. The `id` in `appinfo.json` is used only
-when both `APPID` and `appId` are missing.
+SAM native launch puts a JSON document in argv[1]
+([Developing Built-in Native Apps](https://www.webosose.org/docs/guides/development/native-apps/native-app-overview/)).
+On this TV the lifecycle-2 document includes
+`interfaceMethod":"registerApp"` and `interfaceVersion":2`
+(`tvs/lg-65nano756pr/evidence/luna-register-live-2026-11-13.md`). The ELF
+recognises that document: it selects `--demo` (input + spare SHM buffers),
+takes `APPID` then `appId` then appinfo `id`, and if the launch is
+lifecycle 2 it also selects `--luna-register`, `--webos-shell`, and
+`_WEBOS_WINDOW_TYPE_OVERLAY`, with a 90 s safety cap. `--duration` still
+wins when passed. BACK (evdev 158) or EXIT (174) ends it. The hard alarm
+is the cap plus 5 s. The process does **not** exit on `pause` or keyboard
+leave; `close` is a clean exit. `relaunch` re-asserts fullscreen
+(`persist: restore-foreground`). Alive ticks every 5 s are
+`persist: alive`. Those persist steps are **hypothesis** until the next
+on-TV run. The 0.6/0.7 SAM `wl_shell` path still reclaimed at ~31 s
+(`tvs/lg-65nano756pr/evidence/interactive-demo-2026-11-08.md`,
+`tvs/lg-65nano756pr/evidence/ls2-register-proof-2026-11-13.md`).
 
-The launcher runs `wayland-hello --demo --app-id "$APPID"`. `--demo` is
-plain `wl_shell` (no `--webos-shell`), implies `--input`, and moves the
-green square with the remote arrows. A redraw allocates another SHM buffer
-when the current one is still busy, up to 8, and does not paint a busy
-buffer. The 30 s run recorded `releases=0`. BACK (evdev 158) or EXIT (174)
-ends it. `--duration` is only the safety cap: default 120 s with `--demo`,
-still 10 s and at most 30 s without it. The hard alarm is that cap plus 5 s.
-
-`--lifecycle 2` only changes `appinfo.json`. It does not call SAM. The OSE
-built-in sample that sets `nativeLifeCycleInterfaceVersion` to 2 also calls
-`luna://com.webos.service.applicationmanager/registerApp` with `{}` and stays
-subscribed
+`--luna-register` dlopens `/usr/lib/libglib-2.0.so.0` and
+`/usr/lib/libluna-service2.so.3` (or those sonames under
+`WAYLAND_HELLO_LIB_DIR` in tests). It does not add them to NEEDED. It
+`LSRegister`s the `LS2_NAME` environment variable when that is a service
+name, otherwise the `--app-id`. webOS OSE SAM's native container sets
+`LS2_NAME` to `<appId>-<n>` and looks the caller up by that name, then by
+app id
+([NativeContainer.cpp](https://github.com/webosose/sam/blob/96161d3e50670fb21daccfb12a75c35fe406ce0e/src/bus/client/NativeContainer.cpp),
+[ApplicationManager.cpp `registerApp`](https://github.com/webosose/sam/blob/96161d3e50670fb21daccfb12a75c35fe406ce0e/src/bus/service/ApplicationManager.cpp)).
+`registerNativeApp` is bound to that same handler. The call this client
+sends is the one the OSE native sample and the
+[registerApp docs](https://www.webosose.org/docs/reference/ls2-api/com-webos-service-applicationmanager/)
+specify for a native app with lifecycle version 2:
+`luna://com.webos.service.applicationmanager/registerApp` with
+`{"subscribe":true}`
 ([nativeqt ServiceRequest.cpp](https://github.com/webosose/samples/blob/df5fd71410733d120315321e30909e08864f0155/native-apps/built-in/com.example.app.nativeqt/ServiceRequest.cpp),
-[overview](https://www.webosose.org/docs/guides/development/native-apps/native-app-overview/)).
-That sample `LSRegister`s the app id, attaches a GLib main loop
-(`LSGmainAttach`), and uses `LSCall`. The ACG is `application.operation`
-(`requiredPermissions` in that sample's appinfo). Subscription events are
-`registered`, `relaunch` (with `parameters`), `pause`, and `close`
-([registerApp](https://www.webosose.org/docs/reference/ls2-api/com-webos-service-applicationmanager/)).
-Doing it here means dlopen of `libluna-service2` plus a main loop beside
-this client's `poll`, or a child that stays alive for the whole run. A
-one-shot `luna-send -n 1` ends the subscription when that process exits.
-None of that is linked or spawned in this package. Moonlight and the
-webosbrew template ship without the field and without that call.
+[native app overview](https://www.webosose.org/docs/guides/development/native-apps/native-app-overview/)).
+`LSGmainAttach` uses a GLib main loop, and each Wayland `poll` turn calls
+`g_main_context_iteration(NULL, FALSE)` so the reply is not waited on
+([lunaservice.h](https://github.com/webosose/luna-service2/blob/5bc38aa348b35f5799f1bf9ed7c6cb513bc5f702/include/public/luna-service2/lunaservice.h)).
+Every reply is logged. `relaunch` re-asserts fullscreen (OSE nativeqt
+`showFullScreen()` on relaunch; no client ack is required —
+[RunningApp.cpp](https://github.com/webosose/sam/blob/96161d3e50670fb21daccfb12a75c35fe406ce0e/src/base/RunningApp.cpp)).
+`pause` is logged and the surface stays mapped. `close` is a clean exit.
+Moonlight and `webosbrew/template-native-gui-app` do not make this call. A
+missing library fails closed with exit 10 and no surface.
 
-SDK binary SHA256 `54bcb2f27a59a3ff79161d989217a982f577619aa06820d1bb6264263b166bbc`.
-IPK SHA256 `1132d137dbe86236ff44f594cc0698697e0d3a3bec61c05d219eacb8439981fe`.
-Neither file is committed. `abi/wayland-hello-v6-ABI-REPORT.txt` records the
-same binary.
+`--heartbeat-ms` is the other experiment: an SHM redraw on that interval
+while the process is idle, in case Home returns because nothing was drawn
+rather than because luna registration is missing. It is not in the default
+launcher. With no buffer release it still stops at the spare-buffer cap.
+
+Host tests of `--luna-register` use a stand-in library. Registration
+alone does **not** stop the 31 s Home reclaim
+(**verified**, `tvs/lg-65nano756pr/evidence/ls2-register-proof-2026-11-13.md`).
+OSE `RunningApp::registerApp` answers in that call with top-level `event`
+`registered`. If that reply is missing for 2 s, or the process would
+otherwise exit on the safety cap with no ack, this client unregisters and
+exits 10. A nested `event` or `returnValue` does not count. Only top-level
+fields do. The client logs `luna: exe=` from `/proc/self/exe` so a live
+run can be compared with the installer-generated role `exeName`.
+
+SDK binary SHA256 `ef27b70fcdca93f4a71e92c530d2fefd803d5c8f8a62f078919a45c30ff00f2b`.
+Default IPK SHA256 `1f774ab06df06fe5b31b712fa63fbb5c377f95e11e14c9afd5df06a3ac61d054`
+(`nativeLifeCycleInterfaceVersion` omitted; SAM JSON without
+`registerApp` stays on plain `wl_shell`). Lifecycle-2 IPK SHA256
+`e940723ab82be2cebcd1e02639abdcf1317afba960524ebe4dd2a8069fef39dc`
+(the field is 2; `defaultWindowType` overlay; SAM JSON selects luna +
+`wl_webos_shell` overlay). The binary inside both IPKs matches the SDK
+binary. None of those three files is committed.
+`abi/wayland-hello-v8-ABI-REPORT.txt` records the binary. Do not install
+the previous lifecycle-2 hashes `888e96b0e705bec22c4852dd7e1d7eea2b54ea8ff2b2d4cfcbcfe6735a7cf7b1`
+or `0452e5e3956f38aa4f2edad529e0b4804230add8059d2da3ecd5cf555d2b9890`.
 
 ### Install, launch, uninstall
 
@@ -155,8 +221,8 @@ same binary.
 commands are the same shape, with `</dev/null` because `luna-send-pub` reads
 stdin and will swallow a `sh -s` script
 (`tvs/lg-65nano756pr/evidence/sam-launch-success-2026-11-08.md`). Copy the
-IPK to `/tmp/org.va7dimar.waylandhello_0.6.0_arm.ipk` first. Developer mode
-has to already be on.
+IPK to `/tmp` first. The lifecycle-2 package is the persist-past-31s
+experiment. Developer mode has to already be on.
 
 Install uses OSE `com.webos.appInstallService/dev/install` (`id`, absolute
 `ipkUrl`, `subscribe`;
@@ -166,7 +232,13 @@ Homebrew Channel calls that method with `luna-send-pub`
 and `tools/install.sh`).
 
 ```sh
-luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.6.0_arm.ipk","subscribe":true}' </dev/null
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.8.0_arm.ipk","subscribe":true}' </dev/null
+```
+
+The persist build is the same command with `org.va7dimar.waylandhello_0.8.0_arm-lifecycle2.ipk`. Uninstall the first id before installing the second; OSE `dev/install` ignores a second install of the same id.
+
+```sh
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.8.0_arm-lifecycle2.ipk","subscribe":true}' </dev/null
 ```
 
 Launch uses OSE `com.webos.service.applicationmanager/launch` with `{"id":"..."}`
@@ -184,9 +256,26 @@ Uninstall uses OSE `dev/remove` with the app id
 luna-send-pub -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"org.va7dimar.waylandhello","subscribe":true}' </dev/null
 ```
 
-Then read `/tmp/wh6.log`. Arrows should move the green square (`buf: spare`
-when the compositor has not released). BACK or EXIT should end it before the
-120 s cap. Pixels on screen are a separate observation.
+Then read `/tmp/wh6.log`. Exact greps are in
+`tvs/lg-65nano756pr/evidence/persist-past-31s-2026-11-13.md`. For the
+lifecycle-2 package:
+
+1. Role/exe: `luna: exe=` should end in `/wayland-hello` (not
+   `wayland-hello-launch.sh`) and `luna: event=registered` should appear
+   without `-1027`.
+2. Overlay path: `sam: lifecycle2=1`,
+   `_WEBOS_WINDOW_TYPE_OVERLAY`, `webos: set_state` value 3.
+3. Survive past 31 s: a `persist: alive t=` line with `t=` **greater than
+   31000**, and **no** `input: keyboard leave surface=ours` before that
+   (or a leave that is followed by another enter / restore). The process
+   should still be running until the 90 s cap (`exiting (deadline)`).
+4. Fail-closed: `Invalid permissions`, missing `wl_webos_shell`, or
+   missing libwayland-webos-client still exits 9 or 10 with no linger.
+
+Arrows should move the green square (`buf: spare` when the compositor has
+not released). BACK or EXIT should end it before the 90 s cap. Pixels on
+screen are a separate observation. Overlay keeping Home from covering the
+surface is **hypothesis**.
 
 ## PROPOSED on-TV runs for 0.4
 0.1, 0.2, and 0.3 already ran with owner approval. **None of the steps below

@@ -1,0 +1,17 @@
+{
+  "org.va7dimar.waylandhello": [
+    "all",
+    "public",
+    "application.operation"
+  ],
+  "org.va7dimar.waylandhello*": [
+    "all",
+    "public",
+    "application.operation"
+  ],
+  "org.va7dimar.waylandhello-*": [
+    "all",
+    "public",
+    "application.operation"
+  ]
+}

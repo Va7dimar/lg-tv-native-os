@@ -26,7 +26,7 @@ import sys
 import tarfile
 
 APP_ID = "org.va7dimar.waylandhello"
-VERSION = "0.6.0"
+VERSION = "0.8.0"
 ARCH = "arm"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PACKAGING = os.path.join(ROOT, "packaging")
@@ -127,9 +127,13 @@ def render_appinfo(lifecycle="omit", default_window_type="card"):
     return (json.dumps(info, indent=2) + "\n").encode("utf-8")
 
 
-def build_ipk(binary_path, out_path, mtime=0, lifecycle="omit", default_window_type="card"):
+def build_ipk(binary_path, out_path, mtime=0, lifecycle="omit", default_window_type=None, heartbeat_ms=0):
     if not os.path.isfile(binary_path):
         raise SystemExit("binary not found: %s" % binary_path)
+    if default_window_type is None:
+        # Lifecycle-2 persist experiment uses overlay so Home's CARD does not
+        # cover the surface. Plain packages stay card (the 30 s SAM-launch path).
+        default_window_type = "overlay" if str(lifecycle) == "2" else "card"
     files = {
         "appinfo.json": (render_appinfo(lifecycle, default_window_type), 0o644),
         "icon.png": (None, 0o644),
@@ -147,6 +151,10 @@ def build_ipk(binary_path, out_path, mtime=0, lifecycle="omit", default_window_t
         binary = fh.read()
     payload += len(binary)
     members.append((APP_PREFIX + "/wayland-hello", binary, 0o755))
+    if heartbeat_ms:
+        hb = ("%d\n" % int(heartbeat_ms)).encode("ascii")
+        payload += len(hb)
+        members.append((APP_PREFIX + "/heartbeat-ms", hb, 0o644))
     members.sort(key=lambda item: item[0])
     installed = max(1, (payload + 1023) // 1024)
     control_gz = _tar_gzip([("control", _control(installed), 0o644)], mtime)
@@ -184,15 +192,24 @@ def main(argv):
     )
     parser.add_argument(
         "--default-window-type",
-        default="card",
-        help="appinfo.json defaultWindowType (default card)",
+        default=None,
+        help="appinfo.json defaultWindowType (card, or overlay when --lifecycle 2)",
+    )
+    parser.add_argument(
+        "--heartbeat-ms",
+        type=int,
+        default=0,
+        help="write heartbeat-ms next to the ELF; the client reads it on SAM launch (0 omits it)",
     )
     args = parser.parse_args(argv)
+    if args.heartbeat_ms and not 100 <= args.heartbeat_ms <= 60000:
+        raise SystemExit("--heartbeat-ms must be 0 or 100..60000")
     path = build_ipk(
         args.binary,
         args.out,
         lifecycle=args.lifecycle,
         default_window_type=args.default_window_type,
+        heartbeat_ms=args.heartbeat_ms,
     )
     print(path)
     return 0
