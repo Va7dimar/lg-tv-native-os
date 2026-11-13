@@ -1,4 +1,54 @@
-# wayland-hello: minimal legacy Wayland client prototype (OFF-TV)
+# wayland-hello: a native Wayland app for rooted LG webOS TVs
+
+A small C client that draws full-screen on an LG webOS 6 TV's own Wayland compositor,
+reads the remote's keys, and registers with SAM (the webOS application manager) as a
+lifecycle-2 native app. Validated on an LG 65NANO756PR (webOS 6.5.3-47). Prototype only:
+no hardware compatibility guarantee for other models.
+
+## Status (v0.9.0)
+
+| Feature | State |
+|---|---|
+| Full-screen SHM surface via `wl_shell`, remote arrow keys | TV-validated |
+| IPK install via `dev/install`, launch via SAM | TV-validated |
+| Lifecycle-2 `registerApp` (appinfo `main` = the ELF, so the auto-generated LS2 role matches `/proc/self/exe`) | TV-validated |
+| `wl_webos_shell` overlay staying up past SAM's ~31 s Home reclaim | Logs show the full 90 s cap reached; on-screen visibility not yet confirmed ([run note](../../tvs/lg-65nano756pr/evidence/persist-90s-tv-run-2026-11-13.md)) |
+| `--menu` tile launcher (Demo / About / Exit) | Host-tested only, never run on a TV |
+
+## Quick start
+
+Off-TV (any Linux host with gcc, make, python3, gpgv):
+
+```sh
+make test                                   # host build + mock-compositor tests, no TV needed
+python3 -I scripts/fetch_openlgtv_sdk.py    # pinned openlgtv SDK; fails closed on digest/signature mismatch
+make sdk-abi                                # ARM soft-float build + ABI report
+python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --lifecycle 2 \
+  --out build/ipk/org.va7dimar.waylandhello_0.9.0_arm-lifecycle2.ipk
+```
+
+On the TV (already rooted, Homebrew Channel + root SSH; this repo contains no rooting steps):
+copy the IPK to `/tmp`, then
+
+```sh
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.9.0_arm-lifecycle2.ipk","subscribe":true}' </dev/null
+luna-send-pub -n 1 luna://com.webos.service.applicationmanager/launch '{"id":"org.va7dimar.waylandhello"}' </dev/null
+# BACK/EXIT or the 90 s cap ends it; log: /tmp/wh6.log
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"org.va7dimar.waylandhello","subscribe":true}' </dev/null
+```
+
+`</dev/null` matters: `luna-send-pub` reads stdin. Uninstall before reinstalling the same id.
+What to grep for in the log is listed under "Install, launch, uninstall" in the detailed notes below.
+
+> **Safety:** never write to kernel, rootfs or tvservice partitions (guaranteed brick).
+> This app only lives in `/tmp` and the dev-install app directory. A power cycle is not a
+> proven recovery on this TV (snapshot boot).
+
+---
+
+## Detailed notes and run history
+
+_Original prototype notes (minimal legacy Wayland client, built off-TV)._
 
 A prototype only, not part of a complete OS. **No hardware compatibility guarantee.**
 Version 0.1 was cross-built and, with separate owner approval, run twice on the
