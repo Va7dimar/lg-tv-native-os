@@ -28,7 +28,12 @@ A hand-built IPK of the 0.5 binary, launched by SAM in plain `wl_shell`
 mode, held the full screen and keyboard focus for 30 s
 (`tvs/lg-65nano756pr/evidence/sam-launch-success-2026-11-08.md`). The same
 launch with `--webos-shell` was not shown. Version 0.6 packages that plain
-path as `--demo`. **This package has not been installed on the TV.**
+path as `--demo`. That demo was run: arrows move the square and redraws reach
+the screen. About 31 s after launch, SAM `last_input_handler` relaunches
+Home and hides the surface while the process keeps running
+(`tvs/lg-65nano756pr/evidence/interactive-demo-2026-11-08.md`). Version 0.7
+adds optional luna registration and an idle redraw. **0.7 has not been
+installed on the TV.**
 
 ## What it does
 - Connects to `$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY`. Defaults: `/tmp/xdg` and `wayland-0`. Override with `--runtime-dir` / `--display`. The name must not contain `/`.
@@ -50,7 +55,7 @@ path as `--demo`. **This package has not been installed on the TV.**
 - **Controlled failure on allocation.** Every constructor or bind proxy (`wl_registry`, `wl_callback`, `wl_compositor`, `wl_shm`, `wl_shell`, `wl_surface`, `wl_shell_surface`, `wl_shm_pool`, `wl_buffer`) is NULL-checked before it is marshalled or given a listener. Every `wl_proxy_add_listener` return value is checked, and listeners are installed before the creating request goes out. A NULL proxy exits 7 (`EX_ALLOC`). A failed listener install exits 4. Both run cleanup.
 - **SHM backing.** Each buffer is bounded to ≤1920x1080x4 (8 MiB) and ≤`INT32_MAX`. Its unlinked temp file is backed by `posix_fallocate()`, and the size is checked with `fstat()` before `mmap()`. Any non-zero `posix_fallocate` result fails closed with exit 7: ENOSPC, EFBIG, EINVAL, ENODEV, or EOPNOTSUPP/unsupported filesystem. There is no sparse `ftruncate` fallback. This prevents SIGBUS when the program paints into a full tmpfs. It does **not** stop a hostile compositor from truncating the shared fd.
 
-Exit codes: 0 ok, 2 usage, 3 connect, 4 protocol/timeout/listener-install failure, 5 no wl_shell, 6 libwayland load, 7 proxy allocation or SHM allocation/backing failure, 8 `--input` but no `wl_seat`, 9 `--webos-shell` but the global or the runtime interface is unusable, 124 hard deadline.
+Exit codes: 0 ok, 2 usage, 3 connect, 4 protocol/timeout/listener-install failure, 5 no wl_shell, 6 libwayland load, 7 proxy allocation or SHM allocation/backing failure, 8 `--input` but no `wl_seat`, 9 `--webos-shell` but the global or the runtime interface is unusable, 10 `--luna-register` but libluna-service2 or libglib did not load or `registerApp` could not be sent, 124 hard deadline.
 
 ## ABI strategy
 - Target: ELF32 ARM, EABI5, **soft-float calling convention** (`-march=armv5te -marm -mfloat-abi=soft`, the Debian armel baseline). The TV compositor's captured `e_flags=0x05000200` shows EABI5 soft-float. Its build attributes (`readelf -A`) were **never captured**, so nothing beyond that is claimed about it.
@@ -89,8 +94,10 @@ layout. The ARM package is:
 
 ```sh
 python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello \
-  --out build/ipk/org.va7dimar.waylandhello_0.6.0_arm.ipk
-# optional: --lifecycle omit|1|2   --default-window-type card
+  --out build/ipk/org.va7dimar.waylandhello_0.7.0_arm.ipk
+python3 -I scripts/build_ipk.py --binary build/sdk/wayland-hello --lifecycle 2 \
+  --out build/ipk/org.va7dimar.waylandhello_0.7.0_arm-lifecycle2.ipk
+# optional: --lifecycle omit|1|2   --default-window-type card   --heartbeat-ms 1000
 ```
 
 `appinfo.json` id is `org.va7dimar.waylandhello`, type `native`, main
@@ -127,27 +134,57 @@ buffer. The 30 s run recorded `releases=0`. BACK (evdev 158) or EXIT (174)
 ends it. `--duration` is only the safety cap: default 120 s with `--demo`,
 still 10 s and at most 30 s without it. The hard alarm is that cap plus 5 s.
 
-`--lifecycle 2` only changes `appinfo.json`. It does not call SAM. The OSE
-built-in sample that sets `nativeLifeCycleInterfaceVersion` to 2 also calls
-`luna://com.webos.service.applicationmanager/registerApp` with `{}` and stays
-subscribed
-([nativeqt ServiceRequest.cpp](https://github.com/webosose/samples/blob/df5fd71410733d120315321e30909e08864f0155/native-apps/built-in/com.example.app.nativeqt/ServiceRequest.cpp),
-[overview](https://www.webosose.org/docs/guides/development/native-apps/native-app-overview/)).
-That sample `LSRegister`s the app id, attaches a GLib main loop
-(`LSGmainAttach`), and uses `LSCall`. The ACG is `application.operation`
-(`requiredPermissions` in that sample's appinfo). Subscription events are
-`registered`, `relaunch` (with `parameters`), `pause`, and `close`
-([registerApp](https://www.webosose.org/docs/reference/ls2-api/com-webos-service-applicationmanager/)).
-Doing it here means dlopen of `libluna-service2` plus a main loop beside
-this client's `poll`, or a child that stays alive for the whole run. A
-one-shot `luna-send -n 1` ends the subscription when that process exits.
-None of that is linked or spawned in this package. Moonlight and the
-webosbrew template ship without the field and without that call.
+When `appinfo.json` has `nativeLifeCycleInterfaceVersion` 2, the same
+launcher also passes `--luna-register`. A `heartbeat-ms` file of digits, if
+the package contains one, is passed as `--heartbeat-ms`. The default
+package has neither.
 
-SDK binary SHA256 `54bcb2f27a59a3ff79161d989217a982f577619aa06820d1bb6264263b166bbc`.
-IPK SHA256 `1132d137dbe86236ff44f594cc0698697e0d3a3bec61c05d219eacb8439981fe`.
-Neither file is committed. `abi/wayland-hello-v6-ABI-REPORT.txt` records the
-same binary.
+`--luna-register` dlopens `/usr/lib/libglib-2.0.so.0` and
+`/usr/lib/libluna-service2.so.3` (or those sonames under
+`WAYLAND_HELLO_LIB_DIR` in tests). It does not add them to NEEDED. It
+`LSRegister`s the `LS2_NAME` environment variable when that is a service
+name, otherwise the `--app-id`. webOS OSE SAM's native container sets
+`LS2_NAME` to `<appId>-<n>` and looks the caller up by that name, then by
+app id
+([NativeContainer.cpp](https://github.com/webosose/sam/blob/96161d3e50670fb21daccfb12a75c35fe406ce0e/src/bus/client/NativeContainer.cpp),
+[ApplicationManager.cpp `registerApp`](https://github.com/webosose/sam/blob/96161d3e50670fb21daccfb12a75c35fe406ce0e/src/bus/service/ApplicationManager.cpp)).
+`registerNativeApp` is bound to that same handler. The call this client
+sends is the one the OSE native sample and the
+[registerApp docs](https://www.webosose.org/docs/reference/ls2-api/com-webos-service-applicationmanager/)
+specify for a native app with lifecycle version 2:
+`luna://com.webos.service.applicationmanager/registerApp` with
+`{"subscribe":true}`
+([nativeqt ServiceRequest.cpp](https://github.com/webosose/samples/blob/df5fd71410733d120315321e30909e08864f0155/native-apps/built-in/com.example.app.nativeqt/ServiceRequest.cpp),
+[native app overview](https://www.webosose.org/docs/guides/development/native-apps/native-app-overview/)).
+`LSGmainAttach` uses a GLib main loop, and each Wayland `poll` turn calls
+`g_main_context_iteration(NULL, FALSE)` so the reply is not waited on
+([lunaservice.h](https://github.com/webosose/luna-service2/blob/5bc38aa348b35f5799f1bf9ed7c6cb513bc5f702/include/public/luna-service2/lunaservice.h)).
+Every reply is logged. `relaunch` is logged and the process stays up.
+`close` is a clean exit. Moonlight and `webosbrew/template-native-gui-app`
+do not make this call. A missing library fails closed with exit 10 and no
+surface.
+
+`--heartbeat-ms` is the other experiment: an SHM redraw on that interval
+while the process is idle, in case Home returns because nothing was drawn
+rather than because luna registration is missing. It is not in the default
+launcher. With no buffer release it still stops at the spare-buffer cap.
+
+Host tests of `--luna-register` use a stand-in library. They do not show
+that registration stops the 31 s Home relaunch. No v0.7 `registerApp` reply
+has been seen on the TV. OSE `RunningApp::registerApp` answers in that
+call with top-level `event` `registered`. If that reply is missing for 2 s,
+or the process would otherwise exit on the safety cap with no ack, this
+client unregisters and exits 10. A nested `event` or `returnValue` does not
+count. Only top-level fields do.
+
+SDK binary SHA256 `673dfb9b98a8d170bb1be328af426afa4e966e06393b05b6c4beeb70359f1c30`.
+Default IPK SHA256 `2fabc28a1bc35847111c5227af0b369c13ce6c43c599a16f3fa422121c0718d1`
+(`nativeLifeCycleInterfaceVersion` omitted; launcher does not pass
+`--luna-register`). Lifecycle-2 IPK SHA256
+`888e96b0e705bec22c4852dd7e1d7eea2b54ea8ff2b2d4cfcbcfe6735a7cf7b1`
+(the field is 2; the launcher passes `--luna-register`). The binary inside
+both IPKs matches the SDK binary. None of those three files is committed.
+`abi/wayland-hello-v7-ABI-REPORT.txt` records the binary.
 
 ### Install, launch, uninstall
 
@@ -155,7 +192,8 @@ same binary.
 commands are the same shape, with `</dev/null` because `luna-send-pub` reads
 stdin and will swallow a `sh -s` script
 (`tvs/lg-65nano756pr/evidence/sam-launch-success-2026-11-08.md`). Copy the
-IPK to `/tmp/org.va7dimar.waylandhello_0.6.0_arm.ipk` first. Developer mode
+IPK to `/tmp` first. The lifecycle-2 package is the registration experiment.
+Developer mode
 has to already be on.
 
 Install uses OSE `com.webos.appInstallService/dev/install` (`id`, absolute
@@ -166,7 +204,13 @@ Homebrew Channel calls that method with `luna-send-pub`
 and `tools/install.sh`).
 
 ```sh
-luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.6.0_arm.ipk","subscribe":true}' </dev/null
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.7.0_arm.ipk","subscribe":true}' </dev/null
+```
+
+The registration build is the same command with `org.va7dimar.waylandhello_0.7.0_arm-lifecycle2.ipk`. Uninstall the first id before installing the second; OSE `dev/install` ignores a second install of the same id.
+
+```sh
+luna-send-pub -n 1 luna://com.webos.appInstallService/dev/install '{"id":"org.va7dimar.waylandhello","ipkUrl":"/tmp/org.va7dimar.waylandhello_0.7.0_arm-lifecycle2.ipk","subscribe":true}' </dev/null
 ```
 
 Launch uses OSE `com.webos.service.applicationmanager/launch` with `{"id":"..."}`

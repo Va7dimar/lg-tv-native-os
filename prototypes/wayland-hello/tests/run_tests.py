@@ -51,7 +51,7 @@ def parser_tests():
     check("v2 flags parse", rc == 0 and "input=1" in out and "webos_shell=1" in out and "egl=1" in out
           and "app_id=wayland-hello-prototype" in out, out)
     rc, out, _, _ = run(["--version"])
-    check("version 0.6", rc == 0 and "0.6-prototype" in out, out)
+    check("version 0.7", rc == 0 and "0.7-prototype" in out, out)
     rc, _, err, _ = run(["--parse-only", "--window-type", "_WEBOS_WINDOW_TYPE_OVERLAY"])
     check("window-type requires webos shell", rc == 2, "rc=%d %s" % (rc, err))
     rc, _, err, _ = run(["--parse-only", "--webos-shell", "--window-type", "OVERLAY"])
@@ -67,6 +67,10 @@ def parser_tests():
     check("demo duration can exceed 30", rc == 0 and "duration_s=45" in out, out)
     rc, _, err, _ = run(["--parse-only", "--demo", "--webos-shell"])
     check("demo rejects webos-shell", rc == 2 and "plain wl_shell" in err, err)
+    rc, out, err, _ = run(["--parse-only", "--luna-register", "--heartbeat-ms", "500"])
+    check("luna and heartbeat parse", rc == 0 and "luna_register=1" in out and "heartbeat_ms=500" in out, out + err)
+    rc, _, err, _ = run(["--parse-only", "--heartbeat-ms", "50"])
+    check("reject heartbeat below 100", rc == 2 and "100..60000" in err, err)
     rc, _, err, _ = run(["--parse-only", "--duration", "45"])
     check("reject duration 45 without demo", rc == 2 and "1..30" in err, err)
     rc, _, err, _ = run(["--parse-only", "--webos-key-mask"])
@@ -393,6 +397,169 @@ def telemetry_tests():
     (rc, out, err, dt), ev, _ = with_mock(["--seats", "1", "--input-script", "p174"],
                                           ["--demo", "--duration", "6"])
     check("demo exits on EXIT", rc == 0 and dt < 4.0 and "exiting (exit-key)" in err, "rc=%d dt=%.2f" % (rc, dt))
+
+    (rc, out, err, dt), ev, _ = with_mock([], ["--luna-register", "--duration", "2"],
+                                          env_extra={"WAYLAND_HELLO_LIB_DIR": "/tmp/wayland-hello-no-luna"})
+    check("missing luna library fails closed", rc == 10 and "libluna-service2.so.3" in err and "Failing closed" in err, err[-500:])
+    check("missing luna sends no bind", not any(e.get("req") == "bind" for e in ev), str(ev)[:400])
+
+    fix = tempfile.mkdtemp(prefix="wlh-luna-")
+    so = os.path.join(fix, "libluna-service2.so.3")
+    built = subprocess.run(["gcc", "-shared", "-fPIC", "-std=c99", "-o", so,
+                            os.path.join(HERE, "luna_fixture.c")],
+                           capture_output=True, text=True)
+    check("luna fixture builds", built.returncode == 0, built.stderr)
+    if built.returncode == 0:
+        os.symlink("libluna-service2.so.3", os.path.join(fix, "libglib-2.0.so.0"))
+        (rc, out, err, dt), ev, _ = with_mock([], ["--luna-register", "--duration", "2"],
+                                              env_extra={"WAYLAND_HELLO_LIB_DIR": fix, "LS2_NAME": "org.va7dimar.waylandhello-3"})
+        check("luna register uses LS2_NAME and exits on close",
+              rc == 0 and "luna: register name=org.va7dimar.waylandhello-3 source=LS2_NAME" in err
+              and "luna: LSCall luna://com.webos.service.applicationmanager/registerApp {\"subscribe\":true}" in err
+              and "luna: event=registered" in err and "luna: event=relaunch" in err
+              and "luna: event=close" in err and "exiting (luna-close)" in err
+              and "fixture: iterate ctx=null block=0" in err
+              and err.find("fixture: LSUnregister") > err.find("luna: event=close"), err[-1500:])
+
+        def luna_case(name, script, args, timeout=40):
+            env = {"WAYLAND_HELLO_LIB_DIR": fix}
+            if script:
+                env["WAYLAND_HELLO_LUNA_SCRIPT"] = script
+            return with_mock([], args, timeout=timeout, env_extra=env)
+
+        (rc, out, err, dt), ev, _ = luna_case("reject", "reject", ["--luna-register", "--duration", "4"])
+        check("rejected registerApp fails closed before a surface",
+              rc == 10 and "luna: reply rejected" in err and "returnValue\":false" in err
+              and "exiting (luna-reject)" in err
+              and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-500:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("regfail", "register-fail", ["--luna-register", "--duration", "4"])
+        check("LSRegister failure logs the luna error",
+              rc == 10 and "luna: LSRegister failed code=1 message=register refused" in err
+              and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("attachfail", "attach-fail", ["--luna-register", "--duration", "4"])
+        check("LSGmainAttach failure logs the luna error",
+              rc == 10 and "luna: LSGmainAttach failed code=2 message=attach refused" in err
+              and "fixture: LSUnregister" in err
+              and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("callfail", "call-fail", ["--luna-register", "--duration", "4"])
+        check("LSCall failure logs the luna error and still unregisters",
+              rc == 10 and "luna: LSCall failed code=3 message=call refused" in err
+              and err.find("fixture: LSUnregister") > err.find("luna: LSCall failed")
+              and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("nested", "nested-close", ["--luna-register", "--duration", "4"])
+        check("top-level close wins over a nested event",
+              rc == 0 and "exiting (luna-close)" in err and "event=relaunch" not in err, err[-500:])
+
+        (rc, out, err, dt), ev, _ = luna_case("relaunch", "relaunch-only", ["--luna-register", "--duration", "2"])
+        polls = 0
+        for line in err.splitlines():
+            if "luna_polls=" in line:
+                polls = int(line.split("luna_polls=")[1].split()[0])
+        check("relaunch does not exit and polling continues",
+              rc == 0 and dt > 1.2 and "luna: event=relaunch" in err and "luna-close" not in err
+              and "exiting (deadline)" in err and polls >= 5 and "fixture: LSUnregister" in err,
+              "rc=%d dt=%.2f polls=%d %s" % (rc, dt, polls, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("late", "close-late", ["--luna-register", "--duration", "8"], timeout=20)
+        check("close during the poll loop exits before the safety cap",
+              rc == 0 and dt < 6.0 and "exiting (luna-close)" in err, "rc=%d dt=%.2f" % (rc, dt))
+
+        (rc, out, err, dt), ev, _ = luna_case("silent", "silent", ["--luna-register", "--duration", "6"], timeout=15)
+        check("silent bus fails closed",
+              rc == 10 and "exiting (luna-reject)" in err and "luna: no registerApp reply after" in err
+              and "luna_replies=0" in err and 1.2 < dt < 3.5
+              and err.find("fixture: LSUnregister") > err.find("no registerApp reply after"),
+              "rc=%d dt=%.2f %s" % (rc, dt, err[-500:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("nesta", "nest-close-inside", ["--luna-register", "--duration", "2"])
+        check("nested event=close does not end a top-level relaunch",
+              rc == 0 and dt > 1.2 and "luna: event=relaunch" in err and "luna-close" not in err,
+              "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+        (rc, out, err, dt), ev, _ = luna_case("nestb", "nest-close-outside", ["--luna-register", "--duration", "2"])
+        check("top-level relaunch wins when nested close comes first",
+              rc == 0 and dt > 1.2 and "luna: event=relaunch" in err and "luna-close" not in err,
+              "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+        (rc, out, err, dt), ev, _ = luna_case("nestrv", "nest-true-then-false", ["--luna-register", "--duration", "4"])
+        check("top-level returnValue false is not masked by a nested true",
+              rc == 10 and "exiting (luna-reject)" in err and not any(e.get("req") == "bind" for e in ev),
+              "rc=%d %s" % (rc, err[-400:]))
+        (rc, out, err, dt), ev, _ = luna_case("nestrv2", "nest-false-then-true", ["--luna-register", "--duration", "2"])
+        check("nested returnValue false does not mask a top-level registered",
+              rc == 0 and dt > 1.2 and "luna: event=registered" in err and "luna-reject" not in err,
+              "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = with_mock(
+            ["--stall"], ["--luna-register", "--duration", "3"], timeout=10,
+            env_extra={"WAYLAND_HELLO_LIB_DIR": fix, "WAYLAND_HELLO_LUNA_SCRIPT": "close-startup"})
+        check("stalled startup roundtrip aborts on luna close",
+              rc == 0 and dt < 0.8 and "exiting (luna-close)" in err
+              and "roundtrip deadline exceeded" not in err,
+              "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("late", "late-reject", ["--luna-register", "--duration", "6"], timeout=20)
+        check("mid-run reject exits as luna-reject",
+              rc == 10 and "exiting (luna-reject)" in err and "exiting (deadline)" not in err
+              and "commit-queued" in err, "rc=%d dt=%.2f %s" % (rc, dt, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("hub", "hub", ["--luna-register", "--duration", "4"])
+        check("hub error fails closed",
+              rc == 10 and "exiting (luna-reject)" in err and "Unknown method" in err
+              and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("dryreject", "reject-roundtrip",
+                                              ["--dry-run", "--luna-register", "--duration", "4"])
+        check("dry-run does not return 0 after a reject",
+              rc == 10 and "exiting (luna-reject)" in err and "dry-run: no surfaces created" not in out,
+              "rc=%d out=%s err=%s" % (rc, out[-200:], err[-400:]))
+
+        (rc, out, err, dt), ev, _ = luna_case("closestart", "close-startup", ["--luna-register", "--duration", "4"])
+        check("close during startup does not commit a surface",
+              rc == 0 and "exiting (luna-close)" in err
+              and not any(e.get("req") in ("commit", "create_surface") for e in ev),
+              "rc=%d %s" % (rc, err[-400:]))
+
+        (rc, out, err, dt), ev, _ = with_mock([], ["--luna-register", "--duration", "2"],
+                                              env_extra={"WAYLAND_HELLO_LIB_DIR": fix, "LS2_NAME": "bad name"})
+        check("unusable LS2_NAME falls back to the app id",
+              rc == 0 and "source=app-id" in err and "not a usable service name" in err, err[-500:])
+
+        partial = tempfile.mkdtemp(prefix="wlh-luna-partial-")
+        partial_so = os.path.join(partial, "libluna-service2.so.3")
+        partial_build = subprocess.run(
+            ["gcc", "-shared", "-fPIC", "-std=c99", "-DLUNA_OMIT_ATTACH", "-o", partial_so,
+             os.path.join(HERE, "luna_fixture.c")],
+            capture_output=True, text=True)
+        check("partial luna fixture builds", partial_build.returncode == 0, partial_build.stderr)
+        if partial_build.returncode == 0:
+            os.symlink("libluna-service2.so.3", os.path.join(partial, "libglib-2.0.so.0"))
+            (rc, out, err, dt), ev, _ = with_mock([], ["--luna-register", "--duration", "2"],
+                                                  env_extra={"WAYLAND_HELLO_LIB_DIR": partial})
+            check("missing LSGmainAttach fails closed",
+                  rc == 10 and "missing symbol LSGmainAttach" in err
+                  and not any(e.get("req") == "bind" for e in ev), "rc=%d %s" % (rc, err[-400:]))
+
+    sample = (
+        "luna: LSCall luna://com.webos.service.applicationmanager/registerApp {\"subscribe\":true}\n"
+        "luna: no registerApp reply after 2000ms\n"
+        "info: exiting (deadline)\n"
+        "summary: commits=1 luna_replies=0 luna_polls=4\n"
+    )
+    logf = os.path.join(tempfile.mkdtemp(prefix="wlh-wh6-"), "wh6.log")
+    with open(logf, "w", encoding="utf-8") as fh:
+        fh.write(sample)
+    classified = subprocess.run(
+        ["python3", "-I", os.path.join(os.path.dirname(HERE), "scripts", "classify_wh6_log.py"), logf],
+        capture_output=True, text=True)
+    check("wh6 classifier names a silent bus",
+          classified.returncode == 0 and classified.stdout == "replies=0\nreply=none\nexit=deadline\nmarker=yes\n",
+          classified.stdout + classified.stderr)
+
+    (rc, out, err, dt), ev, _ = with_mock([], ["--heartbeat-ms", "400", "--duration", "2"])
+    check("heartbeat ticks while idle", rc == 0 and "heartbeat: tick n=2" in err, err[-500:])
 
     (rc, out, err, dt), ev, _ = with_mock(["--configure", "800x600", "--no-release"], ["--duration", "2"])
     check("resize logs generations and busy destruction",

@@ -182,3 +182,46 @@ to true, and omits `nativeLifeCycleInterfaceVersion`. `--lifecycle 2` and
 matches the SDK binary. `abi/wayland-hello-v6-ABI-REPORT.txt`
 ABI CHECK PASS, `e_flags 0x5000200`, max `GLIBC_2.4`, NEEDED `libc.so.6`,
 `libdl.so.2`, `librt.so.1`. No 0.6 binary or IPK was copied to or run on the TV.
+
+## 2026-11-08: wayland-hello 0.7 (luna register and heartbeat)
+
+The 0.6 demo stayed on screen until about 31 s, when SAM
+`last_input_handler` relaunched Home and hid the surface. The process kept
+running (`tvs/lg-65nano756pr/evidence/interactive-demo-2026-11-08.md`). 0.7
+adds `--luna-register` (dlopen of libluna-service2 and libglib, `registerApp`
+with subscribe, `LS2_NAME` when set) and `--heartbeat-ms`. NEEDED stays
+libc/libdl/librt.
+
+Host `make test`: **163 tests, 0 failed**, plus `tests/test_ipk.py` (0 failed).
+Review fixes: a rejected reply logs `exiting (luna-reject)` and returns 10;
+`LSRegister`/`LSGmainAttach`/`LSCall` log the luna error code and message;
+`--dry-run` does not return 0 after a reject; `close` during startup does
+not commit a surface. That does not show the 31 s Home relaunch is fixed.
+
+A later host-only review of `71f07e5` held on three points, each with a
+test that failed on that binary and passed after the change. Lifecycle
+`event`, `returnValue`, `errorCode`, and `errorText` are read only at the
+top level of the reply. A startup Wayland roundtrip returns as soon as
+`quit` or `fatal` is set, so a luna close during a stalled sync keeps
+`exiting (luna-close)` instead of waiting out the safety cap. `--luna-register`
+requires a top-level `event` `registered` within 2 s (`LUNA_REGISTER_ACK_MS`).
+OSE `RunningApp::registerApp` sends that reply in the same call; no public
+path was found where a successful register stays silent, so there is no
+fail-open flag. A missing ack unregisters and exits 10
+(`luna: no registerApp reply after`, `exiting (luna-reject)`).
+
+Host `make test` after that change: **168 tests, 0 failed**, plus
+`tests/test_ipk.py` (0 failed). The six new checks failed on the
+pre-change host binary (168 run, 6 failed) and pass on this one.
+
+SDK binary SHA256
+`673dfb9b98a8d170bb1be328af426afa4e966e06393b05b6c4beeb70359f1c30`.
+Default IPK SHA256
+`2fabc28a1bc35847111c5227af0b369c13ce6c43c599a16f3fa422121c0718d1`.
+Lifecycle-2 IPK SHA256
+`888e96b0e705bec22c4852dd7e1d7eea2b54ea8ff2b2d4cfcbcfe6735a7cf7b1`.
+The binary inside both IPKs matches the SDK binary.
+`abi/wayland-hello-v7-ABI-REPORT.txt` ABI CHECK PASS, `e_flags 0x5000200`,
+max `GLIBC_2.4`, NEEDED `libc.so.6`, `libdl.so.2`, `librt.so.1`. No 0.7
+binary or IPK was copied to or run on the TV. These hashes replace
+`cd2c0497…`, `c02f98bb…`, and `e1679f75…`. Do not install those.

@@ -56,6 +56,13 @@ if [ -z "$APPID_VALUE" ]; then
 	APPID_SOURCE=fallback
 fi
 
+# nativeLifeCycleInterfaceVersion is a number. 2 means SAM's registerApp path.
+LIFE=$(printf '%s\n' "$APPINFO" | sed -n 's/.*"nativeLifeCycleInterfaceVersion" *: *\([0-9][0-9]*\).*/\1/p' | head -n 1)
+HB=
+if [ -f "$APP_DIR/heartbeat-ms" ]; then
+	HB=$(tr -cd '0-9' < "$APP_DIR/heartbeat-ms" | head -c 6)
+fi
+
 XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/tmp/xdg}
 WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
 export XDG_RUNTIME_DIR WAYLAND_DISPLAY
@@ -68,6 +75,7 @@ export XDG_RUNTIME_DIR WAYLAND_DISPLAY
 	echo "app_dir=$APP_DIR"
 	echo "app_id=$APPID_VALUE"
 	echo "app_id_source=$APPID_SOURCE"
+	echo "lifecycle=${LIFE:-omit}"
 	echo "xdg_runtime_dir=$XDG_RUNTIME_DIR"
 	echo "wayland_display=$WAYLAND_DISPLAY"
 	echo "argv_count=$#"
@@ -86,7 +94,12 @@ export XDG_RUNTIME_DIR WAYLAND_DISPLAY
 	echo "----- client -----"
 } >>"$LOG" 2>&1
 
-exec "$APP_DIR/wayland-hello" \
-	--demo \
-	--app-id "$APPID_VALUE" \
-	>>"$LOG" 2>&1
+set -- --demo
+if [ "$LIFE" = "2" ]; then
+	set -- "$@" --luna-register
+fi
+if [ -n "$HB" ]; then
+	set -- "$@" --heartbeat-ms "$HB"
+fi
+set -- "$@" --app-id "$APPID_VALUE"
+exec "$APP_DIR/wayland-hello" "$@" >>"$LOG" 2>&1

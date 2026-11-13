@@ -192,6 +192,7 @@ def main():
                   args.strip() == "--demo --app-id org.va7dimar.fromenv",
                   args)
             check("launcher does not pass webos-shell", "--webos-shell" not in args, args)
+            check("default launcher does not register", "--luna-register" not in args, args)
         if os.path.exists(log):
             os.remove(log)
 
@@ -236,6 +237,27 @@ def main():
         with open(out_v2, "rb") as fh:
             v2_members = dict(parse_ar(fh.read()))
         v2_info = json.loads(Archive(v2_members["data.tar.gz"]).read(prefix + "appinfo.json").decode("utf-8"))
+        with open(os.path.join(app, "appinfo.json"), "w", encoding="utf-8") as fh:
+            json.dump(v2_info, fh)
+        with open(os.path.join(app, "heartbeat-ms"), "w", encoding="utf-8") as fh:
+            fh.write("1000\n")
+        run = subprocess.run(
+            ["sh", os.path.join(app, "wayland-hello-launch.sh")],
+            cwd=app, env=env, capture_output=True, text=True,
+        )
+        check("lifecycle 2 launcher exits 0", run.returncode == 0, run.stderr)
+        arg_files = [n for n in os.listdir("/tmp") if n.startswith("wh6-args.")]
+        check("lifecycle 2 launcher passes luna and heartbeat", len(arg_files) == 1, str(arg_files))
+        if arg_files:
+            with open(os.path.join("/tmp", arg_files[0]), encoding="utf-8") as fh:
+                args = fh.read().strip()
+            os.remove(os.path.join("/tmp", arg_files[0]))
+            check("lifecycle 2 exec args",
+                  args == "--demo --luna-register --heartbeat-ms 1000 --app-id org.va7dimar.waylandhello",
+                  args)
+        if os.path.exists(log):
+            os.remove(log)
+
         check("lifecycle 2 is written", v2_info.get("nativeLifeCycleInterfaceVersion") == 2, str(v2_info))
         check("window type flag is written", v2_info.get("defaultWindowType") == "overlay", str(v2_info))
         check("splash stays off when flags change", v2_info.get("noSplashOnLaunch") is True, str(v2_info))
