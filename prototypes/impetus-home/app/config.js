@@ -45,10 +45,12 @@ window.IMPETUS_CONFIG = {
   ],
 
   // App ids listed here come first, in this order; the rest follow by name.
-  order: ["youtube.leanback.v4", "com.disney.disneyplus-prod", "spotify-beehive"],
+  order: ["youtube.leanback.v4", "spotify-beehive"],
   // App ids never shown. Inputs are not apps (they are system apps) and never
   // show in the list; only the Apple TV door above reaches one.
-  hide: ["netflix", "amazon", "ui30", "tv.twitch.tv.starshot.lg"],   // Netflix, Prime Video, Rakuten TV, Twitch
+  // Netflix, Prime Video, Rakuten TV, Twitch, Disney+, Tennis TV, Viaplay.
+  hide: ["netflix", "amazon", "ui30", "tv.twitch.tv.starshot.lg", "com.disney.disneyplus-prod",
+    "com.deltatre.tennistv.lgapp", "viaplay-lg"],
   // Short names for apps whose title is too long for a bar.
   labels: { "spotify-beehive": "Spotify", "berlin.philharmonic": "Berliner Phil.", "org.webosbrew.hbchannel": "Homebrew" },
 
