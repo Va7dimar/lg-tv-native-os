@@ -17,7 +17,8 @@
 enum photo_frame_mode {
 	PHOTO_FRAME_OFF = 0,
 	PHOTO_FRAME_A = 1,
-	PHOTO_FRAME_B = 2
+	PHOTO_FRAME_B = 2,
+	PHOTO_FRAME_C = 3
 };
 
 enum photo_frame_corner {
@@ -70,6 +71,7 @@ void photo_frame_paint(const struct photo_frame_state *st, uint32_t *px, int w, 
 /* Distinctive fills so host tests can sample pixels. XRGB with 0xff alpha. */
 #define PHOTO_COL_A_BG      0xffff00d0u  /* bright magenta */
 #define PHOTO_COL_B_BG      0xff00c8ffu  /* bright cyan */
+#define PHOTO_COL_C_BG      0xff20d060u  /* bright green */
 #define PHOTO_COL_CORNER    0xfffff200u  /* yellow box */
 #define PHOTO_COL_CORNER_IN 0xff101010u  /* near-black interior */
 #define PHOTO_COL_TEXT      0xffffffffu

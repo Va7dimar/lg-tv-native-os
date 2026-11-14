@@ -86,11 +86,11 @@ int photo_frame_parse_mode(const char *text, int *mode)
 	if (!*p) return -1;
 	c = *p;
 	if (c >= 'a' && c <= 'z') c = (char)(c - 32);
-	if (c != 'A' && c != 'B') return -1;
+	if (c != 'A' && c != 'B' && c != 'C') return -1;
 	p++;
 	while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') p++;
 	if (*p) return -1;
-	*mode = (c == 'A') ? PHOTO_FRAME_A : PHOTO_FRAME_B;
+	*mode = (c == 'A') ? PHOTO_FRAME_A : (c == 'B') ? PHOTO_FRAME_B : PHOTO_FRAME_C;
 	return 0;
 }
 
@@ -98,6 +98,7 @@ const char *photo_frame_mode_name(int mode)
 {
 	if (mode == PHOTO_FRAME_A) return "A";
 	if (mode == PHOTO_FRAME_B) return "B";
+	if (mode == PHOTO_FRAME_C) return "C";
 	return "-";
 }
 
@@ -105,6 +106,7 @@ const char *photo_frame_mode_label(int mode)
 {
 	if (mode == PHOTO_FRAME_A) return "FOCUSABLE FULLSCREEN";
 	if (mode == PHOTO_FRAME_B) return "NON-FOCUSABLE OVERLAY";
+	if (mode == PHOTO_FRAME_C) return "WEBOS CARD APPID";
 	return "-";
 }
 
@@ -112,6 +114,7 @@ const char *photo_frame_window_type(int mode)
 {
 	if (mode == PHOTO_FRAME_A) return "wl_shell-fullscreen";
 	if (mode == PHOTO_FRAME_B) return "_WEBOS_WINDOW_TYPE_OVERLAY";
+	if (mode == PHOTO_FRAME_C) return "_WEBOS_WINDOW_TYPE_CARD";
 	return "-";
 }
 
@@ -289,7 +292,7 @@ void photo_frame_paint(const struct photo_frame_state *st, uint32_t *px, int w, 
 
 	if (!px || w < 1 || h < 1) return;
 	mode = st ? st->mode : PHOTO_FRAME_A;
-	bg = (mode == PHOTO_FRAME_B) ? PHOTO_COL_B_BG : PHOTO_COL_A_BG;
+	bg = (mode == PHOTO_FRAME_B) ? PHOTO_COL_B_BG : (mode == PHOTO_FRAME_C) ? PHOTO_COL_C_BG : PHOTO_COL_A_BG;
 	fill_rect(px, w, h, 0, 0, w, h, bg);
 
 	border = w < 400 ? 4 : 8;
@@ -352,7 +355,7 @@ void photo_frame_paint(const struct photo_frame_state *st, uint32_t *px, int w, 
 	blit_centered(px, w, h, hud_x + hud_w / 2, ly, scale_line, line, PHOTO_COL_TEXT);
 	ly += FONT_H * scale_line + scale_line;
 
-	if (mode == PHOTO_FRAME_A) {
+	if (mode == PHOTO_FRAME_A || mode == PHOTO_FRAME_C) {
 		int enter = st ? st->focus_enter : 0;
 		int leave = st ? st->focus_leave : 0;
 		int pent = st ? st->ptr_enter : 0;

@@ -452,6 +452,12 @@ static void apply_photo_frame_mode(struct opts *o)
 		snprintf(g_window_type_buf, sizeof g_window_type_buf, "%s",
 		         "_WEBOS_WINDOW_TYPE_OVERLAY");
 		o->window_type = g_window_type_buf;
+	} else if (o->photo_frame == PHOTO_FRAME_C) {
+		/* Gate test: webOS shell + appId + CARD, the type OSE SAM counts as foreground. */
+		o->webos_shell = 1;
+		snprintf(g_window_type_buf, sizeof g_window_type_buf, "%s",
+		         "_WEBOS_WINDOW_TYPE_CARD");
+		o->window_type = g_window_type_buf;
 	}
 }
 
@@ -1206,7 +1212,7 @@ static void paint(struct buf *b, uint32_t rgb)
 		st.ptr_leave = S.n_ptr_leave;
 		st.last_key = S.last_key;
 		st.last_key_name = S.last_key_name[0] ? S.last_key_name : "-";
-		if (S.o->photo_frame == PHOTO_FRAME_B && S.o->window_type)
+		if ((S.o->photo_frame == PHOTO_FRAME_B || S.o->photo_frame == PHOTO_FRAME_C) && S.o->window_type)
 			st.window_type = S.o->window_type;
 		else
 			st.window_type = photo_frame_window_type(S.o->photo_frame);
