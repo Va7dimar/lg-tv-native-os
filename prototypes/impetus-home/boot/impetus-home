@@ -1,0 +1,41 @@
+#!/bin/sh
+# Impetus Home boot hook. Homebrew Channel's startup script runs every
+# executable in /var/lib/webosbrew/init.d with run-parts at boot, so this
+# file is installed there as `impetus-home` (no dot: run-parts skips names
+# with one) with mode 755.
+#
+# What it does: opens org.va7dimar.home once the system is up, then follows
+# the foreground app and opens it again whenever stock Home
+# (com.webos.app.home) comes to the front. It never gives up: if the
+# subscription drops, it starts again after 5 s.
+#
+# Pause without a reboot:   touch /tmp/impetus-pause    (rm it to resume)
+# Way back to stock Home:   rm /var/lib/webosbrew/init.d/impetus-home
+#                           then restart the TV (the running watcher ends
+#                           with the boot).
+
+APP=org.va7dimar.home
+STOCK=com.webos.app.home
+SAM=luna://com.webos.service.applicationmanager
+
+open_ours() {
+  [ -e /tmp/impetus-pause ] && return
+  luna-send -n 1 "$SAM/launch" "{\"id\":\"$APP\"}" >/dev/null 2>&1
+}
+
+watch() {
+  sleep 25
+  open_ours
+  while true; do
+    luna-send -i "$SAM/getForegroundAppInfo" '{"subscribe":true}' 2>/dev/null </dev/null |
+      while read -r line; do
+        case "$line" in
+          *"\"appId\":\"$STOCK\""*|*"\"appId\": \"$STOCK\""*) open_ours ;;
+        esac
+      done
+    sleep 5
+  done
+}
+
+watch >/dev/null 2>&1 </dev/null &
+exit 0

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<title>Impetus</title>
+<link rel="stylesheet" href="home.css">
+</head>
+<body>
+<div id="stage">
+
+  <!-- Room 1: the living room -->
+  <main id="living" class="room living">
+    <div class="light"></div>
+    <svg id="sky" class="sky" width="1920" height="1080" viewBox="0 0 1920 1080">
+      <defs>
+        <radialGradient id="halo">
+          <stop offset="0" stop-color="#1FB487" stop-opacity="0.55"/>
+          <stop offset="0.35" stop-color="#2C8C86" stop-opacity="0.22"/>
+          <stop offset="1" stop-color="#2C8C86" stop-opacity="0"/>
+        </radialGradient>
+        <clipPath id="above"><rect x="0" y="0" width="1920" height="690"/></clipPath>
+      </defs>
+      <g clip-path="url(#above)">
+        <path id="arc" class="arc" d=""/>
+        <path id="travelled" class="travelled" d=""/>
+        <circle id="glow" r="150" fill="url(#halo)"/>
+        <circle id="sun" class="sun" r="11"/>
+      </g>
+      <line class="horizon" x1="0" y1="691" x2="1920" y2="691"/>
+    </svg>
+    <div class="ground">
+      <time id="clock" class="clock">--:--</time>
+      <p id="date" class="date"></p>
+      <p id="sunline" class="sunline"></p>
+    </div>
+  </main>
+
+  <!-- Room 2: the control room, turned over the living room on any key -->
+  <section id="control" class="room control" aria-hidden="true">
+    <div class="lead"></div>
+
+    <div class="col-main">
+      <button id="appletv" class="key appletv" data-focus><span>APPLE TV</span></button>
+      <h2 class="label">STYTTINGAR</h2>
+      <div id="shortcuts" class="shortcuts"></div>
+    </div>
+
+    <div class="col-apps">
+      <h2 class="label">FORRIT</h2>
+      <div id="apps" class="apps"></div>
+      <p id="note" class="note" hidden></p>
+    </div>
+
+    <aside class="found">
+      <h2 class="label">TENGINGAR</h2>
+      <div id="conncount" class="count">–</div>
+      <ol id="connlist" class="connlist"></ol>
+    </aside>
+  </section>
+
+</div>
+<script src="logic.js"></script>
+<script src="config.js"></script>
+<script src="luna.js"></script>
+<script src="home.js"></script>
+</body>
+</html>
