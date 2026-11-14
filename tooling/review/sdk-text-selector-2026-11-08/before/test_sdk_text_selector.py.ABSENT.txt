@@ -1,1 +1,0 @@
-New file: test_sdk_text_selector.py did not exist before this task.
