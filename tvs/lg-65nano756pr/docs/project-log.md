@@ -299,3 +299,11 @@ Software Version / Auto Update were not re-shot after reboot; hold remains
 Custom-OS boot and independent recovery stay no-go / blocked. Next research
 (not install) frontiers: `handoff/post-root-research-2026-11-08.md`.
 Evidence: `evidence/root-result-2026-11-08.md`.
+
+# Photo-frame modes A and B on the TV — 2026-11-14
+0.10 photo-frame build, owner watching with photos. Mode A (`wl_shell`
+fullscreen) is visible: 1920x1080 magenta with all four corners, keyboard
+focus at 0.6 s, then Home takes the screen at about 31 s. Mode B (webOS
+overlay) is never shown: SAM's loading spinner stays up and the compositor
+sends no events. Mode A is the working path. App removed afterwards.
+Evidence: `evidence/photo-frame-tv-run-2026-11-14.md`.
