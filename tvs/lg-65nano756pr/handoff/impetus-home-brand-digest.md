@@ -5,11 +5,13 @@ owner's own repo on the PC you run on). Read these there, in this order:
 
 | Path in that repo | What it holds |
 |---|---|
-| `apps/impetus/src/app/globals.css` | The tokens, as CSS variables. Copy the values from here. |
-| `apps/impetus/src/fonts/` | The three font files. Bundle these into the Home rather than fetching from Google Fonts. |
+| `apps/impetus/src/app/globals.css` | The site tokens, as CSS variables (ground, pane, line, muted, text, slab, key wall). Copy the values from here. |
+| `docs/impetus/design-vision/brand/package/tokens.brand.json` and `brand.md` | The **brand greens** (`#1FB487` light, `#2C8C86` quiet, `#0E6A50` phthalo). They are not in `globals.css` yet, because they're "not yet on the site". |
+| `apps/impetus/src/fonts/` | `Syncopate-Bold.woff2`, `Unbounded-Variable.woff2`, `IBMPlexMono-Regular.woff2`, and the `LICENSE-*.txt` files. Bundle the fonts **with** their licence files. Don't fetch from Google Fonts. |
+| `apps/impetus/src/app/icon.svg`; `docs/impetus/design-vision/avatar/impetus-avatar-dark-128.png` and `-256.png` | The mark. For the webOS `icon` (80×80) and `largeIcon` (130×130), downscale the 128 and 256 PNGs, or render the SVG. Don't redraw or recolour it. |
 | `.design-sync/guidelines`, `.design-sync/docs` | Colour, type, motion and composition rules, one doc per part. |
 | `docs/impetus/design-vision/vision.md` | The numbered rulings that the rules cite. |
-| `docs/impetus/design-vision/brand/package/`, `docs/impetus/design-vision/brand-taste/summary.md` | The brand layer (the green light, the halo) and the Logos (the mark, for the launcher icon). |
+| `docs/impetus/design-vision/brand/package/`, `docs/impetus/design-vision/brand-taste/summary.md` | The brand layer: the green light, the halo, the press glow and the motion curves. |
 
 The owner also shared the design-system artifact with your account:
 <https://claude.ai/artifact/32kKsnrcTjnk1xTX3iypWF> (read
@@ -76,9 +78,9 @@ date 30 px Unbounded in muted, clock 64 px Plex Mono in text. Tune on the TV.
   to a short imperative. The site's line is "Go in. Play around. See what
   happens.", but Home v1 needs no tagline.
 - The Impetus mark (one fine line that forks: ink stem, phthalo branch) is
-  for the **launcher icon only**, never inside the UI. Take it from the
-  Logos in the monorepo's brand package (the favicon cut suits a small
-  icon). Don't redraw or recolour it.
+  for the **launcher icon only**, never inside the UI. Take it from
+  `apps/impetus/src/app/icon.svg` or the `docs/impetus/design-vision/avatar/`
+  PNGs (see the table above). Don't redraw or recolour it.
 
 Secondary colourway (grey `#2A2A2C`, orange `#FF5A1F`, white): **not** for
 v1. Never mix it with the green.

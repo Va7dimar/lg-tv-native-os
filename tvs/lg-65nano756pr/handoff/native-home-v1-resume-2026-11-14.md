@@ -1,5 +1,37 @@
 # native-home-v1: resume brief for the session that built Mode C
 
+## Start here (read without leaving your branch)
+
+You are on `native-home-v1` with unpushed commits, so **don't check out**
+this branch. Read these files in place:
+
+```sh
+git fetch origin claude/affectionate-ride-81a0f7
+git show origin/claude/affectionate-ride-81a0f7:tvs/lg-65nano756pr/handoff/native-home-v1-resume-2026-11-14.md
+git show origin/claude/affectionate-ride-81a0f7:tvs/lg-65nano756pr/handoff/impetus-home-brand-digest.md
+```
+
+If `git fetch` fails, the repo is public; read the same files from
+`https://raw.githubusercontent.com/Va7dimar/lg-tv-native-os/claude/affectionate-ride-81a0f7/tvs/lg-65nano756pr/handoff/<file>`.
+If your clone is `lg-tv-native-os-private`, the same two files are on the
+same branch name there.
+
+Bring both files into your branch so they merge with your PR:
+
+```sh
+git checkout origin/claude/affectionate-ride-81a0f7 -- tvs/lg-65nano756pr/handoff/native-home-v1-resume-2026-11-14.md tvs/lg-65nano756pr/handoff/impetus-home-brand-digest.md
+```
+
+**Self-check before you start.** In one line to the owner, confirm that you
+read (1) this brief, (2) the brand digest, and (3) the brand paths in the
+owner's monorepo (listed in the digest; checked by the writer of this brief
+on 2026-11-14, monorepo commit `334b9cf`). If one of them fails, say which
+and carry on: the digest alone is enough for v1.
+
+**Order of work:** Mode C run → verdict → evidence note and project log →
+PR, squash-merge → Home v1 plan → build → run on the TV as an app → revert
+test → set as Home → summary to the owner.
+
 Written 2026-11-14 at about 06:50 Atlantic/Reykjavik (UTC) by a separate
 session that cannot see your local branch or files. It holds the owner's
 answers to a long round of questions, so you can run to the end without
@@ -67,6 +99,14 @@ said run it anyway: it's cheap.
 
 ## The Mode C run
 
+**From Windows, use a script file on the TV, not quoted JSON over ssh.**
+PowerShell quoting of the luna JSON is easy to break, and `luna-send-pub`
+reads stdin, so it swallows a piped `sh -s` script. Write the luna commands
+into a small `.sh` file with `</dev/null` on every `luna-send-pub` line,
+`scp` it to `/tmp/` along with the IPK, then run `ssh root@<tv> sh /tmp/<file>.sh`.
+Hash on the PC with `Get-FileHash -Algorithm SHA256`, and on the TV with
+`sha256sum`.
+
 1. Check the hash of `wh-photo-c.ipk` against the one you recorded at build
    time. `ssh` to the TV. If our id is installed, `dev/remove` it.
 2. `scp` the IPK to `/tmp/`, check its sha256 on the TV, then
@@ -116,8 +156,9 @@ is in Icelandic with a 24-hour clock.
 4. **Brand**: the Impetus primary colourway. The source of truth is the
    owner's monorepo with `apps/impetus` (tokens in
    `apps/impetus/src/app/globals.css`, fonts in `apps/impetus/src/fonts/`,
-   rules in `.design-sync/` and `docs/impetus/design-vision/`, the mark in
-   the brand package's Logos). The design-system artifact is shared with
+   rules in `.design-sync/` and `docs/impetus/design-vision/`, brand greens in
+   `docs/impetus/design-vision/brand/package/tokens.brand.json`, the mark
+   at `apps/impetus/src/app/icon.svg` and in `docs/impetus/design-vision/avatar/`). The design-system artifact is shared with
    your account too. [`impetus-home-brand-digest.md`](impetus-home-brand-digest.md)
    is a quick reference with the exact paths; the repo wins where they
    differ. Focus is the green halo **plus** the 2 px `#E6EAF1` ring, and a
