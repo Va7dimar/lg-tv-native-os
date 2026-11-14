@@ -179,9 +179,16 @@ restore_target() {
   if [ ! -s "$rt_f" ]; then rm -f "$rt_f" "$RUN/pending.$1" "$RUN/tries.$1" "$KEEP/orig.$1"; return 0; fi
   rt_bad=0
   for rt_pass in pic mode; do   # the values first, then the mode they belong to
+    # The values belong to the scene's mode: while one of them is still
+    # refused the mode stays, so a later try does not write them into the
+    # mode from before.
+    [ "$rt_bad" = 0 ] || break
     while IFS='|' read -r rt_t rt_k rt_v rt_q; do
       [ "$rt_t" = "$rt_pass" ] || continue
-      pic_put "$rt_k" "$rt_v" "$rt_q" || rt_bad=1
+      # A refused write counts as done when the TV already holds the value
+      # (a key this TV never takes was never changed in the first place).
+      pic_put "$rt_k" "$rt_v" "$rt_q" ||
+        [ "$(pic_read "$rt_k" | jget "$rt_k")" = "$rt_v" ] || rt_bad=1
     done < "$rt_f"
   done
   if [ "$rt_bad" = 0 ]; then rm -f "$rt_f" "$RUN/pending.$1" "$RUN/tries.$1" "$KEEP/orig.$1"; return 0; fi
@@ -200,6 +207,8 @@ vol_put() { ok "$(luna "$AUD/setVolume" "{\"volume\":$1}")"; }
 # vol, mirrored in $KEEP). When the TV does not answer the record stays and
 # the keeper tries again, $TRIES turns at most.
 vol_restore() {
+  # After a restart the record may only be on disk yet.
+  [ -s "$RUN/vol" ] || cp "$KEEP/vol" "$RUN/vol" 2>/dev/null
   if [ ! -s "$RUN/vol" ]; then rm -f "$RUN/vol" "$RUN/vol.tries" "$KEEP/vol"; return 0; fi
   read -r vr_was vr_set < "$RUN/vol"
   vr_cur=$(vol_read)
@@ -312,9 +321,14 @@ scene_apply() {
       # record still waiting from an earlier scene keeps its older volume.
       sa_was=$sa_cur
       if [ -s "$RUN/vol" ]; then read -r sa_old sa_x < "$RUN/vol"; is_num "$sa_old" && sa_was=$sa_old; fi
-      echo "$sa_was $VOLMAX" > "$RUN/vol"
-      { mkdir -p "$KEEP" && cp "$RUN/vol" "$KEEP/vol"; } 2>/dev/null
-      vol_put "$VOLMAX" || rm -f "$RUN/vol" "$KEEP/vol"
+      # A volume that cannot be written down is not lowered.
+      if { mkdir -p "$KEEP" && echo "$sa_was $VOLMAX" > "$KEEP/vol.new" &&
+           mv "$KEEP/vol.new" "$KEEP/vol"; } 2>/dev/null; then
+        echo "$sa_was $VOLMAX" > "$RUN/vol"
+        vol_put "$VOLMAX" || rm -f "$RUN/vol" "$KEEP/vol"
+      else
+        rm -f "$KEEP/vol.new" 2>/dev/null
+      fi
     fi
   fi
   if [ -n "$SOFF" ]; then
@@ -407,6 +421,14 @@ hosts_plain() {
     skip && index($0, s6) == 1 && $2 == last { next }
     { skip = 0; print }' "$1" 2>/dev/null
 }
+# hosts_strip src dst: src without our block, written to dst. Fails when awk
+# is missing or failed, or when dst came out empty although src holds lines
+# that are not ours: the caller then leaves the hosts file alone.
+hosts_strip() {
+  hosts_plain "$1" > "$2" || return 1
+  [ -s "$2" ] && return 0
+  ! grep -v -e "^$SINK4 " -e "^$SINK6 " -e "^$MARK_A" -e "^$MARK_B" "$1" 2>/dev/null | grep -q .
+}
 
 shield_block() {
   echo "$MARK_A"
@@ -453,14 +475,17 @@ shield_on_locked() {
   if hosts_mounted && [ -w "$HBC_HOSTS" ] && same_text "$HBC_HOSTS" "$ETC_HOSTS"; then
     # Homebrew Channel already keeps /etc/hosts in memory: add our lines to
     # its file in place (same inode, so the mount keeps showing it).
-    { hosts_plain "$HBC_HOSTS"; shield_block; } > "$RUN/hosts.new"
-    cat "$RUN/hosts.new" > "$HBC_HOSTS"; rm -f "$RUN/hosts.new"
-    echo inplace > "$RUN/shield.mode"
+    # Written back only when the lines that were there came through whole.
+    if hosts_strip "$HBC_HOSTS" "$RUN/hosts.new" && shield_block >> "$RUN/hosts.new"; then
+      cat "$RUN/hosts.new" > "$HBC_HOSTS"
+      echo inplace > "$RUN/shield.mode"
+    fi
+    rm -f "$RUN/hosts.new"
   else
-    { hosts_plain "$ETC_HOSTS"; shield_block; } > "$RUN/hosts"
     # The mount is on record only once it exists, so turning the shield off
     # never takes away a mount that is not ours.
-    if mount --bind "$RUN/hosts" "$ETC_HOSTS" 2>/dev/null || mount -o bind "$RUN/hosts" "$ETC_HOSTS" 2>/dev/null; then
+    if hosts_strip "$ETC_HOSTS" "$RUN/hosts" && shield_block >> "$RUN/hosts" &&
+       { mount --bind "$RUN/hosts" "$ETC_HOSTS" 2>/dev/null || mount -o bind "$RUN/hosts" "$ETC_HOSTS" 2>/dev/null; }; then
       echo bind > "$RUN/shield.mode"
     else
       rm -f "$RUN/hosts"
@@ -475,13 +500,17 @@ shield_on_locked() {
   echo ok=1
 }
 
-# Takes our lines out again. Fails (and keeps the shield on record) only when
-# our own mount will not let go, so a later try can finish the job.
+# Takes our lines out again. Fails (and keeps the shield on record) when our
+# own mount will not let go or the hosts file could not be rebuilt whole, so
+# a later try can finish the job.
 shield_off_quiet() {
   case "$(cat "$RUN/shield.mode" 2>/dev/null)" in
     inplace)
-      hosts_plain "$HBC_HOSTS" > "$RUN/hosts.new" && cat "$RUN/hosts.new" > "$HBC_HOSTS"
-      rm -f "$RUN/hosts.new" ;;
+      if hosts_strip "$HBC_HOSTS" "$RUN/hosts.new"; then
+        cat "$RUN/hosts.new" > "$HBC_HOSTS"; rm -f "$RUN/hosts.new"
+      else
+        rm -f "$RUN/hosts.new"; return 1
+      fi ;;
     bind)
       if ! umount "$ETC_HOSTS" 2>/dev/null && grep -q "^$MARK_A" "$ETC_HOSTS" 2>/dev/null; then return 1; fi
       rm -f "$RUN/hosts" ;;
@@ -615,6 +644,9 @@ follow() {
         echo "$id" > "$RUN/front.new" && mv "$RUN/front.new" "$RUN/front"
         case "$id" in "$APP"|"$STOCK") ;; *) echo "$id" > "$RUN/last" ;; esac
       done
+    # The subscription ended: the note is no longer kept current, so the
+    # helper asks the TV directly until it is back.
+    rm -f "$RUN/front"
     sleep 5
   done
 }

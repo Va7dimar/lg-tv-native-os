@@ -8,6 +8,7 @@
 # Empty files switch on a fault or a variant:
 #   numeric        whole-number picture values are answered as numbers, not text
 #   failset        the TV refuses every picture change
+#   failkey        (holds a key name) the TV refuses changes of that one key
 #   novolume       the volume cannot be read
 #   nopower        the TV refuses every power call
 #   nolaunch       the TV refuses to open an app
@@ -36,9 +37,10 @@ case "$uri" in
     elif [ -e "$T/numeric" ] && whole "$v"; then echo "{\"category\":\"picture\",\"settings\":{\"$k\":$v},\"returnValue\":true}"
     else echo "{\"category\":\"picture\",\"settings\":{\"$k\":\"$v\"},\"returnValue\":true}"; fi ;;
   *settingsservice/setSystemSettings)
-    if [ -e "$T/failset" ]; then echo '{"returnValue":false,"errorText":"not ready"}'
+    k=$(echo "$body" | sed -n 's/.*"settings":{"\([A-Za-z]*\)".*/\1/p')
+    if [ -e "$T/failset" ] || [ "$(cat "$T/failkey" 2>/dev/null)" = "$k" ]; then
+      echo '{"returnValue":false,"errorText":"not ready"}'
     else
-      k=$(echo "$body" | sed -n 's/.*"settings":{"\([A-Za-z]*\)".*/\1/p')
       echo "$k=$(val "$k")" >> "$T/pic.$front"
       echo '{"returnValue":true}'
     fi ;;

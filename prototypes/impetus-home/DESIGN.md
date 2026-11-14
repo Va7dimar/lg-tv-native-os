@@ -161,8 +161,10 @@ The page cannot change the TV by itself, so the work is split in three:
   the sleep timer ending and `impetus-ctl restore` all put them back. A
   put-back the TV refuses stays on record and is tried again on later turns
   (20 at most, then it waits for the next scene end or `restore`); the record
-  is deleted only when the TV took every value. Values go back in the form
-  they were read in, number or text.
+  is deleted only when the TV took every value (or already holds it). While a
+  value is still refused the scene's mode stays too, so its values are never
+  written into the mode from before. Values go back in the form they were
+  read in, number or text.
 - **Sleep.** Two minutes before standby the keeper brings Impetus to the front
   with a countdown. Any key cancels the timer and goes back to what was on. No
   key: the scene's app is brought back to the front, the picture values are
@@ -188,9 +190,9 @@ Home Chooser is absent on this TV, so Impetus becomes the default through a
 Homebrew boot hook (`boot/impetus-home`, installed as
 `/var/lib/webosbrew/init.d/impetus-home`, mode 755). It starts the keeper,
 opens Impetus once the system is up and again whenever stock Home comes to the
-front, and it never gives up. One brake: more than 5 reopenings within 30 s
-means Impetus keeps closing, so stock Home is left alone for 2 minutes before
-the next try. Only one watcher runs at a time (`/tmp/impetus-hook.pid`).
+front, and it never gives up. One brake: more than 5 reopenings within a
+minute means Impetus keeps closing, so stock Home is left alone for 2 minutes
+before the next try (six presses of Home in a minute do the same). Only one watcher runs at a time (`/tmp/impetus-hook.pid`).
 Pause: `touch /tmp/impetus-pause`.
 
 **Way back** (in this order, over SSH):

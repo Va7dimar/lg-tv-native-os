@@ -11,9 +11,10 @@
 #   2. opens org.va7dimar.home, then follows the foreground app and opens it
 #      again whenever stock Home (com.webos.app.home) comes to the front. It
 #      never gives up: if the subscription drops, it starts again after 5 s.
-#      One brake: if it had to reopen Impetus more than 5 times within 30 s,
-#      Impetus keeps closing, so stock Home is left alone for 2 minutes and
-#      then it tries again. Only one watcher runs at a time.
+#      One brake: if it had to reopen Impetus more than 5 times within a
+#      minute, Impetus keeps closing (or Home was pressed six times), so
+#      stock Home is left alone for 2 minutes and then it tries again. Only
+#      one watcher runs at a time.
 #
 # Pause without a reboot:   touch /tmp/impetus-pause    (rm it to resume)
 # Way back to stock Home:   rm /var/lib/webosbrew/init.d/impetus-home
@@ -29,9 +30,10 @@ CTL=${IMPETUS_CTL:-/media/developer/apps/usr/palm/applications/$APP/bin/impetus-
 PAUSE=${IMPETUS_PAUSE:-/tmp/impetus-pause}
 PIDFILE=${IMPETUS_HOOK_PID:-/tmp/impetus-hook.pid}
 RESTFILE=$PIDFILE.rest          # rm it to end a rest early
+COUNTFILE=$PIDFILE.count
 WAIT=${IMPETUS_HOOK_WAIT:-25}   # seconds for the system to come up
 BURST=5                         # more reopenings than this ...
-WINDOW=30                       # ... within this many seconds: Impetus keeps closing
+WINDOW=60                       # ... within this many seconds: Impetus keeps closing
 REST=${IMPETUS_HOOK_REST:-120}  # leave stock Home alone this long, then try again
 
 # One watcher at a time: a second run (by hand, or Homebrew Channel running
@@ -45,10 +47,16 @@ open_ours() {
   oo_rest=$(cat "$RESTFILE" 2>/dev/null)
   case "$oo_rest" in ""|*[!0-9]*) oo_rest=0 ;; esac
   [ "$oo_now" -lt "$oo_rest" ] && return
-  if [ $((oo_now - ${oo_start:-0})) -gt "$WINDOW" ]; then oo_start=$oo_now; oo_n=0; fi
+  # The count and the rest are kept in files, so they hold when the
+  # subscription starts over.
+  oo_start= oo_n=
+  [ -r "$COUNTFILE" ] && read -r oo_start oo_n < "$COUNTFILE"
+  case "$oo_start" in ""|*[!0-9]*) oo_start=0 ;; esac
+  case "$oo_n" in ""|*[!0-9]*) oo_n=0 ;; esac
+  if [ $((oo_now - oo_start)) -gt "$WINDOW" ]; then oo_start=$oo_now; oo_n=0; fi
   oo_n=$((oo_n + 1))
-  # The rest is kept in a file so it holds when the subscription starts over.
-  if [ "$oo_n" -gt "$BURST" ]; then echo $((oo_now + REST)) > "$RESTFILE"; oo_n=0; return; fi
+  if [ "$oo_n" -gt "$BURST" ]; then echo $((oo_now + REST)) > "$RESTFILE"; rm -f "$COUNTFILE"; return; fi
+  echo "$oo_start $oo_n" > "$COUNTFILE"
   luna-send -n 1 "$SAM/launch" "{\"id\":\"$APP\"}" >/dev/null 2>&1
 }
 

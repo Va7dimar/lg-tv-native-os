@@ -310,7 +310,40 @@ rm -f "$STUB_TV/failset"
 is "refused put-back: restore still puts it back" "$(sh "$CTL" restore)" "ok=1"
 is "refused put-back: the picture is back" "$(pic $HDMI pictureMode)" standard
 
+# A key this TV never takes: nothing was changed, so nothing is left to put back.
+reset
+echo 'contrast=85' >> "$STUB_TV/pic.$HDMI"
+echo contrast > "$STUB_TV/failkey"
+IMPETUS_NOW=1000 sh "$CTL" scene on id=film launch=$HDMI mode=cinema set=backlight:30,contrast:50 >/dev/null
+wait_for '[ "$(pic $HDMI backlight)" = 30 ]'; settle
+tv_front "$HDMI"
+sh "$CTL" scene off >/dev/null
+is "refused key: the rest of the picture is back" "$(pic $HDMI backlight)$(pic $HDMI pictureMode)" 80standard
+no "refused key: and no record is left to try again" test -e "$KEEP/orig.$HDMI"
+# One value refused at put-back: the mode waits with it, and the values are
+# never written into the mode from before.
+reset
+IMPETUS_NOW=1000 sh "$CTL" scene on id=film launch=$HDMI mode=cinema set=backlight:30 >/dev/null
+wait_for '[ "$(pic $HDMI backlight)" = 30 ]'; settle
+tv_front "$HDMI"
+echo backlight > "$STUB_TV/failkey"
+sh "$CTL" scene off >/dev/null
+sh "$CTL" tick >/dev/null
+is "refused value: the mode stays with its values" "$(pic $HDMI pictureMode)" cinema
+is "refused value: the mode from before is not asked for yet" "$(calls '"pictureMode":"standard"')" 0
+rm -f "$STUB_TV/failkey"
+sh "$CTL" tick >/dev/null
+is "refused value: once it is taken, value and mode go back" "$(pic $HDMI backlight)$(pic $HDMI pictureMode)" 80standard
+is "refused value: the mode went back once" "$(calls '"pictureMode":"standard"')" 1
+
 # ---------- a value that cannot be written down is not changed ----------
+reset
+: > "$KEEP"
+echo netflix > "$RUN/last"
+IMPETUS_NOW=10000 sh "$CTL" scene on id=winddown launch=@last volmax=12 >/dev/null
+wait_for '[ -e "$RUN/scene.id" ]'; settle
+is "no record, no change: the volume is untouched" "$(cat "$STUB_TV/volume")" 20
+rm -f "$KEEP"
 reset
 : > "$KEEP"   # a file where the state folder should be
 IMPETUS_NOW=1000 sh "$CTL" scene on id=film launch=$HDMI mode=cinema set=backlight:30 >/dev/null
@@ -347,6 +380,12 @@ sh "$CTL" start >/dev/null
 yes "volume: put back after a restart" wait_for '[ "$(cat "$STUB_TV/volume")" = 20 ]'
 yes "volume: and the record is gone" wait_for '[ ! -e "$KEEP/vol" ]'
 sh "$CTL" restore >/dev/null
+# A verb that runs before the keeper has looked: the record on disk still counts.
+reset
+mkdir -p "$KEEP"; echo "20 12" > "$KEEP/vol"; echo 12 > "$STUB_TV/volume"
+sh "$CTL" scene off >/dev/null
+is "volume: a record only on disk is used, not thrown away" "$(cat "$STUB_TV/volume")" 20
+no "volume: and is gone once the volume is back" test -e "$KEEP/vol"
 # A TV that does not answer at scene end: the record waits for the next turn.
 reset
 echo netflix > "$RUN/last"
@@ -425,6 +464,19 @@ read -r _kind cpid2 < "$RUN/shield.count"
 yes "shield: on twice stops the first counter" wait_for '! kill -0 "$cpid1" 2>/dev/null'
 yes "shield: and leaves one running" kill -0 "$cpid2"
 sh "$CTL" shield off >/dev/null
+# A TV whose awk fails: the hosts file is left alone rather than cut down.
+reset
+mkdir -p "$W/bin"; printf '#!/bin/sh\nexit 1\n' > "$W/bin/awk"; chmod 755 "$W/bin/awk"
+cp "$W/hbc-hosts" "$W/hosts.before"
+is "shield: without a working awk it stays off" "$(PATH="$W/bin:$PATH" sh "$CTL" shield on)" "error=nomount"
+yes "shield: and the hosts file is untouched" cmp -s "$W/etc-hosts" "$W/hosts.before"
+sh "$CTL" shield on >/dev/null
+cp "$W/hbc-hosts" "$W/hosts.on"
+is "shield: off without a working awk is reported" "$(PATH="$W/bin:$PATH" sh "$CTL" shield off)" "error=busy"
+yes "shield: and the hosts file keeps every line" cmp -s "$W/etc-hosts" "$W/hosts.on"
+is "shield: a later off finishes the job" "$(sh "$CTL" shield off)" "ok=1"
+yes "shield: the hosts file is as it was" cmp -s "$W/etc-hosts" "$W/hosts.before"
+rm -rf "$W/bin"
 # A marker that cannot be written must not end the helper with the lock held.
 reset
 mkdir -p "$KEEP/shield.on"   # a folder where the marker file should be
@@ -515,7 +567,7 @@ is "boot hook: a second run keeps the first watcher" "$(cat "$W/hook.pid")" "$hp
 kill "$hp" 2>/dev/null
 # Paused: stock Home is left alone.
 reset
-: > "$W/pause"; rm -f "$W/hook.pid" "$W/hook.pid.rest"
+: > "$W/pause"; rm -f "$W/hook.pid" "$W/hook.pid.rest" "$W/hook.pid.count"
 echo '{"appId":"com.webos.app.home","returnValue":true}' > "$STUB_TV/sub.lines"
 sh "$HOOK"
 wait_for '[ -s "$W/hook.pid" ]'; sleep 1

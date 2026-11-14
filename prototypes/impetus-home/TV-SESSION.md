@@ -35,9 +35,9 @@ sh /media/developer/apps/usr/palm/applications/org.va7dimar.home/bin/impetus-ctl
 
 puts the picture and volume back, takes the shield off and stops the keeper.
 It prints `ok=1`. `error=notrestored <app>` means that app would not come to
-the front, so its picture values were not put back (they are never written
-to another input) and stay in `state/orig.<app>`: open the app with the
-remote and run `restore` again. `error=notrestored hosts` means the shield's
+the front, or the TV refused one of its values, so its picture values were
+not all put back (they are never written to another input) and stay in
+`state/orig.<app>`: open the app with the remote and run `restore` again. `error=notrestored hosts` means the shield's
 own mount would not let go: run it again. If the helper itself is broken, the
 same by hand:
 
@@ -154,6 +154,11 @@ Then **FILM NIGHT**:
 
 - **Open question: which input the values land on.** Picture values belong
   to an input. Check HDMI 2 changed and the TV's own apps did not.
+- **Open question: is "the app in front" the whole address of a value?** If
+  the TV keeps separate values per picture mode or for HDR, a put-back could
+  land in another set than it was read from. Run FILM NIGHT once over an HDR
+  film, and once change the picture mode by hand while the scene is on; after
+  `scene off` check the values in both modes.
 - Turn it off (`$CTL scene off` or the key): mode and values are back.
 
 If a write is refused, the answer names the reason; the call form lives in
@@ -199,6 +204,8 @@ The shield is off until this step. It changes only memory.
 
 1. Before: `cat /proc/self/mountinfo | grep hosts` and `wc -l /etc/hosts`.
    Homebrew Channel should show `/tmp/hosts` mounted over `/etc/hosts`.
+   `awk 'BEGIN{exit}' && echo awk-ok` must print `awk-ok`: the shield
+   rebuilds the hosts file with awk and refuses to turn on without it.
 2. With the owner's yes: turn SHIELD on in the engine room (or
    `$CTL shield on`).
 3. See: `grep -c 127.66.66.66 /etc/hosts` equals the count in
@@ -233,7 +240,7 @@ before it is left in place.
    system is up, Impetus is in front. Press Home on the remote: Impetus
    comes back. `touch /tmp/impetus-pause` stops that; `rm` it to resume.
    The hook has one brake: if it had to reopen Impetus more than 5 times
-   within 30 s, it leaves stock Home alone for 2 minutes
+   within a minute, it leaves stock Home alone for 2 minutes
    (`rm /tmp/impetus-hook.pid.rest` ends that rest early). The running
    watcher's pid is in `/tmp/impetus-hook.pid`.
 4. **Revert test, once, owner watching:**
