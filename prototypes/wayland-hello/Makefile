@@ -8,7 +8,7 @@
 #
 # Sysroot: populated by `python3 -I scripts/fetch_buster_armel_sysroot.py` into build-cache/sysroot.
 
-SRC        := src/wayland_hello.c src/menu.c
+SRC        := src/wayland_hello.c src/menu.c src/photo_frame.c
 CFLAGS_COM := -std=c99 -O2 -Wall -Wextra -Wno-unused-parameter -fno-strict-aliasing -Isrc
 
 HOSTCC     ?= gcc

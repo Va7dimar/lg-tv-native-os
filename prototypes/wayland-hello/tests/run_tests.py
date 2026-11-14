@@ -113,7 +113,7 @@ def parser_tests():
         rc, _, _, _ = run(["--parse-only"] + bad)
         check("reject %s" % " ".join(bad), rc == 2, "rc=%d" % rc)
     rc, out, _, _ = run(["--version"])
-    check("version 0.9", rc == 0 and "0.9-prototype" in out, out)
+    check("version 0.10", rc == 0 and "0.10-prototype" in out, out)
     rc, out, err, _ = run([LAUNCH, "--parse-only"])
     check("sam lifecycle-2 json selects overlay, luna and 90s cap",
           rc == 0 and "sam_lifecycle2=1" in out and "luna_register=1" in out
@@ -227,6 +227,38 @@ def menu_tests():
     check("OK on Exit exits", rc == 0 and dt < 4.0 and "exiting (menu-exit)" in err, "rc=%d dt=%.2f" % (rc, dt))
 
 
+PHOTO_A_BG, PHOTO_B_BG, PHOTO_CORNER = 0xffff00d0, 0xff00c8ff, 0xfffff200
+
+
+def photo_frame_tests(ose):
+    tmp = tempfile.mkdtemp(prefix="wlh-pf-unit-")
+    dest = os.path.join(tmp, "test_photo_frame")
+    p = subprocess.run(["gcc", "-std=c99", "-Wall", "-Wextra", "-I", os.path.join(HERE, "..", "src"), "-o", dest,
+                        os.path.join(HERE, "test_photo_frame.c"), os.path.join(HERE, "..", "src", "photo_frame.c")],
+                       capture_output=True, text=True, timeout=30)
+    r = subprocess.run([dest], capture_output=True, text=True, timeout=30) if p.returncode == 0 else None
+    check("photo_frame unit tests pass", r is not None and r.returncode == 0 and "0 failed" in r.stdout,
+          p.stderr + (r.stdout if r else ""))
+
+    (rc, out, err, dt), ev = with_mock(["--seats", "1"], ["--photo-frame", "A", "--duration", "2"])
+    bufs = [e["args"] for e in ev if e.get("req") == "create_buffer"]
+    px = last_pixels(ev)
+    check("photo-frame A: wl_shell fullscreen at wl_output size, magenta with corners",
+          rc == 0 and bufs and bufs[0][2] == 1920 and bufs[0][3] == 1080 and "source=wl_output" in err
+          and any(e.get("req") == "set_fullscreen" for e in ev)
+          and px.get("200,540") == PHOTO_A_BG and px.get("0,0") == PHOTO_CORNER and px.get("1919,1079") == PHOTO_CORNER,
+          str(bufs) + err[-400:])
+
+    (rc, out, err, dt), ev = with_mock(["--webos", "--seats", "1"], ["--photo-frame", "B", "--duration", "2"],
+                                       env_extra={"WAYLAND_HELLO_LIB_DIR": ose})
+    bufs = [e["args"] for e in ev if e.get("req") == "create_buffer"]
+    seq = [(e.get("req"), e.get("args")) for e in ev if e.get("iface") == "wl_webos_shell_surface"]
+    check("photo-frame B: 1920x1080 overlay, cyan",
+          rc == 0 and bufs and bufs[0][2] == 1920 and bufs[0][3] == 1080
+          and ("op2", ["_WEBOS_WINDOW_TYPE", "_WEBOS_WINDOW_TYPE_OVERLAY"]) in seq
+          and last_pixels(ev).get("200,540") == PHOTO_B_BG, str(seq) + err[-400:])
+
+
 def egl_tests():
     (rc, out, err, dt), ev = with_mock([], ["--egl", "--duration", "2"], env_extra={"WAYLAND_HELLO_LIB_DIR": tempfile.mkdtemp()})
     check("missing EGL falls back to shm",
@@ -249,6 +281,7 @@ if __name__ == "__main__":
     webos_tests(ose)
     luna_tests(ose)
     menu_tests()
+    photo_frame_tests(ose)
     egl_tests()
     linkage_tests()
     n_fail = sum(1 for _, ok, _ in results if not ok)

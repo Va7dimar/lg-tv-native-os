@@ -252,6 +252,34 @@ def main():
               'exec "$APP_DIR/wayland-hello"' in menu_launch and "--menu" not in menu_launch,
               menu_launch[-400:])
 
+        out_pa = os.path.join(tmp, "photo-a.ipk")
+        build_ipk(binary, out_pa, photo_frame="A")
+        with open(out_pa, "rb") as fh:
+            pa_members = dict(parse_ar(fh.read()))
+        pa_data = Archive(pa_members["data.tar.gz"])
+        pa_info = json.loads(pa_data.read(prefix + "appinfo.json").decode("utf-8"))
+        check("photo-frame A sidecar is packaged next to the ELF",
+              pa_data.read(prefix + "photo-frame") == b"A\n", "")
+        check("photo-frame A main stays the ELF", pa_info.get("main") == "wayland-hello", str(pa_info))
+        check("photo-frame A is lifecycle 2", pa_info.get("nativeLifeCycleInterfaceVersion") == 2, str(pa_info))
+        check("photo-frame A defaultWindowType is card", pa_info.get("defaultWindowType") == "card", str(pa_info))
+        check("photo-frame A has no sysbus members",
+              not any("sysbus" in name for name in pa_data.files()), str(pa_data.files()))
+        check("default IPK does not ship a photo-frame sidecar",
+              prefix + "photo-frame" not in data_tar.files(), str(data_tar.files()))
+
+        out_pb = os.path.join(tmp, "photo-b.ipk")
+        build_ipk(binary, out_pb, photo_frame="B")
+        with open(out_pb, "rb") as fh:
+            pb_members = dict(parse_ar(fh.read()))
+        pb_data = Archive(pb_members["data.tar.gz"])
+        pb_info = json.loads(pb_data.read(prefix + "appinfo.json").decode("utf-8"))
+        check("photo-frame B sidecar is packaged next to the ELF",
+              pb_data.read(prefix + "photo-frame") == b"B\n", "")
+        check("photo-frame B main stays the ELF", pb_info.get("main") == "wayland-hello", str(pb_info))
+        check("photo-frame B is lifecycle 2", pb_info.get("nativeLifeCycleInterfaceVersion") == 2, str(pb_info))
+        check("photo-frame B defaultWindowType is overlay", pb_info.get("defaultWindowType") == "overlay", str(pb_info))
+
         if shutil.which("ar") and shutil.which("tar"):
             listing = subprocess.run(["ar", "t", out_a], capture_output=True, text=True)
             check("system ar lists the three members",
