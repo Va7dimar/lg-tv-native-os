@@ -129,8 +129,7 @@ The reusable finding is the relationship between SAM launch, the executable, and
 | [`tvs/lg-65nano756pr/`](tvs/lg-65nano756pr/) | Device docs, evidence, sources, SSAP remote helper and handoff |
 | [`tvs/_template/`](tvs/_template/) | Starting point for another TV |
 | [`tooling/`](tooling/) | Bounded, read-only archive/SDK inspection tools and tests |
-| [`REPRODUCING.md`](REPRODUCING.md) | Generic research method |
-| [`playbooks/tv-os-research.md`](playbooks/tv-os-research.md) | TV OS research workflow |
+| [`REPRODUCING.md`](REPRODUCING.md) | Research method and how to repeat it on another TV |
 | [`SOURCES.md`](SOURCES.md) | Source records |
 | [`docs/superpowers/`](docs/superpowers/) | Tool plans |
 
