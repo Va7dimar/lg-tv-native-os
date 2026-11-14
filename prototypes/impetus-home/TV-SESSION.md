@@ -66,6 +66,25 @@ On the TV now: 1.0.0 as an ordinary app, no boot hook.
 
 4. See: `ls -l $APPDIR/bin/impetus-ctl` shows the file as executable and
    `head -c 9 $APPDIR/bin/impetus-ctl` prints `#!/bin/sh`.
+5. The helper's lock names its holder by pid and gives up calls that hang.
+   Both lean on the TV's own shell, which has only been tested as dash on a
+   PC. On the TV:
+
+   ```sh
+   sh -c 'echo "$PPID"'; echo $$          # the same number twice
+   ( sleep 30 & p=$!; kill $p; wait $p; echo "ended $?" )   # "ended 143" at once
+   ( trap 'kill $s; echo cancelled; exit 0' TERM; sleep 30 & s=$!; wait $s; echo late ) & w=$!; sleep 1; kill $w; sleep 1; ps | grep '[s]leep 30'
+                                          # "cancelled" at once, and no "sleep 30" line
+   ln -s 1.2 /tmp/lk; ln -s 3.4 /tmp/lk; ls -ld /tmp/lk | sed -n 's/.* -> //p'; rm /tmp/lk
+                                          # "File exists", then "1.2"
+   read a b < /proc/uptime; echo "$a"     # seconds since the TV started, like 5123.45
+   $CTL scene off; ls /tmp/impetus/lock   # ok=1, then "No such file"
+   ```
+
+   The lock is a symbolic link whose target is its holder's pid and the
+   second it was taken. A different result on the first, fourth or fifth
+   line goes to the lock (`lock_me`, `lock`, `lock_now` in `impetus-ctl`), on
+   the second or third to `luna`.
 
 **Later reinstalls:** an install replaces the app folder, and with it
 `state/` (the picture values from before a scene, and the shield flag). Run

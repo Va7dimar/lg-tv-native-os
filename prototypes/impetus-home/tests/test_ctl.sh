@@ -31,7 +31,9 @@ pic() { sed -n "s/^$2=//p" "$STUB_TV/pic.$1" 2>/dev/null | tail -n 1; }
 calls() { grep -c -F -- "$1" "$STUB_TV/calls"; }
 st() { sh "$CTL" state | sed -n "s/^$1=//p"; }
 wait_for() { i=0; while [ "$i" -lt 75 ]; do if eval "$1"; then return 0; fi; sleep 0.2; i=$((i + 1)); done; return 1; }
-settle() { sleep 0.3; wait_for '[ ! -d "$RUN/lock" ]'; }
+# The lock is a symbolic link; a folder in its place also counts as held.
+held() { [ -L "$RUN/lock" ] || [ -d "$RUN/lock" ]; }
+settle() { sleep 0.3; wait_for '! held'; }
 # The app in front, as the TV and the keeper's follower both see it.
 tv_front() { echo "$1" > "$STUB_TV/front"; echo "$1" > "$RUN/front"; }
 # A fresh TV. A sleeping process stands in for the keeper, so the helper does
@@ -481,7 +483,7 @@ rm -rf "$W/bin"
 reset
 mkdir -p "$KEEP/shield.on"   # a folder where the marker file should be
 is "shield: on still answers when its marker cannot be written" "$(sh "$CTL" shield on)" "ok=1"
-no "shield: and the lock is free again" test -d "$RUN/lock"
+no "shield: and the lock is free again" held
 sh "$CTL" shield off >/dev/null 2>&1
 # With its own mount: a mount that fails is not on record, one that will not
 # let go keeps the shield on record.
@@ -502,6 +504,109 @@ yes "shield (own mount): across a restart too" test -e "$KEEP/shield.on"
 rm -f "$STUB_TV/noumount"
 is "shield (own mount): a later off finishes the job" "$(sh "$CTL" shield off)" "ok=1"
 is "shield (own mount): the hosts file is as it was" "$(cat "$W/etc-hosts")" "127.0.0.1 localhost"
+
+# ---------- the lock has an owner ----------
+reset
+owner() { ls -ld "$RUN/lock" 2>/dev/null | sed -n 's/.* -> //p' | cut -d. -f1; }
+up() { cut -d. -f1 /proc/uptime; }
+secs() { date +%s; }
+# hold pid since: a lock in place, as that holder would have made it. The
+# link is made aside and moved in, so there is no moment without a lock.
+hold() { rm -rf "$RUN/lock.n"; ln -s "$1.$2" "$RUN/lock.n"; mv -f "$RUN/lock.n" "$RUN/lock"; }
+# Its holder is running: a verb waits, goes on without it, and leaves it.
+hold "$FAKE" "$(up)"
+t0=$(secs); out=$(IMPETUS_LOCKWAIT=2 sh "$CTL" scene off); t1=$(secs)
+is "lock: a verb that could not get it still answers" "$out" "ok=1"
+yes "lock: after waiting for it" test $((t1 - t0)) -ge 1
+is "lock: a running holder keeps its lock" "$(owner)" "$FAKE"
+# Its holder is gone: taken over at once.
+sleep 0 & gone=$!; wait "$gone"
+hold "$gone" "$(up)"
+t0=$(secs); out=$(sh "$CTL" scene off); t1=$(secs)
+is "lock: one whose holder is gone is taken over" "$out" "ok=1"
+yes "lock: and at once" test $((t1 - t0)) -le 2
+no "lock: and given back afterwards" held
+# The way back does not wait for a lock a stopped keeper left either.
+hold "$gone" "$(up)"
+t0=$(secs); out=$(sh "$CTL" restore); t1=$(secs)
+is "lock: the way back takes a gone holder's lock" "$out" "ok=1"
+yes "lock: and at once too" test $((t1 - t0)) -le 2
+no "lock: and gives it back" held
+reset
+# Held longer than the limit, holder still running: taken over.
+hold "$FAKE" "$(( $(up) - 5 ))"
+IMPETUS_LOCKMAX=2 sh "$CTL" scene off >/dev/null
+no "lock: one held far too long is taken over" held
+# Something without a holder's name in its place: taken over after three tries.
+mkdir "$RUN/lock"
+t0=$(secs); sh "$CTL" scene off >/dev/null; t1=$(secs)
+no "lock: a folder left in its place is taken over" held
+yes "lock: after three tries, not at once" test $((t1 - t0)) -ge 2
+is "lock: nothing is left of the old ones" "$(ls -d "$RUN"/lock.old.* 2>/dev/null | wc -l | tr -d ' ')" 0
+# One or two tries without a name do not count once a holder's name is back.
+ln -s nobody "$RUN/lock"
+IMPETUS_LOCKWAIT=5 sh "$CTL" sleep cancel >/dev/null &
+cp=$!
+sleep 1.5; hold "$FAKE" "$(up)"
+wait "$cp"
+is "lock: a name that was missing for a moment is not a free lock" "$(owner)" "$FAKE"
+rm -f "$RUN/lock"
+
+# A call that never answers is given up; the holder that meanwhile lost its
+# lock leaves the new holder's lock alone.
+echo "30 10" > "$RUN/vol"; echo 10 > "$STUB_TV/volume"
+echo getVolume > "$STUB_TV/hang"
+t0=$(secs)
+IMPETUS_LUNAWAIT=3 sh "$CTL" scene off > "$W/hang.out" &
+hp=$!
+wait_for '[ -n "$(owner)" ]'
+is "lock: its holder is on record while it works" "$(owner)" "$hp"
+hold "$FAKE" "$(up)"
+wait "$hp"; t1=$(secs)
+yes "no answer: the call is given up after its limit" test $((t1 - t0)) -le 8
+is "no answer: the verb still answers" "$(cat "$W/hang.out")" "ok=1"
+is "no answer: the volume record waits for the next turn" "$(cat "$RUN/vol")" "30 10"
+is "lock: a holder that lost it leaves the new one" "$(owner)" "$FAKE"
+rm -f "$RUN/lock" "$STUB_TV/hang"
+sh "$CTL" tick >/dev/null
+is "no answer: the next turn puts the volume back" "$(cat "$STUB_TV/volume")" 30
+
+# A call the TV carries out but answers too late: the record stays, so the
+# volume still goes back.
+reset
+: > "$STUB_TV/latevolume"
+IMPETUS_LUNAWAIT=2 sh "$CTL" scene on id=music launch=$HDMI volmax=10 >/dev/null
+yes "late answer: the volume was lowered all the same" wait_for '[ "$(cat "$STUB_TV/volume")" = 10 ]'
+yes "late answer: the scene's background part ends" wait_for '[ "$(st scene)" = music ] && ! held'
+settle
+is "late answer: the volume from before is still on record" "$(cat "$RUN/vol" 2>/dev/null)" "20 10"
+rm -f "$STUB_TV/latevolume"
+sh "$CTL" scene off >/dev/null
+is "late answer: and goes back when the scene ends" "$(cat "$STUB_TV/volume")" 20
+
+# A scene's own background part holds the lock under a pid that is running.
+reset
+echo getVolume > "$STUB_TV/hang"
+IMPETUS_LUNAWAIT=3 sh "$CTL" scene on id=music launch=$HDMI volmax=10 >/dev/null
+yes "lock: the background part of a scene is on record" wait_for '[ -n "$(owner)" ]'
+yes "lock: and counts as running" kill -0 "$(owner)"
+rm -f "$STUB_TV/hang"
+yes "lock: it gives the lock back when done" wait_for '! held'
+settle
+
+# The keeper starting during a verb leaves the verb's lock.
+reset
+kill "$FAKE" 2>/dev/null; rm -f "$RUN/keeper.pid"
+sleep 600 & HOLD=$!
+hold "$HOLD" "$(up)"
+sh "$CTL" start >/dev/null
+yes "lock: a keeper starts" wait_for '[ "$(st keeper)" = 1 ]'
+sleep 1
+is "lock: a starting keeper leaves a verb's lock" "$(owner)" "$HOLD"
+kp=$(cat "$RUN/keeper.pid"); kill "$kp" 2>/dev/null
+yes "lock: a stopped keeper ends" wait_for '! kill -0 "$kp" 2>/dev/null'
+is "lock: and still leaves it" "$(owner)" "$HOLD"
+kill "$HOLD" 2>/dev/null; rm -f "$RUN/lock"
 
 # ---------- the engine room's one answer ----------
 reset

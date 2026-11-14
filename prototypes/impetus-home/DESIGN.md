@@ -150,6 +150,14 @@ The page cannot change the TV by itself, so the work is split in three:
   flag that the shield is wanted. They are written before the TV is changed:
   a value that cannot be written down is not changed. Nothing is written
   anywhere else.
+- **One change at a time.** The helper, the keeper and a scene's background
+  part take turns through a lock (`/tmp/impetus/lock`) that names its holder.
+  Only the holder gives it back. It is taken over when the holder is no
+  longer running or has held it for more than two minutes; a verb that waits
+  16 s for a running holder goes on without the lock and leaves it alone.
+- **A call that never answers.** Every single call to a TV service is given
+  up after 10 s and counts as refused, so the put-back rules below apply to
+  it and the lock is never held by a call that hangs.
 - **Self-test.** At start the page asks the helper to `probe`. Each part that
   does not answer on this TV is hidden: no still means a plain slab, a scene
   whose parts are all missing is not drawn, the engine room door goes away if

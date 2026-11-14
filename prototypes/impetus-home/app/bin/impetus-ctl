@@ -57,6 +57,9 @@ STILL_MAXAGE=${IMPETUS_STILL_MAXAGE:-21600}
 NOTICE=120              # seconds of notice before standby
 TRIES=20                # turns a put-back is tried again when the TV refuses it
 FRONTWAIT=${IMPETUS_FRONTWAIT:-15}   # seconds `restore` waits for an app to come to the front
+LUNAWAIT=${IMPETUS_LUNAWAIT:-10}     # seconds one call to the TV may take
+LOCKWAIT=${IMPETUS_LOCKWAIT:-16}     # tries (about a second each) a verb waits for the lock
+LOCKMAX=${IMPETUS_LOCKMAX:-120}      # seconds after which a lock is taken over though its holder runs
 
 now() { if [ -n "$IMPETUS_NOW" ]; then echo "$IMPETUS_NOW"; else date +%s; fi; }
 
@@ -87,7 +90,24 @@ mark() { { printf '' > "$1"; } 2>/dev/null; }
 
 # ---------- luna ----------
 
-luna() { luna-send -n 1 "$1" "$2" 2>/dev/null </dev/null; }
+# One call, one answer. A service that never answers is given up after
+# $LUNAWAIT seconds: the call then counts as refused (no answer text). The
+# watcher writes nowhere, so a caller reading the answer never waits for it.
+luna() {
+  (
+    luna-send -n 1 "$1" "$2" 2>/dev/null </dev/null &
+    ln_p=$!
+    (
+      trap 'kill "$ln_s" 2>/dev/null; exit 0' TERM
+      sleep "$LUNAWAIT" & ln_s=$!
+      wait "$ln_s" && kill "$ln_p" 2>/dev/null
+    ) >/dev/null 2>&1 </dev/null &
+    ln_w=$!
+    wait "$ln_p"; ln_r=$?
+    kill "$ln_w" 2>/dev/null
+    exit "$ln_r"
+  ) 2>/dev/null   # the shell's own note about a call it ended stays out of the answer
+}
 ok() { case "$1" in *'"returnValue":true'*|*'"returnValue": true'*) return 0 ;; esac; return 1; }
 # The value of "key" in a JSON text on stdin (string or number). When a line
 # holds the key twice, the last one is taken.
@@ -108,16 +128,76 @@ launch() {
 
 # Shell variables are shared by every function in this file, so the helpers
 # below keep to their own names (lk, pp_*, so_*, ap_*, am_*, rt_*, vr_*, ...).
+#
+# The lock is the symbolic link $RUN/lock, and what it points at names its
+# holder: "pid.second" (seconds since the TV started). Making the link takes
+# the lock and names the holder in one step. Only the holder removes it. A
+# waiter takes it over when the holder is no longer running, when the lock is
+# older than $LOCKMAX seconds, or when something without a holder's name has
+# been in its place for 3 tries in a row.
+
+# The pid of this shell. Not $$: in a background part ( ... ) & that is still
+# the pid of the shell that started it, which may be gone already.
+lock_me() { exec sh -c 'echo "$PPID"'; }
+# Seconds since the TV started, into lk_now. Not the clock: it may jump when
+# the TV gets the time from the network.
+lock_now() {
+  lk_now= lk_x=
+  { read -r lk_now lk_x < /proc/uptime; } 2>/dev/null
+  lk_now=${lk_now%%.*}
+  is_num "$lk_now" || lk_now=$(date +%s)
+}
+lock_read() { ls -ld "$1" 2>/dev/null | sed -n 's/.* -> //p'; }
+
+# True when the lock in place may be taken over. Leaves what it read in lk_v.
+lock_stale() {
+  lk_v=$(lock_read "$RUN/lock")
+  lk_p=${lk_v%%.*}; lk_at=${lk_v#*.}
+  if ! is_num "$lk_p"; then lk_none=$((lk_none + 1)); [ "$lk_none" -ge 3 ]; return; fi
+  lk_none=0
+  [ "$lk_p" = "$lk_me" ] && return 0          # left behind under this very pid
+  kill -0 "$lk_p" 2>/dev/null || return 0
+  is_num "$lk_at" || return 0
+  lock_now
+  [ $((lk_now - lk_at)) -gt "$LOCKMAX" ]
+}
+
 lock() {
-  lk=0
-  while ! mkdir "$RUN/lock" 2>/dev/null; do
+  lk=0 lk_none=0
+  lk_me=$(lock_me)
+  is_num "$lk_me" || lk_me=$$
+  while :; do
+    lock_now
+    if ln -s "$lk_me.$lk_now" "$RUN/lock" 2>/dev/null; then
+      [ -L "$RUN/lock" ] && return 0
+      rm -f "$RUN/lock/$lk_me.$lk_now"       # a folder sat in its place and took the link in
+    fi
     lk=$((lk + 1))
-    [ "$lk" -eq 13 ] && rmdir "$RUN/lock" 2>/dev/null   # its holder died
-    [ "$lk" -gt 16 ] && return 1                       # /tmp full or read-only: go on without it
+    [ "$lk" -gt "$LOCKWAIT" ] && return 1    # held too long, /tmp full or read-only: go on without it
+    if lock_stale; then
+      # Moved aside in one step. If another waiter took it over first, what
+      # was moved is their new lock: it goes back under the same name.
+      rm -rf "$RUN/lock.old.$lk_me"
+      if mv "$RUN/lock" "$RUN/lock.old.$lk_me" 2>/dev/null; then
+        lk_q=$(lock_read "$RUN/lock.old.$lk_me")
+        [ "$lk_q" = "$lk_v" ] || ln -s "$lk_q" "$RUN/lock" 2>/dev/null
+        rm -rf "$RUN/lock.old.$lk_me"
+      fi
+      lk_none=0
+      continue
+    fi
     sleep 1
   done
 }
-unlock() { rmdir "$RUN/lock" 2>/dev/null; }
+
+# Only the holder's own lock is removed: a verb that went on without the
+# lock, or lost it to a take-over, leaves the next holder's lock alone.
+unlock() {
+  [ -n "$lk_me" ] || return 0
+  ul_v=$(lock_read "$RUN/lock")
+  [ "${ul_v%%.*}" = "$lk_me" ] && rm -f "$RUN/lock"
+  return 0
+}
 
 # ---------- picture ----------
 
@@ -325,7 +405,9 @@ scene_apply() {
       if { mkdir -p "$KEEP" && echo "$sa_was $VOLMAX" > "$KEEP/vol.new" &&
            mv "$KEEP/vol.new" "$KEEP/vol"; } 2>/dev/null; then
         echo "$sa_was $VOLMAX" > "$RUN/vol"
-        vol_put "$VOLMAX" || rm -f "$RUN/vol" "$KEEP/vol"
+        # A call that got no answer may still be carried out, so the record
+        # stays; it is dropped later if the volume is not the one set here.
+        vol_put "$VOLMAX"
       else
         rm -f "$KEEP/vol.new" 2>/dev/null
       fi
@@ -715,7 +797,6 @@ keeper() {
   mkdir -p "$RUN"
   keeper_alive && exit 0
   echo $$ > "$RUN/keeper.pid"
-  rm -rf "$RUN/lock"
   recover
   follow $$ &
   kp_follow=$!
@@ -734,6 +815,7 @@ keeper() {
 }
 
 keeper_end() {
+  unlock   # a turn that was stopped half-way gives its lock back
   kill "$kp_follow" 2>/dev/null
   if [ "$(cat "$RUN/keeper.pid" 2>/dev/null)" = "$$" ]; then rm -f "$RUN/keeper.pid" "$RUN/follow.pid" "$RUN/front"; fi
   exit 0
@@ -754,10 +836,8 @@ keeper_stop() {
 restore_all() {
   mkdir -p "$RUN"
   keeper_stop
-  # A turn of the keeper that was under way gets a moment to finish.
-  i=0
-  while [ -d "$RUN/lock" ] && [ "$i" -lt 5 ]; do sleep 1; i=$((i + 1)); done
-  rm -rf "$RUN/lock"
+  # A lock the stopped keeper left is taken over at once (its holder is
+  # gone); a verb still at work is waited for.
   lock
   for f in "$KEEP"/orig.*; do
     [ -s "$f" ] || continue

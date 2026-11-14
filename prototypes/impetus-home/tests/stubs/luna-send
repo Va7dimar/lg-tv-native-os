@@ -13,12 +13,16 @@
 #   nopower        the TV refuses every power call
 #   nolaunch       the TV refuses to open an app
 #   sub.lines      what a subscription (-i) to the app in front prints
+#   hang           (holds part of a call's address) that call never answers
+#   latevolume     the volume is set, but the answer never comes
 T=${STUB_TV:?}
 sub=0
 for a in "$@"; do [ "$a" = "-i" ] && sub=1; done
 while [ $# -gt 2 ]; do shift; done
 uri=$1; body=$2
 echo "$uri $body" >> "$T/calls"
+h=$(cat "$T/hang" 2>/dev/null)
+if [ -n "$h" ]; then case "$uri" in *"$h"*) exec sleep 60 ;; esac; fi
 front=$(cat "$T/front" 2>/dev/null)
 val() { echo "$body" | sed -n 's/.*"'"$1"'" *: *"\{0,1\}\([^",}]*\).*/\1/p' | head -n 1; }
 whole() { case "$1" in ""|-|*[!0-9-]*|?*-*) return 1 ;; esac; return 0; }
@@ -48,7 +52,9 @@ case "$uri" in
     if [ -e "$T/novolume" ]; then echo '{"returnValue":false,"errorText":"not ready"}'
     else echo "{\"returnValue\":true,\"volumeStatus\":{\"volume\":$(cat "$T/volume")}}"; fi ;;
   *audio/master/setVolume)
-    val volume > "$T/volume"; echo '{"returnValue":true}' ;;
+    val volume > "$T/volume"
+    [ -e "$T/latevolume" ] && exec sleep 60
+    echo '{"returnValue":true}' ;;
   *capture/executeOneShot)
     p=$(val path)
     if [ -e "$T/black" ]; then printf 'tiny' > "$p"; else head -c 4000 /dev/zero | tr '\0' 'x' > "$p"; fi
