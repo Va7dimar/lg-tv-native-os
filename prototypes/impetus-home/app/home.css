@@ -2,9 +2,9 @@
    apps/impetus globals.css). Rules: DESIGN.md. Chromium 79: no flex `gap`,
    no `inset`; all spacing is margins and the stage is scaled with `zoom` by
    home.js. */
-@font-face { font-family: "Syncopate"; font-weight: 700; src: url("fonts/Syncopate-Bold.woff2") format("woff2"); }
-@font-face { font-family: "Unbounded"; font-weight: 300 500; src: url("fonts/Unbounded-Variable.woff2") format("woff2"); }
-@font-face { font-family: "Plex Mono"; font-weight: 400; src: url("fonts/IBMPlexMono-Regular.woff2") format("woff2"); }
+/* One family, three roles. Doors and labels: 600 at the wide width, caps.
+   Reading: 400. Data: 500 with figures of one width, 300 when monumental. */
+@font-face { font-family: "Saira"; font-weight: 100 900; font-stretch: 50% 125%; src: url("fonts/Saira-Variable.woff2") format("woff2"); }
 
 :root {
   --ground: #000000;
@@ -31,7 +31,7 @@ button { font: inherit; color: inherit; border: 0; background: none; text-align:
 
 #stage {
   position: relative; width: 1920px; height: 1080px; overflow: hidden;
-  color: var(--text); font-family: "Unbounded", sans-serif; font-weight: 400;
+  color: var(--text); font-family: "Saira", sans-serif; font-weight: 400;
 }
 
 .room { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
@@ -51,12 +51,12 @@ button { font: inherit; color: inherit; border: 0; background: none; text-align:
 
 .ground { position: absolute; left: 112px; top: 718px; }
 .clock {
-  display: block; font-family: "Plex Mono", monospace; font-size: 180px; line-height: 1;
+  display: block; font-family: "Saira", sans-serif; font-weight: 300; font-stretch: 100%; font-variant-numeric: tabular-nums; font-size: 180px; line-height: 1;
   letter-spacing: -0.02em; color: var(--text);
 }
-.date { margin-top: 26px; font-size: 30px; font-weight: 300; color: var(--muted); }
-.sunline { margin-top: 14px; font-size: 22px; font-weight: 300; color: var(--muted); }
-.sunline .n { font-family: "Plex Mono", monospace; font-size: 23px; color: var(--text); }
+.date { margin-top: 26px; font-size: 30px; font-weight: 400; color: var(--muted); }
+.sunline { margin-top: 14px; font-size: 22px; font-weight: 400; color: var(--muted); }
+.sunline .n { font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums; font-size: 23px; color: var(--text); }
 .sunline .sep { margin: 0 14px; color: var(--line); }
 
 /* ---------- The room turns ---------- */
@@ -84,10 +84,10 @@ body.instant .room { transition: none; }
 }
 
 .label {
-  font-family: "Syncopate", sans-serif; font-weight: 700; font-size: 16px;
+  font-family: "Saira", sans-serif; font-weight: 600; font-stretch: 125%; font-size: 18px;
   letter-spacing: 0.08em; color: var(--muted); margin-bottom: 18px;
 }
-.n { font-family: "Plex Mono", monospace; }
+.n { font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums; }
 
 /* ---------- Pressables ---------- */
 
@@ -95,7 +95,7 @@ body.instant .room { transition: none; }
   position: relative; display: block;
   background: linear-gradient(180deg, var(--slab-top), var(--pane));
   box-shadow: var(--edge), 3px 3px 0 var(--key-wall);
-  font-family: "Syncopate", sans-serif; font-weight: 700; letter-spacing: 0.08em;
+  font-family: "Saira", sans-serif; font-weight: 600; font-stretch: 125%; letter-spacing: 0.08em;
   color: var(--text); white-space: nowrap; overflow: hidden;
 }
 .key.focused {
@@ -119,14 +119,14 @@ body.instant .room { transition: none; }
 .col-apps { position: absolute; left: 840px; top: 112px; width: 640px; }
 .col-scenes { position: absolute; left: 1496px; top: 112px; width: 328px; }
 
-.appletv { width: 700px; height: 500px; margin-top: 34px; font-size: 72px; line-height: 1; }
+.appletv { width: 700px; height: 500px; margin-top: 34px; font-size: 80px; line-height: 1; }
 .appletv .name { position: absolute; left: 44px; bottom: 52px; }
 .still { position: absolute; left: 0; top: 0; width: 700px; height: 500px; object-fit: cover; opacity: 0.7; }
 .shade { display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%;
   background: linear-gradient(180deg, rgba(13, 14, 16, 0.10) 0%, rgba(13, 14, 16, 0.30) 45%, rgba(10, 11, 13, 0.94) 100%); }
 .appletv.has-still .shade { display: block; }
 .stillage {
-  position: absolute; right: 28px; top: 24px; font-family: "Plex Mono", monospace;
+  position: absolute; right: 28px; top: 24px; font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums;
   font-size: 18px; letter-spacing: 0; color: var(--text);
 }
 
@@ -135,11 +135,11 @@ body.instant .room { transition: none; }
 .shortcuts:after, .apps:after { content: ""; display: block; clear: both; }
 .shortcut {
   float: left; width: 222px; height: 150px; margin-right: 17px; padding: 30px 24px 0;
-  font-size: 22px;
+  font-size: 24px;
 }
 .shortcut .name { display: block; }
 .shortcut .place {
-  display: block; margin-top: 16px; font-family: "Unbounded", sans-serif; font-weight: 300;
+  display: block; margin-top: 16px; font-family: "Saira", sans-serif; font-weight: 400; font-stretch: 100%;
   font-size: 22px; letter-spacing: 0; color: var(--muted); white-space: normal;
 }
 
@@ -147,20 +147,20 @@ body.instant .room { transition: none; }
 .appcol { float: left; width: 300px; margin-right: 16px; }
 .appbar {
   width: 300px; height: 110px; margin-bottom: 16px; padding: 0 24px;
-  font-size: 20px; line-height: 110px; text-overflow: ellipsis;
+  font-size: 22px; line-height: 110px; text-overflow: ellipsis;
 }
-.note { margin-top: 4px; font-size: 20px; font-weight: 300; color: var(--muted); }
+.note { margin-top: 4px; font-size: 20px; font-weight: 400; color: var(--muted); }
 
 /* A button centres its content, so each line is placed by hand. */
-.scene { width: 328px; height: 176px; margin-bottom: 16px; font-size: 24px; white-space: normal; }
+.scene { width: 328px; height: 176px; margin-bottom: 16px; font-size: 27px; white-space: normal; }
 .scene .name { position: absolute; left: 24px; top: 24px; white-space: nowrap; }
 .scene .does {
   position: absolute; left: 24px; top: 62px; width: 280px; text-align: left;
-  font-family: "Unbounded", sans-serif; font-weight: 300;
+  font-family: "Saira", sans-serif; font-weight: 400; font-stretch: 100%;
   font-size: 18px; line-height: 24px; letter-spacing: 0; color: var(--muted);
 }
 .scene .state {
-  position: absolute; left: 24px; bottom: 20px; font-family: "Plex Mono", monospace;
+  position: absolute; left: 24px; bottom: 20px; font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums;
   font-size: 18px; letter-spacing: 0; color: var(--text);
 }
 
@@ -171,12 +171,12 @@ body.instant .room { transition: none; }
   box-shadow: var(--edge); overflow: hidden;
 }
 .what {
-  float: left; font-family: "Syncopate", sans-serif; font-weight: 700; font-size: 16px;
+  float: left; font-family: "Saira", sans-serif; font-weight: 600; font-stretch: 125%; font-size: 18px;
   letter-spacing: 0.08em; color: var(--muted);
 }
 .shieldline .n { float: right; font-size: 22px; color: var(--text); }
 
-.door { width: 328px; height: 98px; padding: 0 24px; font-size: 20px; line-height: 98px; }
+.door { width: 328px; height: 98px; padding: 0 24px; font-size: 22px; line-height: 98px; }
 
 /* ---------- Room 3: the engine room. Slabs on the ground, 16 px apart. ---------- */
 
@@ -190,49 +190,49 @@ body.instant .room { transition: none; }
 .log { left: 1208px; width: 616px; height: 872px; }
 
 .temp {
-  margin-top: 10px; font-family: "Plex Mono", monospace; font-size: 168px; line-height: 1;
+  margin-top: 10px; font-family: "Saira", sans-serif; font-weight: 300; font-stretch: 100%; font-variant-numeric: tabular-nums; font-size: 168px; line-height: 1;
   letter-spacing: -0.02em; color: var(--text);
 }
 .temp .unit { margin-left: 14px; font-size: 44px; letter-spacing: 0; color: var(--muted); }
-.row { margin-top: 34px; height: 28px; line-height: 28px; overflow: hidden; }
+.row { margin-top: 30px; height: 32px; line-height: 32px; overflow: hidden; }
 .row .n { float: right; font-size: 22px; color: var(--text); }
 .meter { margin-top: 12px; height: 4px; background: var(--line); }
 .meter span { display: block; width: 0; height: 4px; background: var(--text); }
 
 .shieldkey {
   position: absolute; left: 96px; top: 688px; width: 520px; height: 296px;
-  padding: 40px 34px 0; font-size: 44px; line-height: 1; white-space: normal;
+  padding: 40px 34px 0; font-size: 48px; line-height: 1; white-space: normal;
 }
 .shieldkey .name { display: block; }
 .shieldkey .state {
-  display: block; margin-top: 24px; font-family: "Plex Mono", monospace; font-size: 30px;
+  display: block; margin-top: 24px; font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums; font-size: 30px;
   letter-spacing: 0; color: var(--text);
 }
 .shieldkey .does {
-  display: block; margin-top: 22px; font-family: "Unbounded", sans-serif; font-weight: 300;
+  display: block; margin-top: 22px; font-family: "Saira", sans-serif; font-weight: 400; font-stretch: 100%;
   font-size: 18px; line-height: 1.45; letter-spacing: 0; color: var(--muted);
 }
 
 .talkers .label, .log .label { margin-bottom: 8px; }
-.count { font-family: "Plex Mono", monospace; font-size: 96px; line-height: 1.1; color: var(--text); }
-.sub { font-size: 18px; font-weight: 300; color: var(--muted); }
+.count { font-family: "Saira", sans-serif; font-weight: 300; font-stretch: 100%; font-variant-numeric: tabular-nums; font-size: 96px; line-height: 1.1; color: var(--text); }
+.sub { font-size: 18px; font-weight: 400; color: var(--muted); }
 .talklist { list-style: none; margin-top: 30px; }
 .talklist li { position: relative; height: 58px; margin-bottom: 12px; overflow: hidden; }
 .talklist .bar { position: absolute; left: 0; top: 0; height: 58px; background: rgba(230, 234, 241, 0.09); }
 .talklist .who {
-  position: absolute; left: 16px; top: 0; font-family: "Plex Mono", monospace; font-size: 20px;
+  position: absolute; left: 16px; top: 0; font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums; font-size: 20px;
   line-height: 58px; color: var(--muted); white-space: nowrap;
 }
 .talklist .owner { color: var(--text); }
 .talklist .arrow { color: var(--line); }
 .talklist .num {
-  position: absolute; right: 16px; top: 0; font-family: "Plex Mono", monospace; font-size: 22px;
+  position: absolute; right: 16px; top: 0; font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums; font-size: 22px;
   line-height: 58px; color: var(--text);
 }
 
 .loglist { list-style: none; margin-top: 22px; }
 .loglist li {
-  font-family: "Plex Mono", monospace; font-size: 18px; line-height: 1.4; color: var(--muted);
+  font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums; font-size: 18px; line-height: 1.4; color: var(--muted);
   margin-bottom: 14px; word-wrap: break-word; overflow-wrap: break-word;
 }
 .loglist .who { color: var(--text); }
@@ -241,9 +241,9 @@ body.instant .room { transition: none; }
 
 .notice { background: var(--ground); visibility: hidden; }
 body.notice .notice { visibility: visible; }
-.notice .label { position: absolute; left: 112px; top: 250px; font-size: 22px; }
+.notice .label { position: absolute; left: 112px; top: 250px; font-size: 24px; }
 .countdown {
-  position: absolute; left: 104px; top: 300px; font-family: "Plex Mono", monospace;
+  position: absolute; left: 104px; top: 300px; font-family: "Saira", sans-serif; font-weight: 300; font-stretch: 100%; font-variant-numeric: tabular-nums;
   font-size: 340px; line-height: 1; letter-spacing: -0.02em; color: var(--text);
 }
-.noticeline { position: absolute; left: 112px; top: 690px; font-size: 30px; font-weight: 300; color: var(--muted); }
+.noticeline { position: absolute; left: 112px; top: 690px; font-size: 30px; font-weight: 400; color: var(--muted); }

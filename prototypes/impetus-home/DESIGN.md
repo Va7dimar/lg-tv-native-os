@@ -26,11 +26,12 @@ for the frame".
   `--color-text` on the arc carrying the green halo (`--color-brand-light`,
   quiet fill `--color-brand-quiet`). Below the horizon (night) the point sinks
   under the line and only a dim green glow spills up over it.
-- **Data.** The clock in Plex Mono, monumental (180 px), bottom left on the
-  ground below the horizon. Under it the date in Unbounded, muted
+- **Data.** The clock in Saira 300, monumental (180 px), bottom left on the
+  ground below the horizon. Under it the date in Saira 400, muted
   (`Saturday 14 November`), and one line
-  `sunrise 09:54 · sunset 16:31 · 6 h 37 min` (words in Unbounded, numbers in
-  Plex Mono, case rule: mono is data).
+  `sunrise 09:54 · sunset 16:31 · 6 h 37 min` (words in Saira 400, numbers in
+  Saira 500 with figures of one width, so a changing number never shifts its
+  line).
 - **Motion.** Still. The sun moves at the speed of the real sun; the redraw is
   once a minute. Nothing floats or pulses.
 
@@ -49,18 +50,18 @@ something an Apple TV home screen does not: set the room, not only open apps.
   else. The room is a full slab (top light, slab gradient) with the 140 px lead
   band of `--color-text` washing its top edge.
 - **APPLE TV**: the focal object. A large pressable slab at the left, wider than
-  everything else, `APPLE TV` in Syncopate 700 caps, 72 px, too big for its
+  everything else, `APPLE TV` in wide Saira 600 caps, 80 px, too big for its
   slab's comfort. It has focus when the room arrives, so OK goes straight to
   HDMI 2. Its face carries a **live still** of HDMI 2 under the type: a small
   capture of the video plane, refreshed about every 3 s while the room is open
   and dimmed so the type stays the loudest thing. When a live capture is black
   or fails, the last still seen while the Apple TV was in front is shown with
-  its age in Plex Mono (`12 MIN AGO`); with neither, the slab is plain.
+  its age in data figures (`12 MIN AGO`); with neither, the slab is plain.
 - **SHORTCUTS**: a row of pressables under it, each a TV app opened at a set
-  place (webOS deep link). Two lines per face: the app in Syncopate caps, the
-  place in Unbounded muted. Listed in `config.js`.
+  place (webOS deep link). Two lines per face: the app in wide Saira caps, the
+  place in Saira 400 muted. Listed in `config.js`.
 - **APPS**: the rest as a column list, not a card grid. Each app is a long, low
-  pressable bar, its name in Syncopate caps. Two columns of six.
+  pressable bar, its name in wide Saira caps. Two columns of six.
 - **SCENES**: the right column, three tall keys. A scene sets the room in one
   press: it opens what you watch and changes the TV around it. Each is one
   entry in `config.js`.
@@ -72,11 +73,11 @@ something an Apple TV home screen does not: set the room, not only open apps.
     in 60 minutes.
 
   A scene key **latches**: while its scene is on, the face stays down on its
-  wall with a steady quiet halo and a state line in Plex Mono (`ON · UNTIL
+  wall with a steady quiet halo and a state line in data figures (`ON · UNTIL
   09:54`, `ON · SLEEPS 23:40`). Pressing a latched key turns the scene off and
   puts the TV back as it was. One scene at a time.
-- **SHIELD**: under the scenes, read only: the count of blocked calls in Plex
-  Mono, or `OFF`.
+- **SHIELD**: under the scenes, read only: the count of blocked calls in data
+  figures, or `OFF`.
 - **ENGINE ROOM**: the last key in the column, a door.
 
 ## Room 3: the engine room
@@ -87,13 +88,13 @@ wall.
 
 - **Arrival.** The same room turn, from the control room. BACK returns to the
   control room; 60 s with no key returns to the living room.
-- **VITALS** (read only): temperature as the one big number in Plex Mono, then
+- **VITALS** (read only): temperature as the one big number in Saira 300, then
   uptime, memory and storage as thin meters. Refreshed every 5 s while the room
   is open.
 - **WHO TALKS THE MOST** (read only): open connections grouped by the program
   on the TV and by who owns the far end (LG, Google, Apple, Netflix, a cloud
   host, unknown), most first, as ranked bars with a count.
-- **LOG** (read only): the newest lines of the system log in Plex Mono,
+- **LOG** (read only): the newest lines of the system log in data figures,
   filtered. Device ids never reach the screen: hardware addresses, long hex
   ids, UUIDs and serial values are masked before a line is drawn.
 - **SHIELD**: the one pressable in the room, a latching switch. On, it blocks
@@ -109,9 +110,9 @@ wall.
 | Read-only | flat slab, no wall | decision 12 |
 | Focus | green halo + 2 px `--color-text` ring set 2 px out; snaps, no transition | brand digest |
 | Press (OK) | face drops 3 px onto its wall with no transition; a faint green halo flares | decision 14 (key actions do not animate), brand reading 9 |
-| Latched | face stays down on its wall, steady quiet halo, state line in Plex Mono | new, from the press rule |
+| Latched | face stays down on its wall, steady quiet halo, state line in data figures | new, from the press rule |
 | Slab gap | ground only, never a rule; 16 px at TV scale | inherited 8 px, ×2 |
-| Text | Syncopate 700 caps for doors, Unbounded for reading, Plex Mono for data only | type.md |
+| Text | one family, Saira: 600 at the wide width in caps for doors and labels, 400 for reading, 500 with figures of one width for data, 300 for the monumental numbers | owner's pick, 2026-11-14 |
 | Navigation | arrows move to the nearest focusable in that direction (spatial) | new |
 | Language | English on every face and label | owner, 2026-11-14 |
 

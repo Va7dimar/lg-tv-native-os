@@ -34,7 +34,7 @@ def main():
     data = tarfile.open(fileobj=io.BytesIO(gzip.decompress(parts["data.tar.gz"])))
     names = data.getnames()
     prefix = "usr/palm/applications/org.va7dimar.home/"
-    for need in ("appinfo.json", "index.html", "home.js", "fonts/Syncopate-Bold.woff2", "fonts/LICENSE-Syncopate.txt",
+    for need in ("appinfo.json", "index.html", "home.js", "fonts/Saira-Variable.woff2", "fonts/LICENSE-Saira.txt",
                  "icon.png", "bin/impetus-ctl", "bin/shield-count.js", "shield/hosts.txt"):
         assert prefix + need in names, need
     assert not [n for n in names if n.startswith(prefix + "state")], "state/ is the TV's own folder"
