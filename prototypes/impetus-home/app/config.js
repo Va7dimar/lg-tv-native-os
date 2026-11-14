@@ -45,12 +45,12 @@ window.IMPETUS_CONFIG = {
   ],
 
   // App ids listed here come first, in this order; the rest follow by name.
-  order: ["youtube.leanback.v4", "netflix", "com.disney.disneyplus-prod", "amazon", "spotify-beehive"],
+  order: ["youtube.leanback.v4", "com.disney.disneyplus-prod", "spotify-beehive"],
   // App ids never shown. Inputs are not apps (they are system apps) and never
   // show in the list; only the Apple TV door above reaches one.
-  hide: [],
+  hide: ["netflix", "amazon", "ui30", "tv.twitch.tv.starshot.lg"],   // Netflix, Prime Video, Rakuten TV, Twitch
   // Short names for apps whose title is too long for a bar.
-  labels: { "spotify-beehive": "Spotify", "ui30": "Rakuten TV", "berlin.philharmonic": "Berliner Phil.", "org.webosbrew.hbchannel": "Homebrew" },
+  labels: { "spotify-beehive": "Spotify", "berlin.philharmonic": "Berliner Phil.", "org.webosbrew.hbchannel": "Homebrew" },
 
   idleSeconds: 60,       // no key for this long: back to the living room
   stateEverySeconds: 5,  // scene and shield state, while the control room is open
