@@ -678,6 +678,37 @@ sh "$HOOK"
 wait_for '[ -s "$W/hook.pid" ]'; sleep 1
 is "boot hook: paused, it opens nothing" "$(calls applicationmanager/launch)" 0
 kill "$(cat "$W/hook.pid")" 2>/dev/null
+# A wake: the TV shows its last input and stock Home never comes up. The
+# hook opens Impetus once when it starts; a wake is one opening more.
+export IMPETUS_HOOK_WAKE=0 IMPETUS_HOOK_LOG="$W/tvlog"
+wake_run() {   # $1: the states the TV reports, one per line; $2: the log's last power line
+  reset
+  rm -f "$W/pause" "$W/hook.pid" "$W/hook.pid.rest" "$W/hook.pid.count"
+  echo '{"appId":"com.webos.app.hdmi2","returnValue":true}' > "$STUB_TV/sub.lines"
+  tv_front com.webos.app.hdmi2
+  echo "$1" | while read -r s; do echo "{ \"returnValue\": true, \"state\": \"$s\" }"; done > "$STUB_TV/sub.power"
+  echo "2026-11-14T15:29:37.3Z [1652.1] user.info tvpowerd [] tvpowerd NL_POWER_STATE $2" > "$W/tvlog"
+  sh "$HOOK"
+  wait_for '[ -s "$W/hook.pid" ]'
+}
+wake_run "Active
+Suspend
+Active" '{"old":"Suspend","new":"Active","PowerOnReason":"remoteKey"}'
+yes "boot hook: a wake by the TV's remote opens Impetus" wait_for '[ "$(calls "\"id\":\"$US\"")" -ge 2 ]'
+is "boot hook: once per wake" "$(calls "\"id\":\"$US\"")" 2
+kill "$(cat "$W/hook.pid")" 2>/dev/null
+wake_run "Active
+Suspend
+Active" '{"old":"Suspend","new":"Active","PowerOnReason":"hdmiCec"}'
+sleep 1
+is "boot hook: a wake by another device leaves it in front" "$(calls applicationmanager/launch)" 1
+kill "$(cat "$W/hook.pid")" 2>/dev/null
+wake_run "Active
+Screen Off
+Active" '{"old":"Screen Off","new":"Active"}'
+sleep 1
+is "boot hook: the screen coming back on is not a wake" "$(calls applicationmanager/launch)" 1
+kill "$(cat "$W/hook.pid")" 2>/dev/null
 
 echo "$n checks, $failed failed"
 [ "$failed" = 0 ]

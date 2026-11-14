@@ -13,6 +13,7 @@
 #   nopower        the TV refuses every power call
 #   nolaunch       the TV refuses to open an app
 #   sub.lines      what a subscription (-i) to the app in front prints
+#   sub.power      what a subscription (-i) to the power state prints
 #   hang           (holds part of a call's address) that call never answers
 #   latevolume     the volume is set, but the answer never comes
 T=${STUB_TV:?}
@@ -59,7 +60,10 @@ case "$uri" in
     p=$(val path)
     if [ -e "$T/black" ]; then printf 'tiny' > "$p"; else head -c 4000 /dev/zero | tr '\0' 'x' > "$p"; fi
     echo '{"returnValue":true}' ;;
-  *tvpower/power/turnOffScreen|*tvpower/power/getPowerState)
+  *tvpower/power/getPowerState)
+    if [ "$sub" = 1 ] && [ -r "$T/sub.power" ]; then cat "$T/sub.power"
+    else echo '{"returnValue":true}'; fi ;;
+  *tvpower/power/turnOffScreen)
     echo '{"returnValue":true}' ;;
   *tvpower/power/turnOff)
     echo '{"returnValue":false,"errorText":"Unknown method"}' ;;

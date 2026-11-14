@@ -15,6 +15,11 @@
 #      minute, Impetus keeps closing (or Home was pressed six times), so
 #      stock Home is left alone for 2 minutes and then it tries again. Only
 #      one watcher runs at a time.
+#   3. opens it on every wake. The remote's power button puts this TV to
+#      sleep, and on wake the TV shows the last input: stock Home never
+#      comes up, so the wake itself is the cue. Only a wake by the TV's
+#      own remote counts; a wake by another device (the Apple TV's remote
+#      over HDMI) means that device is wanted, and it is left in front.
 #
 # Pause without a reboot:   touch /tmp/impetus-pause    (rm it to resume)
 # Way back to stock Home:   rm /var/lib/webosbrew/init.d/impetus-home
@@ -26,6 +31,7 @@
 APP=org.va7dimar.home
 STOCK=com.webos.app.home
 SAM=luna://com.webos.service.applicationmanager
+POWER=luna://com.webos.service.tvpower/power
 CTL=${IMPETUS_CTL:-/media/developer/apps/usr/palm/applications/$APP/bin/impetus-ctl}
 PAUSE=${IMPETUS_PAUSE:-/tmp/impetus-pause}
 PIDFILE=${IMPETUS_HOOK_PID:-/tmp/impetus-hook.pid}
@@ -35,6 +41,8 @@ WAIT=${IMPETUS_HOOK_WAIT:-25}   # seconds for the system to come up
 BURST=5                         # more reopenings than this ...
 WINDOW=60                       # ... within this many seconds: Impetus keeps closing
 REST=${IMPETUS_HOOK_REST:-120}  # leave stock Home alone this long, then try again
+WAKEWAIT=${IMPETUS_HOOK_WAKE:-3}             # after a wake, let the TV reopen its last input first
+LOG=${IMPETUS_HOOK_LOG:-/var/log/messages}   # where the TV writes why it woke
 
 # One watcher at a time: a second run (by hand, or Homebrew Channel running
 # the folder again) ends here.
@@ -75,6 +83,33 @@ watch() {
   done
 }
 
+# Why the TV woke, from its own log: remoteKey for the TV's remote. Empty
+# when the log does not say.
+wake_reason() {
+  grep NL_POWER_STATE "$LOG" 2>/dev/null | tail -n 1 | sed -n 's/.*"PowerOnReason":"\([^"]*\)".*/\1/p'
+}
+
+# $1: the watcher's pid; this ends when that one is gone.
+wake() {
+  while kill -0 "$1" 2>/dev/null; do
+    slept=
+    luna-send -i "$POWER/getPowerState" '{"subscribe":true}' 2>/dev/null </dev/null |
+      while read -r line; do
+        case "$line" in
+          *'"state":"Suspend"'*|*'"state": "Suspend"'*|*'"Active Standby"'*) slept=1 ;;
+          *'"state":"Active"'*|*'"state": "Active"'*)
+            if [ -n "$slept" ]; then
+              slept=
+              sleep "$WAKEWAIT"
+              case "$(wake_reason)" in ""|remoteKey) open_ours ;; esac
+            fi ;;
+        esac
+      done
+    sleep 5
+  done
+}
+
 watch >/dev/null 2>&1 </dev/null &
 echo $! > "$PIDFILE"
+wake $! >/dev/null 2>&1 </dev/null &
 exit 0
