@@ -40,7 +40,8 @@ int main(void)
 	check("parse B", photo_frame_parse_mode("B\n", &mode) == 0 && mode == PHOTO_FRAME_B);
 	check("parse b spaces", photo_frame_parse_mode("  b  ", &mode) == 0 && mode == PHOTO_FRAME_B);
 	check("reject empty", photo_frame_parse_mode("", &mode) != 0);
-	check("reject C", photo_frame_parse_mode("C\n", &mode) != 0);
+	check("parse C", photo_frame_parse_mode("C\n", &mode) == 0 && mode == PHOTO_FRAME_C);
+	check("reject D", photo_frame_parse_mode("D\n", &mode) != 0);
 	check("reject AB", photo_frame_parse_mode("AB", &mode) != 0);
 	check("reject null", photo_frame_parse_mode(NULL, &mode) != 0);
 

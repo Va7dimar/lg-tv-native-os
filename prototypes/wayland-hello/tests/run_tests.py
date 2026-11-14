@@ -227,7 +227,7 @@ def menu_tests():
     check("OK on Exit exits", rc == 0 and dt < 4.0 and "exiting (menu-exit)" in err, "rc=%d dt=%.2f" % (rc, dt))
 
 
-PHOTO_A_BG, PHOTO_B_BG, PHOTO_CORNER = 0xffff00d0, 0xff00c8ff, 0xfffff200
+PHOTO_A_BG, PHOTO_B_BG, PHOTO_C_BG, PHOTO_CORNER = 0xffff00d0, 0xff00c8ff, 0xff20d060, 0xfffff200
 
 
 def photo_frame_tests(ose):
@@ -257,6 +257,14 @@ def photo_frame_tests(ose):
           rc == 0 and bufs and bufs[0][2] == 1920 and bufs[0][3] == 1080
           and ("op2", ["_WEBOS_WINDOW_TYPE", "_WEBOS_WINDOW_TYPE_OVERLAY"]) in seq
           and last_pixels(ev).get("200,540") == PHOTO_B_BG, str(seq) + err[-400:])
+
+    (rc, out, err, dt), ev = with_mock(["--webos", "--seats", "1"], ["--photo-frame", "C", "--duration", "2"],
+                                       env_extra={"WAYLAND_HELLO_LIB_DIR": ose})
+    seq = [(e.get("req"), e.get("args")) for e in ev if e.get("iface") == "wl_webos_shell_surface"]
+    check("photo-frame C: webOS CARD with appId, green",
+          rc == 0 and ("op2", ["_WEBOS_WINDOW_TYPE", "_WEBOS_WINDOW_TYPE_CARD"]) in seq
+          and any(r == "op2" and a and a[0] == "appId" for r, a in seq)
+          and last_pixels(ev).get("200,540") == PHOTO_C_BG, str(seq) + err[-400:])
 
 
 def egl_tests():

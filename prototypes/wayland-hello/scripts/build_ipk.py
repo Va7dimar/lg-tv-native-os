@@ -132,8 +132,8 @@ def build_ipk(binary_path, out_path, mtime=0, lifecycle="omit", default_window_t
         raise SystemExit("binary not found: %s" % binary_path)
     if photo_frame:
         token = str(photo_frame).strip().upper()
-        if token not in ("A", "B"):
-            raise SystemExit("photo_frame must be A or B")
+        if token not in ("A", "B", "C"):
+            raise SystemExit("photo_frame must be A, B or C")
         photo_frame = token
         # Photograph-test IPKs are SAM lifecycle-2 so registerApp matches
         # appinfo main=the ELF. MODE A is a focusable CARD; MODE B is overlay.
@@ -228,9 +228,9 @@ def main(argv):
     )
     parser.add_argument(
         "--photo-frame",
-        choices=("A", "B"),
+        choices=("A", "B", "C"),
         default=None,
-        help="package a photo-frame sidecar (A=focusable fullscreen, B=overlay fullscreen)",
+        help="package a photo-frame sidecar (A=focusable fullscreen, B=overlay fullscreen, C=webOS CARD with appId)",
     )
     args = parser.parse_args(argv)
     if args.heartbeat_ms and not 100 <= args.heartbeat_ms <= 60000:
