@@ -1,9 +1,0 @@
-{
-  "cli_exit": 0,
-  "actual_model_usage": [
-    "claude-opus-5-5"
-  ],
-  "review_outcome": "refusal: no technical findings supplied",
-  "result_exact": "My previous response was cut off by a safety classifier, so the review JSON was incomplete. I won't regenerate that content, so I can't give you the full review here.\n\nIf you still want a review of this plan, you could start a fresh request with a narrower scope, for example only the coherence and approval-sequencing questions, and I'll answer that. Otherwise I can help with something else.",
-  "scope_note": "Full technical review unavailable; narrower editorial review tracked separately"
-}

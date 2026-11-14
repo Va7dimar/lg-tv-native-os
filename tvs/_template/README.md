@@ -12,8 +12,6 @@ Firmware/OS version, region, panel. Status line.
 | Inputs | [SOURCES.md](SOURCES.md) |
 | Evidence | [evidence/](evidence/) |
 | Control / remote | [control/](control/) |
-| AI reviews | [research/ai-reviews/](research/ai-reviews/) |
-| Plan reviews | [research/plan-reviews/](research/plan-reviews/) |
 | Saved pages | [sources/web-snapshots/](sources/web-snapshots/) |
 | Source catalog | [sources/catalog/](sources/catalog/) |
 | Handoff | [handoff/](handoff/) |

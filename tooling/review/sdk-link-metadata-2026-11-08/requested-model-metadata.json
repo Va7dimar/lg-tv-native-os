@@ -1,9 +1,0 @@
-{
-  "requested_role": "PRIMARY",
-  "requested_access": "subscribed Codex",
-  "requested_model": "gpt-6.1-sol",
-  "requested_reasoning": "HIGH",
-  "actual_backend_model_independently_attested": false,
-  "external_providers_used": false,
-  "agents_spawned": false
-}
