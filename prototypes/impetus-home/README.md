@@ -62,6 +62,22 @@ No LG SDK. The same files always give the same bytes.
 app order, hidden apps and short names. `app/shield/hosts.txt` is the shield's
 list, one host per line.
 
+## Next
+
+The TV session comes first: [#14](https://github.com/Va7dimar/lg-tv-native-os/issues/14).
+Ideas that were wanted and parked, one issue each:
+
+| Idea | Issue |
+|---|---|
+| Your TV day: a timeline of what was on | [#6](https://github.com/Va7dimar/lg-tv-native-os/issues/6) |
+| Remote keys as direct doors | [#7](https://github.com/Va7dimar/lg-tv-native-os/issues/7) |
+| The control room follows the hour | [#8](https://github.com/Va7dimar/lg-tv-native-os/issues/8) |
+| Moon, aurora and weather in the sky | [#9](https://github.com/Va7dimar/lg-tv-native-os/issues/9) |
+| Sound to Bluetooth headphones | [#10](https://github.com/Va7dimar/lg-tv-native-os/issues/10) |
+| Wake and sleep the Apple TV over HDMI-CEC | [#11](https://github.com/Va7dimar/lg-tv-native-os/issues/11) |
+| Apple TV app control and now playing | [#12](https://github.com/Va7dimar/lg-tv-native-os/issues/12) |
+| Live HDMI video in the APPLE TV slab | [#13](https://github.com/Va7dimar/lg-tv-native-os/issues/13) |
+
 ## Layout
 
 | Path | Holds |
