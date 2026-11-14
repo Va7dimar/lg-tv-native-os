@@ -113,10 +113,16 @@ is in Icelandic with a 24-hour clock.
    `com.webos.app.livetv`, but check them on the TV).
 3. **Clock and info bar** along the top: 24-hour time in Plex Mono and an
    Icelandic date, e.g. `laugardagur 14. nóvember`. No weather in v1.
-4. **Brand**: the Impetus primary colourway, in
-   [`impetus-home-brand-digest.md`](impetus-home-brand-digest.md). Focus is
-   the green halo **plus** the 2 px `#E6EAF1` ring, and a press is a 60 ms
-   snap.
+4. **Brand**: the Impetus primary colourway. The source of truth is the
+   owner's monorepo with `apps/impetus` (tokens in
+   `apps/impetus/src/app/globals.css`, fonts in `apps/impetus/src/fonts/`,
+   rules in `.design-sync/` and `docs/impetus/design-vision/`, the mark in
+   the brand package's Logos). The design-system artifact is shared with
+   your account too. [`impetus-home-brand-digest.md`](impetus-home-brand-digest.md)
+   is a quick reference with the exact paths; the repo wins where they
+   differ. Focus is the green halo **plus** the 2 px `#E6EAF1` ring, and a
+   press is a 60 ms snap. Use the real mark from that repo for the launcher
+   icon.
 5. Remote: arrows move focus, OK launches, BACK does nothing on Home. No
    pointer UI in v1.
 

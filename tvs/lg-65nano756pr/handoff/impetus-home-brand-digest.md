@@ -1,9 +1,24 @@
 # Impetus brand digest for Impetus Home (TV)
 
-A digest of the owner's Impetus design system (synced 2026-10-04, brand
-rulings 2026-10-23/24), copied here because the building session can't open
-the original. Only the parts a TV home screen needs. Hex values are exact.
-Use them as CSS variables; don't invent new colours.
+**Source of truth: the owner's monorepo, the one with `apps/impetus`** (the
+owner's own repo on the PC you run on). Read these there, in this order:
+
+| Path in that repo | What it holds |
+|---|---|
+| `apps/impetus/src/app/globals.css` | The tokens, as CSS variables. Copy the values from here. |
+| `apps/impetus/src/fonts/` | The three font files. Bundle these into the Home rather than fetching from Google Fonts. |
+| `.design-sync/guidelines`, `.design-sync/docs` | Colour, type, motion and composition rules, one doc per part. |
+| `docs/impetus/design-vision/vision.md` | The numbered rulings that the rules cite. |
+| `docs/impetus/design-vision/brand/package/`, `docs/impetus/design-vision/brand-taste/summary.md` | The brand layer (the green light, the halo) and the Logos (the mark, for the launcher icon). |
+
+The owner also shared the design-system artifact with your account:
+<https://claude.ai/artifact/32kKsnrcTjnk1xTX3iypWF> (read
+`project/README.md`, `colour.md`, `type.md`, `brand.md`, `tokens.json`).
+
+The digest below is a quick reference, taken from that system (synced
+2026-10-04, brand rulings 2026-10-23/24). Where it differs from the repo,
+**the repo wins**. Only the parts a TV home screen needs. Don't invent new
+colours.
 
 ## Colourway: primary only
 
@@ -61,9 +76,9 @@ date 30 px Unbounded in muted, clock 64 px Plex Mono in text. Tune on the TV.
   to a short imperative. The site's line is "Go in. Play around. See what
   happens.", but Home v1 needs no tagline.
 - The Impetus mark (one fine line that forks: ink stem, phthalo branch) is
-  for the **launcher icon only**, never inside the UI. Don't redraw or
-  recolour it. If you don't have the asset, use a plain placeholder icon and
-  say so.
+  for the **launcher icon only**, never inside the UI. Take it from the
+  Logos in the monorepo's brand package (the favicon cut suits a small
+  icon). Don't redraw or recolour it.
 
 Secondary colourway (grey `#2A2A2C`, orange `#FF5A1F`, white): **not** for
 v1. Never mix it with the green.
