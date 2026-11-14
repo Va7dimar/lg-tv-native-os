@@ -54,3 +54,5 @@ python3 -m unittest discover -s /workspace/lg-tv/tooling/tests -v
 ```
 
 The later real inspection command is documented as **proposed only** in `tooling/review/targeted-core-two-2026-11-08/PROPOSED-INSPECTION-COMMAND.txt`. Do not run it until independent review passes and parent hands off the inspection. This session did not read original LG archives.
+
+The `tooling/review/` and `tooling/artifacts/` snapshots (review packets, red/green test logs) were removed on 2026-11-14 to keep the repo light. Older docs still name those paths; the files are in git history at commit `8e25ca0`.

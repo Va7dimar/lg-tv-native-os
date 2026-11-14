@@ -14,7 +14,6 @@ Model 65NANO756PR, webOS 6.0 (open-source catalog "webOS 6.0 KLP 1.0", seq 51032
 | Handoffs | [`handoff/`](handoff/) (post-root research: [`post-root-research-2026-11-08.md`](handoff/post-root-research-2026-11-08.md); earlier pause: [`paused-2026-11-08-0711.md`](handoff/paused-2026-11-08-0711.md)) |
 | Native-OS plan | [`docs/plans/`](docs/plans/) |
 | Tooling-phase plans (generic) | [`docs/superpowers/plans/`](../../docs/superpowers/plans/) |
-| Plan-review packets | [`research/plan-reviews/`](research/plan-reviews/) |
-| AI research and reviews | [`research/ai-reviews/`](research/ai-reviews/) |
+| Old AI/plan review packets | Removed 2026-11-14 to keep the repo light; still in git history at commit `8e25ca0` |
 | Control / remote | [`control/lgtv.ps1`](control/lgtv.ps1), [`control/control-research.md`](control/control-research.md), [`control/NOTES.md`](control/NOTES.md) |
 | Log | [`docs/project-log.md`](docs/project-log.md) |
