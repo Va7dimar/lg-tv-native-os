@@ -18,6 +18,18 @@ do, what to see, and where the fix goes when the TV answers differently.
 - Nothing from the TV goes into the repo with a serial, nduid, MAC or IP in
   it, and no photos: describe them.
 
+**Where it stands (2026-11-14).** Steps 1 to 9 were worked on the TV; the
+results and what is still open are in
+`tvs/lg-65nano756pr/evidence/impetus-home-1.2-tv-run-2026-11-14.md`. Three
+things learned there change how this list reads:
+
+- The remote's power button only puts this TV to sleep. "Restarts the TV"
+  below means a cold start (power cord), which only the owner does.
+- The TV's address is the one in the newest evidence note that names one,
+  not the oldest. Check the host key against `known_hosts` before trusting it.
+- busybox `ps` shows no command lines: find the helper's processes by their
+  pid files and `kill -0`, or by reading `/proc/<pid>/cmdline`.
+
 Short names used below:
 
 ```sh
@@ -255,7 +267,7 @@ before it is left in place.
    chmod 755 /var/lib/webosbrew/init.d/impetus-home
    ```
 
-3. The owner restarts the TV with the remote. See: about 25 s after the
+3. The owner restarts the TV (a cold start; the remote only sleeps it). See: about 25 s after the
    system is up, Impetus is in front. Press Home on the remote: Impetus
    comes back. `touch /tmp/impetus-pause` stops that; `rm` it to resume.
    The hook has one brake: if it had to reopen Impetus more than 5 times
@@ -269,9 +281,26 @@ before it is left in place.
    rm /var/lib/webosbrew/init.d/impetus-home
    ```
 
-   The owner restarts the TV. See: stock Home, and it stays.
+   The owner restarts the TV. See: stock Home, and it stays. Without a
+   restart the watcher is still running: `touch /tmp/impetus-pause` first,
+   then open stock Home (this form passed on 2026-11-14).
 5. Only after that passes: install the hook again and leave it.
 6. A blank screen or a crash loop at any time: do step 4 at once.
+7. **Wake.** With the Apple TV in front, the owner turns the TV off and on
+   with its own remote. See: Impetus comes up a few seconds after the
+   picture. The boot file's second loop does this from the power state
+   (`getPowerState` with a subscription) and the reason in the TV's log;
+   it was built against the stand-in and the line shapes on the TV are
+   not yet seen. Record them first:
+
+   ```sh
+   luna-send -i luna://com.webos.service.tvpower/power/getPowerState '{"subscribe":true}' </dev/null >/tmp/rec-power.log 2>&1 &
+   ```
+
+   then read `/tmp/rec-power.log` after the off and on, and fit `wake` in
+   `boot/impetus-home` and `sub.power` in the tests to what it shows.
+   Waking the TV with the Apple TV's remote should leave the Apple TV in
+   front.
 
 ## 10. Smaller open points
 

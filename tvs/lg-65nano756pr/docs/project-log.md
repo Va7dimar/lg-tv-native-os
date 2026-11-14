@@ -328,3 +328,17 @@ stand-in TV, the IPK test. Nothing newer than 1.0.0 is on the TV; no boot
 hook is installed; picture settings, the hosts file and power are untouched.
 What the TV must show before each part is trusted:
 `prototypes/impetus-home/TV-SESSION.md`.
+
+# Impetus Home 1.2.0 on the TV — 2026-11-14
+1.2.0 is installed and was worked through `TV-SESSION.md` with the owner at
+the TV. Probe all ten yes; live still, WIND DOWN's picture round trip, MUSIC,
+the engine room, the shield (45 names, in place inside Homebrew's own hosts
+mount) and the doors work. The type is now Saira and the apps list is five.
+The boot file is installed with the owner's yes, Home on the remote brings
+Impetus back, and the way back to LG's Home was tested live. Found: the
+remote's power button only sleeps this TV and on wake its boot manager
+reopens the last input, so the boot file got a wake loop; that loop is
+host-tested only and has not yet been seen to work on the TV. A cold start
+has not been seen either. Left on the TV: 1.2.0, the boot file, the shield
+on, and session files in `/tmp`.
+Evidence: `evidence/impetus-home-1.2-tv-run-2026-11-14.md`.
