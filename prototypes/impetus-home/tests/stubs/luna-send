@@ -5,39 +5,58 @@
 #   volume         the master volume
 #   calls          every call, one per line
 # Picture values belong to the input in front, as on the real TV.
+# Empty files switch on a fault or a variant:
+#   numeric        whole-number picture values are answered as numbers, not text
+#   failset        the TV refuses every picture change
+#   novolume       the volume cannot be read
+#   nopower        the TV refuses every power call
+#   nolaunch       the TV refuses to open an app
+#   sub.lines      what a subscription (-i) to the app in front prints
 T=${STUB_TV:?}
+sub=0
+for a in "$@"; do [ "$a" = "-i" ] && sub=1; done
 while [ $# -gt 2 ]; do shift; done
 uri=$1; body=$2
 echo "$uri $body" >> "$T/calls"
 front=$(cat "$T/front" 2>/dev/null)
 val() { echo "$body" | sed -n 's/.*"'"$1"'" *: *"\{0,1\}\([^",}]*\).*/\1/p' | head -n 1; }
+whole() { case "$1" in ""|-|*[!0-9-]*|?*-*) return 1 ;; esac; return 0; }
 
 case "$uri" in
   *applicationmanager/getForegroundAppInfo)
-    echo "{\"appId\":\"$front\",\"returnValue\":true}" ;;
+    if [ "$sub" = 1 ] && [ -r "$T/sub.lines" ]; then cat "$T/sub.lines"
+    else echo "{\"appId\":\"$front\",\"returnValue\":true}"; fi ;;
   *applicationmanager/launch)
-    val id > "$T/front"
-    echo '{"returnValue":true}' ;;
+    if [ -e "$T/nolaunch" ]; then echo '{"returnValue":false,"errorText":"refused"}'
+    else val id > "$T/front"; echo '{"returnValue":true}'; fi ;;
   *settingsservice/getSystemSettings)
     k=$(echo "$body" | sed -n 's/.*"keys":\["\([A-Za-z]*\)"\].*/\1/p')
     v=$(sed -n "s/^$k=//p" "$T/pic.$front" 2>/dev/null | tail -n 1)
-    if [ -n "$v" ]; then echo "{\"category\":\"picture\",\"settings\":{\"$k\":\"$v\"},\"returnValue\":true}"
-    else echo '{"returnValue":false,"errorText":"no such key"}'; fi ;;
+    if [ -z "$v" ]; then echo '{"returnValue":false,"errorText":"no such key"}'
+    elif [ -e "$T/numeric" ] && whole "$v"; then echo "{\"category\":\"picture\",\"settings\":{\"$k\":$v},\"returnValue\":true}"
+    else echo "{\"category\":\"picture\",\"settings\":{\"$k\":\"$v\"},\"returnValue\":true}"; fi ;;
   *settingsservice/setSystemSettings)
-    k=$(echo "$body" | sed -n 's/.*"settings":{"\([A-Za-z]*\)".*/\1/p')
-    echo "$k=$(val "$k")" >> "$T/pic.$front"
-    echo '{"returnValue":true}' ;;
+    if [ -e "$T/failset" ]; then echo '{"returnValue":false,"errorText":"not ready"}'
+    else
+      k=$(echo "$body" | sed -n 's/.*"settings":{"\([A-Za-z]*\)".*/\1/p')
+      echo "$k=$(val "$k")" >> "$T/pic.$front"
+      echo '{"returnValue":true}'
+    fi ;;
   *audio/master/getVolume)
-    echo "{\"returnValue\":true,\"volumeStatus\":{\"volume\":$(cat "$T/volume")}}" ;;
+    if [ -e "$T/novolume" ]; then echo '{"returnValue":false,"errorText":"not ready"}'
+    else echo "{\"returnValue\":true,\"volumeStatus\":{\"volume\":$(cat "$T/volume")}}"; fi ;;
   *audio/master/setVolume)
     val volume > "$T/volume"; echo '{"returnValue":true}' ;;
   *capture/executeOneShot)
     p=$(val path)
     if [ -e "$T/black" ]; then printf 'tiny' > "$p"; else head -c 4000 /dev/zero | tr '\0' 'x' > "$p"; fi
     echo '{"returnValue":true}' ;;
+  *tvpower/power/turnOffScreen|*tvpower/power/getPowerState)
+    echo '{"returnValue":true}' ;;
   *tvpower/power/turnOff)
     echo '{"returnValue":false,"errorText":"Unknown method"}' ;;
-  *tvpower/power/*)
-    echo '{"returnValue":true}' ;;
+  *tvpower/power/*|*power/shutdown/*)
+    if [ -e "$T/nopower" ]; then echo '{"returnValue":false,"errorText":"refused"}'
+    else echo '{"returnValue":true}'; fi ;;
   *) echo '{"returnValue":true}' ;;
 esac

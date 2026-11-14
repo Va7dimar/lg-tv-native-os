@@ -143,11 +143,13 @@ The page cannot change the TV by itself, so the work is split in three:
   app when the page's own call is refused; its JSON is refused if it holds a
   quote) and a name lookup for one address in the engine room (digits and
   dots only).
-- State lives in `/tmp/impetus/` (memory; a restart clears it). Two small
+- State lives in `/tmp/impetus/` (memory; a restart clears it). A few small
   files are also kept in the app's own folder (`state/`), because they must
-  survive a restart: the picture values from before a scene (so a restart in
-  the middle of a scene can still put them back) and the flag that the shield
-  is wanted. Nothing is written anywhere else.
+  survive a restart: the picture values and the volume from before a scene
+  (so a restart in the middle of a scene can still put them back) and the
+  flag that the shield is wanted. They are written before the TV is changed:
+  a value that cannot be written down is not changed. Nothing is written
+  anywhere else.
 - **Self-test.** At start the page asks the helper to `probe`. Each part that
   does not answer on this TV is hidden: no still means a plain slab, a scene
   whose parts are all missing is not drawn, the engine room door goes away if
@@ -156,11 +158,16 @@ The page cannot change the TV by itself, so the work is split in three:
   applied after its target is in front, by the helper, not by the page (the
   page is in the background by then). Before the first change the helper
   writes down the values it is about to touch; turning the scene off, sunrise,
-  the sleep timer ending and `impetus-ctl restore` all put them back.
+  the sleep timer ending and `impetus-ctl restore` all put them back. A
+  put-back the TV refuses stays on record and is tried again on later turns
+  (20 at most, then it waits for the next scene end or `restore`); the record
+  is deleted only when the TV took every value. Values go back in the form
+  they were read in, number or text.
 - **Sleep.** Two minutes before standby the keeper brings Impetus to the front
   with a countdown. Any key cancels the timer and goes back to what was on. No
-  key: the picture values are put back and the TV goes to standby. Standby is
-  a normal power-off, never a reboot.
+  key: the scene's app is brought back to the front, the picture values are
+  put back and the TV goes to standby. Standby is a normal power-off, never a
+  reboot; if the TV refuses it, it is asked on 5 turns and then left on.
 - **Shield.** Name-based and in memory only. Homebrew Channel already keeps
   the TV's hosts file in memory (`/tmp/hosts`, mounted over `/etc/hosts`); the
   shield adds its lines to that file between two marker lines and takes them
@@ -181,12 +188,19 @@ Home Chooser is absent on this TV, so Impetus becomes the default through a
 Homebrew boot hook (`boot/impetus-home`, installed as
 `/var/lib/webosbrew/init.d/impetus-home`, mode 755). It starts the keeper,
 opens Impetus once the system is up and again whenever stock Home comes to the
-front, and it never gives up. Pause: `touch /tmp/impetus-pause`.
+front, and it never gives up. One brake: more than 5 reopenings within 30 s
+means Impetus keeps closing, so stock Home is left alone for 2 minutes before
+the next try. Only one watcher runs at a time (`/tmp/impetus-hook.pid`).
+Pause: `touch /tmp/impetus-pause`.
 
 **Way back** (in this order, over SSH):
 
 1. `sh /media/developer/apps/usr/palm/applications/org.va7dimar.home/bin/impetus-ctl restore`
    puts the picture and volume back, takes the shield off and stops the keeper.
+   It prints `ok=1`. Picture values belong to an input, so each set is put
+   back with its own app in front; if an app will not open, its values are not
+   written to another input, they stay on record, and the answer is
+   `error=notrestored <app>`: run it again.
 2. `rm /var/lib/webosbrew/init.d/impetus-home`, then restart the TV: stock Home
    is the default again.
 

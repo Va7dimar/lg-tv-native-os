@@ -19,9 +19,10 @@
 #   restore               the way back: scene off, shield off, keeper stopped
 #   keeper | tick         the background loop, or one turn of it
 #
-# Files: /tmp/impetus (memory) and <app dir>/state (two small files that must
-# survive a restart). Nothing else is written. Never reboots; the sleep timer
-# ends in a normal power-off.
+# Files: /tmp/impetus (memory) and <app dir>/state (small files that must
+# survive a restart: the picture values and volume from before a scene, and
+# whether the shield is on). Nothing else is written. Never reboots; the
+# sleep timer ends in a normal power-off.
 #
 # busybox ash and dash both run this file.
 
@@ -54,6 +55,8 @@ STILL_MIN=2500          # a smaller JPG is a black frame
 STILL_MAX=150000        # a larger one does not fit the exec answer
 STILL_MAXAGE=${IMPETUS_STILL_MAXAGE:-21600}
 NOTICE=120              # seconds of notice before standby
+TRIES=20                # turns a put-back is tried again when the TV refuses it
+FRONTWAIT=${IMPETUS_FRONTWAIT:-15}   # seconds `restore` waits for an app to come to the front
 
 now() { if [ -n "$IMPETUS_NOW" ]; then echo "$IMPETUS_NOW"; else date +%s; fi; }
 
@@ -61,7 +64,10 @@ now() { if [ -n "$IMPETUS_NOW" ]; then echo "$IMPETUS_NOW"; else date +%s; fi; }
 
 safe() { case "$1" in ""|*[!A-Za-z0-9._:,=+@/-]*) return 1 ;; esac; return 0; }
 safe_id() { case "$1" in ""|*[!A-Za-z0-9._-]*) return 1 ;; esac; return 0; }
-is_num() { case "$1" in ""|*[!0-9]*) return 1 ;; esac; [ ${#1} -le 12 ]; }
+# A plain whole number. A leading zero is refused: the shell's arithmetic
+# would read it as octal.
+is_num() { case "$1" in ""|*[!0-9]*|0?*) return 1 ;; esac; [ ${#1} -le 12 ]; }
+is_int() { case "$1" in -*) is_num "${1#-}" ;; *) is_num "$1" ;; esac; }
 pic_key() {
   case "$1" in backlight|contrast|brightness|color|sharpness|colorTemperature|energySaving) return 0 ;; esac
   return 1
@@ -75,12 +81,16 @@ pairs_ok() {
   return 0
 }
 die() { echo "error=$1"; exit 2; }
+# An empty marker file. Not `: > file`: when the file cannot be written, a
+# redirection on `:` ends the whole shell, with the lock still held.
+mark() { { printf '' > "$1"; } 2>/dev/null; }
 
 # ---------- luna ----------
 
 luna() { luna-send -n 1 "$1" "$2" 2>/dev/null </dev/null; }
 ok() { case "$1" in *'"returnValue":true'*|*'"returnValue": true'*) return 0 ;; esac; return 1; }
-# The value of "key" in a JSON text on stdin (string or number), first match.
+# The value of "key" in a JSON text on stdin (string or number). When a line
+# holds the key twice, the last one is taken.
 jget() { sed -n 's/.*"'"$1"'" *: *"\{0,1\}\([^",}]*\).*/\1/p' | head -n 1; }
 jquoted() { grep -q '"'"$1"'" *: *"'; }
 
@@ -97,12 +107,13 @@ launch() {
 # ---------- lock (one state change at a time) ----------
 
 # Shell variables are shared by every function in this file, so the helpers
-# below keep to their own names (lk, pp_*, so_*, ap_*, am_*).
+# below keep to their own names (lk, pp_*, so_*, ap_*, am_*, rt_*, vr_*, ...).
 lock() {
   lk=0
   while ! mkdir "$RUN/lock" 2>/dev/null; do
     lk=$((lk + 1))
-    [ "$lk" -gt 12 ] && { rmdir "$RUN/lock" 2>/dev/null; lk=0; }
+    [ "$lk" -eq 13 ] && rmdir "$RUN/lock" 2>/dev/null   # its holder died
+    [ "$lk" -gt 16 ] && return 1                       # /tmp full or read-only: go on without it
     sleep 1
   done
 }
@@ -114,24 +125,31 @@ pic_read() { luna "$SET/getSystemSettings" "{\"category\":\"picture\",\"keys\":[
 # pic_put key value quoted(1|0): written in the form it was read in.
 pic_put() {
   pp_v=$2
-  if [ "$3" = 1 ] || ! is_num "$2"; then pp_v="\"$2\""; fi
+  if [ "$3" = 1 ] || ! is_int "$2"; then pp_v="\"$2\""; fi
   pp_x=""
   [ "$1" = energySaving ] && pp_x=',"energySavingModified":"true"'
   ok "$(luna "$SET/setSystemSettings" "{\"category\":\"picture\",\"settings\":{\"$1\":$pp_v$pp_x}}")"
 }
 
 # Originals live in orig.<target>: "pic|key|value|quoted" and
-# "mode|pictureMode|value|quoted". The copy in $KEEP survives a restart.
+# "mode|pictureMode|value|quoted". The copy in $KEEP survives a restart, and
+# is written first: a value that cannot be written down is not changed.
 save_orig() { # file kind key
   grep -q "^$2|$3|" "$1" 2>/dev/null && return 0
   so_r=$(pic_read "$3")
   ok "$so_r" || return 1
-  so_v=$(echo "$so_r" | jget "$3")
-  [ -n "$so_v" ] || return 1
-  so_q=0; echo "$so_r" | jquoted "$3" && so_q=1
-  echo "$2|$3|$so_v|$so_q" >> "$1"
-  mkdir -p "$KEEP" 2>/dev/null && cp "$1" "$KEEP/$(basename "$1")" 2>/dev/null
-  return 0
+  so_v=$(printf '%s\n' "$so_r" | jget "$3")
+  case "$so_v" in ""|*'|'*) return 1 ;; esac
+  so_q=0; printf '%s\n' "$so_r" | jquoted "$3" && so_q=1
+  so_b=${1##*/}
+  mkdir -p "$KEEP" 2>/dev/null
+  if { cat "$1" 2>/dev/null; echo "$2|$3|$so_v|$so_q"; } > "$KEEP/new.$so_b" 2>/dev/null &&
+     mv "$KEEP/new.$so_b" "$KEEP/$so_b" 2>/dev/null; then
+    echo "$2|$3|$so_v|$so_q" >> "$1"
+  else
+    rm -f "$KEEP/new.$so_b" 2>/dev/null
+    return 1
+  fi
 }
 
 apply_pairs() { # file pairs
@@ -152,31 +170,57 @@ apply_mode() { # file mode
 }
 
 # Put back what orig.<target> holds. Only called while <target> is in front,
-# because picture values belong to the input that is showing.
+# because picture values belong to the input that is showing. The record is
+# dropped only when the TV took every value; otherwise it stays and the
+# put-back waits (pending.<target>) for a later turn, $TRIES turns at most.
+# After that the record still stays for the next scene end or `restore`.
 restore_target() {
-  f="$RUN/orig.$1"
-  [ -s "$f" ] || { rm -f "$f" "$RUN/pending.$1" "$KEEP/orig.$1"; return 0; }
-  grep '^pic|' "$f" | while IFS='|' read -r _t k v q; do pic_put "$k" "$v" "$q"; done
-  grep '^mode|' "$f" | while IFS='|' read -r _t k v q; do pic_put "$k" "$v" "$q"; done
-  rm -f "$f" "$RUN/pending.$1" "$KEEP/orig.$1"
+  rt_f="$RUN/orig.$1"
+  if [ ! -s "$rt_f" ]; then rm -f "$rt_f" "$RUN/pending.$1" "$RUN/tries.$1" "$KEEP/orig.$1"; return 0; fi
+  rt_bad=0
+  for rt_pass in pic mode; do   # the values first, then the mode they belong to
+    while IFS='|' read -r rt_t rt_k rt_v rt_q; do
+      [ "$rt_t" = "$rt_pass" ] || continue
+      pic_put "$rt_k" "$rt_v" "$rt_q" || rt_bad=1
+    done < "$rt_f"
+  done
+  if [ "$rt_bad" = 0 ]; then rm -f "$rt_f" "$RUN/pending.$1" "$RUN/tries.$1" "$KEEP/orig.$1"; return 0; fi
+  rt_n=$(cat "$RUN/tries.$1" 2>/dev/null); is_num "$rt_n" || rt_n=0
+  rt_n=$((rt_n + 1))
+  if [ "$rt_n" -ge "$TRIES" ]; then rm -f "$RUN/pending.$1" "$RUN/tries.$1"
+  else echo "$rt_n" > "$RUN/tries.$1"; mark "$RUN/pending.$1"; fi
+  return 1
 }
 
 # ---------- volume ----------
 
 vol_read() { luna "$AUD/getVolume" '{}' | jget volume; }
 vol_put() { ok "$(luna "$AUD/setVolume" "{\"volume\":$1}")"; }
+# Put the volume back to what it was before a scene lowered it ("was set" in
+# vol, mirrored in $KEEP). When the TV does not answer the record stays and
+# the keeper tries again, $TRIES turns at most.
 vol_restore() {
-  [ -s "$RUN/vol" ] || return 0
-  read -r was set < "$RUN/vol"
-  cur=$(vol_read)
-  # Only when nobody touched the volume since the scene lowered it.
-  [ "$cur" = "$set" ] && is_num "$was" && vol_put "$was"
-  rm -f "$RUN/vol"
+  if [ ! -s "$RUN/vol" ]; then rm -f "$RUN/vol" "$RUN/vol.tries" "$KEEP/vol"; return 0; fi
+  read -r vr_was vr_set < "$RUN/vol"
+  vr_cur=$(vol_read)
+  if is_num "$vr_cur"; then
+    # Only when nobody touched the volume since the scene lowered it.
+    if [ "$vr_cur" != "$vr_set" ] || ! is_num "$vr_was" || vol_put "$vr_was"; then
+      rm -f "$RUN/vol" "$RUN/vol.tries" "$KEEP/vol"; return 0
+    fi
+  fi
+  vr_n=$(cat "$RUN/vol.tries" 2>/dev/null); is_num "$vr_n" || vr_n=0
+  vr_n=$((vr_n + 1))
+  if [ "$vr_n" -ge "$TRIES" ]; then rm -f "$RUN/vol" "$RUN/vol.tries" "$KEEP/vol"
+  else echo "$vr_n" > "$RUN/vol.tries"; fi
+  return 1
 }
 
 # ---------- scenes ----------
 
-scene_clear() { rm -f "$RUN"/scene.* "$RUN/sleep.until" "$RUN/sleep.noticed" "$RUN/sleep.prev" "$RUN/screenoff.at"; }
+scene_clear() {
+  rm -f "$RUN"/scene.* "$RUN/sleep.until" "$RUN/sleep.noticed" "$RUN/sleep.prev" "$RUN/standby.tries" "$RUN/screenoff.at"
+}
 
 # End the active scene. Picture values go back now when the scene's target is
 # in front; otherwise they wait (pending.<target>) until it is.
@@ -185,7 +229,7 @@ scene_off_locked() {
   scene_clear
   vol_restore
   if safe_id "$t" && [ -e "$RUN/orig.$t" ]; then
-    if [ "$(front)" = "$t" ]; then restore_target "$t"; else : > "$RUN/pending.$t"; fi
+    if [ "$(front)" = "$t" ]; then restore_target "$t"; else mark "$RUN/pending.$t"; fi
   fi
 }
 
@@ -207,7 +251,7 @@ due() {
   if [ -s "$RUN/scene.night" ] && [ ! -e "$RUN/scene.night.done" ]; then
     ns=$(cat "$RUN/scene.nightstart" 2>/dev/null)
     if is_num "$ns" && [ "$(now)" -ge "$ns" ]; then
-      : > "$RUN/scene.night.done"
+      mark "$RUN/scene.night.done"
       apply_pairs "$o" "$(cat "$RUN/scene.night")"
     fi
   fi
@@ -255,15 +299,23 @@ scene_apply() {
   safe_id "$t" && echo "$t" > "$RUN/scene.target"
   [ -n "$END" ] && echo "$END" > "$RUN/scene.end"
   if [ -n "$MODE$SETP" ] && safe_id "$t"; then
-    echo "$MODE" > "$RUN/scene.mode"; echo "$SETP" > "$RUN/scene.set"; : > "$RUN/scene.apply"
+    echo "$MODE" > "$RUN/scene.mode"; echo "$SETP" > "$RUN/scene.set"; mark "$RUN/scene.apply"
   fi
   if [ -n "$NIGHT" ] && safe_id "$t"; then
     echo "$NIGHT" > "$RUN/scene.night"; echo "$NSTART" > "$RUN/scene.nightstart"
   fi
   [ -n "$SLEEPM" ] && echo $((n + SLEEPM * 60)) > "$RUN/sleep.until"
   if [ -n "$VOLMAX" ]; then
-    cur=$(vol_read)
-    if is_num "$cur" && [ "$cur" -gt "$VOLMAX" ] && vol_put "$VOLMAX"; then echo "$cur $VOLMAX" > "$RUN/vol"; fi
+    sa_cur=$(vol_read)
+    if is_num "$sa_cur" && [ "$sa_cur" -gt "$VOLMAX" ]; then
+      # Written down first, where it survives a restart, then lowered. A
+      # record still waiting from an earlier scene keeps its older volume.
+      sa_was=$sa_cur
+      if [ -s "$RUN/vol" ]; then read -r sa_old sa_x < "$RUN/vol"; is_num "$sa_old" && sa_was=$sa_old; fi
+      echo "$sa_was $VOLMAX" > "$RUN/vol"
+      { mkdir -p "$KEEP" && cp "$RUN/vol" "$KEEP/vol"; } 2>/dev/null
+      vol_put "$VOLMAX" || rm -f "$RUN/vol" "$KEEP/vol"
+    fi
   fi
   if [ -n "$SOFF" ]; then
     echo $((n + SOFF)) > "$RUN/screenoff.at"
@@ -342,6 +394,19 @@ MARK_A="# impetus-shield begin"
 MARK_B="# impetus-shield end"
 
 hosts_mounted() { grep -q " $ETC_HOSTS " "$MOUNTINFO" 2>/dev/null; }
+same_text() { [ "$(cat "$1" 2>/dev/null)" = "$(cat "$2" 2>/dev/null)" ]; }
+
+# A hosts file without our block, every line ending in a newline. A block
+# that lost its closing marker (a cut-off write) is still taken out: after the
+# opening marker only our own pairs of lines are dropped.
+hosts_plain() {
+  awk -v a="$MARK_A" -v b="$MARK_B" -v s4="$SINK4 " -v s6="$SINK6 " '
+    index($0, a) == 1 { skip = 1; last = ""; next }
+    index($0, b) == 1 { skip = 0; next }
+    skip && index($0, s4) == 1 { last = $2; next }
+    skip && index($0, s6) == 1 && $2 == last { next }
+    { skip = 0; print }' "$1" 2>/dev/null
+}
 
 shield_block() {
   echo "$MARK_A"
@@ -353,7 +418,7 @@ shield_block() {
 }
 
 counter_start() {
-  rm -f "$RUN/shield.hits" "$RUN/shield.count"
+  counter_stop   # never two counters on the same ports
   if iptables -I OUTPUT -d "$SINK4" 2>/dev/null; then echo ipt > "$RUN/shield.count"; return 0; fi
   if command -v node >/dev/null 2>&1 && [ -r "$DIR/bin/shield-count.js" ]; then
     node "$DIR/bin/shield-count.js" "$RUN/shield.hits" "$SINK4" "$SINK6" >/dev/null 2>&1 </dev/null &
@@ -376,39 +441,60 @@ shield_hits() {
 
 shield_on() {
   mkdir -p "$RUN"
+  lock; shield_on_locked; sh_r=$?; unlock
+  return "$sh_r"
+}
+
+shield_on_locked() {
   [ -r "$DIR/shield/hosts.txt" ] || { echo "error=nolist"; return 1; }
-  [ -e "$RUN/shield.on" ] && shield_off_quiet
-  if hosts_mounted && [ -w "$HBC_HOSTS" ] && cmp -s "$HBC_HOSTS" "$ETC_HOSTS"; then
+  if [ -e "$RUN/shield.on" ] || [ -e "$RUN/shield.mode" ]; then
+    shield_off_quiet || { echo "error=busy"; return 1; }
+  fi
+  if hosts_mounted && [ -w "$HBC_HOSTS" ] && same_text "$HBC_HOSTS" "$ETC_HOSTS"; then
     # Homebrew Channel already keeps /etc/hosts in memory: add our lines to
     # its file in place (same inode, so the mount keeps showing it).
-    { sed "/^$MARK_A/,/^$MARK_B/d" "$HBC_HOSTS"; shield_block; } > "$RUN/hosts.new"
+    { hosts_plain "$HBC_HOSTS"; shield_block; } > "$RUN/hosts.new"
     cat "$RUN/hosts.new" > "$HBC_HOSTS"; rm -f "$RUN/hosts.new"
     echo inplace > "$RUN/shield.mode"
   else
-    { sed "/^$MARK_A/,/^$MARK_B/d" "$ETC_HOSTS"; shield_block; } > "$RUN/hosts"
-    mount --bind "$RUN/hosts" "$ETC_HOSTS" 2>/dev/null || mount -o bind "$RUN/hosts" "$ETC_HOSTS" 2>/dev/null
-    echo bind > "$RUN/shield.mode"
+    { hosts_plain "$ETC_HOSTS"; shield_block; } > "$RUN/hosts"
+    # The mount is on record only once it exists, so turning the shield off
+    # never takes away a mount that is not ours.
+    if mount --bind "$RUN/hosts" "$ETC_HOSTS" 2>/dev/null || mount -o bind "$RUN/hosts" "$ETC_HOSTS" 2>/dev/null; then
+      echo bind > "$RUN/shield.mode"
+    else
+      rm -f "$RUN/hosts"
+    fi
   fi
   if ! grep -q "^$MARK_A" "$ETC_HOSTS" 2>/dev/null; then
     shield_off_quiet; echo "error=nomount"; return 1
   fi
   counter_start
-  : > "$RUN/shield.on"
-  mkdir -p "$KEEP" 2>/dev/null && : > "$KEEP/shield.on"
+  mark "$RUN/shield.on"
+  mkdir -p "$KEEP" 2>/dev/null && mark "$KEEP/shield.on"
   echo ok=1
 }
 
+# Takes our lines out again. Fails (and keeps the shield on record) only when
+# our own mount will not let go, so a later try can finish the job.
 shield_off_quiet() {
-  counter_stop
   case "$(cat "$RUN/shield.mode" 2>/dev/null)" in
     inplace)
-      sed "/^$MARK_A/,/^$MARK_B/d" "$HBC_HOSTS" > "$RUN/hosts.new" && cat "$RUN/hosts.new" > "$HBC_HOSTS"
+      hosts_plain "$HBC_HOSTS" > "$RUN/hosts.new" && cat "$RUN/hosts.new" > "$HBC_HOSTS"
       rm -f "$RUN/hosts.new" ;;
-    bind) umount "$ETC_HOSTS" 2>/dev/null; rm -f "$RUN/hosts" ;;
+    bind)
+      if ! umount "$ETC_HOSTS" 2>/dev/null && grep -q "^$MARK_A" "$ETC_HOSTS" 2>/dev/null; then return 1; fi
+      rm -f "$RUN/hosts" ;;
   esac
+  counter_stop
   rm -f "$RUN/shield.mode" "$RUN/shield.on"
 }
-shield_off() { shield_off_quiet; rm -f "$KEEP/shield.on"; echo ok=1; }
+shield_off() {
+  mkdir -p "$RUN"
+  lock
+  if shield_off_quiet; then rm -f "$KEEP/shield.on"; unlock; echo ok=1
+  else unlock; echo "error=busy"; return 1; fi
+}
 
 # ---------- reads ----------
 
@@ -459,12 +545,12 @@ probe() {
   if capture "$RUN/probe.jpg"; then echo "capture=1"; else echo "capture=0"; fi
   rm -f "$RUN/probe.jpg"
   r=$(pic_read backlight)
-  if ok "$r" && [ -n "$(echo "$r" | jget backlight)" ]; then echo "picture=1"; else echo "picture=0"; fi
+  if ok "$r" && [ -n "$(printf '%s\n' "$r" | jget backlight)" ]; then echo "picture=1"; else echo "picture=0"; fi
   if ok "$(luna "$PWR/getPowerState" '{}')"; then echo "screenoff=1"; echo "sleep=1"; else echo "screenoff=0"; echo "sleep=0"; fi
   if is_num "$(vol_read)"; then echo "volume=1"; else echo "volume=0"; fi
   b=0
   if [ -r "$DIR/shield/hosts.txt" ]; then
-    if hosts_mounted && [ -w "$HBC_HOSTS" ] && cmp -s "$HBC_HOSTS" "$ETC_HOSTS"; then b=1
+    if hosts_mounted && [ -w "$HBC_HOSTS" ] && same_text "$HBC_HOSTS" "$ETC_HOSTS"; then b=1
     else
       # Try a bind mount on two scratch files; /etc is not touched.
       echo a > "$RUN/bind.a"; echo b > "$RUN/bind.b"
@@ -499,7 +585,8 @@ keeper_ensure() {
 }
 
 # After a restart /tmp is empty but $KEEP may still hold the picture values
-# from before an interrupted scene: queue them, and put the shield back.
+# and volume from before an interrupted scene: queue them, and put the shield
+# back.
 recover() {
   mkdir -p "$RUN"
   for f in "$KEEP"/orig.*; do
@@ -507,8 +594,11 @@ recover() {
     t=${f##*/orig.}
     safe_id "$t" || continue
     [ -e "$RUN/orig.$t" ] && continue
-    cp "$f" "$RUN/orig.$t" && : > "$RUN/pending.$t"
+    cp "$f" "$RUN/orig.$t" && mark "$RUN/pending.$t"
   done
+  if [ -s "$KEEP/vol" ] && [ ! -e "$RUN/vol" ]; then
+    cp "$KEEP/vol" "$RUN/vol" && echo 0 > "$RUN/vol.tries"
+  fi
   if [ -e "$KEEP/shield.on" ] && [ ! -e "$RUN/shield.on" ]; then shield_on >/dev/null; fi
 }
 
@@ -529,15 +619,44 @@ follow() {
   done
 }
 
+# The sleep timer reached zero: end the scene, put its picture back, then a
+# normal power-off. The notice put Impetus in front, so the scene's target is
+# brought forward first: picture values can only go back to the input showing.
+power_down() { # the hour the timer was set for
+  lock
+  # Cancelled or replaced while this turn waited for the lock: leave the TV on.
+  if [ "$(cat "$RUN/sleep.until" 2>/dev/null)" != "$1" ]; then unlock; return 0; fi
+  pd_n=$(cat "$RUN/standby.tries" 2>/dev/null); is_num "$pd_n" || pd_n=0
+  pd_t=$(cat "$RUN/scene.target" 2>/dev/null)
+  scene_off_locked
+  if safe_id "$pd_t" && [ -e "$RUN/pending.$pd_t" ]; then
+    launch "$pd_t"
+    pd_i=0
+    while [ "$pd_i" -lt 8 ] && [ "$(front_now)" != "$pd_t" ]; do sleep 1; pd_i=$((pd_i + 1)); done
+    [ "$(front_now)" = "$pd_t" ] && restore_target "$pd_t"
+  fi
+  if standby; then
+    rm -f "$RUN/standby.tries"
+  else
+    # The TV took none of the power calls: ask again on the next turns, 5 at most.
+    pd_n=$((pd_n + 1))
+    if [ "$pd_n" -lt 5 ]; then
+      echo "$pd_n" > "$RUN/standby.tries"; echo "$1" > "$RUN/sleep.until"; mark "$RUN/sleep.noticed"
+    else
+      rm -f "$RUN/standby.tries"
+    fi
+  fi
+  unlock
+}
+
 tick() {
   n=$(now)
   u=$(cat "$RUN/sleep.until" 2>/dev/null)
   if is_num "$u"; then
     if [ "$n" -ge "$u" ]; then
-      lock; scene_off_locked; unlock
-      standby
+      power_down "$u"
     elif [ "$n" -ge $((u - NOTICE)) ] && [ ! -e "$RUN/sleep.noticed" ]; then
-      : > "$RUN/sleep.noticed"
+      mark "$RUN/sleep.noticed"
       f=$(front)
       [ "$f" != "$APP" ] && safe_id "$f" && echo "$f" > "$RUN/sleep.prev"
       launch "$APP" "{\"notice\":\"sleep\",\"until\":$u}"
@@ -554,6 +673,9 @@ tick() {
     if [ ! -e "$RUN/scene.apply" ] && [ ! -s "$RUN/scene.night" ] && [ ! -s "$RUN/sleep.until" ] &&
        [ ! -s "$RUN/vol" ] && { ! safe_id "$t" || [ ! -e "$RUN/orig.$t" ]; }; then scene_clear; fi
   fi
+  # A volume that could not be put back when its scene ended (or was found
+  # after a restart) is tried again while no scene is on.
+  if [ -e "$RUN/vol.tries" ] && [ ! -e "$RUN/scene.id" ]; then lock; vol_restore; unlock; fi
   lock; due; unlock
 }
 
@@ -594,7 +716,9 @@ keeper_stop() {
 }
 
 # The way back. Picture values belong to an input, so each waiting set is put
-# back with its own app in front; the last one stays in front.
+# back with its own app in front; the last one stays in front. A set whose
+# app will not come to the front is never written to another input: its
+# record stays in $KEEP and the answer names it.
 restore_all() {
   mkdir -p "$RUN"
   keeper_stop
@@ -602,24 +726,38 @@ restore_all() {
   i=0
   while [ -d "$RUN/lock" ] && [ "$i" -lt 5 ]; do sleep 1; i=$((i + 1)); done
   rm -rf "$RUN/lock"
+  lock
   for f in "$KEEP"/orig.*; do
     [ -s "$f" ] || continue
     t=${f##*/orig.}
     safe_id "$t" && [ ! -e "$RUN/orig.$t" ] && cp "$f" "$RUN/orig.$t"
   done
+  [ -s "$RUN/vol" ] || cp "$KEEP/vol" "$RUN/vol" 2>/dev/null
   scene_clear
-  vol_restore
+  vol_restore || { sleep 1; vol_restore; } || { sleep 1; vol_restore; }
+  rm -f "$RUN/vol" "$RUN/vol.tries" "$KEEP/vol"
+  unlock
+  ra_left=""
   for f in "$RUN"/orig.*; do
     [ -e "$f" ] || continue
     t=${f##*/orig.}
     safe_id "$t" || continue
     launch "$t"
     i=0
-    while [ "$i" -lt 15 ] && [ "$(front_now)" != "$t" ]; do sleep 1; i=$((i + 1)); done
-    restore_target "$t"
+    while [ "$i" -lt "$FRONTWAIT" ] && [ "$(front_now)" != "$t" ]; do sleep 1; i=$((i + 1)); done
+    if [ "$(front_now)" = "$t" ]; then
+      restore_target "$t" || { sleep 1; restore_target "$t"; } || { sleep 1; restore_target "$t"; } ||
+        ra_left="$ra_left $t"
+    else
+      mark "$RUN/pending.$t"
+      ra_left="$ra_left $t"
+    fi
   done
-  shield_off_quiet
-  rm -f "$KEEP/shield.on" "$KEEP"/orig.* "$RUN"/pending.*
+  rm -f "$RUN"/tries.*
+  lock
+  if shield_off_quiet; then rm -f "$KEEP/shield.on"; else ra_left="$ra_left hosts"; fi
+  unlock
+  if [ -n "$ra_left" ]; then echo "error=notrestored$ra_left"; return 1; fi
   echo ok=1
 }
 
@@ -646,8 +784,11 @@ case "$verb" in
     case "$sub" in on) scene_on "$@" ;; off) scene_off ;; *) die scene ;; esac ;;
   sleep)
     [ "$1" = cancel ] || die sleep
+    mkdir -p "$RUN"
+    lock
     echo "prev=$(cat "$RUN/sleep.prev" 2>/dev/null)"
-    rm -f "$RUN/sleep.until" "$RUN/sleep.noticed" "$RUN/sleep.prev" ;;
+    rm -f "$RUN/sleep.until" "$RUN/sleep.noticed" "$RUN/sleep.prev" "$RUN/standby.tries"
+    unlock ;;
   shield) case "$1" in on) shield_on ;; off) shield_off ;; *) die shield ;; esac ;;
   engine) engine ;;
   restore) restore_all ;;

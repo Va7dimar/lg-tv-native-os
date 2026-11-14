@@ -73,6 +73,8 @@ refused "sleep of 0 minutes" sleep scene on id=film sleep=0
 refused "sleep of 601 minutes" sleep scene on id=film sleep=601
 refused "volume above 100" volmax scene on id=film volmax=101
 refused "screen off after 601 s" screenoff scene on id=film screenoff=601
+refused "sleep with a leading zero" sleep scene on id=film sleep=09
+refused "an end hour with a leading zero" end scene on id=film end=08
 refused "night values without their hours" night scene on id=film night=backlight:30
 refused "an unknown verb" verb bogus
 refused "an unknown shield word" shield shield maybe
@@ -260,6 +262,195 @@ is "shield (own mount): a failed mount is reported" "$out" "error=nomount"
 is "shield (own mount): and leaves the shield off" "$(st shield)" off
 yes "shield (own mount): and the hosts file as it was" cmp -s "$W/etc-hosts" "$W/hosts.before"
 
+# ---------- values go back in the form they were read in ----------
+reset
+: > "$STUB_TV/numeric"
+IMPETUS_NOW=1000 sh "$CTL" scene on id=film launch=$HDMI set=backlight:30,colorTemperature:-20 >/dev/null
+wait_for '[ "$(pic $HDMI colorTemperature)" = -20 ]'; settle
+is "numbers: a TV that answers in numbers gets a number" "$(calls '"backlight":30}')" 1
+is "numbers: a negative value is a number too" "$(calls '"colorTemperature":-20}')" 1
+tv_front "$HDMI"
+sh "$CTL" scene off >/dev/null
+is "numbers: and the old value goes back as a number" "$(calls '"backlight":80}')" 1
+reset
+IMPETUS_NOW=1000 sh "$CTL" scene on id=film launch=$HDMI set=colorTemperature:-20 >/dev/null
+wait_for '[ "$(pic $HDMI colorTemperature)" = -20 ]'; settle
+is "numbers: a TV that answers in text gets text" "$(calls '"colorTemperature":"-20"')" 1
+
+# ---------- a put-back the TV refuses is kept and tried again ----------
+reset
+IMPETUS_NOW=1000 sh "$CTL" scene on id=film launch=$HDMI mode=cinema >/dev/null
+wait_for '[ "$(pic $HDMI pictureMode)" = cinema ]'; settle
+tv_front "$HDMI"
+: > "$STUB_TV/failset"
+is "refused put-back: scene off still answers" "$(sh "$CTL" scene off)" "ok=1"
+is "refused put-back: the picture is still the scene's" "$(pic $HDMI pictureMode)" cinema
+yes "refused put-back: the old values are kept" test -s "$RUN/orig.$HDMI"
+yes "refused put-back: on disk too" test -s "$KEEP/orig.$HDMI"
+yes "refused put-back: and the put-back waits" test -e "$RUN/pending.$HDMI"
+rm -f "$STUB_TV/failset"
+sh "$CTL" tick >/dev/null
+is "refused put-back: the next turn puts the picture back" "$(pic $HDMI pictureMode)" standard
+no "refused put-back: nothing is left waiting" test -e "$RUN/pending.$HDMI"
+no "refused put-back: nor on disk" test -e "$KEEP/orig.$HDMI"
+# A TV that keeps refusing: the turns stop, the record stays for `restore`.
+reset
+IMPETUS_NOW=1000 sh "$CTL" scene on id=film launch=$HDMI mode=cinema >/dev/null
+wait_for '[ "$(pic $HDMI pictureMode)" = cinema ]'; settle
+tv_front "$HDMI"
+: > "$STUB_TV/failset"
+sh "$CTL" scene off >/dev/null
+i=0; while [ "$i" -lt 19 ]; do sh "$CTL" tick >/dev/null; i=$((i + 1)); done
+no "refused put-back: after 20 turns the keeper stops trying" test -e "$RUN/pending.$HDMI"
+yes "refused put-back: but the record stays on disk" test -s "$KEEP/orig.$HDMI"
+c=$(calls setSystemSettings)
+sh "$CTL" tick >/dev/null
+is "refused put-back: no further call once it stopped" "$(calls setSystemSettings)" "$c"
+rm -f "$STUB_TV/failset"
+is "refused put-back: restore still puts it back" "$(sh "$CTL" restore)" "ok=1"
+is "refused put-back: the picture is back" "$(pic $HDMI pictureMode)" standard
+
+# ---------- a value that cannot be written down is not changed ----------
+reset
+: > "$KEEP"   # a file where the state folder should be
+IMPETUS_NOW=1000 sh "$CTL" scene on id=film launch=$HDMI mode=cinema set=backlight:30 >/dev/null
+wait_for '[ -e "$RUN/scene.apply" ]'; wait_for '[ ! -e "$RUN/scene.apply" ]'; settle
+is "no record, no change: the mode is untouched" "$(pic $HDMI pictureMode)" standard
+is "no record, no change: the backlight is untouched" "$(pic $HDMI backlight)" 80
+is "no record, no change: the TV was not asked" "$(calls setSystemSettings)" 0
+rm -f "$KEEP"
+
+# ---------- restore never writes one input's picture to another ----------
+reset
+mkdir -p "$KEEP"
+printf 'pic|backlight|70|1\n' > "$KEEP/orig.netflix"
+printf 'pictureMode=vivid\nbacklight=25\n' > "$STUB_TV/pic.netflix"
+: > "$STUB_TV/nolaunch"
+out=$(IMPETUS_FRONTWAIT=1 sh "$CTL" restore); code=$?
+is "restore: an app that will not open is named" "$out" "error=notrestored netflix"
+is "restore: and the exit code says so" "$code" 1
+is "restore: nothing was written to what is in front" "$(calls setSystemSettings)" 0
+yes "restore: its record stays on disk" test -s "$KEEP/orig.netflix"
+rm -f "$STUB_TV/nolaunch"
+is "restore: a second try finishes the job" "$(sh "$CTL" restore)" "ok=1"
+is "restore: the picture is back" "$(pic netflix backlight)" 70
+no "restore: the record is gone" test -e "$KEEP/orig.netflix"
+
+# ---------- the volume survives a restart ----------
+reset
+echo netflix > "$RUN/last"
+IMPETUS_NOW=10000 sh "$CTL" scene on id=winddown launch=@last volmax=12 >/dev/null
+wait_for '[ "$(cat "$STUB_TV/volume")" = 12 ]'; settle
+is "volume: written down where it survives a restart" "$(cat "$KEEP/vol" 2>/dev/null)" "20 12"
+kill "$FAKE" 2>/dev/null; rm -rf "$RUN"
+sh "$CTL" start >/dev/null
+yes "volume: put back after a restart" wait_for '[ "$(cat "$STUB_TV/volume")" = 20 ]'
+yes "volume: and the record is gone" wait_for '[ ! -e "$KEEP/vol" ]'
+sh "$CTL" restore >/dev/null
+# A TV that does not answer at scene end: the record waits for the next turn.
+reset
+echo netflix > "$RUN/last"
+IMPETUS_NOW=10000 sh "$CTL" scene on id=winddown launch=@last volmax=12 >/dev/null
+wait_for '[ "$(cat "$STUB_TV/volume")" = 12 ]'; settle
+: > "$STUB_TV/novolume"
+sh "$CTL" scene off >/dev/null
+is "volume: left alone while the TV does not answer" "$(cat "$STUB_TV/volume")" 12
+yes "volume: the record waits" test -s "$RUN/vol"
+rm -f "$STUB_TV/novolume"
+sh "$CTL" tick >/dev/null
+is "volume: back on the next turn" "$(cat "$STUB_TV/volume")" 20
+no "volume: nothing is left waiting" test -e "$RUN/vol"
+
+# ---------- the sleep timer puts the picture back before the power-off ----------
+reset
+echo netflix > "$RUN/last"
+IMPETUS_NOW=10000 sh "$CTL" scene on id=winddown launch=@last set=backlight:25 sleep=1 >/dev/null
+wait_for '[ "$(pic netflix backlight)" = 25 ]'; settle
+IMPETUS_NOW=10000 sh "$CTL" tick >/dev/null
+tv_front "$US"   # the notice put Impetus in front
+IMPETUS_NOW=10061 sh "$CTL" tick >/dev/null
+is "sleep: the picture is back before the TV goes off" "$(pic netflix backlight)" 70
+a=$(grep -n -F '"backlight":"70"' "$STUB_TV/calls" | head -n 1 | cut -d: -f1)
+b=$(grep -n -F 'power/shutDown' "$STUB_TV/calls" | head -n 1 | cut -d: -f1)
+yes "sleep: the put-back comes first, then the power-off" test "${a:-9999}" -lt "${b:-0}"
+no "sleep: nothing is left waiting" test -e "$RUN/pending.netflix"
+no "sleep: nor on disk" test -e "$KEEP/orig.netflix"
+
+# A timer cancelled while a turn waits for the lock: the TV stays on.
+reset
+IMPETUS_NOW=10000 sh "$CTL" scene on id=winddown launch=@last fallback=$HDMI sleep=1 >/dev/null
+wait_for '[ -s "$RUN/sleep.until" ]'; settle
+mkdir "$RUN/lock"
+IMPETUS_NOW=10061 sh "$CTL" tick >/dev/null &
+tp=$!
+sleep 0.5; rm -f "$RUN/sleep.until"; rmdir "$RUN/lock"
+wait "$tp"
+is "sleep: a timer cancelled in the last second gives no power-off" "$(calls tvpower/power/)" 0
+is "sleep: and the scene stays on" "$(st scene)" winddown
+
+# A TV that takes no power call: asked 5 turns, then left on.
+reset
+IMPETUS_NOW=10000 sh "$CTL" scene on id=winddown launch=@last fallback=$HDMI sleep=1 >/dev/null
+wait_for '[ -s "$RUN/sleep.until" ]'; settle
+: > "$STUB_TV/nopower"
+i=0; while [ "$i" -lt 7 ]; do IMPETUS_NOW=10061 sh "$CTL" tick >/dev/null; i=$((i + 1)); done
+is "sleep: a refused power-off is asked 5 turns, no more" "$(calls machineOff)" 5
+is "sleep: then no standby is waiting" "$(st sleep)" ""
+
+# ---------- the shield: odd hosts files, refusals, one counter ----------
+reset
+printf '127.0.0.1 localhost\n10.0.0.1 keepme' > "$W/hbc-hosts"   # no newline at the end
+sh "$CTL" shield on >/dev/null
+is "shield: a last line without a newline stays whole" "$(grep -c '^10.0.0.1 keepme$' "$W/etc-hosts")" 1
+is "shield: and the marker gets its own line" "$(grep -c '^# impetus-shield begin$' "$W/etc-hosts")" 1
+sh "$CTL" shield off >/dev/null
+is "shield: off leaves the two lines" "$(cat "$W/etc-hosts")" "127.0.0.1 localhost
+10.0.0.1 keepme"
+reset
+printf '127.0.0.1 localhost\n# impetus-shield begin\n127.66.66.66 lgads.tv\n::1 lgads.tv\n127.66.66.66 old.example\n10.0.0.1 keepme\n::1 localhost6\n' > "$W/hbc-hosts"
+sh "$CTL" shield on >/dev/null
+is "shield: a block cut off earlier is replaced, not doubled" "$(grep -c '^# impetus-shield begin' "$W/etc-hosts")" 1
+is "shield: its leftover lines are gone" "$(grep -c 'old.example' "$W/etc-hosts")" 0
+is "shield: each host is there once" "$(grep -c '^127.66.66.66 lgads.tv$' "$W/etc-hosts")" 1
+sh "$CTL" shield off >/dev/null
+is "shield: off leaves only the lines that were not ours" "$(cat "$W/etc-hosts")" "127.0.0.1 localhost
+10.0.0.1 keepme
+::1 localhost6"
+reset
+sh "$CTL" shield on >/dev/null
+wait_for '[ -s "$RUN/shield.count" ]'
+read -r _kind cpid1 < "$RUN/shield.count"
+sh "$CTL" shield on >/dev/null
+read -r _kind cpid2 < "$RUN/shield.count"
+yes "shield: on twice stops the first counter" wait_for '! kill -0 "$cpid1" 2>/dev/null'
+yes "shield: and leaves one running" kill -0 "$cpid2"
+sh "$CTL" shield off >/dev/null
+# A marker that cannot be written must not end the helper with the lock held.
+reset
+mkdir -p "$KEEP/shield.on"   # a folder where the marker file should be
+is "shield: on still answers when its marker cannot be written" "$(sh "$CTL" shield on)" "ok=1"
+no "shield: and the lock is free again" test -d "$RUN/lock"
+sh "$CTL" shield off >/dev/null 2>&1
+# With its own mount: a mount that fails is not on record, one that will not
+# let go keeps the shield on record.
+reset
+rm -f "$W/etc-hosts"; printf '127.0.0.1 localhost\n' > "$W/etc-hosts"; : > "$W/mountinfo"
+: > "$STUB_TV/nomount"
+sh "$CTL" shield on >/dev/null
+no "shield (own mount): a failed mount is not on record" test -e "$RUN/shield.mode"
+is "shield (own mount): so no unmount is tried" "$(grep -c '^umount ' "$STUB_TV/calls")" 0
+no "shield (own mount): and it is not remembered" test -e "$KEEP/shield.on"
+rm -f "$STUB_TV/nomount"
+sh "$CTL" shield on >/dev/null
+: > "$STUB_TV/noumount"
+out=$(sh "$CTL" shield off); code=$?
+is "shield (own mount): a mount that will not let go is reported" "$out exit $code" "error=busy exit 1"
+is "shield (own mount): and the shield stays on record" "$(st shield)" on
+yes "shield (own mount): across a restart too" test -e "$KEEP/shield.on"
+rm -f "$STUB_TV/noumount"
+is "shield (own mount): a later off finishes the job" "$(sh "$CTL" shield off)" "ok=1"
+is "shield (own mount): the hosts file is as it was" "$(cat "$W/etc-hosts")" "127.0.0.1 localhost"
+
 # ---------- the engine room's one answer ----------
 reset
 e=$(sh "$CTL" engine)
@@ -306,6 +497,30 @@ is "keeper: and leaves the record of the other alone" "$(cat "$RUN/keeper.pid")"
 rm -f "$RUN/keeper.pid"
 is "way back: nothing is kept on disk" "$(ls "$KEEP" | wc -l | tr -d ' ')" 0
 is "way back: no power call, no reboot" "$(calls tvpower/power/turnOff)$(calls reboot)" 00
+
+# ---------- the boot hook: one watcher, and a brake ----------
+reset
+HOOK="$HERE/../boot/impetus-home"
+export IMPETUS_CTL="$W/no-helper" IMPETUS_PAUSE="$W/pause" IMPETUS_HOOK_PID="$W/hook.pid" IMPETUS_HOOK_WAIT=0
+i=0; while [ "$i" -lt 8 ]; do echo '{"appId":"com.webos.app.home","returnValue":true}'; i=$((i + 1)); done > "$STUB_TV/sub.lines"
+tv_front com.webos.app.home
+sh "$HOOK"
+yes "boot hook: a watcher is on record" wait_for '[ -s "$W/hook.pid" ]'
+hp=$(cat "$W/hook.pid")
+yes "boot hook: stock Home in front opens Impetus" wait_for '[ "$(calls "\"id\":\"$US\"")" -ge 1 ]'
+yes "boot hook: Impetus closing over and over ends in a rest" wait_for '[ -s "$W/hook.pid.rest" ]'
+is "boot hook: 5 reopenings before the rest, no more" "$(calls "\"id\":\"$US\"")" 5
+sh "$HOOK"
+is "boot hook: a second run keeps the first watcher" "$(cat "$W/hook.pid")" "$hp"
+kill "$hp" 2>/dev/null
+# Paused: stock Home is left alone.
+reset
+: > "$W/pause"; rm -f "$W/hook.pid" "$W/hook.pid.rest"
+echo '{"appId":"com.webos.app.home","returnValue":true}' > "$STUB_TV/sub.lines"
+sh "$HOOK"
+wait_for '[ -s "$W/hook.pid" ]'; sleep 1
+is "boot hook: paused, it opens nothing" "$(calls applicationmanager/launch)" 0
+kill "$(cat "$W/hook.pid")" 2>/dev/null
 
 echo "$n checks, $failed failed"
 [ "$failed" = 0 ]

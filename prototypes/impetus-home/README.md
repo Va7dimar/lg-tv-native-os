@@ -40,7 +40,7 @@ Enter (OK) and Backspace or Escape (BACK) drive it. The TV is a stand-in
 
 ```sh
 node tests/test_logic.js      # the page's logic: 24 tests
-sh tests/test_ctl.sh          # the root helper against a stand-in TV: 125 checks
+sh tests/test_ctl.sh          # the root helper against a stand-in TV: 194 checks
 python tests/test_ipk.py      # the package: layout, line ends, modes, same bytes twice
 ```
 

@@ -34,7 +34,12 @@ sh /media/developer/apps/usr/palm/applications/org.va7dimar.home/bin/impetus-ctl
 ```
 
 puts the picture and volume back, takes the shield off and stops the keeper.
-It prints `ok=1`. If the helper itself is broken, the same by hand:
+It prints `ok=1`. `error=notrestored <app>` means that app would not come to
+the front, so its picture values were not put back (they are never written
+to another input) and stay in `state/orig.<app>`: open the app with the
+remote and run `restore` again. `error=notrestored hosts` means the shield's
+own mount would not let go: run it again. If the helper itself is broken, the
+same by hand:
 
 ```sh
 kill "$(cat /tmp/impetus/keeper.pid)" 2>/dev/null
@@ -130,7 +135,8 @@ Note the number and whether it is quoted (`"80"` or `80`). Then press
 
 - See: the picture dims on the app that was in front; the key stays down
   with `ON · SLEEPS hh:mm`.
-- `cat $APPDIR/state/orig.*` lists the values from before.
+- `cat $APPDIR/state/orig.*` lists the values from before, and
+  `cat $APPDIR/state/vol` the volume from before and the cap.
 - Press WIND DOWN again: backlight and volume are back, the read above gives
   the first number again.
 
@@ -169,8 +175,9 @@ If a write is refused, the answer names the reason; the call form lives in
 
   After one minute Impetus comes to the front with a countdown. Press a key:
   the timer is gone and the app from before is back. Run it again and press
-  nothing: at zero the picture values are put back and the TV goes to
-  standby, a normal power-off. `standby` in `impetus-ctl` tries
+  nothing: at zero the app from before comes to the front for a moment, the
+  picture values are put back and the TV goes to standby, a normal
+  power-off (asked on 5 turns at most; after that the TV is left on). `standby` in `impetus-ctl` tries
   `tvpower/power/turnOff`, then `shutDown`, then
   `com.webos.service.power/shutdown/machineOff`. If the TV stays on at zero,
   run the three by hand, one at a time, and put the one that works first.
@@ -225,6 +232,10 @@ before it is left in place.
 3. The owner restarts the TV with the remote. See: about 25 s after the
    system is up, Impetus is in front. Press Home on the remote: Impetus
    comes back. `touch /tmp/impetus-pause` stops that; `rm` it to resume.
+   The hook has one brake: if it had to reopen Impetus more than 5 times
+   within 30 s, it leaves stock Home alone for 2 minutes
+   (`rm /tmp/impetus-hook.pid.rest` ends that rest early). The running
+   watcher's pid is in `/tmp/impetus-hook.pid`.
 4. **Revert test, once, owner watching:**
 
    ```sh
