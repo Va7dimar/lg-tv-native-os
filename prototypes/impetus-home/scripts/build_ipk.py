@@ -20,6 +20,12 @@ import tarfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_DIR = os.path.join(ROOT, "app")
+# Everything else is text and goes in with LF line ends: the TV's shell does
+# not run a script with CRLF.
+BINARY = (".woff2", ".png")
+EXECUTABLE = ("bin/impetus-ctl",)
+# The helper's own folder on the TV; never part of a package.
+SKIP_DIRS = ("state",)
 
 
 def _pad(text, width):
@@ -35,7 +41,7 @@ def _tar_gzip(members, mtime):
     raw = io.BytesIO()
     with tarfile.open(fileobj=raw, mode="w", format=tarfile.USTAR_FORMAT) as tar:
         dirs = set()
-        for arcname, _data in members:
+        for arcname, _data, _mode in members:
             parent = os.path.dirname(arcname)
             while parent:
                 dirs.add(parent)
@@ -46,10 +52,10 @@ def _tar_gzip(members, mtime):
             info.mode = 0o755
             info.mtime = mtime
             tar.addfile(info)
-        for arcname, data in members:
+        for arcname, data, mode in members:
             info = tarfile.TarInfo(arcname)
             info.size = len(data)
-            info.mode = 0o644
+            info.mode = mode
             info.mtime = mtime
             tar.addfile(info, io.BytesIO(data))
     out = io.BytesIO()
@@ -64,17 +70,19 @@ def build_ipk(out_path, mtime=0):
     app_id, version = info["id"], info["version"]
     prefix = "usr/palm/applications/" + app_id
     members = []
-    for base, _dirs, files in os.walk(APP_DIR):
+    for base, dirs, files in os.walk(APP_DIR):
+        if base == APP_DIR:
+            dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         for name in files:
             path = os.path.join(base, name)
             rel = os.path.relpath(path, APP_DIR).replace(os.sep, "/")
             with open(path, "rb") as fh:
                 data = fh.read()
-            if name.endswith((".js", ".css", ".html", ".json")):
+            if not name.endswith(BINARY):
                 data = data.replace(b"\r\n", b"\n")
-            members.append((prefix + "/" + rel, data))
+            members.append((prefix + "/" + rel, data, 0o755 if rel in EXECUTABLE else 0o644))
     members.sort(key=lambda m: m[0])
-    size_kb = max(1, (sum(len(d) for _n, d in members) + 1023) // 1024)
+    size_kb = max(1, (sum(len(d) for _n, d, _m in members) + 1023) // 1024)
     control = "\n".join([
         "Package: " + app_id, "Version: " + version, "Section: misc",
         "Priority: optional", "Architecture: all", "Installed-Size: %d" % size_kb,
@@ -82,7 +90,7 @@ def build_ipk(out_path, mtime=0):
         "webOS-Package-Format-Version: 2", "webOS-Packager-Version: impetus-home-" + version, "",
     ]).encode("utf-8")
     parts = [("debian-binary", b"2.0\n"),
-             ("control.tar.gz", _tar_gzip([("control", control)], mtime)),
+             ("control.tar.gz", _tar_gzip([("control", control, 0o644)], mtime)),
              ("data.tar.gz", _tar_gzip(members, mtime))]
     blob = bytearray(b"!<arch>\n")
     for name, data in parts:

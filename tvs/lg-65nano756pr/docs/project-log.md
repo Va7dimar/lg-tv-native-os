@@ -315,3 +315,16 @@ sent no events or keyboard focus. With mode B and the v0.5 CARD run, that
 makes `wl_webos_shell` unusable on this firmware. Verdict: hybrid. Impetus
 Home v1 is a webOS web app; native rendering is for later.
 Evidence: `evidence/photo-frame-c-tv-run-2026-11-14.md`.
+
+# Impetus Home 1.2.0 built off-TV — 2026-11-14
+After the hybrid verdict the Home became a web app, `prototypes/impetus-home/`.
+1.0.0 ran on the TV as an ordinary app (app list through Homebrew Channel's
+root exec; Home Chooser is absent on this TV, so a boot hook is the route to
+default Home). 1.2.0 adds the control room (Apple TV door with a live still,
+shortcuts, apps, scenes), the engine room (vitals, connections, log, a shield
+for LG's own ad and tracking hosts), a root helper with a keeper loop, and a
+PC preview. Host-tested only: 24 logic tests, 125 helper checks against a
+stand-in TV, the IPK test. Nothing newer than 1.0.0 is on the TV; no boot
+hook is installed; picture settings, the hosts file and power are untouched.
+What the TV must show before each part is trusted:
+`prototypes/impetus-home/TV-SESSION.md`.

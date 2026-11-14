@@ -1,0 +1,7 @@
+#!/bin/sh
+# Stand-in for umount: puts back what tests/stubs/mount covered.
+T=${STUB_TV:?}
+[ "$(cat "$T/mounted.path" 2>/dev/null)" = "$1" ] || exit 1
+echo "umount $1" >> "$T/calls"
+cat "$T/mounted.saved" > "$1"
+rm -f "$T/mounted.saved" "$T/mounted.path"

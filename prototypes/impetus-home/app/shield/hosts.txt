@@ -1,0 +1,68 @@
+# Impetus shield: the hosts it blocks, one per line. Lines starting with #
+# and empty lines are skipped. Edit freely; the shield reads this file each
+# time it is turned on.
+#
+# Scope (owner, 2026-11-14): LG's own advertising, tracking and content
+# recognition, and nothing else. Collected from community block lists for
+# LG webOS TVs; which of them this TV really calls is seen in the engine room.
+#
+# Deliberately NOT here, because blocking them breaks something:
+#   snu.lge.com, su.lge.com, su-ssl.lge.com, nsu.lge.com   software update
+#   lgtvsdp.com as a whole                                  clock and sign-in
+#   lgappstv.com as a whole                                 the app store
+#   ngfts.lge.com, nextlgsdp.com, lgsmartweb.com            voice and search
+#   lgtviot.com, lgthinq.com                                ThinQ and remote app
+#   anything else under lge.com
+# Also left out: LG's recommendation and home-screen content hosts. They are
+# not ads or tracking in the strict sense.
+
+# --- advertising ---
+lgads.tv
+www.lgads.tv
+lgsmartad.com
+ad.lgsmartad.com
+info.lgsmartad.com
+is.ad.lgsmartad.com
+is.info.lgsmartad.com
+gb.ad.lgsmartad.com
+gb.info.lgsmartad.com
+dk.ad.lgsmartad.com
+dk.info.lgsmartad.com
+no.ad.lgsmartad.com
+no.info.lgsmartad.com
+se.ad.lgsmartad.com
+se.info.lgsmartad.com
+de.ad.lgsmartad.com
+de.info.lgsmartad.com
+us.ad.lgsmartad.com
+us.info.lgsmartad.com
+ads.lgtvcommon.com
+eic.ads.lgtvcommon.com
+aic.ads.lgtvcommon.com
+adts.lgtvcommon.com
+eic.adts.lgtvcommon.com
+videoads.lgtvcommon.com
+eic.videoads.lgtvcommon.com
+lgads.adsmeasurement.com
+ad.lgappstv.com
+
+# --- tracking ---
+cdpbeacon.lgtvcommon.com
+eic.cdpbeacon.lgtvcommon.com
+aic.cdpbeacon.lgtvcommon.com
+cdpbeacon2.lgtvcommon.com
+eic.cdpbeacon2.lgtvcommon.com
+rdl.lgtvcommon.com
+eic.rdl.lgtvcommon.com
+rdx2.lgtvsdp.com
+is.rdx2.lgtvsdp.com
+gb.rdx2.lgtvsdp.com
+dk.rdx2.lgtvsdp.com
+de.rdx2.lgtvsdp.com
+us.rdx2.lgtvsdp.com
+
+# --- content recognition (what is on the screen) ---
+alphonso.tv
+www.alphonso.tv
+videoacr.lgtvcommon.com
+eic.videoacr.lgtvcommon.com

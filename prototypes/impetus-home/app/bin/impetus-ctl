@@ -1,0 +1,657 @@
+#!/bin/sh
+# impetus-ctl: the root-side helper of Impetus Home (DESIGN.md, "How it runs").
+#
+# The page calls it through Homebrew Channel's exec service, one verb at a
+# time:   sh <app dir>/bin/impetus-ctl <verb> [key=value ...]
+# Every word is checked here again; anything outside the safe set is refused.
+#
+# Verbs
+#   probe                 what works on this TV, as key=1|0 lines (changes nothing)
+#   start [target=<id>]   put back anything a restart interrupted, start the keeper
+#   state                 scene, timers and shield as key=value lines
+#   still [nolive]        one line "kind=live|last|none age=<s>", then the JPG bytes
+#   scene on id=.. [launch=..] [mode=..] [set=k:v,..] [night=k:v,..]
+#            [nightstart=<epoch>] [end=<epoch>] [screenoff=<s>] [volmax=<n>] [sleep=<min>]
+#   scene off             end the scene, put the TV back as it was
+#   sleep cancel          drop the sleep timer; prints prev=<app that was in front>
+#   shield on|off         block the hosts in shield/hosts.txt (memory only)
+#   engine                vitals, state, connections and log in one answer
+#   restore               the way back: scene off, shield off, keeper stopped
+#   keeper | tick         the background loop, or one turn of it
+#
+# Files: /tmp/impetus (memory) and <app dir>/state (two small files that must
+# survive a restart). Nothing else is written. Never reboots; the sleep timer
+# ends in a normal power-off.
+#
+# busybox ash and dash both run this file.
+
+umask 022
+
+APP=org.va7dimar.home
+STOCK=com.webos.app.home
+DIR=$(cd "$(dirname "$0")/.." 2>/dev/null && pwd)
+RUN=${IMPETUS_RUN:-/tmp/impetus}
+KEEP=${IMPETUS_KEEP:-$DIR/state}
+ETC_HOSTS=${IMPETUS_ETC_HOSTS:-/etc/hosts}
+HBC_HOSTS=${IMPETUS_HBC_HOSTS:-/tmp/hosts}
+MOUNTINFO=${IMPETUS_MOUNTINFO:-/proc/self/mountinfo}
+THERMAL=${IMPETUS_THERMAL:-/sys/class/thermal/thermal_zone0/temp}
+LOGS=${IMPETUS_LOGS:-/var/log/legacy-log /var/log/messages /var/log/dbg-log}
+DISK=${IMPETUS_DISK:-/media/developer}
+
+# The TV's services. Each call was taken from community notes for webOS 6 and
+# is confirmed (or corrected here) in the TV session; see TV-SESSION.md.
+SAM=luna://com.webos.service.applicationmanager
+SET=luna://com.webos.settingsservice
+PWR=luna://com.webos.service.tvpower/power
+AUD=luna://com.webos.service.audio/master
+CAP=luna://com.webos.service.capture/executeOneShot
+TOAST=luna://com.webos.notification/createToast
+
+SINK4=127.66.66.66      # where blocked names go; nothing listens but the counter
+SINK6=::1
+STILL_MIN=2500          # a smaller JPG is a black frame
+STILL_MAX=150000        # a larger one does not fit the exec answer
+STILL_MAXAGE=${IMPETUS_STILL_MAXAGE:-21600}
+NOTICE=120              # seconds of notice before standby
+
+now() { if [ -n "$IMPETUS_NOW" ]; then echo "$IMPETUS_NOW"; else date +%s; fi; }
+
+# ---------- checks ----------
+
+safe() { case "$1" in ""|*[!A-Za-z0-9._:,=+@/-]*) return 1 ;; esac; return 0; }
+safe_id() { case "$1" in ""|*[!A-Za-z0-9._-]*) return 1 ;; esac; return 0; }
+is_num() { case "$1" in ""|*[!0-9]*) return 1 ;; esac; [ ${#1} -le 12 ]; }
+pic_key() {
+  case "$1" in backlight|contrast|brightness|color|sharpness|colorTemperature|energySaving) return 0 ;; esac
+  return 1
+}
+pic_val() { case "$1" in ""|*[!A-Za-z0-9_-]*) return 1 ;; esac; [ ${#1} -le 24 ]; }
+pairs_ok() {
+  for p in $(echo "$1" | tr ',' ' '); do
+    case "$p" in *:*) ;; *) return 1 ;; esac
+    pic_key "${p%%:*}" && pic_val "${p#*:}" || return 1
+  done
+  return 0
+}
+die() { echo "error=$1"; exit 2; }
+
+# ---------- luna ----------
+
+luna() { luna-send -n 1 "$1" "$2" 2>/dev/null </dev/null; }
+ok() { case "$1" in *'"returnValue":true'*|*'"returnValue": true'*) return 0 ;; esac; return 1; }
+# The value of "key" in a JSON text on stdin (string or number), first match.
+jget() { sed -n 's/.*"'"$1"'" *: *"\{0,1\}\([^",}]*\).*/\1/p' | head -n 1; }
+jquoted() { grep -q '"'"$1"'" *: *"'; }
+
+front_now() { luna "$SAM/getForegroundAppInfo" '{}' | jget appId; }
+# What is in front: the follower's note when the keeper runs, else a direct ask.
+front() {
+  if [ -s "$RUN/front" ] && keeper_alive; then cat "$RUN/front"; else front_now; fi
+}
+launch() {
+  if [ -n "$2" ]; then luna "$SAM/launch" "{\"id\":\"$1\",\"params\":$2}" >/dev/null
+  else luna "$SAM/launch" "{\"id\":\"$1\"}" >/dev/null; fi
+}
+
+# ---------- lock (one state change at a time) ----------
+
+# Shell variables are shared by every function in this file, so the helpers
+# below keep to their own names (lk, pp_*, so_*, ap_*, am_*).
+lock() {
+  lk=0
+  while ! mkdir "$RUN/lock" 2>/dev/null; do
+    lk=$((lk + 1))
+    [ "$lk" -gt 12 ] && { rmdir "$RUN/lock" 2>/dev/null; lk=0; }
+    sleep 1
+  done
+}
+unlock() { rmdir "$RUN/lock" 2>/dev/null; }
+
+# ---------- picture ----------
+
+pic_read() { luna "$SET/getSystemSettings" "{\"category\":\"picture\",\"keys\":[\"$1\"]}"; }
+# pic_put key value quoted(1|0): written in the form it was read in.
+pic_put() {
+  pp_v=$2
+  if [ "$3" = 1 ] || ! is_num "$2"; then pp_v="\"$2\""; fi
+  pp_x=""
+  [ "$1" = energySaving ] && pp_x=',"energySavingModified":"true"'
+  ok "$(luna "$SET/setSystemSettings" "{\"category\":\"picture\",\"settings\":{\"$1\":$pp_v$pp_x}}")"
+}
+
+# Originals live in orig.<target>: "pic|key|value|quoted" and
+# "mode|pictureMode|value|quoted". The copy in $KEEP survives a restart.
+save_orig() { # file kind key
+  grep -q "^$2|$3|" "$1" 2>/dev/null && return 0
+  so_r=$(pic_read "$3")
+  ok "$so_r" || return 1
+  so_v=$(echo "$so_r" | jget "$3")
+  [ -n "$so_v" ] || return 1
+  so_q=0; echo "$so_r" | jquoted "$3" && so_q=1
+  echo "$2|$3|$so_v|$so_q" >> "$1"
+  mkdir -p "$KEEP" 2>/dev/null && cp "$1" "$KEEP/$(basename "$1")" 2>/dev/null
+  return 0
+}
+
+apply_pairs() { # file pairs
+  for ap_p in $(echo "$2" | tr ',' ' '); do
+    ap_k=${ap_p%%:*}; ap_v=${ap_p#*:}
+    pic_key "$ap_k" && pic_val "$ap_v" || continue
+    save_orig "$1" pic "$ap_k" || continue
+    ap_q=$(grep "^pic|$ap_k|" "$1" | head -n 1 | cut -d'|' -f4)
+    pic_put "$ap_k" "$ap_v" "$ap_q"
+  done
+}
+
+apply_mode() { # file mode
+  save_orig "$1" mode pictureMode || return 1
+  am_q=$(grep "^mode|pictureMode|" "$1" | head -n 1 | cut -d'|' -f4)
+  pic_put pictureMode "$2" "$am_q" || return 1
+  sleep 1   # the values read next belong to the new mode
+}
+
+# Put back what orig.<target> holds. Only called while <target> is in front,
+# because picture values belong to the input that is showing.
+restore_target() {
+  f="$RUN/orig.$1"
+  [ -s "$f" ] || { rm -f "$f" "$RUN/pending.$1" "$KEEP/orig.$1"; return 0; }
+  grep '^pic|' "$f" | while IFS='|' read -r _t k v q; do pic_put "$k" "$v" "$q"; done
+  grep '^mode|' "$f" | while IFS='|' read -r _t k v q; do pic_put "$k" "$v" "$q"; done
+  rm -f "$f" "$RUN/pending.$1" "$KEEP/orig.$1"
+}
+
+# ---------- volume ----------
+
+vol_read() { luna "$AUD/getVolume" '{}' | jget volume; }
+vol_put() { ok "$(luna "$AUD/setVolume" "{\"volume\":$1}")"; }
+vol_restore() {
+  [ -s "$RUN/vol" ] || return 0
+  read -r was set < "$RUN/vol"
+  cur=$(vol_read)
+  # Only when nobody touched the volume since the scene lowered it.
+  [ "$cur" = "$set" ] && is_num "$was" && vol_put "$was"
+  rm -f "$RUN/vol"
+}
+
+# ---------- scenes ----------
+
+scene_clear() { rm -f "$RUN"/scene.* "$RUN/sleep.until" "$RUN/sleep.noticed" "$RUN/sleep.prev" "$RUN/screenoff.at"; }
+
+# End the active scene. Picture values go back now when the scene's target is
+# in front; otherwise they wait (pending.<target>) until it is.
+scene_off_locked() {
+  t=$(cat "$RUN/scene.target" 2>/dev/null)
+  scene_clear
+  vol_restore
+  if safe_id "$t" && [ -e "$RUN/orig.$t" ]; then
+    if [ "$(front)" = "$t" ]; then restore_target "$t"; else : > "$RUN/pending.$t"; fi
+  fi
+}
+
+# Work that waits for an app to be in front: pending restores, a scene's
+# picture values, and its night values once the sun is down.
+due() {
+  f=$(front)
+  safe_id "$f" || return 0
+  [ -e "$RUN/pending.$f" ] && restore_target "$f"
+  [ "$(cat "$RUN/scene.target" 2>/dev/null)" = "$f" ] || return 0
+  o="$RUN/orig.$f"
+  if [ -e "$RUN/scene.apply" ]; then
+    rm -f "$RUN/scene.apply"
+    m=$(cat "$RUN/scene.mode" 2>/dev/null)
+    [ -n "$m" ] && apply_mode "$o" "$m"
+    s=$(cat "$RUN/scene.set" 2>/dev/null)
+    [ -n "$s" ] && apply_pairs "$o" "$s"
+  fi
+  if [ -s "$RUN/scene.night" ] && [ ! -e "$RUN/scene.night.done" ]; then
+    ns=$(cat "$RUN/scene.nightstart" 2>/dev/null)
+    if is_num "$ns" && [ "$(now)" -ge "$ns" ]; then
+      : > "$RUN/scene.night.done"
+      apply_pairs "$o" "$(cat "$RUN/scene.night")"
+    fi
+  fi
+}
+
+scene_on() {
+  ID= LAUNCH= FALLBACK= MODE= SETP= NIGHT= NSTART= END= SOFF= VOLMAX= SLEEPM=
+  for a in "$@"; do
+    k=${a%%=*}; v=${a#*=}
+    case "$k" in
+      id) safe_id "$v" || die id; ID=$v ;;
+      launch) [ "$v" = @last ] || safe_id "$v" || die launch; LAUNCH=$v ;;
+      fallback) safe_id "$v" || die fallback; FALLBACK=$v ;;
+      mode) pic_val "$v" || die mode; MODE=$v ;;
+      set) pairs_ok "$v" || die set; SETP=$v ;;
+      night) pairs_ok "$v" || die night; NIGHT=$v ;;
+      nightstart) is_num "$v" || die nightstart; NSTART=$v ;;
+      end) is_num "$v" || die end; END=$v ;;
+      screenoff) is_num "$v" && [ "$v" -le 600 ] || die screenoff; SOFF=$v ;;
+      volmax) is_num "$v" && [ "$v" -le 100 ] || die volmax; VOLMAX=$v ;;
+      sleep) is_num "$v" && [ "$v" -ge 1 ] && [ "$v" -le 600 ] || die sleep; SLEEPM=$v ;;
+      *) die "word" ;;
+    esac
+  done
+  [ -n "$ID" ] || die id
+  if [ -n "$NIGHT" ]; then is_num "$NSTART" && is_num "$END" || die night; fi
+  mkdir -p "$RUN"
+  keeper_ensure
+  echo ok=1
+  # The rest runs on its own: the page goes to the background when the
+  # scene's app opens, and the exec call must not wait for it.
+  ( scene_apply ) >/dev/null 2>&1 </dev/null &
+}
+
+scene_apply() {
+  lock
+  scene_off_locked
+  t=$LAUNCH
+  if [ "$t" = @last ]; then
+    t=$(cat "$RUN/last" 2>/dev/null)
+    safe_id "$t" || t=$FALLBACK
+  fi
+  n=$(now)
+  echo "$ID" > "$RUN/scene.id"
+  safe_id "$t" && echo "$t" > "$RUN/scene.target"
+  [ -n "$END" ] && echo "$END" > "$RUN/scene.end"
+  if [ -n "$MODE$SETP" ] && safe_id "$t"; then
+    echo "$MODE" > "$RUN/scene.mode"; echo "$SETP" > "$RUN/scene.set"; : > "$RUN/scene.apply"
+  fi
+  if [ -n "$NIGHT" ] && safe_id "$t"; then
+    echo "$NIGHT" > "$RUN/scene.night"; echo "$NSTART" > "$RUN/scene.nightstart"
+  fi
+  [ -n "$SLEEPM" ] && echo $((n + SLEEPM * 60)) > "$RUN/sleep.until"
+  if [ -n "$VOLMAX" ]; then
+    cur=$(vol_read)
+    if is_num "$cur" && [ "$cur" -gt "$VOLMAX" ] && vol_put "$VOLMAX"; then echo "$cur $VOLMAX" > "$RUN/vol"; fi
+  fi
+  if [ -n "$SOFF" ]; then
+    echo $((n + SOFF)) > "$RUN/screenoff.at"
+    [ "$SOFF" -ge 5 ] && luna "$TOAST" "{\"sourceId\":\"$APP\",\"message\":\"Screen off in $SOFF seconds\"}" >/dev/null
+  fi
+  unlock
+  safe_id "$t" && launch "$t"
+  # Picture values wait for the target to be in front; the keeper takes over
+  # if that takes longer than this.
+  i=0
+  while [ "$i" -lt 15 ] && [ -e "$RUN/scene.apply" ]; do
+    sleep 1; i=$((i + 1))
+    if [ "$(front_now)" = "$t" ]; then
+      echo "$t" > "$RUN/front"
+      lock; due; unlock
+    fi
+  done
+}
+
+scene_off() { mkdir -p "$RUN"; lock; scene_off_locked; unlock; echo ok=1; }
+
+# ---------- power ----------
+
+screen_off() { ok "$(luna "$PWR/turnOffScreen" '{}')" || ok "$(luna "$PWR/turnOffScreen" '{"standbyMode":"active"}')"; }
+
+# A normal power-off, as the remote's power key does. Never a reboot. The
+# calls are tried in order until the TV accepts one.
+standby() {
+  ok "$(luna "$PWR/turnOff" '{"reason":"remoteKey"}')" && return 0
+  ok "$(luna "$PWR/shutDown" '{"reason":"remoteKey"}')" && return 0
+  ok "$(luna luna://com.webos.service.power/shutdown/machineOff '{"reason":"remoteKey"}')" && return 0
+  return 1
+}
+
+# ---------- the still ----------
+
+fsize() { [ -r "$1" ] && wc -c < "$1" | tr -d " "; }
+
+capture() { # path
+  rm -f "$1"
+  r=$(luna "$CAP" "{\"path\":\"$1\",\"method\":\"DISPLAY\",\"format\":\"JPG\",\"width\":480,\"height\":270}")
+  ok "$r" || return 1
+  s=$(fsize "$1")
+  is_num "$s" && [ "$s" -ge "$STILL_MIN" ] && [ "$s" -le "$STILL_MAX" ]
+}
+
+still() {
+  mkdir -p "$RUN"
+  if [ "$1" != nolive ] && capture "$RUN/live.jpg"; then
+    echo "kind=live age=0"; cat "$RUN/live.jpg"; return 0
+  fi
+  at=$(cat "$RUN/last.at" 2>/dev/null)
+  if is_num "$at" && [ -s "$RUN/last.jpg" ]; then
+    age=$(( $(now) - at ))
+    if [ "$age" -ge 0 ] && [ "$age" -le "$STILL_MAXAGE" ]; then
+      echo "kind=last age=$age"; cat "$RUN/last.jpg"; return 0
+    fi
+  fi
+  echo "kind=none age=0"
+}
+
+# The keeper keeps one still from the last time the target was in front.
+still_keep() {
+  t=$(cat "$RUN/still.target" 2>/dev/null)
+  safe_id "$t" && [ "$(front)" = "$t" ] || return 0
+  if capture "$RUN/last.new"; then
+    mv "$RUN/last.new" "$RUN/last.jpg"; now > "$RUN/last.at"
+  else
+    rm -f "$RUN/last.new"
+  fi
+}
+
+# ---------- shield ----------
+
+MARK_A="# impetus-shield begin"
+MARK_B="# impetus-shield end"
+
+hosts_mounted() { grep -q " $ETC_HOSTS " "$MOUNTINFO" 2>/dev/null; }
+
+shield_block() {
+  echo "$MARK_A"
+  while read -r h _rest; do
+    case "$h" in ""|\#*|*[!A-Za-z0-9.-]*) continue ;; esac
+    echo "$SINK4 $h"; echo "$SINK6 $h"
+  done < "$DIR/shield/hosts.txt"
+  echo "$MARK_B"
+}
+
+counter_start() {
+  rm -f "$RUN/shield.hits" "$RUN/shield.count"
+  if iptables -I OUTPUT -d "$SINK4" 2>/dev/null; then echo ipt > "$RUN/shield.count"; return 0; fi
+  if command -v node >/dev/null 2>&1 && [ -r "$DIR/bin/shield-count.js" ]; then
+    node "$DIR/bin/shield-count.js" "$RUN/shield.hits" "$SINK4" "$SINK6" >/dev/null 2>&1 </dev/null &
+    echo "node $!" > "$RUN/shield.count"
+  fi
+}
+counter_stop() {
+  kind= pid=
+  [ -r "$RUN/shield.count" ] && read -r kind pid < "$RUN/shield.count"
+  [ "$kind" = ipt ] && iptables -D OUTPUT -d "$SINK4" 2>/dev/null
+  [ "$kind" = node ] && is_num "$pid" && kill "$pid" 2>/dev/null
+  rm -f "$RUN/shield.count" "$RUN/shield.hits"
+}
+shield_hits() {
+  kind=
+  [ -r "$RUN/shield.count" ] && read -r kind _pid < "$RUN/shield.count"
+  if [ "$kind" = ipt ]; then iptables -L OUTPUT -v -n -x 2>/dev/null | grep -F "$SINK4" | head -n 1 | awk '{print $1}'
+  elif [ "$kind" = node ]; then cat "$RUN/shield.hits" 2>/dev/null; fi
+}
+
+shield_on() {
+  mkdir -p "$RUN"
+  [ -r "$DIR/shield/hosts.txt" ] || { echo "error=nolist"; return 1; }
+  [ -e "$RUN/shield.on" ] && shield_off_quiet
+  if hosts_mounted && [ -w "$HBC_HOSTS" ] && cmp -s "$HBC_HOSTS" "$ETC_HOSTS"; then
+    # Homebrew Channel already keeps /etc/hosts in memory: add our lines to
+    # its file in place (same inode, so the mount keeps showing it).
+    { sed "/^$MARK_A/,/^$MARK_B/d" "$HBC_HOSTS"; shield_block; } > "$RUN/hosts.new"
+    cat "$RUN/hosts.new" > "$HBC_HOSTS"; rm -f "$RUN/hosts.new"
+    echo inplace > "$RUN/shield.mode"
+  else
+    { sed "/^$MARK_A/,/^$MARK_B/d" "$ETC_HOSTS"; shield_block; } > "$RUN/hosts"
+    mount --bind "$RUN/hosts" "$ETC_HOSTS" 2>/dev/null || mount -o bind "$RUN/hosts" "$ETC_HOSTS" 2>/dev/null
+    echo bind > "$RUN/shield.mode"
+  fi
+  if ! grep -q "^$MARK_A" "$ETC_HOSTS" 2>/dev/null; then
+    shield_off_quiet; echo "error=nomount"; return 1
+  fi
+  counter_start
+  : > "$RUN/shield.on"
+  mkdir -p "$KEEP" 2>/dev/null && : > "$KEEP/shield.on"
+  echo ok=1
+}
+
+shield_off_quiet() {
+  counter_stop
+  case "$(cat "$RUN/shield.mode" 2>/dev/null)" in
+    inplace)
+      sed "/^$MARK_A/,/^$MARK_B/d" "$HBC_HOSTS" > "$RUN/hosts.new" && cat "$RUN/hosts.new" > "$HBC_HOSTS"
+      rm -f "$RUN/hosts.new" ;;
+    bind) umount "$ETC_HOSTS" 2>/dev/null; rm -f "$RUN/hosts" ;;
+  esac
+  rm -f "$RUN/shield.mode" "$RUN/shield.on"
+}
+shield_off() { shield_off_quiet; rm -f "$KEEP/shield.on"; echo ok=1; }
+
+# ---------- reads ----------
+
+state() {
+  echo "now=$(now)"
+  echo "scene=$(cat "$RUN/scene.id" 2>/dev/null)"
+  echo "target=$(cat "$RUN/scene.target" 2>/dev/null)"
+  echo "end=$(cat "$RUN/scene.end" 2>/dev/null)"
+  echo "sleep=$(cat "$RUN/sleep.until" 2>/dev/null)"
+  echo "screenoff=$(cat "$RUN/screenoff.at" 2>/dev/null)"
+  if [ -e "$RUN/shield.on" ]; then echo "shield=on"; echo "hits=$(shield_hits)"; else echo "shield=off"; fi
+  echo "hosts=$(grep -c '^[A-Za-z0-9]' "$DIR/shield/hosts.txt" 2>/dev/null)"
+  if keeper_alive; then echo "keeper=1"; else echo "keeper=0"; fi
+}
+
+vitals() {
+  t=$(cat "$THERMAL" 2>/dev/null) || t=$(cat /proc/thermalinfo/soc_temperature 2>/dev/null)
+  echo "temp=$t"
+  echo "uptime=$(cut -d' ' -f1 /proc/uptime 2>/dev/null)"
+  mt=$(sed -n 's/^MemTotal: *\([0-9]*\).*/\1/p' /proc/meminfo 2>/dev/null)
+  ma=$(sed -n 's/^MemAvailable: *\([0-9]*\).*/\1/p' /proc/meminfo 2>/dev/null)
+  if [ -z "$ma" ]; then
+    mf=$(sed -n 's/^MemFree: *\([0-9]*\).*/\1/p' /proc/meminfo 2>/dev/null)
+    mc=$(sed -n 's/^Cached: *\([0-9]*\).*/\1/p' /proc/meminfo 2>/dev/null)
+    is_num "$mf" && is_num "$mc" && ma=$((mf + mc))
+  fi
+  echo "memtotal=$mt"; echo "memavail=$ma"
+  df -k -P "$DISK" 2>/dev/null | tail -n 1 | awk '{print "disktotal=" $2; print "diskused=" $3}'
+}
+
+logtail() {
+  for f in $LOGS; do
+    if [ -r "$f" ]; then tail -n 80 "$f"; return 0; fi
+  done
+  dmesg 2>/dev/null | tail -n 40
+}
+
+engine() {
+  echo "@vitals"; vitals
+  echo "@state"; state
+  echo "@talk"; netstat -tnp 2>/dev/null
+  echo "@log"; logtail
+}
+
+probe() {
+  mkdir -p "$RUN"
+  echo "exec=1"
+  if capture "$RUN/probe.jpg"; then echo "capture=1"; else echo "capture=0"; fi
+  rm -f "$RUN/probe.jpg"
+  r=$(pic_read backlight)
+  if ok "$r" && [ -n "$(echo "$r" | jget backlight)" ]; then echo "picture=1"; else echo "picture=0"; fi
+  if ok "$(luna "$PWR/getPowerState" '{}')"; then echo "screenoff=1"; echo "sleep=1"; else echo "screenoff=0"; echo "sleep=0"; fi
+  if is_num "$(vol_read)"; then echo "volume=1"; else echo "volume=0"; fi
+  b=0
+  if [ -r "$DIR/shield/hosts.txt" ]; then
+    if hosts_mounted && [ -w "$HBC_HOSTS" ] && cmp -s "$HBC_HOSTS" "$ETC_HOSTS"; then b=1
+    else
+      # Try a bind mount on two scratch files; /etc is not touched.
+      echo a > "$RUN/bind.a"; echo b > "$RUN/bind.b"
+      if mount --bind "$RUN/bind.a" "$RUN/bind.b" 2>/dev/null || mount -o bind "$RUN/bind.a" "$RUN/bind.b" 2>/dev/null; then
+        b=1; umount "$RUN/bind.b" 2>/dev/null
+      fi
+      rm -f "$RUN/bind.a" "$RUN/bind.b"
+    fi
+  fi
+  echo "shield=$b"
+  c=0
+  iptables -L OUTPUT -n >/dev/null 2>&1 && c=1
+  command -v node >/dev/null 2>&1 && c=1
+  echo "count=$c"
+  l=0
+  for f in $LOGS; do [ -r "$f" ] && l=1; done
+  echo "log=$l"
+  if [ -r "$THERMAL" ] || [ -r /proc/thermalinfo/soc_temperature ]; then echo "temp=1"; else echo "temp=0"; fi
+}
+
+# ---------- the keeper ----------
+
+keeper_alive() {
+  p=$(cat "$RUN/keeper.pid" 2>/dev/null)
+  is_num "$p" && kill -0 "$p" 2>/dev/null
+}
+
+keeper_ensure() {
+  mkdir -p "$RUN"
+  keeper_alive && return 0
+  ( exec sh "$0" keeper ) >/dev/null 2>&1 </dev/null &
+}
+
+# After a restart /tmp is empty but $KEEP may still hold the picture values
+# from before an interrupted scene: queue them, and put the shield back.
+recover() {
+  mkdir -p "$RUN"
+  for f in "$KEEP"/orig.*; do
+    [ -s "$f" ] || continue
+    t=${f##*/orig.}
+    safe_id "$t" || continue
+    [ -e "$RUN/orig.$t" ] && continue
+    cp "$f" "$RUN/orig.$t" && : > "$RUN/pending.$t"
+  done
+  if [ -e "$KEEP/shield.on" ] && [ ! -e "$RUN/shield.on" ]; then shield_on >/dev/null; fi
+}
+
+# Follows the app in front without polling: one subscription, one line per
+# change. It belongs to one keeper ($1 = its pid) and ends when that keeper
+# is no longer the one on record.
+follow() {
+  while [ "$(cat "$RUN/keeper.pid" 2>/dev/null)" = "$1" ]; do
+    luna-send -i "$SAM/getForegroundAppInfo" '{"subscribe":true}' 2>/dev/null </dev/null |
+      while read -r line; do
+        [ "$(cat "$RUN/keeper.pid" 2>/dev/null)" = "$1" ] || exit 0
+        id=$(printf '%s\n' "$line" | jget appId)
+        safe_id "$id" || continue
+        echo "$id" > "$RUN/front.new" && mv "$RUN/front.new" "$RUN/front"
+        case "$id" in "$APP"|"$STOCK") ;; *) echo "$id" > "$RUN/last" ;; esac
+      done
+    sleep 5
+  done
+}
+
+tick() {
+  n=$(now)
+  u=$(cat "$RUN/sleep.until" 2>/dev/null)
+  if is_num "$u"; then
+    if [ "$n" -ge "$u" ]; then
+      lock; scene_off_locked; unlock
+      standby
+    elif [ "$n" -ge $((u - NOTICE)) ] && [ ! -e "$RUN/sleep.noticed" ]; then
+      : > "$RUN/sleep.noticed"
+      f=$(front)
+      [ "$f" != "$APP" ] && safe_id "$f" && echo "$f" > "$RUN/sleep.prev"
+      launch "$APP" "{\"notice\":\"sleep\",\"until\":$u}"
+    fi
+  fi
+  e=$(cat "$RUN/scene.end" 2>/dev/null)
+  if is_num "$e" && [ "$n" -ge "$e" ]; then lock; scene_off_locked; unlock; fi
+  s=$(cat "$RUN/screenoff.at" 2>/dev/null)
+  if is_num "$s" && [ "$n" -ge "$s" ]; then
+    rm -f "$RUN/screenoff.at"
+    t=$(cat "$RUN/scene.target" 2>/dev/null)
+    [ "$(front)" = "$t" ] && screen_off
+    # A scene that only turns the screen off has nothing left to undo.
+    if [ ! -e "$RUN/scene.apply" ] && [ ! -s "$RUN/scene.night" ] && [ ! -s "$RUN/sleep.until" ] &&
+       [ ! -s "$RUN/vol" ] && { ! safe_id "$t" || [ ! -e "$RUN/orig.$t" ]; }; then scene_clear; fi
+  fi
+  lock; due; unlock
+}
+
+keeper() {
+  mkdir -p "$RUN"
+  keeper_alive && exit 0
+  echo $$ > "$RUN/keeper.pid"
+  rm -rf "$RUN/lock"
+  recover
+  follow $$ &
+  kp_follow=$!
+  echo "$kp_follow" > "$RUN/follow.pid"
+  # It only ever removes its own record: by the time an old keeper ends, a
+  # new one may already be the keeper on record.
+  trap 'keeper_end' TERM INT
+  kp_i=0
+  while [ "$(cat "$RUN/keeper.pid" 2>/dev/null)" = "$$" ]; do
+    tick
+    [ $((kp_i % 20)) -eq 0 ] && still_keep   # at once, then about once a minute
+    kp_i=$((kp_i + 1))
+    sleep 3
+  done
+  keeper_end
+}
+
+keeper_end() {
+  kill "$kp_follow" 2>/dev/null
+  if [ "$(cat "$RUN/keeper.pid" 2>/dev/null)" = "$$" ]; then rm -f "$RUN/keeper.pid" "$RUN/follow.pid" "$RUN/front"; fi
+  exit 0
+}
+
+keeper_stop() {
+  p=$(cat "$RUN/keeper.pid" 2>/dev/null)
+  is_num "$p" && kill "$p" 2>/dev/null
+  p=$(cat "$RUN/follow.pid" 2>/dev/null)
+  is_num "$p" && kill "$p" 2>/dev/null
+  rm -f "$RUN/keeper.pid" "$RUN/follow.pid" "$RUN/front"
+}
+
+# The way back. Picture values belong to an input, so each waiting set is put
+# back with its own app in front; the last one stays in front.
+restore_all() {
+  mkdir -p "$RUN"
+  keeper_stop
+  # A turn of the keeper that was under way gets a moment to finish.
+  i=0
+  while [ -d "$RUN/lock" ] && [ "$i" -lt 5 ]; do sleep 1; i=$((i + 1)); done
+  rm -rf "$RUN/lock"
+  for f in "$KEEP"/orig.*; do
+    [ -s "$f" ] || continue
+    t=${f##*/orig.}
+    safe_id "$t" && [ ! -e "$RUN/orig.$t" ] && cp "$f" "$RUN/orig.$t"
+  done
+  scene_clear
+  vol_restore
+  for f in "$RUN"/orig.*; do
+    [ -e "$f" ] || continue
+    t=${f##*/orig.}
+    safe_id "$t" || continue
+    launch "$t"
+    i=0
+    while [ "$i" -lt 15 ] && [ "$(front_now)" != "$t" ]; do sleep 1; i=$((i + 1)); done
+    restore_target "$t"
+  done
+  shield_off_quiet
+  rm -f "$KEEP/shield.on" "$KEEP"/orig.* "$RUN"/pending.*
+  echo ok=1
+}
+
+# ---------- verbs ----------
+
+for a in "$@"; do safe "$a" || die word; done
+[ -n "$DIR" ] || die dir
+
+verb=$1
+[ $# -gt 0 ] && shift
+case "$verb" in
+  probe) probe ;;
+  start)
+    mkdir -p "$RUN"
+    for a in "$@"; do
+      case "$a" in target=*) safe_id "${a#target=}" && echo "${a#target=}" > "$RUN/still.target" ;; esac
+    done
+    keeper_ensure; echo ok=1 ;;
+  state) state ;;
+  still) still "$1" ;;
+  scene)
+    sub=$1
+    [ $# -gt 0 ] && shift
+    case "$sub" in on) scene_on "$@" ;; off) scene_off ;; *) die scene ;; esac ;;
+  sleep)
+    [ "$1" = cancel ] || die sleep
+    echo "prev=$(cat "$RUN/sleep.prev" 2>/dev/null)"
+    rm -f "$RUN/sleep.until" "$RUN/sleep.noticed" "$RUN/sleep.prev" ;;
+  shield) case "$1" in on) shield_on ;; off) shield_off ;; *) die shield ;; esac ;;
+  engine) engine ;;
+  restore) restore_all ;;
+  keeper) keeper ;;
+  tick) mkdir -p "$RUN"; tick; echo ok=1 ;;
+  *) die verb ;;
+esac

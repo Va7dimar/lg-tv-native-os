@@ -1,0 +1,43 @@
+#!/bin/sh
+# A stand-in TV for tests/test_ctl.sh. It keeps its "TV" in $STUB_TV:
+#   front          the app in front
+#   pic.<input>    picture values of that input, one key=value per line
+#   volume         the master volume
+#   calls          every call, one per line
+# Picture values belong to the input in front, as on the real TV.
+T=${STUB_TV:?}
+while [ $# -gt 2 ]; do shift; done
+uri=$1; body=$2
+echo "$uri $body" >> "$T/calls"
+front=$(cat "$T/front" 2>/dev/null)
+val() { echo "$body" | sed -n 's/.*"'"$1"'" *: *"\{0,1\}\([^",}]*\).*/\1/p' | head -n 1; }
+
+case "$uri" in
+  *applicationmanager/getForegroundAppInfo)
+    echo "{\"appId\":\"$front\",\"returnValue\":true}" ;;
+  *applicationmanager/launch)
+    val id > "$T/front"
+    echo '{"returnValue":true}' ;;
+  *settingsservice/getSystemSettings)
+    k=$(echo "$body" | sed -n 's/.*"keys":\["\([A-Za-z]*\)"\].*/\1/p')
+    v=$(sed -n "s/^$k=//p" "$T/pic.$front" 2>/dev/null | tail -n 1)
+    if [ -n "$v" ]; then echo "{\"category\":\"picture\",\"settings\":{\"$k\":\"$v\"},\"returnValue\":true}"
+    else echo '{"returnValue":false,"errorText":"no such key"}'; fi ;;
+  *settingsservice/setSystemSettings)
+    k=$(echo "$body" | sed -n 's/.*"settings":{"\([A-Za-z]*\)".*/\1/p')
+    echo "$k=$(val "$k")" >> "$T/pic.$front"
+    echo '{"returnValue":true}' ;;
+  *audio/master/getVolume)
+    echo "{\"returnValue\":true,\"volumeStatus\":{\"volume\":$(cat "$T/volume")}}" ;;
+  *audio/master/setVolume)
+    val volume > "$T/volume"; echo '{"returnValue":true}' ;;
+  *capture/executeOneShot)
+    p=$(val path)
+    if [ -e "$T/black" ]; then printf 'tiny' > "$p"; else head -c 4000 /dev/zero | tr '\0' 'x' > "$p"; fi
+    echo '{"returnValue":true}' ;;
+  *tvpower/power/turnOff)
+    echo '{"returnValue":false,"errorText":"Unknown method"}' ;;
+  *tvpower/power/*)
+    echo '{"returnValue":true}' ;;
+  *) echo '{"returnValue":true}' ;;
+esac

@@ -1,6 +1,7 @@
 /* Impetus Home. Tokens from the Impetus primary colourway (owner's monorepo,
    apps/impetus globals.css). Rules: DESIGN.md. Chromium 79: no flex `gap`,
-   all spacing is margins; the stage is scaled with `zoom` by home.js. */
+   no `inset`; all spacing is margins and the stage is scaled with `zoom` by
+   home.js. */
 @font-face { font-family: "Syncopate"; font-weight: 700; src: url("fonts/Syncopate-Bold.woff2") format("woff2"); }
 @font-face { font-family: "Unbounded"; font-weight: 300 500; src: url("fonts/Unbounded-Variable.woff2") format("woff2"); }
 @font-face { font-family: "Plex Mono"; font-weight: 400; src: url("fonts/IBMPlexMono-Regular.woff2") format("woff2"); }
@@ -17,13 +18,16 @@
   --brand-light: #1FB487;
   --brand-quiet: #2C8C86;
   --turn: 1400ms cubic-bezier(0.77, 0, 0.175, 1);
+  --edge: inset 0 1px 0 rgba(230, 234, 241, 0.14);
   --halo: 0 0 44px 6px rgba(31, 180, 135, 0.34);
   --halo-flare: 0 0 72px 14px rgba(31, 180, 135, 0.5);
+  --halo-quiet: 0 0 34px 2px rgba(44, 140, 134, 0.36);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: var(--ground); cursor: none; }
 button { font: inherit; color: inherit; border: 0; background: none; text-align: left; }
+[hidden] { display: none !important; }
 
 #stage {
   position: relative; width: 1920px; height: 1080px; overflow: hidden;
@@ -36,7 +40,7 @@ button { font: inherit; color: inherit; border: 0; background: none; text-align:
 
 .living { background: var(--ground); transform-origin: 50% 0; transition: transform var(--turn), opacity var(--turn); }
 .light {
-  position: absolute; left: 0; top: 0; width: 100%; height: 100%; /* no `inset` before Chromium 87 */
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%;
   background: radial-gradient(ellipse 70% 60% at 22% 18%, rgba(230, 234, 241, 0.10), rgba(230, 234, 241, 0) 70%);
 }
 .sky { position: absolute; left: 0; top: 0; }
@@ -55,16 +59,24 @@ button { font: inherit; color: inherit; border: 0; background: none; text-align:
 .sunline .n { font-family: "Plex Mono", monospace; font-size: 23px; color: var(--text); }
 .sunline .sep { margin: 0 14px; color: var(--line); }
 
-/* ---------- The room turn ---------- */
+/* ---------- The room turns ---------- */
 
 .control {
-  transform: translateY(100%); transition: transform var(--turn);
+  transform: translateY(100%); transform-origin: 50% 0;
+  transition: transform var(--turn), opacity var(--turn);
   background: linear-gradient(180deg, var(--slab-top), var(--slab-foot) 60%);
-  box-shadow: inset 0 1px 0 rgba(230, 234, 241, 0.14);
+  box-shadow: var(--edge);
+}
+.engine {
+  transform: translateY(100%); transition: transform var(--turn);
+  background: var(--ground);
 }
 body.open .control { transform: translateY(0); }
 body.open .living { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0.35; }
-body.instant .control, body.instant .living { transition: none; }
+body.deep .living { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0; }
+body.deep .control { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0.35; }
+body.deep .engine { transform: translateY(0); }
+body.instant .room { transition: none; }
 
 .lead {
   position: absolute; left: 0; top: 0; width: 100%; height: 140px; pointer-events: none;
@@ -75,70 +87,163 @@ body.instant .control, body.instant .living { transition: none; }
   font-family: "Syncopate", sans-serif; font-weight: 700; font-size: 16px;
   letter-spacing: 0.08em; color: var(--muted); margin-bottom: 18px;
 }
+.n { font-family: "Plex Mono", monospace; }
 
 /* ---------- Pressables ---------- */
 
 .key {
   position: relative; display: block;
   background: linear-gradient(180deg, var(--slab-top), var(--pane));
-  box-shadow: inset 0 1px 0 rgba(230, 234, 241, 0.14), 3px 3px 0 var(--key-wall);
+  box-shadow: var(--edge), 3px 3px 0 var(--key-wall);
   font-family: "Syncopate", sans-serif; font-weight: 700; letter-spacing: 0.08em;
   color: var(--text); white-space: nowrap; overflow: hidden;
 }
 .key.focused {
   outline: 2px solid var(--text); outline-offset: 2px;
-  box-shadow: inset 0 1px 0 rgba(230, 234, 241, 0.14), 3px 3px 0 var(--key-wall), var(--halo);
+  box-shadow: var(--edge), 3px 3px 0 var(--key-wall), var(--halo);
 }
-.key.pressed {
+/* Latched: the face stays down on its wall with a steady quiet halo. */
+.key.latched {
   transform: translate(3px, 3px);
-  box-shadow: inset 0 1px 0 rgba(230, 234, 241, 0.14), 0 0 0 var(--key-wall), var(--halo-flare);
+  box-shadow: var(--edge), 0 0 0 var(--key-wall), var(--halo-quiet);
+}
+.key.latched.focused { box-shadow: var(--edge), 0 0 0 var(--key-wall), var(--halo); }
+.key.pressed, .key.latched.pressed {
+  transform: translate(3px, 3px);
+  box-shadow: var(--edge), 0 0 0 var(--key-wall), var(--halo-flare);
 }
 
-/* Layout: three columns placed on the 1920 frame. */
+/* ---------- Room 2: the control room. Three columns on the 1920 frame. ---------- */
+
 .col-main { position: absolute; left: 96px; top: 112px; width: 700px; }
-.col-apps { position: absolute; left: 844px; top: 112px; width: 652px; }
-.found { position: absolute; left: 1484px; top: 112px; width: 340px; height: 872px; }
+.col-apps { position: absolute; left: 840px; top: 112px; width: 640px; }
+.col-scenes { position: absolute; left: 1496px; top: 112px; width: 328px; }
 
-.appletv {
-  width: 700px; height: 500px; margin-top: 34px; padding: 0 44px;
-  font-size: 72px; line-height: 1;
+.appletv { width: 700px; height: 500px; margin-top: 34px; font-size: 72px; line-height: 1; }
+.appletv .name { position: absolute; left: 44px; bottom: 52px; }
+.still { position: absolute; left: 0; top: 0; width: 700px; height: 500px; object-fit: cover; opacity: 0.7; }
+.shade { display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+  background: linear-gradient(180deg, rgba(13, 14, 16, 0.10) 0%, rgba(13, 14, 16, 0.30) 45%, rgba(10, 11, 13, 0.94) 100%); }
+.appletv.has-still .shade { display: block; }
+.stillage {
+  position: absolute; right: 28px; top: 24px; font-family: "Plex Mono", monospace;
+  font-size: 18px; letter-spacing: 0; color: var(--text);
 }
-.appletv span { position: absolute; left: 44px; bottom: 52px; }
 
+.col-main .label { margin-top: 56px; }
 .shortcuts { width: 760px; }
 .shortcuts:after, .apps:after { content: ""; display: block; clear: both; }
-.col-main .label:nth-of-type(1) { margin-top: 56px; }
 .shortcut {
   float: left; width: 222px; height: 150px; margin-right: 17px; padding: 30px 24px 0;
   font-size: 22px;
 }
+.shortcut .name { display: block; }
 .shortcut .place {
   display: block; margin-top: 16px; font-family: "Unbounded", sans-serif; font-weight: 300;
   font-size: 22px; letter-spacing: 0; color: var(--muted); white-space: normal;
 }
 
-.apps { width: 668px; }
-.appcol { float: left; width: 318px; margin-right: 16px; }
+.apps { width: 640px; }
+.appcol { float: left; width: 300px; margin-right: 16px; }
 .appbar {
-  width: 318px; height: 98px; margin-bottom: 16px; padding: 0 26px;
-  font-size: 22px; line-height: 98px; text-overflow: ellipsis;
+  width: 300px; height: 110px; margin-bottom: 16px; padding: 0 24px;
+  font-size: 20px; line-height: 110px; text-overflow: ellipsis;
 }
-.note { margin-top: 12px; font-size: 20px; color: var(--muted); }
+.note { margin-top: 4px; font-size: 20px; font-weight: 300; color: var(--muted); }
 
-/* ---------- Read-only: connections ---------- */
+/* A button centres its content, so each line is placed by hand. */
+.scene { width: 328px; height: 176px; margin-bottom: 16px; font-size: 24px; white-space: normal; }
+.scene .name { position: absolute; left: 24px; top: 24px; white-space: nowrap; }
+.scene .does {
+  position: absolute; left: 24px; top: 62px; width: 280px; text-align: left;
+  font-family: "Unbounded", sans-serif; font-weight: 300;
+  font-size: 18px; line-height: 24px; letter-spacing: 0; color: var(--muted);
+}
+.scene .state {
+  position: absolute; left: 24px; bottom: 20px; font-family: "Plex Mono", monospace;
+  font-size: 18px; letter-spacing: 0; color: var(--text);
+}
 
-.found {
-  padding: 34px 30px;
+/* Read only: the shield count. */
+.shieldline {
+  width: 328px; height: 50px; margin-bottom: 16px; padding: 0 24px; line-height: 50px;
   background: linear-gradient(180deg, var(--slab-top), var(--slab-foot));
-  box-shadow: inset 0 1px 0 rgba(230, 234, 241, 0.14);
+  box-shadow: var(--edge); overflow: hidden;
 }
-.found .label { margin-bottom: 8px; }
+.what {
+  float: left; font-family: "Syncopate", sans-serif; font-weight: 700; font-size: 16px;
+  letter-spacing: 0.08em; color: var(--muted);
+}
+.shieldline .n { float: right; font-size: 22px; color: var(--text); }
+
+.door { width: 328px; height: 98px; padding: 0 24px; font-size: 20px; line-height: 98px; }
+
+/* ---------- Room 3: the engine room. Slabs on the ground, 16 px apart. ---------- */
+
+.slab {
+  position: absolute; top: 112px; padding: 34px 30px; overflow: hidden;
+  background: linear-gradient(180deg, var(--slab-top), var(--slab-foot));
+  box-shadow: var(--edge);
+}
+.vitals { left: 96px; width: 520px; height: 560px; }
+.talkers { left: 632px; width: 560px; height: 872px; }
+.log { left: 1208px; width: 616px; height: 872px; }
+
+.temp {
+  margin-top: 10px; font-family: "Plex Mono", monospace; font-size: 168px; line-height: 1;
+  letter-spacing: -0.02em; color: var(--text);
+}
+.temp .unit { margin-left: 14px; font-size: 44px; letter-spacing: 0; color: var(--muted); }
+.row { margin-top: 34px; height: 28px; line-height: 28px; overflow: hidden; }
+.row .n { float: right; font-size: 22px; color: var(--text); }
+.meter { margin-top: 12px; height: 4px; background: var(--line); }
+.meter span { display: block; width: 0; height: 4px; background: var(--text); }
+
+.shieldkey {
+  position: absolute; left: 96px; top: 688px; width: 520px; height: 296px;
+  padding: 40px 34px 0; font-size: 44px; line-height: 1; white-space: normal;
+}
+.shieldkey .name { display: block; }
+.shieldkey .state {
+  display: block; margin-top: 24px; font-family: "Plex Mono", monospace; font-size: 30px;
+  letter-spacing: 0; color: var(--text);
+}
+.shieldkey .does {
+  display: block; margin-top: 22px; font-family: "Unbounded", sans-serif; font-weight: 300;
+  font-size: 18px; line-height: 1.45; letter-spacing: 0; color: var(--muted);
+}
+
+.talkers .label, .log .label { margin-bottom: 8px; }
 .count { font-family: "Plex Mono", monospace; font-size: 96px; line-height: 1.1; color: var(--text); }
-.connlist { list-style: none; margin-top: 30px; }
-.connlist li {
-  font-family: "Plex Mono", monospace; font-size: 20px; line-height: 1.35; color: var(--muted);
-  margin-bottom: 18px; word-break: break-all; transition: color 1600ms ease-out;
+.sub { font-size: 18px; font-weight: 300; color: var(--muted); }
+.talklist { list-style: none; margin-top: 30px; }
+.talklist li { position: relative; height: 58px; margin-bottom: 12px; overflow: hidden; }
+.talklist .bar { position: absolute; left: 0; top: 0; height: 58px; background: rgba(230, 234, 241, 0.09); }
+.talklist .who {
+  position: absolute; left: 16px; top: 0; font-family: "Plex Mono", monospace; font-size: 20px;
+  line-height: 58px; color: var(--muted); white-space: nowrap;
 }
-.connlist li.fresh { color: var(--text); transition: none; }
-.connlist .prog { color: inherit; }
-.connlist .arrow { color: var(--line); }
+.talklist .owner { color: var(--text); }
+.talklist .arrow { color: var(--line); }
+.talklist .num {
+  position: absolute; right: 16px; top: 0; font-family: "Plex Mono", monospace; font-size: 22px;
+  line-height: 58px; color: var(--text);
+}
+
+.loglist { list-style: none; margin-top: 22px; }
+.loglist li {
+  font-family: "Plex Mono", monospace; font-size: 18px; line-height: 1.4; color: var(--muted);
+  margin-bottom: 14px; word-wrap: break-word; overflow-wrap: break-word;
+}
+.loglist .who { color: var(--text); }
+
+/* ---------- The sleep notice ---------- */
+
+.notice { background: var(--ground); visibility: hidden; }
+body.notice .notice { visibility: visible; }
+.notice .label { position: absolute; left: 112px; top: 250px; font-size: 22px; }
+.countdown {
+  position: absolute; left: 104px; top: 300px; font-family: "Plex Mono", monospace;
+  font-size: 340px; line-height: 1; letter-spacing: -0.02em; color: var(--text);
+}
+.noticeline { position: absolute; left: 112px; top: 690px; font-size: 30px; font-weight: 300; color: var(--muted); }

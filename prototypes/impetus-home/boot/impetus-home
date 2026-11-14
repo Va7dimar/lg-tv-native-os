@@ -4,19 +4,25 @@
 # file is installed there as `impetus-home` (no dot: run-parts skips names
 # with one) with mode 755.
 #
-# What it does: opens org.va7dimar.home once the system is up, then follows
-# the foreground app and opens it again whenever stock Home
-# (com.webos.app.home) comes to the front. It never gives up: if the
-# subscription drops, it starts again after 5 s.
+# What it does, once the system is up:
+#   1. starts the keeper (bin/impetus-ctl start). It puts back what a restart
+#      interrupted (a scene's picture values, the shield if it was on) and
+#      then looks after scenes and the sleep timer.
+#   2. opens org.va7dimar.home, then follows the foreground app and opens it
+#      again whenever stock Home (com.webos.app.home) comes to the front. It
+#      never gives up: if the subscription drops, it starts again after 5 s.
 #
 # Pause without a reboot:   touch /tmp/impetus-pause    (rm it to resume)
 # Way back to stock Home:   rm /var/lib/webosbrew/init.d/impetus-home
 #                           then restart the TV (the running watcher ends
 #                           with the boot).
+# Way back for everything the helper changed (picture, shield, keeper):
+#   sh /media/developer/apps/usr/palm/applications/org.va7dimar.home/bin/impetus-ctl restore
 
 APP=org.va7dimar.home
 STOCK=com.webos.app.home
 SAM=luna://com.webos.service.applicationmanager
+CTL=/media/developer/apps/usr/palm/applications/$APP/bin/impetus-ctl
 
 open_ours() {
   [ -e /tmp/impetus-pause ] && return
@@ -25,6 +31,7 @@ open_ours() {
 
 watch() {
   sleep 25
+  [ -r "$CTL" ] && sh "$CTL" start >/dev/null 2>&1
   open_ours
   while true; do
     luna-send -i "$SAM/getForegroundAppInfo" '{"subscribe":true}' 2>/dev/null </dev/null |

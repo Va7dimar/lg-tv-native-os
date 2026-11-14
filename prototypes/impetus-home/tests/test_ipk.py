@@ -34,10 +34,18 @@ def main():
     data = tarfile.open(fileobj=io.BytesIO(gzip.decompress(parts["data.tar.gz"])))
     names = data.getnames()
     prefix = "usr/palm/applications/org.va7dimar.home/"
-    for need in ("appinfo.json", "index.html", "home.js", "fonts/Syncopate-Bold.woff2", "fonts/LICENSE-Syncopate.txt", "icon.png"):
+    for need in ("appinfo.json", "index.html", "home.js", "fonts/Syncopate-Bold.woff2", "fonts/LICENSE-Syncopate.txt",
+                 "icon.png", "bin/impetus-ctl", "bin/shield-count.js", "shield/hosts.txt"):
         assert prefix + need in names, need
+    assert not [n for n in names if n.startswith(prefix + "state")], "state/ is the TV's own folder"
     info = json.load(data.extractfile(prefix + "appinfo.json"))
     assert info["id"] == "org.va7dimar.home" and info["type"] == "web" and info["title"] == "Impetus"
+    # The helper is run by the TV's shell: LF line ends, executable.
+    for text in ("bin/impetus-ctl", "bin/shield-count.js", "shield/hosts.txt", "home.js", "index.html"):
+        assert b"\r" not in data.extractfile(prefix + text).read(), text
+    assert data.extractfile(prefix + "bin/impetus-ctl").read().startswith(b"#!/bin/sh\n")
+    assert data.getmember(prefix + "bin/impetus-ctl").mode == 0o755
+    assert data.getmember(prefix + "home.js").mode == 0o644
     print("test_ipk: 1 test, 0 failed")
 
 
