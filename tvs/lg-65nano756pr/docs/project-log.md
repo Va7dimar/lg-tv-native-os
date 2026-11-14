@@ -307,3 +307,11 @@ focus at 0.6 s, then Home takes the screen at about 31 s. Mode B (webOS
 overlay) is never shown: SAM's loading spinner stays up and the compositor
 sends no events. Mode A is the working path. App removed afterwards.
 Evidence: `evidence/photo-frame-tv-run-2026-11-14.md`.
+
+# Native gate: mode C (webOS CARD + appId) — 2026-11-14
+Mode C set appId and the CARD window type through `wl_webos_shell`, registered
+with SAM, and drew 1920x1080 for 120 s, but nothing showed and the compositor
+sent no events or keyboard focus. With mode B and the v0.5 CARD run, that
+makes `wl_webos_shell` unusable on this firmware. Verdict: hybrid. Impetus
+Home v1 is a webOS web app; native rendering is for later.
+Evidence: `evidence/photo-frame-c-tv-run-2026-11-14.md`.

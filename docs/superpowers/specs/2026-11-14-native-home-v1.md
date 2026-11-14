@@ -58,3 +58,12 @@ App launching, status bar, other HDMI inputs, the lockdown (decision 5).
 
 Hybrid now (owner wants native first); TV FreeType (ties to LG's ABI); glyph
 atlas (fixed sizes); launch-only v1 (owner chose Home); CEC alone (unverified).
+
+## Verdict (2026-11-14, after the gate)
+
+Mode C was never shown: **hybrid**. Decisions 3, 4, 7 and 10 are replaced by
+the owner's newer brief
+(`tvs/lg-65nano756pr/handoff/native-home-v1-resume-2026-11-14.md`): Impetus
+Home v1 is a webOS web app (`org.va7dimar.home`) with app tiles, input tiles,
+an Icelandic clock bar and the Impetus primary colourway. Its plan is
+`docs/superpowers/plans/2026-11-14-impetus-home-v1-plan.md`.
