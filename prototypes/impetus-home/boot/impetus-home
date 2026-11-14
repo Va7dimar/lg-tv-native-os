@@ -1,0 +1,80 @@
+#!/bin/sh
+# Impetus Home boot hook. Homebrew Channel's startup script runs every
+# executable in /var/lib/webosbrew/init.d with run-parts at boot, so this
+# file is installed there as `impetus-home` (no dot: run-parts skips names
+# with one) with mode 755.
+#
+# What it does, once the system is up:
+#   1. starts the keeper (bin/impetus-ctl start). It puts back what a restart
+#      interrupted (a scene's picture values, the shield if it was on) and
+#      then looks after scenes and the sleep timer.
+#   2. opens org.va7dimar.home, then follows the foreground app and opens it
+#      again whenever stock Home (com.webos.app.home) comes to the front. It
+#      never gives up: if the subscription drops, it starts again after 5 s.
+#      One brake: if it had to reopen Impetus more than 5 times within a
+#      minute, Impetus keeps closing (or Home was pressed six times), so
+#      stock Home is left alone for 2 minutes and then it tries again. Only
+#      one watcher runs at a time.
+#
+# Pause without a reboot:   touch /tmp/impetus-pause    (rm it to resume)
+# Way back to stock Home:   rm /var/lib/webosbrew/init.d/impetus-home
+#                           then restart the TV (the running watcher ends
+#                           with the boot).
+# Way back for everything the helper changed (picture, shield, keeper):
+#   sh /media/developer/apps/usr/palm/applications/org.va7dimar.home/bin/impetus-ctl restore
+
+APP=org.va7dimar.home
+STOCK=com.webos.app.home
+SAM=luna://com.webos.service.applicationmanager
+CTL=${IMPETUS_CTL:-/media/developer/apps/usr/palm/applications/$APP/bin/impetus-ctl}
+PAUSE=${IMPETUS_PAUSE:-/tmp/impetus-pause}
+PIDFILE=${IMPETUS_HOOK_PID:-/tmp/impetus-hook.pid}
+RESTFILE=$PIDFILE.rest          # rm it to end a rest early
+COUNTFILE=$PIDFILE.count
+WAIT=${IMPETUS_HOOK_WAIT:-25}   # seconds for the system to come up
+BURST=5                         # more reopenings than this ...
+WINDOW=60                       # ... within this many seconds: Impetus keeps closing
+REST=${IMPETUS_HOOK_REST:-120}  # leave stock Home alone this long, then try again
+
+# One watcher at a time: a second run (by hand, or Homebrew Channel running
+# the folder again) ends here.
+old=$(cat "$PIDFILE" 2>/dev/null)
+case "$old" in ""|*[!0-9]*) ;; *) kill -0 "$old" 2>/dev/null && exit 0 ;; esac
+
+open_ours() {
+  [ -e "$PAUSE" ] && return
+  oo_now=$(date +%s)
+  oo_rest=$(cat "$RESTFILE" 2>/dev/null)
+  case "$oo_rest" in ""|*[!0-9]*) oo_rest=0 ;; esac
+  [ "$oo_now" -lt "$oo_rest" ] && return
+  # The count and the rest are kept in files, so they hold when the
+  # subscription starts over.
+  oo_start= oo_n=
+  [ -r "$COUNTFILE" ] && read -r oo_start oo_n < "$COUNTFILE"
+  case "$oo_start" in ""|*[!0-9]*) oo_start=0 ;; esac
+  case "$oo_n" in ""|*[!0-9]*) oo_n=0 ;; esac
+  if [ $((oo_now - oo_start)) -gt "$WINDOW" ]; then oo_start=$oo_now; oo_n=0; fi
+  oo_n=$((oo_n + 1))
+  if [ "$oo_n" -gt "$BURST" ]; then echo $((oo_now + REST)) > "$RESTFILE"; rm -f "$COUNTFILE"; return; fi
+  echo "$oo_start $oo_n" > "$COUNTFILE"
+  luna-send -n 1 "$SAM/launch" "{\"id\":\"$APP\"}" >/dev/null 2>&1
+}
+
+watch() {
+  sleep "$WAIT"
+  [ -r "$CTL" ] && sh "$CTL" start >/dev/null 2>&1
+  open_ours
+  while true; do
+    luna-send -i "$SAM/getForegroundAppInfo" '{"subscribe":true}' 2>/dev/null </dev/null |
+      while read -r line; do
+        case "$line" in
+          *"\"appId\":\"$STOCK\""*|*"\"appId\": \"$STOCK\""*) open_ours ;;
+        esac
+      done
+    sleep 5
+  done
+}
+
+watch >/dev/null 2>&1 </dev/null &
+echo $! > "$PIDFILE"
+exit 0

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Stand-in for `node bin/shield-count.js <count file> <sink4> <sink6>`: it
+# reports 7 blocked connections and stays up until it is killed.
+echo 7 > "$2"
+exec sleep 300

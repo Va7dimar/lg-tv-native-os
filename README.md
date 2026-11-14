@@ -6,13 +6,13 @@ This repo holds a working native Wayland client (`wayland-hello`) for a rooted L
 
 > [!WARNING]
 > **NEVER overwrite `kernel`, `rootfs`, or `tvservice` system partitions: doing so will brick the TV.**
-> This project uses userspace and developer installation only, with files in `/tmp` and app directories. No flashing, system-partition writes, or picture-setting changes.
+> This project uses userspace and developer installation only, with files in `/tmp` and app directories. No flashing or system-partition writes. One prototype, [Impetus Home](prototypes/impetus-home/), goes further once the owner approves it at the TV: its scenes change picture settings through the TV's own settings service (saved first, put back after), and its boot hook is one file in Homebrew Channel's start-up folder.
 > An independent recovery route is unknown; a power cycle is not proven recovery because of snapshot boot.
 > **Not affiliated with LG. Use at your own risk.**
 
 ## Status
 
-Results through **2026-11-13**, on the LG 65NANO756PR below.
+Results through **2026-11-14**, on the LG 65NANO756PR below.
 
 | Group | Result | Limits |
 |---|---|---|
@@ -21,6 +21,8 @@ Results through **2026-11-13**, on the LG 65NANO756PR below.
 | **Works today (TV-validated)** | Setting `appinfo.json` `main` to the ELF fixed LS2 `-1027 Invalid permissions`; lifecycle-2 `registerApp` succeeded. | Registration alone did not prevent Home reclaim. |
 | **Experimental** | v0.8 lifecycle-2 + `wl_webos_shell` OVERLAY: logs show the process/overlay stayed up for the full 90-second safety cap. | **On-screen visibility is not yet confirmed.** Buffer was 640×360; no keyboard focus-enter was logged. See [the 90 s run note](tvs/lg-65nano756pr/evidence/persist-90s-tv-run-2026-11-13.md). |
 | **Experimental** | v0.9 opt-in `--menu` tile launcher: Demo / About / Exit. | Host-tested only; without buffer release, the spare-buffer cap allows roughly eight key presses. |
+| **Works today (TV-validated)** | Native gate closed on 2026-11-14: `wl_shell` fullscreen is shown for about 31 seconds; `wl_webos_shell` (OVERLAY and CARD) is never shown on this firmware. Verdict: hybrid, a web app is the Home. | See the [mode A/B](tvs/lg-65nano756pr/evidence/photo-frame-tv-run-2026-11-14.md) and [mode C](tvs/lg-65nano756pr/evidence/photo-frame-c-tv-run-2026-11-14.md) run notes. |
+| **Experimental** | [Impetus Home](prototypes/impetus-home/) 1.2.0, a web-app Home: a living room (the sun's path, clock), a control room (Apple TV door with a live still, shortcuts, apps, scenes) and an engine room (vitals, connections, log, an LG ad and tracking shield). | **Host-tested only** (stand-in TV). 1.0.0 ran on the TV as an ordinary app; everything newer waits for the [TV session](prototypes/impetus-home/TV-SESSION.md). |
 | **Not done** | Custom boot or replacement OS built or booted. | Nothing flashed; internal OS replacement remains a research goal. |
 | **Not done** | Independent recovery route established. | Unknown. |
 
@@ -125,6 +127,7 @@ The reusable finding is the relationship between SAM launch, the executable, and
 | Path | Contents |
 |---|---|
 | [`prototypes/wayland-hello/`](prototypes/wayland-hello/) | Native client, host tests, SDK build and IPK packaging |
+| [`prototypes/impetus-home/`](prototypes/impetus-home/) | Impetus Home: the web-app Home, its root helper, host tests, IPK build, design and TV-session checklist |
 | [`tvs/`](tvs/) | TV index and per-device research |
 | [`tvs/lg-65nano756pr/`](tvs/lg-65nano756pr/) | Device docs, evidence, sources, SSAP remote helper and handoff |
 | [`tvs/_template/`](tvs/_template/) | Starting point for another TV |

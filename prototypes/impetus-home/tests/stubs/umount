@@ -1,0 +1,9 @@
+#!/bin/sh
+# Stand-in for umount: puts back what tests/stubs/mount covered.
+# A file $STUB_TV/noumount makes it fail, as a busy mount does.
+T=${STUB_TV:?}
+[ -e "$T/noumount" ] && exit 1
+[ "$(cat "$T/mounted.path" 2>/dev/null)" = "$1" ] || exit 1
+echo "umount $1" >> "$T/calls"
+cat "$T/mounted.saved" > "$1"
+rm -f "$T/mounted.saved" "$T/mounted.path"

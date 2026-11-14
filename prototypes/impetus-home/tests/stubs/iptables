@@ -1,0 +1,4 @@
+#!/bin/sh
+# Stand-in for iptables on this TV: its kernel has no ip_tables, so every
+# call fails.
+exit 1
