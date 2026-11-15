@@ -264,6 +264,39 @@
     return Math.floor(left / 60) + ":" + pad2(left % 60);
   }
 
+  // ---- The bedtime nudge (#24) ----
+
+  var BED_WINDOW = 10800; // the keeper still asks this long after the hour
+
+  // "22:30" -> the hour to send, in epoch seconds: tonight's while it is not
+  // more than BED_WINDOW past (a TV turned on late is still asked), else
+  // tomorrow's. Local time, so a clock change is followed. null when malformed.
+  function nextBedtime(nowMs, at) {
+    var m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(String(at || ""));
+    if (!m) return null;
+    var d = new Date(nowMs);
+    var t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Number(m[1]), Number(m[2])).getTime();
+    if (nowMs >= t + BED_WINDOW * 1000) {
+      t = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, Number(m[1]), Number(m[2])).getTime();
+    }
+    return Math.round(t / 1000);
+  }
+
+  // cfg.bedtime -> the words for `impetus-ctl bedtime set`, or null when the
+  // nudge is off or malformed.
+  function bedtimeWords(bed, nowMs) {
+    if (!bed || !bed.at) return null;
+    var at = nextBedtime(nowMs, bed.at);
+    if (at === null) return null;
+    var w = ["bedtime", "set", "at=" + at];
+    var step = bed.stepBacklight === undefined ? 10 : bed.stepBacklight;
+    var every = bed.everyMinutes === undefined ? 15 : bed.everyMinutes;
+    var floor = bed.floorBacklight === undefined ? 10 : bed.floorBacklight;
+    if (!wholeIn(step, 1, 50) || !wholeIn(every, 1, 120) || !wholeIn(floor, 0, 100)) return null;
+    w.push("step=" + step, "every=" + every, "floor=" + floor);
+    return w;
+  }
+
   // The answer of `impetus-ctl still` (a binary string): one header line
   // "kind=live|last|none age=<s>", then the JPG. -> {kind, age, body}.
   function parseStill(bin) {
@@ -469,6 +502,7 @@
     parseLaunchParams: parseLaunchParams, ctlCommand: ctlCommand, parseKv: parseKv,
     parseSections: parseSections, parseCaps: parseCaps, sceneWords: sceneWords,
     sceneLine: sceneLine, shieldText: shieldText, shieldLine: shieldLine, countdown: countdown,
+    nextBedtime: nextBedtime, bedtimeWords: bedtimeWords,
     parseStill: parseStill, stillAge: stillAge,
     parseNetstat: parseNetstat, parseNslookup: parseNslookup, ownerOf: ownerOf,
     groupTalkers: groupTalkers, scrubLog: scrubLog, shortLog: shortLog, filterLog: filterLog,

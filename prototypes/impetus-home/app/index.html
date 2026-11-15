@@ -104,6 +104,23 @@
     <p class="noticeline">Press any key to stay up.</p>
   </section>
 
+  <!-- The bedtime card (#24): at the set hour, one quiet offer -->
+  <section id="bedtime" class="room bedtime" aria-hidden="true">
+    <section class="bedcard">
+      <span class="lead"></span>
+      <h2 class="label">BEDTIME <span id="bedclock" class="n"></span></h2>
+      <p class="bedline">Wind down for the night?</p>
+      <nav class="bedkeys">
+        <button id="bedgo" class="key scene" data-focus>
+          <span id="bedname" class="name">WIND DOWN</span>
+          <span id="beddoes" class="does"></span>
+        </button>
+        <button id="bedlater" class="key door" data-focus>NOT TONIGHT</button>
+      </nav>
+      <p id="bednote" class="bednote"></p>
+    </section>
+  </section>
+
 </div>
 <script src="logic.js"></script>
 <script src="config.js"></script>

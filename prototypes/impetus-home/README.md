@@ -35,12 +35,13 @@ Enter (OK) and Backspace or Escape (BACK) drive it. The TV is a stand-in
 | `still=live`, `last`, `none`, `black` | what the Apple TV slab gets |
 | `caps=capture,picture` | parts this TV cannot do (see `probe`) |
 | `notice=sleep` | the two-minute notice before standby |
+| `notice=bedtime` | the bedtime card (WIND DOWN or NOT TONIGHT) |
 
 ## Test
 
 ```sh
-node tests/test_logic.js      # the page's logic: 24 tests
-sh tests/test_ctl.sh          # the root helper against a stand-in TV: 244 checks
+node tests/test_logic.js      # the page's logic: 27 tests
+sh tests/test_ctl.sh          # the root helper against a stand-in TV: 291 checks
 python tests/test_ipk.py      # the package: layout, line ends, modes, same bytes twice
 ```
 

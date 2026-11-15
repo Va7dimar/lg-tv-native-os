@@ -247,3 +247,19 @@ body.notice .notice { visibility: visible; }
   font-size: 340px; line-height: 1; letter-spacing: -0.02em; color: var(--text);
 }
 .noticeline { position: absolute; left: 112px; top: 690px; font-size: 30px; font-weight: 400; color: var(--muted); }
+
+/* ---------- The bedtime card: one slab on the ground, the control room's keys ---------- */
+
+.bedtime { background: var(--ground); visibility: hidden; }
+body.bedtime .bedtime { visibility: visible; }
+.bedcard {
+  position: absolute; left: 112px; top: 250px; width: 760px; height: 470px; padding: 40px 48px;
+  background: linear-gradient(180deg, var(--slab-top), var(--slab-foot)); box-shadow: var(--edge); overflow: hidden;
+}
+.bedcard .label { font-size: 24px; }
+.bedcard .label .n { margin-left: 14px; letter-spacing: 0; color: var(--text); }
+.bedline { font-size: 44px; font-weight: 300; line-height: 1.2; color: var(--text); margin-bottom: 36px; }
+.bedkeys { display: flex; align-items: flex-start; }
+.bedkeys .scene { margin: 0 24px 0 0; }
+.bedkeys .door { width: 280px; }
+.bednote { position: absolute; left: 48px; bottom: 36px; width: 664px; font-size: 20px; font-weight: 400; color: var(--muted); }

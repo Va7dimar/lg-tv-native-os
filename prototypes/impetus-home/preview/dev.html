@@ -10,7 +10,7 @@
 <div id="stage"></div>
 <script>
 // PC preview: load index.html's stage markup, mock the TV, then the app.
-// Query: t=<ISO time>  room=control|engine  notice=sleep
+// Query: t=<ISO time>  room=control|engine  notice=sleep|bedtime
 //        still=live|last|none|black  caps=<names to switch off, comma separated>
 //        scene=<id> (a scene already on)  shield=on
 (function () {
@@ -78,6 +78,7 @@
     }
     if (verb === "scene") { tv.scene = ""; tv.end = tv.sleep = tv.screenoff = ""; return "ok=1"; }
     if (verb === "sleep") { tv.sleep = ""; return "prev=netflix"; }
+    if (verb === "bedtime" && w[1] === "answer") { console.log("ctl", w.join(" ")); return "prev=netflix"; }
     if (verb === "shield") { tv.shield = w[1] === "on"; tv.hits = 0; return "ok=1"; }
     if (verb === "engine") {
       return ["@vitals", "temp=" + (46000 + Math.floor(Math.random() * 3000)), "uptime=" + (93784 + (nowS() % 1000)),

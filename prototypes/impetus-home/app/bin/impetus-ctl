@@ -16,6 +16,10 @@
 #   sleep cancel          drop the sleep timer; prints prev=<app that was in front>
 #   shield on|off         block the hosts in shield/hosts.txt (memory only)
 #   engine                vitals, state, connections and log in one answer
+#   bedtime set at=<epoch> [step=<n>] [every=<min>] [floor=<n>]
+#                         the bedtime nudge (#24): when, and how the picture dims
+#   bedtime off | wake    no nudge | end the dimming, the picture goes back
+#   bedtime answer winddown|later   the card was answered; prints prev=<app>
 #   restore               the way back: scene off, shield off, keeper stopped
 #   keeper | tick         the background loop, or one turn of it
 #
@@ -619,6 +623,9 @@ state() {
   if [ -e "$RUN/shield.on" ]; then echo "shield=on"; echo "hits=$(shield_hits)"; else echo "shield=off"; fi
   echo "hosts=$(grep -c '^[A-Za-z0-9]' "$DIR/shield/hosts.txt" 2>/dev/null)"
   if keeper_alive; then echo "keeper=1"; else echo "keeper=0"; fi
+  echo "bedtime=$(cat "$RUN/bedtime.at" 2>/dev/null)"
+  echo "bedask=$(cat "$RUN/bedtime.asked" 2>/dev/null)"
+  echo "dim=$(cat "$RUN/bedtime.dim" 2>/dev/null)"
 }
 
 vitals() {
@@ -680,6 +687,164 @@ probe() {
   for f in $LOGS; do [ -r "$f" ] && l=1; done
   echo "log=$l"
   if [ -r "$THERMAL" ] || [ -r /proc/thermalinfo/soc_temperature ]; then echo "temp=1"; else echo "temp=0"; fi
+}
+
+# ---------- the bedtime nudge (#24) ----------
+
+# At the hour the page sets, with the TV on and no scene or sleep timer
+# running, Impetus is opened with {notice:"bedtime"}: a card that offers
+# WIND DOWN. Left alone for $BED_CARD seconds, the app that was on comes back
+# and its backlight goes down one step at once and then every <every> minutes,
+# never below <floor>. A key press (any byte from an input device), another
+# app in front or a scene ends it, and the backlight goes back. The value from
+# before is kept in orig.<app>, the record a scene uses, so a restart or
+# `restore` puts it back too. Nothing here is waited on by Home.
+BED_CARD=${IMPETUS_BED_CARD:-60}
+BED_WINDOW=10800   # the nudge still comes this long after the hour (a TV turned on late)
+BED_INPUT=${IMPETUS_INPUT:-/dev/input/event*}
+
+bed_set() {
+  bs_at= bs_step=10 bs_every=15 bs_floor=10
+  for a in "$@"; do
+    k=${a%%=*}; v=${a#*=}
+    case "$k" in
+      at) is_num "$v" || die at; bs_at=$v ;;
+      step) is_num "$v" && [ "$v" -ge 1 ] && [ "$v" -le 50 ] || die step; bs_step=$v ;;
+      every) is_num "$v" && [ "$v" -ge 1 ] && [ "$v" -le 120 ] || die every; bs_every=$v ;;
+      floor) is_num "$v" && [ "$v" -le 100 ] || die floor; bs_floor=$v ;;
+      *) die word ;;
+    esac
+  done
+  [ -n "$bs_at" ] || die at
+  mkdir -p "$RUN"
+  # The page sends the hour each time it is shown: tonight's, once asked, is
+  # not asked again.
+  [ "$(cat "$RUN/bedtime.done" 2>/dev/null)" = "$bs_at" ] || echo "$bs_at" > "$RUN/bedtime.at"
+  echo "$bs_step $bs_every $bs_floor" > "$RUN/bedtime.conf"
+  keeper_ensure
+  echo ok=1
+}
+
+# On, as far as the TV says. A state other than Active (Screen Off, Suspend,
+# Active Standby) or no answer: not on.
+bed_tv_on() {
+  bo_r=$(luna "$PWR/getPowerState" '{}')
+  ok "$bo_r" || return 1
+  bo_s=$(printf '%s\n' "$bo_r" | jget state)
+  [ -z "$bo_s" ] || [ "$bo_s" = Active ]
+}
+
+# One reader per input device. The first byte from any of them is a key.
+bed_watch() {
+  bed_unwatch
+  bw_i=0
+  for bw_d in $BED_INPUT; do
+    [ -r "$bw_d" ] || continue
+    bw_i=$((bw_i + 1))
+    (
+      head -c 1 "$bw_d" > "$RUN/bedtime.in.$bw_i" 2>/dev/null &
+      echo "$!" >> "$RUN/bedtime.watch"
+      wait "$!"
+      [ -s "$RUN/bedtime.in.$bw_i" ] && mark "$RUN/bedtime.key"
+    ) >/dev/null 2>&1 </dev/null &
+  done
+}
+bed_unwatch() {
+  if [ -r "$RUN/bedtime.watch" ]; then
+    while read -r bu_p; do is_num "$bu_p" && kill "$bu_p" 2>/dev/null; done < "$RUN/bedtime.watch"
+  fi
+  rm -f "$RUN/bedtime.watch" "$RUN"/bedtime.in.* "$RUN/bedtime.key"
+}
+
+# End the dimming. With 1 the backlight goes back: now when its app is in
+# front, else when it next is (pending.<app>, as after a scene).
+bed_end() {
+  be_t=$(cat "$RUN/bedtime.dim" 2>/dev/null)
+  bed_unwatch
+  rm -f "$RUN/bedtime.dim" "$RUN/bedtime.next" "$RUN/bedtime.since"
+  [ "$1" = 1 ] && safe_id "$be_t" && [ -e "$RUN/orig.$be_t" ] || return 0
+  if [ "$(front)" = "$be_t" ]; then restore_target "$be_t"; else mark "$RUN/pending.$be_t"; fi
+}
+
+# One turn, under the lock: ask at the hour, start dimming when the card was
+# left alone, take the next step or end it.
+bed_tick() {
+  bt_n=$(now)
+  bt_at=$(cat "$RUN/bedtime.at" 2>/dev/null)
+  if is_num "$bt_at" && [ "$bt_n" -ge "$bt_at" ]; then
+    # The latest hour that has come; the next one is a day on (the page puts
+    # it right when it is next shown, across a clock change).
+    bt_last=$((bt_at + (bt_n - bt_at) / 86400 * 86400))
+    echo "$bt_last" > "$RUN/bedtime.done"
+    echo $((bt_last + 86400)) > "$RUN/bedtime.at"
+    if [ $((bt_n - bt_last)) -lt "$BED_WINDOW" ] && [ ! -e "$RUN/scene.id" ] && [ ! -s "$RUN/sleep.until" ] &&
+       [ ! -e "$RUN/bedtime.dim" ] && bed_tv_on; then
+      bt_f=$(front)
+      rm -f "$RUN/bedtime.prev"
+      [ "$bt_f" != "$APP" ] && safe_id "$bt_f" && echo "$bt_f" > "$RUN/bedtime.prev"
+      echo "$bt_n" > "$RUN/bedtime.asked"
+      launch "$APP" "{\"notice\":\"bedtime\",\"at\":$bt_last}"
+    fi
+  fi
+  bt_k=$(cat "$RUN/bedtime.asked" 2>/dev/null)
+  if is_num "$bt_k" && [ "$bt_n" -ge $((bt_k + BED_CARD)) ]; then
+    rm -f "$RUN/bedtime.asked"
+    # Left alone means the card is still in front: someone who went elsewhere
+    # is up, and is not dimmed.
+    if [ "$(front)" = "$APP" ] && [ ! -e "$RUN/scene.id" ] && [ ! -s "$RUN/sleep.until" ]; then
+      bt_t=$(cat "$RUN/bedtime.prev" 2>/dev/null)
+      if safe_id "$bt_t"; then launch "$bt_t"; else bt_t=$APP; fi
+      echo "$bt_t" > "$RUN/bedtime.dim"
+      echo "$bt_n" > "$RUN/bedtime.next"
+      echo "$bt_n" > "$RUN/bedtime.since"
+      bed_watch
+    fi
+    rm -f "$RUN/bedtime.prev"
+  fi
+  bt_t=$(cat "$RUN/bedtime.dim" 2>/dev/null)
+  safe_id "$bt_t" || return 0
+  if [ -e "$RUN/scene.id" ]; then
+    # A scene on the same app now owns the record and puts it back when it ends.
+    if [ "$(cat "$RUN/scene.target" 2>/dev/null)" = "$bt_t" ]; then bed_end 0; else bed_end 1; fi
+    return 0
+  fi
+  [ -e "$RUN/bedtime.key" ] && { bed_end 1; return 0; }
+  bt_f=$(front)
+  bt_s=$(cat "$RUN/bedtime.since" 2>/dev/null)
+  # The app just brought back may take a moment to come to the front.
+  if [ "$bt_f" != "$bt_t" ] && { ! is_num "$bt_s" || [ "$bt_n" -ge $((bt_s + FRONTWAIT)) ]; }; then
+    bed_end 1; return 0
+  fi
+  bt_x=$(cat "$RUN/bedtime.next" 2>/dev/null)
+  [ "$bt_f" = "$bt_t" ] && is_num "$bt_x" && [ "$bt_n" -ge "$bt_x" ] || return 0
+  bt_step=10 bt_every=15 bt_floor=10
+  [ -r "$RUN/bedtime.conf" ] && read -r bt_step bt_every bt_floor < "$RUN/bedtime.conf"
+  is_num "$bt_step" && is_num "$bt_every" && is_num "$bt_floor" || return 0
+  echo $((bt_n + bt_every * 60)) > "$RUN/bedtime.next"
+  bt_cur=$(pic_read backlight | jget backlight)
+  is_num "$bt_cur" || return 0
+  bt_new=$((bt_cur - bt_step))
+  [ "$bt_new" -lt "$bt_floor" ] && bt_new=$bt_floor
+  [ "$bt_new" -lt "$bt_cur" ] && apply_pairs "$RUN/orig.$bt_t" "backlight:$bt_new"
+  return 0
+}
+
+bed_verb() {
+  mkdir -p "$RUN"
+  bv=$1
+  [ $# -gt 0 ] && shift
+  case "$bv" in
+    set) bed_set "$@" ;;
+    off) lock; rm -f "$RUN/bedtime.at" "$RUN/bedtime.conf" "$RUN/bedtime.asked" "$RUN/bedtime.prev"; bed_end 1; unlock; echo ok=1 ;;
+    wake) lock; bed_end 1; unlock; echo ok=1 ;;
+    answer)
+      case "$1" in winddown|later) ;; *) die answer ;; esac
+      lock
+      echo "prev=$(cat "$RUN/bedtime.prev" 2>/dev/null)"
+      rm -f "$RUN/bedtime.asked" "$RUN/bedtime.prev"
+      unlock ;;
+    *) die bedtime ;;
+  esac
 }
 
 # ---------- the keeper ----------
@@ -791,6 +956,7 @@ tick() {
   # after a restart) is tried again while no scene is on.
   if [ -e "$RUN/vol.tries" ] && [ ! -e "$RUN/scene.id" ]; then lock; vol_restore; unlock; fi
   lock; due; unlock
+  lock; bed_tick; unlock
 }
 
 keeper() {
@@ -845,6 +1011,7 @@ restore_all() {
     safe_id "$t" && [ ! -e "$RUN/orig.$t" ] && cp "$f" "$RUN/orig.$t"
   done
   [ -s "$RUN/vol" ] || cp "$KEEP/vol" "$RUN/vol" 2>/dev/null
+  bed_unwatch; rm -f "$RUN"/bedtime.*   # a dimmed backlight is in orig.<app>, put back below
   scene_clear
   vol_restore || { sleep 1; vol_restore; } || { sleep 1; vol_restore; }
   rm -f "$RUN/vol" "$RUN/vol.tries" "$KEEP/vol"
@@ -903,6 +1070,7 @@ case "$verb" in
     unlock ;;
   shield) case "$1" in on) shield_on ;; off) shield_off ;; *) die shield ;; esac ;;
   engine) engine ;;
+  bedtime) bed_verb "$@" ;;
   restore) restore_all ;;
   keeper) keeper ;;
   tick) mkdir -p "$RUN"; tick; echo ok=1 ;;
