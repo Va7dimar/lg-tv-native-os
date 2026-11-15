@@ -315,6 +315,81 @@ before it is left in place.
 - **Relaunch:** with Impetus already open in the background, opening it
   again shows the living room, not a stale room.
 
+## 10a. Iceland feed (#26, plan step 1; SSH only, no install)
+
+Read only; nothing on the TV changes but `/tmp/impetus/iceland/`.
+
+- `command -v curl wget` and, for each one found, whether it fetches https:
+  `curl -fsS -m 10 -o /dev/null https://en.vedur.is/ && echo ok` (or
+  `wget -q -T 10 -O /dev/null https://en.vedur.is/ && echo ok`).
+- Copy the new helper to `/tmp/impetus-ctl` and run
+  `sh /tmp/impetus-ctl iceland quakes | head -c 300`: the first line is
+  `kind=fresh age=0`, the next starts `quakeInfo = [` (or `VI.quakeInfo`).
+  Run it with the network cable out: `kind=last age=<s>`, within 10 s.
+- Settle page fetch vs helper: from the installed app's page (Web Inspector,
+  or a one-line test page), one `XMLHttpRequest` to the earthquakes page. A
+  readable answer means the webOS page is not held to CORS here; the answer
+  has no `Access-Control-Allow-Origin` header.
+- Write in the evidence note which fetcher the TV has and the XHR result.
+  The room's later steps follow it.
+
+## 10b. Iceland room, still (#26, plan step 3; install, owner's yes)
+
+Needs 10a passed (the helper fetches on this TV).
+
+- From the control room: the `ICELAND` door sits under `ENGINE ROOM`, the
+  column ends above the screen's foot, and both doors read at 80 px.
+- OK on the door: the room turns in like the engine room; the island, the lens
+  and the count show within a second or two (first open builds the map), and
+  the source line reads `updated HH:MM`.
+- Arrows and OK do nothing; after 60 s the room is still there (no idle return).
+- BACK: the control room, focus on `ICELAND`.
+- The owner judges it against the mock on the 65" screen, from the sofa.
+  Note anything that reads dimmer than the mock (the mock used a screen blend
+  for overlapping halos; the TV build does not).
+
+## 10c. Iceland room, live (#26, plan step 4; install, owner's yes)
+
+Needs 10b passed. Launch with the readout on:
+`luna-send -n 1 luna://com.webos.applicationManager/launch '{"id":"org.va7dimar.home","params":{"fps":1}}'`.
+
+- Ten minutes in the room with the fps readout (top left): 30 or more while
+  the newest quake ripples. Note the engine room's CPU temperature before and
+  after; it is no higher than after ten minutes in the living room.
+- The newest quake ripples, fresh halos breathe, the dot by `ICELAND · NOW`
+  pulses. After a minute the lights have aged (NEWEST's "min ago" moves).
+- Pull the network cable for one refresh (up to 2 min): only the source line
+  changes, to `feed down since HH:MM`, and the dot goes grey and still. Plug it
+  back: within 2 min the line reads `updated HH:MM` again.
+- During a fetch, press BACK and open the Apple TV: no delay.
+- If 30 fps is missed: note it; the ripple and breathing are the first to go.
+
+## 10d. Iceland room, aircraft (#26, plan step 5; install, owner's yes)
+
+Needs 10c passed. By SSH first: `impetus-ctl iceland flights | head -c 300` gives
+`kind=fresh age=0` and JSON starting `{"ac":[`. If adsb.lol now refuses
+without a key, stop here and note it (the owner's key is not on the TV yet).
+
+- In the room, by daylight traffic hours: arrows over and around the island
+  move along their trails over 5 min; the second source line reads
+  `Aircraft: adsb.lol (ODbL) · N in the air · updated HH:MM`.
+- No arrow over the left column's text or inside the lens.
+- Pull the network cable: within 2 min the line reads `feed down since`, and
+  within 4 min the arrows are gone (no frozen planes). Plug back: they return.
+- The fps readout still holds 30 or more.
+
+## 10e. Iceland room, webcam (#26, plan step 6; install, owner's yes)
+
+Needs 10c passed. By SSH first: `impetus-ctl iceland webcam | head -c 40 | od -c | head -3`
+gives `kind=fresh age=0` and then the bytes `377 330` (a JPG).
+
+- In daylight at Reykjanes: the WEBCAM window at the bottom right shows the
+  road toward Sundhnúkur, dimmed, with `Road camera: Vegagerðin (IRCA), CC BY 4.0 · HH:MM`;
+  the time moves on once a minute.
+- After dusk (sun below -6°, about an hour after sunset): the window is gone.
+- Pull the network cable: within 6 min the window is gone; plug back and it returns.
+- The fps readout still holds 30 or more.
+
 ## 11. Write it down
 
 One evidence note, `tvs/lg-65nano756pr/evidence/impetus-home-1.2-tv-run-<date>.md`,

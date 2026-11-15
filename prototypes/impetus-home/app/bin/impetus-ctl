@@ -16,6 +16,11 @@
 #   scene off             end the scene, put the TV back as it was
 #   sleep cancel          drop the sleep timer; prints prev=<app that was in front>
 #   shield on|off         block the hosts in shield/hosts.txt (memory only)
+#   engine                vitals, state, connections and log in one answer
+#   iceland quakes        the Met Office's 48-hour quake list (read only, no lock)
+#   iceland flights       aircraft over and around Iceland, adsb.lol (read only, no lock)
+#   iceland webcam        one road-camera frame near Sundhnukur, Vegagerdin (read only, no lock)
+#   restore               the way back: scene off, shield off, keeper stopped
 #   engine                vitals, state, connections and log in one answer; the
 #                         state part also lists paired phones as paired=<id> ..
 #   open id=<app> [params=<base64 JSON>]   open an app (the phone remote)
@@ -671,6 +676,129 @@ logtail() {
   dmesg 2>/dev/null | tail -n 40
 }
 
+# ---------- Iceland: outside feeds (read only) ----------
+
+# One fixed address per feed; the page names a feed, never an address.
+QUAKE_URL=${IMPETUS_QUAKE_URL:-https://en.vedur.is/earthquakes-and-volcanism/earthquakes/}
+# Aircraft within 250 nm of the middle of Iceland (adsb.lol, ODbL, no key).
+FLIGHT_URL=${IMPETUS_FLIGHT_URL:-https://api.adsb.lol/v2/point/64.9/-19/250}
+# One road camera (Vegagerdin, CC BY 4.0): Gighaed on Grindavikurvegur, looking
+# north toward Svartsengi and Sundhnukur. A new 640x480 frame every minute.
+CAM_URL=${IMPETUS_CAM_URL:-https://www.vegagerdin.is/vgdata/vefmyndavelar/gighaed_1.jpg}
+CAM_MIN=2000                          # bytes; a smaller answer is not a frame
+FETCHWAIT=${IMPETUS_FETCHWAIT:-10}   # seconds one fetch may take
+FETCHMAX=2000000                     # bytes; a larger answer is not the page
+
+# Which tool fetches on this TV: curl when there is one, else busybox wget.
+fetcher() {
+  if [ -n "$IMPETUS_FETCHER" ]; then echo "$IMPETUS_FETCHER"; return; fi
+  if command -v curl >/dev/null 2>&1; then echo curl
+  elif command -v wget >/dev/null 2>&1; then echo wget
+  fi
+}
+
+# fetch_to <file> <url>: the whole answer or nothing, given up after
+# $FETCHWAIT seconds (busybox wget's own timeout is per read, not in all).
+fetch_to() {
+  ft_tool=$(fetcher)
+  [ -n "$ft_tool" ] || return 1
+  rm -f "$1.part"
+  (
+    case "$ft_tool" in
+      curl) curl -fsSL -m "$FETCHWAIT" -o "$1.part" "$2" </dev/null >/dev/null 2>&1 & ;;
+      *) wget -q -T "$FETCHWAIT" -O "$1.part" "$2" </dev/null >/dev/null 2>&1 & ;;
+    esac
+    ft_p=$!
+    (
+      trap 'kill "$ft_s" 2>/dev/null; exit 0' TERM
+      sleep "$FETCHWAIT" & ft_s=$!
+      wait "$ft_s" && kill "$ft_p" 2>/dev/null
+    ) >/dev/null 2>&1 </dev/null &
+    ft_w=$!
+    wait "$ft_p"; ft_r=$?
+    kill "$ft_w" 2>/dev/null
+    exit "$ft_r"
+  ) 2>/dev/null || { rm -f "$1.part"; return 1; }
+  ft_n=$(wc -c < "$1.part" 2>/dev/null)
+  if [ -z "$ft_n" ] || [ "$ft_n" -eq 0 ] || [ "$ft_n" -gt "$FETCHMAX" ]; then rm -f "$1.part"; return 1; fi
+  mv "$1.part" "$1"
+}
+
+# iceland quakes: one line "kind=fresh|last|none age=<s>", then the lines of
+# the Met Office page that hold its quakeInfo array (the page parses them).
+# fresh: fetched now. last: this fetch failed, the copy kept from the last
+# good one follows. none: nothing to show. Takes no lock: it changes nothing
+# on the TV and must never hold up a scene, the still or `restore`.
+iceland_quakes() {
+  iq_dir="$RUN/iceland"
+  mkdir -p "$iq_dir"
+  if fetch_to "$iq_dir/page.html" "$QUAKE_URL" &&
+     awk '/quakeInfo *= *\[/ { on = 1 } on { print } on && /\];/ { exit }' \
+       "$iq_dir/page.html" > "$iq_dir/quakes.new" &&
+     grep -q 'quakeInfo' "$iq_dir/quakes.new"; then
+    mv "$iq_dir/quakes.new" "$iq_dir/quakes.txt"
+    now > "$iq_dir/quakes.at"
+    rm -f "$iq_dir/page.html"
+    echo "kind=fresh age=0"
+    cat "$iq_dir/quakes.txt"
+    return 0
+  fi
+  rm -f "$iq_dir/quakes.new" "$iq_dir/page.html"
+  iq_at=$(cat "$iq_dir/quakes.at" 2>/dev/null)
+  if [ -s "$iq_dir/quakes.txt" ] && is_num "$iq_at"; then
+    echo "kind=last age=$(( $(now) - iq_at ))"
+    cat "$iq_dir/quakes.txt"
+  else
+    echo "kind=none age=0"
+  fi
+}
+
+# iceland flights: the same shape as quakes, then adsb.lol's JSON answer
+# (the page reads it with JSON.parse). A good answer carries "ac" and "now".
+iceland_flights() {
+  if_dir="$RUN/iceland"
+  mkdir -p "$if_dir"
+  if fetch_to "$if_dir/flights.new" "$FLIGHT_URL" &&
+     grep -q '"ac"' "$if_dir/flights.new" && grep -q '"now"' "$if_dir/flights.new"; then
+    mv "$if_dir/flights.new" "$if_dir/flights.txt"
+    now > "$if_dir/flights.at"
+    echo "kind=fresh age=0"
+    cat "$if_dir/flights.txt"
+    return 0
+  fi
+  rm -f "$if_dir/flights.new"
+  if_at=$(cat "$if_dir/flights.at" 2>/dev/null)
+  if [ -s "$if_dir/flights.txt" ] && is_num "$if_at"; then
+    echo "kind=last age=$(( $(now) - if_at ))"
+    cat "$if_dir/flights.txt"
+  else
+    echo "kind=none age=0"
+  fi
+}
+
+# iceland webcam: the same header line, then the JPG bytes (the page checks
+# they start FF D8, as for the still). The last frame is kept with its age;
+# the page decides whether it is fresh enough to show.
+iceland_webcam() {
+  iw_dir="$RUN/iceland"
+  mkdir -p "$iw_dir"
+  if fetch_to "$iw_dir/cam.new" "$CAM_URL" && [ "$(fsize "$iw_dir/cam.new")" -ge "$CAM_MIN" ]; then
+    mv "$iw_dir/cam.new" "$iw_dir/cam.jpg"
+    now > "$iw_dir/cam.at"
+    echo "kind=fresh age=0"
+    cat "$iw_dir/cam.jpg"
+    return 0
+  fi
+  rm -f "$iw_dir/cam.new"
+  iw_at=$(cat "$iw_dir/cam.at" 2>/dev/null)
+  if [ -s "$iw_dir/cam.jpg" ] && is_num "$iw_at"; then
+    echo "kind=last age=$(( $(now) - iw_at ))"
+    cat "$iw_dir/cam.jpg"
+  else
+    echo "kind=none age=0"
+  fi
+}
+
 engine() {
   echo "@vitals"; vitals
   echo "@state"; state
@@ -1219,6 +1347,7 @@ case "$verb" in
     unlock ;;
   shield) case "$1" in on) shield_on ;; off) shield_off ;; *) die shield ;; esac ;;
   engine) engine ;;
+  iceland) case "$1" in quakes) iceland_quakes ;; flights) iceland_flights ;; webcam) iceland_webcam ;; *) die iceland ;; esac ;;
   bedtime) bed_verb "$@" ;;
   open) open_app "$@" ;;
   standby)

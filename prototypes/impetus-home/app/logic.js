@@ -496,6 +496,181 @@
     return best;
   }
 
+  // ---------- Iceland: the Met Office's 48-hour quake list ----------
+  // The earthquakes page carries one inline array:
+  //   quakeInfo = [{'t':new Date(2026,11-1,15,0,4,18),'lat':'63.910','lon':'-21.186',
+  //                 'dep':'5.5','s':'0.4','q':'50.0','dR':'Selfoss', ...}, ...];
+  // Times are UTC. Read with patterns, never evaluated. Returns null when the
+  // text has no such array (the page changed or did not arrive), else the
+  // quakes that pass every range check, newest first.
+  var QUAKE_DATE = /'t'\s*:\s*new Date\((\d{4}),(\d{1,2})-1,(\d{1,2}),(\d{1,2}),(\d{1,2}),(\d{1,2})\)/;
+  var QUAKE_MAX_AGE = 49 * 3600 * 1000;
+  function quakeField(obj, key) {
+    var m = new RegExp("'" + key + "'\\s*:\\s*'([^']*)'").exec(obj);
+    return m ? m[1] : null;
+  }
+  function quakeNum(obj, key) {
+    var s = quakeField(obj, key);
+    if (s === null || !/^\s*-?\d+(\.\d+)?\s*$/.test(s)) return NaN;
+    return parseFloat(s);
+  }
+  function parseQuakeInfo(text, nowMs) {
+    if (typeof text !== "string") return null;
+    var start = text.search(/quakeInfo\s*=\s*\[/);
+    if (start < 0) return null;
+    var end = text.indexOf("];", start);
+    if (end < 0) return null;
+    var body = text.slice(text.indexOf("[", start) + 1, end);
+    var objs = body.match(/\{[^{}]*\}/g) || [];
+    var out = [];
+    for (var i = 0; i < objs.length; i++) {
+      var o = objs[i], d = QUAKE_DATE.exec(o);
+      if (!d) continue;
+      var t = Date.UTC(+d[1], +d[2] - 1, +d[3], +d[4], +d[5], +d[6]);
+      var q = { t: t, lat: quakeNum(o, "lat"), lon: quakeNum(o, "lon"), dep: quakeNum(o, "dep"),
+        m: quakeNum(o, "s"), quality: quakeNum(o, "q"), place: (quakeField(o, "dR") || "").replace(/^\s+|\s+$/g, "") };
+      if (!(q.lat >= 62.5 && q.lat <= 67.5 && q.lon >= -25.5 && q.lon <= -12.5)) continue;
+      if (!(q.m >= -1 && q.m <= 8)) continue;
+      if (typeof nowMs === "number" && (t > nowMs + 600000 || nowMs - t > QUAKE_MAX_AGE)) continue;
+      if (isNaN(q.dep)) q.dep = null;
+      if (isNaN(q.quality)) q.quality = null;
+      out.push(q);
+    }
+    out.sort(function (a, b) { return b.t - a.t; });
+    return out;
+  }
+
+  // The helper's answer to `iceland quakes`: a head line `kind=fresh|last|none
+  // age=<s>`, then the page's quakeInfo lines. A list that does not parse is
+  // "none": the room shows what it had, never an error.
+  function parseQuakeReply(text, nowMs) {
+    var s = typeof text === "string" ? text : "", nl = s.indexOf("\n");
+    var head = nl < 0 ? s : s.slice(0, nl);
+    var kind = /(?:^|\s)kind=(fresh|last|none)(?=\s|$)/.exec(head), age = /(?:^|\s)age=(\d+)(?=\s|$)/.exec(head);
+    var body = nl >= 0 ? s.slice(nl + 1) : "";
+    var quakes = kind && kind[1] !== "none" ? parseQuakeInfo(body, nowMs) : null;
+    // Entries on the page but none we can read: the page changed, so the feed is down.
+    if (quakes && !quakes.length && /\{\s*'t'\s*:/.test(body)) quakes = null;
+    return { kind: quakes ? kind[1] : "none", age: quakes && age ? Number(age[1]) : 0, quakes: quakes };
+  }
+
+  // The room's feed state after one reply: { quakes, goodAt (ms of the list
+  // shown), down }. A failed fetch keeps the list it had; the lights age on
+  // their own clock.
+  function isleStep(prev, reply, nowMs) {
+    var kept = prev && prev.quakes ? prev : null;
+    if (reply.kind === "fresh") return { quakes: reply.quakes, goodAt: nowMs - reply.age * 1000, down: false };
+    if (reply.kind === "last") {
+      var at = nowMs - reply.age * 1000;
+      if (kept && kept.goodAt >= at) return { quakes: kept.quakes, goodAt: kept.goodAt, down: true };
+      return { quakes: reply.quakes, goodAt: at, down: true };
+    }
+    return { quakes: kept ? kept.quakes : null, goodAt: kept ? kept.goodAt : null, down: true };
+  }
+
+  function isleSource(st) {
+    var src = "Icelandic Met Office · ";
+    if (!st) return src + "waiting for the list";
+    if (!st.down) return src + "updated " + formatClock(new Date(st.goodAt));
+    return src + "feed down" + (st.goodAt ? " since " + formatClock(new Date(st.goodAt)) : "");
+  }
+
+  // ---------- Iceland: aircraft (adsb.lol) ----------
+  var TRAIL = 10, FLIGHT_STALE = 180000;   // points per trail; a plane not heard for 3 min is gone
+
+  // The helper's "iceland flights" reply -> { kind, age, flights } where each
+  // flight is { id, call, lat, lon, track, t (ms of its fix) }. Read with
+  // JSON.parse, never evaluated. Ground traffic, planes without a position or
+  // track, and fixes older than 60 s are left out.
+  function parseFlightReply(text, nowMs) {
+    var none = { kind: "none", age: 0, flights: null };
+    var s = typeof text === "string" ? text : "", nl = s.indexOf("\n");
+    if (nl < 0) return none;
+    var head = s.slice(0, nl);
+    var kind = /(?:^|\s)kind=(fresh|last)(?=\s|$)/.exec(head), age = /(?:^|\s)age=(\d+)(?=\s|$)/.exec(head);
+    if (!kind) return none;
+    var data;
+    try { data = JSON.parse(s.slice(nl + 1)); } catch (e) { return none; }
+    if (!data || !isArray(data.ac)) return none;
+    var at = typeof data.now === "number" && isFinite(data.now) ? data.now : nowMs, out = [];
+    for (var i = 0; i < data.ac.length; i++) {
+      var a = data.ac[i];
+      if (!a || typeof a.hex !== "string" || !/^~?[0-9a-f]{6}$/.test(a.hex)) continue;
+      if (a.alt_baro === "ground" || !isNum(a.lat) || !isNum(a.lon) || !isNum(a.track)) continue;
+      if (a.lat < 60 || a.lat > 70 || a.lon < -32 || a.lon > -6) continue;
+      var seen = isNum(a.seen_pos) ? a.seen_pos : isNum(a.seen) ? a.seen : 999;
+      if (seen < 0 || seen > 60) continue;
+      var call = typeof a.flight === "string" ? a.flight.replace(/\s+$/, "") : "";
+      out.push({ id: a.hex, call: /^[A-Z0-9]{1,8}$/.test(call) ? call : "", lat: a.lat, lon: a.lon,
+        track: ((a.track % 360) + 360) % 360, t: Math.round(at - seen * 1000) });
+    }
+    return { kind: kind[1], age: age ? Number(age[1]) : 0, flights: out };
+  }
+
+  function isNum(v) { return typeof v === "number" && isFinite(v); }
+  function isArray(v) { return Object.prototype.toString.call(v) === "[object Array]"; }
+
+  // Trails: { id: [fix, ...] } oldest first, at most TRAIL fixes; a fix is
+  // added only when newer than the trail's last; a trail whose last fix is
+  // older than 3 min is dropped. Returns a new object.
+  function flightTrails(prev, flights, nowMs) {
+    var next = {}, id, k;
+    for (id in prev) if (Object.prototype.hasOwnProperty.call(prev, id)) next[id] = prev[id].slice();
+    for (k = 0; k < flights.length; k++) {
+      var f = flights[k], tr = next[f.id] || (next[f.id] = []);
+      if (!tr.length || f.t > tr[tr.length - 1].t) tr.push(f);
+      if (tr.length > TRAIL) tr.splice(0, tr.length - TRAIL);
+    }
+    for (id in next) if (Object.prototype.hasOwnProperty.call(next, id) && nowMs - next[id][next[id].length - 1].t > FLIGHT_STALE) delete next[id];
+    return next;
+  }
+
+  // The flights' state after one reply: { trails, goodAt, down }, as isleStep.
+  function flightStep(prev, reply, nowMs) {
+    var trails = prev ? prev.trails : {}, goodAt = prev ? prev.goodAt : null;
+    if (reply.kind === "fresh") return { trails: flightTrails(trails, reply.flights, nowMs), goodAt: nowMs - reply.age * 1000, down: false };
+    if (reply.kind === "last") {
+      var at = nowMs - reply.age * 1000;
+      return { trails: flightTrails(trails, reply.flights, nowMs), goodAt: goodAt !== null && goodAt >= at ? goodAt : at, down: true };
+    }
+    return { trails: flightTrails(trails, [], nowMs), goodAt: goodAt, down: true };
+  }
+
+  function flightSource(st) {
+    var src = "Aircraft: adsb.lol (ODbL) · ";
+    if (!st) return src + "waiting";
+    if (st.down) return src + "feed down" + (st.goodAt ? " since " + formatClock(new Date(st.goodAt)) : "");
+    var n = 0;
+    for (var id in st.trails) if (Object.prototype.hasOwnProperty.call(st.trails, id)) n++;
+    return src + n + " in the air · updated " + formatClock(new Date(st.goodAt));
+  }
+
+  // ---------- Iceland: the road camera (Vegagerðin, Gíghæð) ----------
+  var CAM_LOC = { lat: 63.903, lon: -22.422 };
+
+  // The helper's "iceland webcam" bytes -> { kind: "fresh"|"last"|"none", age, body }.
+  function parseWebcam(bin) {
+    bin = String(bin || "");
+    var cut = bin.indexOf("\n");
+    var head = parseKv((cut < 0 ? bin : bin.slice(0, cut)).split(" ").join("\n"));
+    var kind = head.kind === "fresh" || head.kind === "last" ? head.kind : "none";
+    var body = cut < 0 ? "" : bin.slice(cut + 1);
+    if (kind === "none" || body.charCodeAt(0) !== 0xFF || body.charCodeAt(1) !== 0xD8) return { kind: "none", age: 0, body: "" };
+    return { kind: kind, age: Number(head.age) || 0, body: body };
+  }
+
+  // The window shows a frame no older than 5 min, and only in daylight at
+  // the camera (sun above -6°: its night frames are lifted to grey noise).
+  function webcamShown(kind, ageSec, nowMs) {
+    if (kind !== "fresh" && !(kind === "last" && ageSec >= 0 && ageSec <= 300)) return false;
+    return sunAltitude(nowMs, CAM_LOC) > -6;
+  }
+
+  // The credit CC BY 4.0 asks for: licensor, licence, and when the frame was taken.
+  function webcamCredit(ageSec, nowMs) {
+    return "Road camera: Vegagerðin (IRCA), CC BY 4.0 · " + formatClock(new Date(nowMs - (Number(ageSec) || 0) * 1000));
+  }
+
   // ---- The phone remote (issue #21) ----
 
   // One request body for bin/impetus-phone: "key=value" lines, the helper
@@ -569,7 +744,8 @@
     return w;
   }
 
-  var api = { formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
+  var api = { parseWebcam: parseWebcam, webcamShown: webcamShown, webcamCredit: webcamCredit, parseFlightReply: parseFlightReply, flightTrails: flightTrails, flightStep: flightStep, flightSource: flightSource,
+    parseQuakeInfo: parseQuakeInfo, parseQuakeReply: parseQuakeReply, isleStep: isleStep, isleSource: isleSource, formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
     isSafeId: isSafeId, isSafeWord: isSafeWord, sunAltitude: sunAltitude, sunDay: sunDay,
     nightWindow: nightWindow, pickApps: pickApps, launchPayload: launchPayload,
     parseLaunchParams: parseLaunchParams, ctlCommand: ctlCommand, parseKv: parseKv,

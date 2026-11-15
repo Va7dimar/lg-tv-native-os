@@ -1,0 +1,16 @@
+The Iceland room's map (map.js) is drawn from two sources, simplified and projected
+by scripts/build_iceland_map.py. Neither source endorses this app.
+
+Coastline
+  geoBoundaries ISL ADM0 (gbOpen), release built 12.12.2023, commit 9469f09.
+  Original data: Landmaelingar Islands (National Land Survey of Iceland), via Lysigagnagatt.
+  Runfola, D. et al. (2020) geoBoundaries: A global database of political administrative
+  boundaries. PLoS ONE 15(4): e0231866. https://www.geoboundaries.org
+  Licence: Creative Commons Attribution 4.0 International (CC BY 4.0),
+  https://creativecommons.org/licenses/by/4.0/
+  Changes: projected to 1920x1080, simplified (Ramer-Douglas-Peucker, 0.45 px),
+  small islands dropped, a detailed piece cut out around Reykjanes.
+
+Glaciers
+  Natural Earth, 10 m glaciated areas, commit ca96624. https://www.naturalearthdata.com
+  Public domain. Changes: Iceland only, projected and simplified as above.

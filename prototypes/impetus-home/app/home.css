@@ -76,6 +76,13 @@ body.open .living { transform: translateY(-66%) perspective(1400px) rotateX(10de
 body.deep .living { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0; }
 body.deep .control { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0.35; }
 body.deep .engine { transform: translateY(0); }
+.isleroom {
+  transform: translateY(100%); transition: transform var(--turn);
+  background: var(--ground);
+}
+body.isle .living { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0; }
+body.isle .control { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0.35; }
+body.isle .isleroom { transform: translateY(0); }
 body.instant .room { transition: none; }
 
 .lead {
@@ -176,7 +183,7 @@ body.instant .room { transition: none; }
 }
 .shieldline .n { float: right; font-size: 22px; color: var(--text); }
 
-.door { width: 328px; height: 98px; padding: 0 24px; font-size: 22px; line-height: 98px; }
+.door { width: 328px; height: 80px; margin-bottom: 16px; padding: 0 24px; font-size: 22px; line-height: 80px; }
 
 /* ---------- Room 3: the engine room. Slabs on the ground, 16 px apart. ---------- */
 
@@ -264,6 +271,47 @@ body.instant .room { transition: none; }
   margin-bottom: 14px; word-wrap: break-word; overflow-wrap: break-word;
 }
 .loglist .who { color: var(--text); }
+
+/* ---------- Room 4: Iceland. Two stacked SVG layers; text roles as everywhere. ---------- */
+
+.islelayer { position: absolute; left: 0; top: 0; }
+/* Layer 3, between the base and the quakes: transform and opacity only, so
+   the compositor moves it and nothing repaints. Paused outside the room. */
+.islemotion { width: 1920px; height: 1080px; overflow: hidden; pointer-events: none; }
+.islemotion div { position: absolute; }
+.islemotion .lensclip { border-radius: 50%; overflow: hidden; }
+.islemotion .halo .breathe { left: 0; top: 0; width: 100%; height: 100%; animation: ice-breathe 6s ease-in-out infinite; }
+.islemotion .ripple { box-sizing: border-box; border: 1.4px solid #FFF3DF; border-radius: 50%; opacity: 0;
+  animation: ice-ripple 4.8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; }
+.islemotion .r2 { animation-delay: 1.6s; }
+.islemotion .r3 { animation-delay: 3.2s; }
+.islemotion .dot { border-radius: 50%; background: #1FB487; }
+.islemotion .live { animation: ice-live 2.4s ease-in-out infinite; }
+.islemotion .dot.down { background: #4E545C; }
+body:not(.isle) .islemotion div { animation-play-state: paused; }
+@keyframes ice-breathe { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
+@keyframes ice-ripple { 0% { transform: scale(0.2); opacity: 0.9; } 100% { transform: scale(6); opacity: 0; } }
+@keyframes ice-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .islemotion div { animation: none !important; } .islemotion .ripple { display: none; } }
+.fps { position: fixed; left: 8px; top: 8px; z-index: 99; font: 500 18px "Saira", sans-serif; color: #FFD34D; background: rgba(0,0,0,0.6); padding: 2px 8px; }
+.isleroom text { font-family: "Saira", sans-serif; }
+.isleroom .lbl { font-weight: 600; font-stretch: 125%; letter-spacing: 0.08em; fill: var(--muted); }
+.isleroom .num { font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums; fill: var(--text); }
+.isleroom .mono { font-weight: 300; font-stretch: 100%; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; fill: var(--text); }
+.isleroom .read { font-weight: 400; font-stretch: 100%; fill: var(--muted); }
+.isleroom .place { font-weight: 400; font-stretch: 100%; fill: #6E7580; }
+/* The road camera: one still a minute, dimmed like the APPLE TV still, gone
+   when the frame is old, the feed is down or it is dark at the camera. */
+.islecam { position: absolute; left: 1500px; top: 812px; width: 300px; height: 169px; overflow: hidden;
+  background: #07090C; outline: 1px solid #34383E; visibility: hidden; }
+.islecam.on { visibility: visible; }
+.islecam img { position: absolute; left: 0; top: 0; width: 300px; height: 169px; object-fit: cover; opacity: 0.7; }
+.islecam::after { content: ""; position: absolute; left: 0; top: 0; right: 0; height: 64px;
+  background: linear-gradient(rgba(5,6,7,0.7), rgba(5,6,7,0)); }
+.islecam p { position: absolute; left: 14px; margin: 0; z-index: 1; font-family: "Saira", sans-serif; font-stretch: 100%; white-space: nowrap; }
+.islecam .camlbl { top: 12px; font-size: 12px; font-weight: 600; font-stretch: 125%; letter-spacing: 0.08em; color: #B8BEC7; }
+.islecam .camwhere { top: 30px; font-size: 14px; color: #8E959F; }
+.islecam .camsrc { left: auto; right: 8px; bottom: 5px; font-size: 11px; color: #B8BEC7; background: rgba(5,6,7,0.6); padding: 0 5px; }
 
 /* ---------- The sleep notice ---------- */
 

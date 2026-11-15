@@ -710,6 +710,75 @@ sleep 1
 is "boot hook: the screen coming back on is not a wake" "$(calls applicationmanager/launch)" 1
 kill "$(cat "$W/hook.pid")" 2>/dev/null
 
+# ---------- iceland quakes: the Met Office feed, read only ----------
+reset
+export IMPETUS_FETCHWAIT=2 IMPETUS_NOW=1794700000
+QPAGE="$HERE/fixtures/vedur-quakeinfo-2026-11-15.txt"
+{ echo "<html><script>"; cat "$QPAGE"; echo "</script>nothing else</html>"; } > "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland quakes)
+is "iceland: a good page is fresh" "$(echo "$out" | head -n 1)" "kind=fresh age=0"
+is "iceland: only the quakeInfo lines come back" "$(echo "$out" | sed 1d)" "$(cat "$QPAGE")"
+is "iceland: the fixed address is fetched" "$(calls 'fetch curl https://en.vedur.is/earthquakes-and-volcanism/earthquakes/')" 1
+no "iceland: no lock is left or taken" held
+rm -f "$STUB_TV/net.page"
+export IMPETUS_NOW=1794700300
+out=$(sh "$CTL" iceland quakes)
+is "iceland: no network gives the last copy with its age" "$(echo "$out" | head -n 1)" "kind=last age=300"
+is "iceland: the last copy is whole" "$(echo "$out" | sed 1d)" "$(cat "$QPAGE")"
+echo "<html>We are down for maintenance</html>" > "$STUB_TV/net.page"
+is "iceland: a page without the list keeps the last copy" "$(sh "$CTL" iceland quakes | head -n 1)" "kind=last age=300"
+rm -f "$STUB_TV/net.page"; touch "$STUB_TV/net.hang"
+t0=$(date +%s); out=$(sh "$CTL" iceland quakes | head -n 1); t1=$(date +%s)
+is "iceland: a hanging fetch falls back to the last copy" "$out" "kind=last age=300"
+yes "iceland: a hanging fetch is given up within its wait" [ $((t1 - t0)) -le 4 ]
+rm -f "$STUB_TV/net.hang" "$RUN/iceland/quakes.txt"
+is "iceland: nothing kept and no network is none" "$(sh "$CTL" iceland quakes)" "kind=none age=0"
+cp "$QPAGE" "$STUB_TV/net.page"
+is "iceland: busybox wget works the same" "$(IMPETUS_FETCHER=wget sh "$CTL" iceland quakes | head -n 1)" "kind=fresh age=0"
+is "iceland: wget was the one used" "$(calls 'fetch wget ')" 1
+rm -f "$STUB_TV/net.page"
+
+# ---------- iceland flights: adsb.lol, read only ----------
+FPAGE="$HERE/fixtures/adsb-lol-2026-11-15.json"
+export IMPETUS_NOW=1794700000
+cp "$FPAGE" "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland flights)
+is "flights: a good answer is fresh" "$(echo "$out" | head -n 1)" "kind=fresh age=0"
+is "flights: the answer comes back whole" "$(echo "$out" | sed 1d)" "$(cat "$FPAGE")"
+is "flights: the fixed address is fetched" "$(calls 'fetch curl https://api.adsb.lol/v2/point/64.9/-19/250')" 1
+no "flights: no lock is left or taken" held
+export IMPETUS_NOW=1794700060
+echo '{"error":"rate limited"}' > "$STUB_TV/net.page"
+is "flights: an answer without aircraft keeps the last copy" "$(sh "$CTL" iceland flights | head -n 1)" "kind=last age=60"
+rm -f "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland flights)
+is "flights: no network gives the last copy with its age" "$(echo "$out" | head -n 1)" "kind=last age=60"
+is "flights: the last copy is whole" "$(echo "$out" | sed 1d)" "$(cat "$FPAGE")"
+yes "flights: the quake copy is untouched" [ -s "$RUN/iceland/quakes.txt" ]
+rm -f "$RUN/iceland/flights.txt"
+is "flights: nothing kept and no network is none" "$(sh "$CTL" iceland flights)" "kind=none age=0"
+rm -f "$STUB_TV/net.page"
+
+# ---------- iceland webcam: one road-camera frame, read only ----------
+export IMPETUS_NOW=1794700000
+{ printf '\377\330'; head -c 3000 /dev/zero; } > "$STUB_TV/net.page"
+sh "$CTL" iceland webcam > "$W/cam.out"
+is "webcam: a frame is fresh" "$(head -n 1 "$W/cam.out")" "kind=fresh age=0"
+is "webcam: the frame's bytes come back whole" "$(sed 1d "$W/cam.out" | wc -c | tr -d ' ')" 3002
+is "webcam: the fixed address is fetched" "$(calls 'fetch curl https://www.vegagerdin.is/vgdata/vefmyndavelar/gighaed_1.jpg')" 1
+no "webcam: no lock is left or taken" held
+export IMPETUS_NOW=1794700090
+echo "Not Found" > "$STUB_TV/net.page"
+is "webcam: a tiny answer keeps the last frame" "$(sh "$CTL" iceland webcam | head -n 1)" "kind=last age=90"
+rm -f "$STUB_TV/net.page"
+is "webcam: no network gives the last frame with its age" "$(sh "$CTL" iceland webcam | head -n 1)" "kind=last age=90"
+rm -f "$RUN/iceland/cam.jpg"
+is "webcam: nothing kept and no network is none" "$(sh "$CTL" iceland webcam)" "kind=none age=0"
+refused "an unknown feed" iceland iceland planes
+refused "an address from the page" word iceland quakes 'url=http://x;reboot'
+unset IMPETUS_FETCHWAIT IMPETUS_NOW
+
+
 # ---------- the bedtime nudge (#24) ----------
 # A fifo stands in for the remote: nothing comes out of it until a test
 # writes a byte, as a key press would.
