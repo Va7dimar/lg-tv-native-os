@@ -1,0 +1,10 @@
+#!/bin/sh
+# Stand-in for busybox httpd: `httpd -f -p <port> -h <www> -c <conf>`.
+# It writes its arguments to $STUB_TV/httpd.args and stays up until it is
+# killed. A port listed in $STUB_TV/httpd.busy is taken: it ends at once.
+T=${STUB_TV:?}
+echo "$*" > "$T/httpd.args"
+port=
+while [ $# -gt 0 ]; do [ "$1" = -p ] && port=$2; shift; done
+if grep -qx "$port" "$T/httpd.busy" 2>/dev/null; then exit 1; fi
+exec sleep 300

@@ -463,6 +463,79 @@
     return best;
   }
 
+  // ---- The phone remote (issue #21) ----
+
+  // One request body for bin/impetus-phone: "key=value" lines, the helper
+  // words as w= lines. null when any value is outside the safe set.
+  function phoneBody(fields, words) {
+    var lines = [];
+    var keys = Object.keys(fields || {});
+    for (var i = 0; i < keys.length; i++) {
+      var v = fields[keys[i]];
+      if (v === undefined || v === null || v === "") continue;
+      if (!/^[a-z]+$/.test(keys[i]) || !isSafeWord(String(v))) return null;
+      lines.push(keys[i] + "=" + v);
+    }
+    for (var j = 0; j < (words || []).length; j++) {
+      if (!isSafeWord(words[j])) return null;
+      lines.push("w=" + words[j]);
+    }
+    return lines.join("\n") + "\n";
+  }
+
+  // A short name for the engine room's list, from the phone's user agent.
+  function phoneName(ua) {
+    ua = String(ua || "");
+    if (/iPhone/.test(ua)) return "iPhone";
+    if (/iPad/.test(ua)) return "iPad";
+    if (/Android/.test(ua)) return "Android";
+    return "Phone";
+  }
+
+  // Six digits, typed with or without spaces -> "123456", else null.
+  function pairCode(s) {
+    var c = String(s || "").replace(/\s+/g, "");
+    return /^\d{6}$/.test(c) ? c : null;
+  }
+
+  // `impetus-ctl phone list` (phone=..) or the engine's state part (paired=..)
+  // -> [{id, name, at}] (at in epoch s).
+  function parsePhones(text) {
+    var out = [];
+    String(text || "").split("\n").forEach(function (line) {
+      var m = /^(?:phone|paired)=([0-9a-f]{6}) ([A-Za-z0-9-]{1,20}) (\d+)$/.exec(line.trim());
+      if (m) out.push({ id: m[1], name: m[2], at: Number(m[3]) });
+    });
+    return out;
+  }
+
+  // "PAIRED 14 NOV" for one phone.
+  function pairedLine(at) {
+    var d = new Date(at * 1000);
+    return "PAIRED " + d.getDate() + " " + MONTHS[d.getMonth()].slice(0, 3).toUpperCase();
+  }
+
+  // The state line on the engine room's PHONE key.
+  function phoneLine(state) {
+    if (!state || state.phone !== "on") return "OFF";
+    var port = /^\d+$/.test(state.phoneport || "") ? state.phoneport : "";
+    var addr = /^[0-9.]+$/.test(state.phoneaddr || "") ? state.phoneaddr : "";
+    if (addr && port) return "ON · " + addr + ":" + port;
+    return port ? "ON · PORT " + port : "ON";
+  }
+
+  // The helper words that open an app from the phone. Deep-link params
+  // travel base64-coded (b64: btoa in a browser), so they pass the word check.
+  function openWords(id, params, b64) {
+    if (!isSafeId(id)) return null;
+    var w = ["open", "id=" + id];
+    if (params && b64) {
+      var p = b64(JSON.stringify(params));
+      if (p.length <= 700 && isSafeWord(p)) w.push("params=" + p);
+    }
+    return w;
+  }
+
   var api = { formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
     isSafeId: isSafeId, isSafeWord: isSafeWord, sunAltitude: sunAltitude, sunDay: sunDay,
     nightWindow: nightWindow, pickApps: pickApps, launchPayload: launchPayload,
@@ -472,7 +545,9 @@
     parseStill: parseStill, stillAge: stillAge,
     parseNetstat: parseNetstat, parseNslookup: parseNslookup, ownerOf: ownerOf,
     groupTalkers: groupTalkers, scrubLog: scrubLog, shortLog: shortLog, filterLog: filterLog,
-    formatUptime: formatUptime, parseVitals: parseVitals, nearest: nearest };
+    formatUptime: formatUptime, parseVitals: parseVitals, nearest: nearest,
+    phoneBody: phoneBody, phoneName: phoneName, pairCode: pairCode, parsePhones: parsePhones,
+    pairedLine: pairedLine, phoneLine: phoneLine, openWords: openWords };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.ImpetusLogic = api;
 })(this);

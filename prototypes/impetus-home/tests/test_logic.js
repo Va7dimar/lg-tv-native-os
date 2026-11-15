@@ -325,4 +325,46 @@ t("the shipped config: every scene yields safe words", () => {
   }
 });
 
+t("phoneBody: key lines and word lines, nothing unsafe", () => {
+  assert.strictEqual(L.phoneBody({ op: "do", t: "ab12" }, ["scene", "off"]), "op=do\nt=ab12\nw=scene\nw=off\n");
+  assert.strictEqual(L.phoneBody({ op: "hello", t: "" }, []), "op=hello\n");
+  assert.strictEqual(L.phoneBody({ op: "do" }, ["a;reboot"]), null);
+  assert.strictEqual(L.phoneBody({ op: "x\nw=restore" }, []), null);
+  assert.strictEqual(L.phoneBody({ "o p": "do" }, []), null);
+});
+
+t("phoneName and pairCode", () => {
+  assert.strictEqual(L.phoneName("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)"), "iPhone");
+  assert.strictEqual(L.phoneName("Mozilla/5.0 (Linux; Android 15; Pixel 9)"), "Android");
+  assert.strictEqual(L.phoneName(undefined), "Phone");
+  assert.strictEqual(L.pairCode("123 456"), "123456");
+  assert.strictEqual(L.pairCode(" 012345 "), "012345");
+  assert.strictEqual(L.pairCode("12345"), null);
+  assert.strictEqual(L.pairCode("12a456"), null);
+});
+
+t("parsePhones reads the list and the engine's paired lines", () => {
+  const text = "phone=3fa91c iPhone 1763100000\npaired=b07e22 Android 1763142000\nphone=on\nphone=XYZ bad 1\npaired=abcdef a;b 1";
+  assert.deepStrictEqual(L.parsePhones(text), [
+    { id: "3fa91c", name: "iPhone", at: 1763100000 }, { id: "b07e22", name: "Android", at: 1763142000 }]);
+  assert.deepStrictEqual(L.parsePhones(undefined), []);
+});
+
+t("pairedLine and phoneLine", () => {
+  assert.strictEqual(L.pairedLine(new Date(2026, 10, 14, 12).getTime() / 1000), "PAIRED 14 NOV");
+  assert.strictEqual(L.phoneLine({ phone: "off" }), "OFF");
+  assert.strictEqual(L.phoneLine({ phone: "none" }), "OFF");
+  assert.strictEqual(L.phoneLine({ phone: "on", phoneport: "8090", phoneaddr: "192.0.2.7" }), "ON · 192.0.2.7:8090");
+  assert.strictEqual(L.phoneLine({ phone: "on", phoneport: "8090", phoneaddr: "" }), "ON · PORT 8090");
+  assert.strictEqual(L.phoneLine({ phone: "on", phoneport: "x" }), "ON");
+});
+
+t("openWords: a safe id, params base64-coded and capped", () => {
+  const b64 = (s) => Buffer.from(s).toString("base64");
+  assert.deepStrictEqual(L.openWords("netflix"), ["open", "id=netflix"]);
+  assert.deepStrictEqual(L.openWords("netflix", { a: 1 }, b64), ["open", "id=netflix", "params=" + b64('{"a":1}')]);
+  assert.deepStrictEqual(L.openWords("netflix", { a: "x".repeat(600) }, b64), ["open", "id=netflix"]);
+  assert.strictEqual(L.openWords("x; reboot"), null);
+});
+
 console.log(n + " tests, 0 failed");

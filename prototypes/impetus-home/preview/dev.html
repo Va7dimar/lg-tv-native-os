@@ -22,7 +22,8 @@
   function nowS() { return Math.round(Date.now() / 1000); }
 
   var off = arg("caps").split(",");
-  var tv = { scene: arg("scene"), end: "", sleep: "", screenoff: "", shield: arg("shield") === "on", hits: 1204 };
+  var tv = { scene: arg("scene"), end: "", sleep: "", screenoff: "", shield: arg("shield") === "on", hits: 1204,
+    phone: arg("phone") === "on", phones: [["3fa91c", "iPhone", 1763100000], ["b07e22", "Android", 1763142000]] };
   if (tv.scene === "film") tv.end = nowS() + 12 * 3600;
   if (tv.scene === "winddown") tv.sleep = nowS() + 47 * 60;
 
@@ -30,7 +31,9 @@
     if (tv.shield) tv.hits += Math.floor(Math.random() * 3);
     return ["now=" + nowS(), "scene=" + tv.scene, "target=", "end=" + tv.end, "sleep=" + tv.sleep,
       "screenoff=" + tv.screenoff, "shield=" + (tv.shield ? "on" : "off")].concat(tv.shield ? ["hits=" + tv.hits] : [])
-      .concat(["hosts=45", "keeper=1"]).join("\n");
+      .concat(["hosts=45", "keeper=1"])
+      .concat(off.indexOf("phone") >= 0 ? ["phone=none"]
+        : tv.phone ? ["phone=on", "phoneport=8090", "phoneaddr=192.168.1.50"] : ["phone=off"]).join("\n");
   }
   var talk = [["142.250.74.46", "WebAppMgr", 6], ["142.250.74.78", "WebAppMgr", 3], ["52.94.236.248", "amazon", 2],
     ["18.66.112.9", "lgecloud", 4], ["34.120.5.11", "rdxd", 2], ["3.248.12.1", "netflix", 5], ["104.18.32.7", "WebAppMgr", 1],
@@ -79,10 +82,15 @@
     if (verb === "scene") { tv.scene = ""; tv.end = tv.sleep = tv.screenoff = ""; return "ok=1"; }
     if (verb === "sleep") { tv.sleep = ""; return "prev=netflix"; }
     if (verb === "shield") { tv.shield = w[1] === "on"; tv.hits = 0; return "ok=1"; }
+    if (verb === "phone" && w[1] === "revoke") {
+      tv.phones = tv.phones.filter(function (p) { return "id=" + p[0] !== w[2]; }); return "ok=1";
+    }
+    if (verb === "phone") { tv.phone = w[1] === "start"; return tv.phone ? "ok=1\nport=8090" : "ok=1"; }
     if (verb === "engine") {
       return ["@vitals", "temp=" + (46000 + Math.floor(Math.random() * 3000)), "uptime=" + (93784 + (nowS() % 1000)),
         "memtotal=1543168", "memavail=" + (612000 + Math.floor(Math.random() * 20000)), "disktotal=1048576", "diskused=412300",
-        "@state", stateText(), "@talk", netstat(), "@log", log].join("\n");
+        "@state", stateText(), tv.phones.map(function (p) { return "paired=" + p.join(" "); }).join("\n"),
+        "@talk", netstat(), "@log", log].join("\n");
     }
     return "ok=1";
   };
