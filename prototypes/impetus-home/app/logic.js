@@ -463,7 +463,51 @@
     return best;
   }
 
-  var api = { formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
+  // ---------- Iceland: the Met Office's 48-hour quake list ----------
+  // The earthquakes page carries one inline array:
+  //   quakeInfo = [{'t':new Date(2026,11-1,15,0,4,18),'lat':'63.910','lon':'-21.186',
+  //                 'dep':'5.5','s':'0.4','q':'50.0','dR':'Selfoss', ...}, ...];
+  // Times are UTC. Read with patterns, never evaluated. Returns null when the
+  // text has no such array (the page changed or did not arrive), else the
+  // quakes that pass every range check, newest first.
+  var QUAKE_DATE = /'t'\s*:\s*new Date\((\d{4}),(\d{1,2})-1,(\d{1,2}),(\d{1,2}),(\d{1,2}),(\d{1,2})\)/;
+  var QUAKE_MAX_AGE = 49 * 3600 * 1000;
+  function quakeField(obj, key) {
+    var m = new RegExp("'" + key + "'\\s*:\\s*'([^']*)'").exec(obj);
+    return m ? m[1] : null;
+  }
+  function quakeNum(obj, key) {
+    var s = quakeField(obj, key);
+    if (s === null || !/^\s*-?\d+(\.\d+)?\s*$/.test(s)) return NaN;
+    return parseFloat(s);
+  }
+  function parseQuakeInfo(text, nowMs) {
+    if (typeof text !== "string") return null;
+    var start = text.search(/quakeInfo\s*=\s*\[/);
+    if (start < 0) return null;
+    var end = text.indexOf("];", start);
+    if (end < 0) return null;
+    var body = text.slice(text.indexOf("[", start) + 1, end);
+    var objs = body.match(/\{[^{}]*\}/g) || [];
+    var out = [];
+    for (var i = 0; i < objs.length; i++) {
+      var o = objs[i], d = QUAKE_DATE.exec(o);
+      if (!d) continue;
+      var t = Date.UTC(+d[1], +d[2] - 1, +d[3], +d[4], +d[5], +d[6]);
+      var q = { t: t, lat: quakeNum(o, "lat"), lon: quakeNum(o, "lon"), dep: quakeNum(o, "dep"),
+        m: quakeNum(o, "s"), quality: quakeNum(o, "q"), place: (quakeField(o, "dR") || "").replace(/^\s+|\s+$/g, "") };
+      if (!(q.lat >= 62.5 && q.lat <= 67.5 && q.lon >= -25.5 && q.lon <= -12.5)) continue;
+      if (!(q.m >= -1 && q.m <= 8)) continue;
+      if (typeof nowMs === "number" && (t > nowMs + 600000 || nowMs - t > QUAKE_MAX_AGE)) continue;
+      if (isNaN(q.dep)) q.dep = null;
+      if (isNaN(q.quality)) q.quality = null;
+      out.push(q);
+    }
+    out.sort(function (a, b) { return b.t - a.t; });
+    return out;
+  }
+
+  var api = { parseQuakeInfo: parseQuakeInfo, formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
     isSafeId: isSafeId, isSafeWord: isSafeWord, sunAltitude: sunAltitude, sunDay: sunDay,
     nightWindow: nightWindow, pickApps: pickApps, launchPayload: launchPayload,
     parseLaunchParams: parseLaunchParams, ctlCommand: ctlCommand, parseKv: parseKv,

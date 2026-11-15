@@ -710,5 +710,35 @@ sleep 1
 is "boot hook: the screen coming back on is not a wake" "$(calls applicationmanager/launch)" 1
 kill "$(cat "$W/hook.pid")" 2>/dev/null
 
+# ---------- iceland quakes: the Met Office feed, read only ----------
+reset
+export IMPETUS_FETCHWAIT=2 IMPETUS_NOW=1794700000
+QPAGE="$HERE/fixtures/vedur-quakeinfo-2026-11-15.txt"
+{ echo "<html><script>"; cat "$QPAGE"; echo "</script>nothing else</html>"; } > "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland quakes)
+is "iceland: a good page is fresh" "$(echo "$out" | head -n 1)" "kind=fresh age=0"
+is "iceland: only the quakeInfo lines come back" "$(echo "$out" | sed 1d)" "$(cat "$QPAGE")"
+is "iceland: the fixed address is fetched" "$(calls 'fetch curl https://en.vedur.is/earthquakes-and-volcanism/earthquakes/')" 1
+no "iceland: no lock is left or taken" held
+rm -f "$STUB_TV/net.page"
+export IMPETUS_NOW=1794700300
+out=$(sh "$CTL" iceland quakes)
+is "iceland: no network gives the last copy with its age" "$(echo "$out" | head -n 1)" "kind=last age=300"
+is "iceland: the last copy is whole" "$(echo "$out" | sed 1d)" "$(cat "$QPAGE")"
+echo "<html>We are down for maintenance</html>" > "$STUB_TV/net.page"
+is "iceland: a page without the list keeps the last copy" "$(sh "$CTL" iceland quakes | head -n 1)" "kind=last age=300"
+rm -f "$STUB_TV/net.page"; touch "$STUB_TV/net.hang"
+t0=$(date +%s); out=$(sh "$CTL" iceland quakes | head -n 1); t1=$(date +%s)
+is "iceland: a hanging fetch falls back to the last copy" "$out" "kind=last age=300"
+yes "iceland: a hanging fetch is given up within its wait" [ $((t1 - t0)) -le 4 ]
+rm -f "$STUB_TV/net.hang" "$RUN/iceland/quakes.txt"
+is "iceland: nothing kept and no network is none" "$(sh "$CTL" iceland quakes)" "kind=none age=0"
+cp "$QPAGE" "$STUB_TV/net.page"
+is "iceland: busybox wget works the same" "$(IMPETUS_FETCHER=wget sh "$CTL" iceland quakes | head -n 1)" "kind=fresh age=0"
+is "iceland: wget was the one used" "$(calls 'fetch wget ')" 1
+refused "an unknown feed" iceland iceland flights
+refused "an address from the page" word iceland quakes 'url=http://x;reboot'
+unset IMPETUS_FETCHWAIT IMPETUS_NOW
+
 echo "$n checks, $failed failed"
 [ "$failed" = 0 ]

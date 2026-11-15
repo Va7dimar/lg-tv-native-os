@@ -39,8 +39,8 @@ Enter (OK) and Backspace or Escape (BACK) drive it. The TV is a stand-in
 ## Test
 
 ```sh
-node tests/test_logic.js      # the page's logic: 24 tests
-sh tests/test_ctl.sh          # the root helper against a stand-in TV: 244 checks
+node tests/test_logic.js      # the page's logic: 29 tests
+sh tests/test_ctl.sh          # the root helper against a stand-in TV: 258 checks
 python tests/test_ipk.py      # the package: layout, line ends, modes, same bytes twice
 ```
 

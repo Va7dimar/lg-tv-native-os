@@ -325,4 +325,62 @@ t("the shipped config: every scene yields safe words", () => {
   }
 });
 
+// ---------- Iceland: the quake list ----------
+const fs = require("fs"), path = require("path");
+const QUAKE_PAGE = fs.readFileSync(path.join(__dirname, "fixtures", "vedur-quakeinfo-2026-11-15.txt"), "utf8");
+const QUAKE_NOW = Date.UTC(2026, 10, 15, 0, 20, 0);
+
+t("quakes: the 15.11 page gives 75, newest first, read as UTC", () => {
+  const q = L.parseQuakeInfo("<script>\n" + QUAKE_PAGE + "</script>", QUAKE_NOW);
+  assert.strictEqual(q.length, 75);
+  assert.strictEqual(q[0].t, Date.UTC(2026, 10, 15, 0, 4, 18));
+  assert.strictEqual(q[0].lat, 63.91); assert.strictEqual(q[0].lon, -21.186);
+  assert.strictEqual(q[0].m, 0.4); assert.strictEqual(q[0].dep, 5.5); assert.strictEqual(q[0].place, "Selfoss");
+  for (let i = 1; i < q.length; i++) assert.ok(q[i - 1].t >= q[i].t);
+  assert.ok(q.some(x => x.place === "Goðabunga"), "Icelandic letters survive");
+});
+
+t("quakes: older than 49 h and out-of-range entries are dropped", () => {
+  const one = (t, lat, lon, s) => "{'t':new Date(" + t + "),'lat':'" + lat + "','lon':'" + lon + "','dep':'1.0','s':'" + s + "','q':'90.0','dR':'X'}";
+  const text = "quakeInfo = [" + [
+    one("2026,11-1,14,12,0,0", "63.9", "-22.1", "1.2"),   // kept
+    one("2026,11-1,12,12,0,0", "63.9", "-22.1", "1.2"),   // 60 h old
+    one("2026,11-1,14,12,0,0", "51.5", "-0.1", "1.2"),    // London
+    one("2026,11-1,14,12,0,0", "63.9", "-22.1", "9.9"),   // magnitude out of range
+    one("2026,11-1,14,12,0,0", "63.9", "-22.1", "abc"),   // not a number
+    "{'t':'yesterday','lat':'63.9','lon':'-22.1','s':'1.0'}" // no date
+  ].join(",") + "];";
+  const q = L.parseQuakeInfo(text, QUAKE_NOW);
+  assert.strictEqual(q.length, 1);
+  assert.strictEqual(q[0].m, 1.2);
+});
+
+t("quakes: no array is null (feed down); an empty array is an empty list", () => {
+  assert.strictEqual(L.parseQuakeInfo("<html>maintenance</html>", QUAKE_NOW), null);
+  assert.strictEqual(L.parseQuakeInfo("", QUAKE_NOW), null);
+  assert.strictEqual(L.parseQuakeInfo(null, QUAKE_NOW), null);
+  assert.strictEqual(L.parseQuakeInfo("quakeInfo = [ ];", QUAKE_NOW).length, 0);
+  assert.strictEqual(L.parseQuakeInfo("quakeInfo = [{'t':new Date(2026,11-1,14,1,2,3)", QUAKE_NOW), null);
+});
+
+t("quakes: nothing in the page is evaluated", () => {
+  global.__pwned = false;
+  const text = "quakeInfo = [{'t':new Date(2026,11-1,14,12,0,0),'lat':'63.9','lon':'-22.1','s':'1.0','dR':'');__pwned=true;('x'}];";
+  const q = L.parseQuakeInfo(text, QUAKE_NOW);
+  assert.strictEqual(global.__pwned, false);
+  assert.ok(Array.isArray(q));
+});
+
+t("shield: none of its names blocks a host the Iceland room needs", () => {
+  const FEEDS = ["en.vedur.is", "vedur.is", "api.adsb.lol", "adsb.lol"];
+  const names = fs.readFileSync(path.join(__dirname, "..", "app", "shield", "hosts.txt"), "utf8")
+    .split(/\r?\n/).map(s => s.trim()).filter(s => s && s[0] !== "#");
+  assert.strictEqual(names.length, 45);
+  for (const host of FEEDS) {
+    for (const name of names) {
+      assert.ok(host !== name && !host.endsWith("." + name), name + " would block " + host);
+    }
+  }
+});
+
 console.log(n + " tests, 0 failed");

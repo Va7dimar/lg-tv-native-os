@@ -1,0 +1,18 @@
+#!/bin/sh
+# Stand-in for `curl -fsSL -m <s> -o <file> <url>` and, linked as wget, for
+# `wget -q -T <s> -O <file> <url>`. The network is $STUB_TV/net: a file to
+# serve (net.page), a hang (net.hang) or nothing (no network, exit 7).
+out=; url=
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -o|-O) out=$2; shift ;;
+    -m|-T) shift ;;
+    -*) ;;
+    *) url=$1 ;;
+  esac
+  shift
+done
+echo "fetch $(basename "$0") $url" >> "$STUB_TV/calls"
+[ -e "$STUB_TV/net.hang" ] && exec sleep 30
+[ -r "$STUB_TV/net.page" ] || exit 7
+cat "$STUB_TV/net.page" > "$out"

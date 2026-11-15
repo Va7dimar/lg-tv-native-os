@@ -133,7 +133,7 @@ The page cannot change the TV by itself, so the work is split in three:
 | Part | File | Runs as | Does |
 |---|---|---|---|
 | Page | `app/*.js` | the web app | draws the rooms, decides nothing about the TV |
-| Helper | `app/bin/impetus-ctl` | root, one call at a time through Homebrew Channel's exec service | a fixed list of verbs: `probe`, `start`, `state`, `still`, `scene`, `sleep`, `shield`, `engine`, `restore` |
+| Helper | `app/bin/impetus-ctl` | root, one call at a time through Homebrew Channel's exec service | a fixed list of verbs: `probe`, `start`, `state`, `still`, `scene`, `sleep`, `shield`, `engine`, `iceland`, `restore` |
 | Keeper | `impetus-ctl keeper` | root, one background loop | the timed jobs: sleep timer, SUN MODE, scene end, last-seen still, shield after a restart |
 
 - Everything that changes the TV goes through the helper. The page sends a

@@ -315,6 +315,24 @@ before it is left in place.
 - **Relaunch:** with Impetus already open in the background, opening it
   again shows the living room, not a stale room.
 
+## 10a. Iceland feed (#26, plan step 1; SSH only, no install)
+
+Read only; nothing on the TV changes but `/tmp/impetus/iceland/`.
+
+- `command -v curl wget` and, for each one found, whether it fetches https:
+  `curl -fsS -m 10 -o /dev/null https://en.vedur.is/ && echo ok` (or
+  `wget -q -T 10 -O /dev/null https://en.vedur.is/ && echo ok`).
+- Copy the new helper to `/tmp/impetus-ctl` and run
+  `sh /tmp/impetus-ctl iceland quakes | head -c 300`: the first line is
+  `kind=fresh age=0`, the next starts `quakeInfo = [` (or `VI.quakeInfo`).
+  Run it with the network cable out: `kind=last age=<s>`, within 10 s.
+- Settle page fetch vs helper: from the installed app's page (Web Inspector,
+  or a one-line test page), one `XMLHttpRequest` to the earthquakes page. A
+  readable answer means the webOS page is not held to CORS here; the answer
+  has no `Access-Control-Allow-Origin` header.
+- Write in the evidence note which fetcher the TV has and the XHR result.
+  The room's later steps follow it.
+
 ## 11. Write it down
 
 One evidence note, `tvs/lg-65nano756pr/evidence/impetus-home-1.2-tv-run-<date>.md`,
