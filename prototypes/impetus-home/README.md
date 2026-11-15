@@ -36,18 +36,27 @@ Enter (OK) and Backspace or Escape (BACK) drive it. The TV is a stand-in
 | `caps=capture,picture` | parts this TV cannot do (see `probe`) |
 | `notice=sleep` | the two-minute notice before standby |
 | `notice=bedtime` | the bedtime card (WIND DOWN or NOT TONIGHT) |
+| `phone=on` | the phone remote's server is on (engine room) |
+
+The phone remote's page: `http://localhost:8765/preview/phone.html` at phone
+width (e.g. 390×844), with `paired=1`, `scene=`, `shield=on`, `caps=` and
+`tv=down` (the TV does not answer).
 
 ## Test
 
 ```sh
-node tests/test_logic.js      # the page's logic: 27 tests
-sh tests/test_ctl.sh          # the root helper against a stand-in TV: 291 checks
+node tests/test_logic.js      # the page's logic: 32 tests
+sh tests/test_ctl.sh          # the root helper against a stand-in TV: 380 checks
 python tests/test_ipk.py      # the package: layout, line ends, modes, same bytes twice
 ```
 
 `test_ctl.sh` needs a POSIX shell (dash or busybox ash; on Windows, WSL).
 It runs the real helper and keeper with stand-ins for `luna-send`, `mount`,
-`umount`, `iptables` and `node` in `tests/stubs/`, in a scratch folder.
+`umount`, `iptables`, `node` and `httpd` in `tests/stubs/`, in a scratch folder.
+
+`scripts/probe_phone.sh` is run on the TV, not the PC: it reads (and changes
+nothing) whether the TV can serve the phone remote (busybox httpd and CGI, nc,
+node, free ports 8090–8093, a /tmp that can run a script).
 
 ## Build
 
@@ -86,6 +95,7 @@ Ideas that were wanted and parked, one issue each:
 | `app/` | the web app: `index.html`, `home.css`, `home.js` (rooms and keys), `logic.js` (pure functions), `luna.js` (the TV's services), `config.js` |
 | `app/bin/impetus-ctl` | the root helper and the keeper |
 | `app/bin/shield-count.js` | counts calls the shield stopped |
+| `app/bin/impetus-phone`, `app/bin/phone-serve.js`, `app/phone/` | the phone remote: its CGI door (pairing, tokens), the node fallback server, the phone page |
 | `boot/impetus-home` | the boot hook that makes Impetus the default Home |
 | `preview/` | the PC preview |
 | `tests/`, `scripts/` | host tests and the IPK build |
