@@ -9,7 +9,7 @@
   var HORIZON = 691, ARC_RISE = 330, X0 = -140, X1 = 2060;
   var KEY = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, OK: 13, BACK: 461, BACKSPACE: 8, ESC: 27 };
   var NOTICE_SECONDS = 120;   // the keeper brings the notice up this long before standby
-  var TALK_ROWS = 9, LOG_LINES = 14;
+  var TALK_ROWS = 9, LOG_LINES = 14, PHONE_ROWS = 4;
 
   var room = "living";        // living | control | engine | notice
   var focusIdx = 0, focusables = [];
@@ -18,6 +18,7 @@
   var stillBusy = false, liveDead = false;
   var conns = [], hosts = {}, resolving = {};
   var noticeUntil = 0, dismissed = 0, cancelling = false;
+  var phonesSig = null, armedPhone = null, armTimer = null;
 
   function every(seconds, fallback) { return (seconds || fallback) * 1000; }
   function noop() {}
@@ -187,6 +188,10 @@
     $("shieldstate").textContent = L.shieldLine(state);
     $("shielddoes").textContent = "Blocks LG's own ads, tracking and content recognition" +
       (Number(state.hosts) > 0 ? ": " + state.hosts + " hosts." : ".");
+    // No web server on this TV (or no helper): no PHONE key, no list.
+    $("phone").hidden = $("phones").hidden = !state.phone || state.phone === "none";
+    $("phone").classList.toggle("latched", state.phone === "on");
+    $("phonestate").textContent = L.phoneLine(state);
   }
 
   function refreshState() {
@@ -307,6 +312,7 @@
       drawVitals(L.parseVitals(L.parseKv(s.vitals)));
       state = L.parseKv(s.state);
       paintState();
+      drawPhones(L.parsePhones(s.state));
       conns = L.parseNetstat(s.talk);
       resolveHosts();
       drawTalkers();
@@ -320,6 +326,60 @@
       if (kv.error) console.log("shield:", kv.error);
       return refreshEngine();
     });
+  }
+
+  // ---------- The phone remote (issue #21) ----------
+  // The PHONE switch starts or stops the helper's web server; each paired
+  // phone is a bar that revokes it on a second press within a few seconds.
+  function pressPhone() {
+    return LUNA.ctl(["phone", state.phone === "on" ? "stop" : "start"]).then(function (out) {
+      var kv = L.parseKv(out);
+      if (kv.error) console.log("phone:", kv.error);
+      return refreshEngine();
+    });
+  }
+
+  function disarmPhone() {
+    clearTimeout(armTimer);
+    armedPhone = null;
+    var bars = document.querySelectorAll(".phonebar");
+    for (var i = 0; i < bars.length; i++) {
+      bars[i].classList.remove("armed");
+      bars[i].lastChild.textContent = "REVOKE";
+    }
+  }
+
+  function pressRevoke(p, bar) {
+    if (armedPhone !== p.id) {
+      disarmPhone();
+      armedPhone = p.id;
+      bar.classList.add("armed");
+      bar.lastChild.textContent = "PRESS AGAIN TO REVOKE";
+      armTimer = setTimeout(disarmPhone, 4000);
+      return null;
+    }
+    disarmPhone();
+    return LUNA.ctl(["phone", "revoke", "id=" + p.id]).then(refreshEngine);
+  }
+
+  // Redrawn only when the list changes, so focus and an armed bar stay put.
+  function drawPhones(list) {
+    list = list.slice(0, PHONE_ROWS);
+    var sig = list.map(function (p) { return p.id; }).join(",");
+    if (sig === phonesSig) return;
+    phonesSig = sig;
+    disarmPhone();
+    var nav = $("phones");
+    nav.innerHTML = "";
+    list.forEach(function (p) {
+      var b = key("phonebar", null);
+      b._press = function () { return pressRevoke(p, b); };
+      b.appendChild(document.createTextNode(p.name.toUpperCase()));
+      b.appendChild(span("when", L.pairedLine(p.at)));
+      b.appendChild(span("act", "REVOKE"));
+      nav.appendChild(b);
+    });
+    if (room === "engine") { collect(); paintFocus(); }
   }
 
   // ---------- The sleep notice ----------
@@ -478,6 +538,7 @@
   $("appletv")._press = function () { return LUNA.launch(CFG.appleTv.id); };
   $("door")._press = function () { setRoom("engine"); };
   $("shield")._press = pressShield;
+  $("phone")._press = pressPhone;
 
   drawLiving();
   setInterval(function () { if (room === "living") drawLiving(); }, 60000);

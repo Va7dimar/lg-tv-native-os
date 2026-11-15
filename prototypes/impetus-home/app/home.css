@@ -213,6 +213,34 @@ body.instant .room { transition: none; }
   font-size: 18px; line-height: 1.45; letter-spacing: 0; color: var(--muted);
 }
 
+/* The right column: the PHONE switch and its paired phones over the log. */
+.col-right {
+  position: absolute; left: 1208px; top: 112px; width: 616px; height: 872px;
+  display: flex; flex-direction: column;
+}
+.col-right .log { position: relative; left: 0; top: 0; width: 616px; height: auto; flex: 1 1 auto; min-height: 0; }
+.phonekey {
+  width: 616px; height: 168px; margin-bottom: 16px; flex: 0 0 auto;
+  padding: 30px 30px 0; font-size: 40px; line-height: 1; white-space: normal;
+}
+.phonekey .name { display: block; }
+.phonekey .state {
+  display: block; margin-top: 16px; font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums; font-size: 26px;
+  letter-spacing: 0; color: var(--text);
+}
+.phonekey .does {
+  display: block; margin-top: 12px; font-family: "Saira", sans-serif; font-weight: 400; font-stretch: 100%;
+  font-size: 18px; line-height: 1.3; letter-spacing: 0; color: var(--muted);
+}
+.phones { flex: 0 0 auto; }
+.phonebar { width: 616px; height: 64px; margin-bottom: 16px; padding: 0 30px; font-size: 20px; line-height: 64px; }
+.phonebar .when {
+  margin-left: 18px; font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums;
+  font-size: 18px; letter-spacing: 0; color: var(--muted);
+}
+.phonebar .act { position: absolute; right: 30px; top: 0; font-size: 16px; color: var(--muted); }
+.phonebar.armed .act { color: var(--text); }
+
 .talkers .label, .log .label { margin-bottom: 8px; }
 .count { font-family: "Saira", sans-serif; font-weight: 300; font-stretch: 100%; font-variant-numeric: tabular-nums; font-size: 96px; line-height: 1.1; color: var(--text); }
 .sub { font-size: 18px; font-weight: 400; color: var(--muted); }
