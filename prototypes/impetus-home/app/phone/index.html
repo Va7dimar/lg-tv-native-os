@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="format-detection" content="telephone=no">
+<title>Impetus</title>
+<link rel="stylesheet" href="phone.css">
+</head>
+<body>
+<span class="light"></span>
+<header class="top">
+  <span class="mark">IMPETUS</span>
+  <span id="quiet" class="quiet"></span>
+</header>
+
+<!-- First visit: a code on the TV pairs this phone -->
+<section id="pair" class="pair" hidden>
+  <h1 class="big">PAIR THIS PHONE</h1>
+  <p class="read">A code appears on the TV. Only someone in the room can see it.</p>
+  <button id="ask" class="key wide" type="button"><span class="name">SHOW A CODE ON THE TV</span></button>
+  <form id="codeform" class="codeform" hidden>
+    <label class="label" for="code">CODE ON THE TV</label>
+    <input id="code" class="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+      maxlength="7" pattern="[0-9 ]*" placeholder="000 000">
+    <button id="send" class="key wide" type="submit"><span class="name">PAIR</span></button>
+    <button id="again" class="link" type="button">Show the code again</button>
+  </form>
+  <p id="pairline" class="line"></p>
+</section>
+
+<!-- Paired: what the remote runs -->
+<main id="remote" class="remote" hidden>
+  <button id="appletv" class="key appletv" type="button"><span class="name">APPLE TV</span></button>
+
+  <h2 id="sceneslabel" class="label" hidden>SCENES</h2>
+  <nav id="scenes" class="scenes"></nav>
+
+  <h2 id="shieldlabel" class="label" hidden>SHIELD</h2>
+  <button id="shield" class="key shield" type="button" hidden>
+    <span class="name">SHIELD</span><span id="shieldstate" class="state">OFF</span>
+  </button>
+
+  <h2 id="shortcutslabel" class="label" hidden>SHORTCUTS</h2>
+  <nav id="shortcuts" class="shortcuts"></nav>
+
+  <h2 id="appslabel" class="label" hidden>APPS</h2>
+  <nav id="apps" class="apps"></nav>
+
+  <button id="standby" class="key standby" type="button"><span class="name">STANDBY</span></button>
+</main>
+
+<script src="logic.js"></script>
+<script src="config.js"></script>
+<script src="phone.js"></script>
+</body>
+</html>

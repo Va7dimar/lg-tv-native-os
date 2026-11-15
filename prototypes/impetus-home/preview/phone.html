@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Impetus</title>
+<base href="../app/">
+<link rel="stylesheet" href="phone/phone.css">
+<style>@font-face { font-family: "Saira"; font-weight: 100 900; font-stretch: 50% 125%; src: url("fonts/Saira-Variable.woff2") format("woff2"); }</style>
+</head>
+<body>
+<script>
+// PC preview of the phone remote: loads app/phone/index.html's markup and
+// stands in for bin/impetus-phone. Open at phone width (e.g. 390x844).
+// Query: paired=1 (start paired)  scene=<id>  shield=on  caps=<names off>  tv=down
+(function () {
+  var q = location.search;
+  function arg(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(q); return m ? decodeURIComponent(m[1]) : ""; }
+  try { if (arg("paired") === "1") localStorage.setItem("impetus.phone.token", "0123456789abcdef0123456789abcdef");
+        else localStorage.removeItem("impetus.phone.token"); } catch (e) {}
+  var off = arg("caps").split(",");
+  var tv = { scene: arg("scene"), shield: arg("shield") === "on", hits: 1204, code: "" };
+  function nowS() { return Math.round(Date.now() / 1000); }
+  function stateText() {
+    return ["now=" + nowS(), "scene=" + tv.scene, "end=" + (tv.scene === "film" ? nowS() + 9 * 3600 : ""),
+      "sleep=" + (tv.scene === "winddown" ? nowS() + 47 * 60 : ""), "screenoff=",
+      "shield=" + (tv.shield ? "on" : "off"), tv.shield ? "hits=" + tv.hits : "", "hosts=45", "keeper=1", "phone=on"].join("\n");
+  }
+  window.MOCK_API = function (f, w) {
+    if (arg("tv") === "down") throw new Error("no answer");
+    console.log("api", JSON.stringify(f), w.join(" "));
+    if (f.op === "pair") { tv.code = "123456"; return "ok=1\nlife=120"; }
+    if (f.op === "confirm") return f.code === tv.code ? "token=0123456789abcdef0123456789abcdef\nid=3fa91c" : "error=code\nleft=4";
+    if (!f.t) return "paired=0";
+    if (f.op === "hello") {
+      return "paired=1\nid=3fa91c\n@caps\n" + ["exec", "capture", "picture", "screenoff", "sleep", "volume", "shield", "phone"]
+        .map(function (k) { return k + "=" + (off.indexOf(k) >= 0 ? 0 : 1); }).join("\n") + "\n@state\n" + stateText();
+    }
+    if (f.op === "state") return stateText();
+    if (f.op === "apps") return JSON.stringify({ returnValue: true, apps: window.MOCK_APPS || [] });
+    if (w[0] === "scene") { tv.scene = w[1] === "on" ? w[2].slice(3) : ""; return "ok=1"; }
+    if (w[0] === "shield") { tv.shield = w[1] === "on"; return "ok=1"; }
+    return "ok=1";
+  };
+  var x = new XMLHttpRequest(); x.open("GET", "phone/index.html", false); x.send();
+  var m = /<body>([\s\S]*?)<script/.exec(x.responseText);
+  document.body.insertAdjacentHTML("afterbegin", m[1]);
+  ["../preview/mock-apps.js", "logic.js", "config.js", "phone/phone.js"].forEach(function (s) {
+    var e = document.createElement("script"); e.src = s; e.async = false; document.body.appendChild(e);
+  });
+})();
+</script>
+</body>
+</html>

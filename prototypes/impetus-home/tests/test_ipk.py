@@ -47,6 +47,12 @@ def main():
     assert data.extractfile(prefix + "bin/impetus-ctl").read().startswith(b"#!/bin/sh\n")
     assert data.getmember(prefix + "bin/impetus-ctl").mode == 0o755
     assert data.getmember(prefix + "home.js").mode == 0o644
+    # The phone remote (issue #21): its CGI helper, fallback server and page.
+    for need in ("bin/impetus-phone", "bin/phone-serve.js", "phone/index.html", "phone/phone.css", "phone/phone.js"):
+        assert prefix + need in names, need
+        assert b"\r" not in data.extractfile(prefix + need).read(), need
+    assert data.extractfile(prefix + "bin/impetus-phone").read().startswith(b"#!/bin/sh\n")
+    assert data.getmember(prefix + "bin/impetus-phone").mode == 0o755
     print("test_ipk: 1 test, 0 failed")
 
 

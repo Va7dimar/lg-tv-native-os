@@ -101,6 +101,49 @@ wall.
   LG's own advertising, tracking and content-recognition hosts and nothing
   else, and counts each blocked call. The list ships in the app
   (`shield/hosts.txt`), one host per line.
+- **PHONE** (issue #21): a latching switch for the phone remote's web server,
+  with the address a phone opens as its state line (`ON · <address>:<port>`).
+  Under it, one bar per paired phone (name, paired date); OK arms a bar
+  (`PRESS AGAIN TO REVOKE`) and a second OK within 4 s forgets that phone.
+  The key is hidden when the TV has no web server to run.
+
+## The phone remote (issue #21)
+
+**Problem.** The TV remote is the only way in. A phone on the same Wi-Fi
+should drive the control room's main actions without an app install.
+
+- **Served by the TV.** `impetus-ctl phone start` starts a small web server on
+  the first free port of 8090–8093. The server is one replaceable part:
+  busybox `httpd` with CGI first, else `bin/phone-serve.js` under node (the
+  same contract: static files plus one CGI door). It serves a copy of the
+  phone page made in `/tmp/impetus/www`, never the app's folder, so `state/`
+  (where the tokens live) cannot be reached from the network. Requests from
+  outside the private address ranges are refused.
+- **Pairing.** The first visit asks for a code. The phone asks; the TV shows
+  six random digits as a toast over whatever is on (`Phone pairing code: 123
+  456`); the code lasts 2 minutes and 5 wrong tries end it. The right code
+  gives the phone a 128-bit random token, kept in the phone's browser storage
+  and in `state/phones` (mode 600) on the TV only. At most 8 phones. The
+  engine room lists them and revokes each.
+- **What a phone may do.** Every request carries the token. A paired phone may
+  read the state and the app list and send exactly these helper verbs: `scene
+  on|off`, `shield on|off`, `open` (an app, deep-link params base64-coded) and
+  `standby`. Everything else (`restore`, the keeper, the phone server, the
+  pairing list) stays with the TV. The words go through the helper's own
+  checks a second time.
+- **The page.** Phone-first, the same visual language as the TV (Saira, the
+  key wall, latched halos), English labels: APPLE TV, SCENES, SHIELD,
+  SHORTCUTS, APPS and STANDBY (two presses: `PRESS AGAIN FOR STANDBY`).
+- **Calm failure.** Nothing on the phone side can block Home or the control
+  room. A TV that does not answer shows one quiet line (`TV NOT ANSWERING`,
+  `NOT DONE`), no error box and no spinner; the page retries on its own. A
+  server that dies is started again by the keeper, once a minute at most,
+  while the owner wants it on. `restore` and `phone stop` end it.
+- **Started by the helper, never a new boot file.** The wish to have it on is
+  a flag in `state/`; the keeper (already started by the boot hook) brings
+  the server back after a restart.
+- **Known gaps.** Plain HTTP on the home network: anyone on the Wi-Fi who
+  sees a request can copy its token. Revoke from the engine room ends it.
 
 ## Room 4: Iceland
 
@@ -200,8 +243,9 @@ The page cannot change the TV by itself, so the work is split in three:
 | Part | File | Runs as | Does |
 |---|---|---|---|
 | Page | `app/*.js` | the web app | draws the rooms, decides nothing about the TV |
-| Helper | `app/bin/impetus-ctl` | root, one call at a time through Homebrew Channel's exec service | a fixed list of verbs: `probe`, `start`, `state`, `still`, `scene`, `sleep`, `shield`, `engine`, `iceland`, `restore` |
-| Keeper | `impetus-ctl keeper` | root, one background loop | the timed jobs: sleep timer, SUN MODE, scene end, last-seen still, shield after a restart |
+| Helper | `app/bin/impetus-ctl` | root, one call at a time through Homebrew Channel's exec service | a fixed list of verbs: `probe`, `start`, `state`, `still`, `scene`, `sleep`, `shield`, `engine`, `iceland`, `open`, `standby`, `phone`, `restore` |
+| Keeper | `impetus-ctl keeper` | root, one background loop | the timed jobs: sleep timer, SUN MODE, scene end, last-seen still, shield and phone server after a restart |
+| Phone door | `app/bin/impetus-phone` | root, as CGI under the phone server | pairing, tokens, and the phone's allowed verbs, handed to the helper |
 
 - Everything that changes the TV goes through the helper. The page sends a
   verb and `key=value` words, each checked against a strict pattern in the
@@ -274,7 +318,8 @@ Pause: `touch /tmp/impetus-pause`.
 **Way back** (in this order, over SSH):
 
 1. `sh /media/developer/apps/usr/palm/applications/org.va7dimar.home/bin/impetus-ctl restore`
-   puts the picture and volume back, takes the shield off and stops the keeper.
+   puts the picture and volume back, takes the shield off, stops the phone
+   server and stops the keeper.
    It prints `ok=1`. Picture values belong to an input, so each set is put
    back with its own app in front; if an app will not open, its values are not
    written to another input, they stay on record, and the answer is
