@@ -170,7 +170,11 @@ app's minor or patch version and is installed only with the owner's yes.
 
 Steps 5 and 6 are independent of each other and can run in parallel after step 4.
 
-## 9. Open (the owner decides)
+## 9. Decided by the owner (15.11.2026)
 
-- Webcam source (section 5) and flight source (section 6).
-- The derived choice that the room has no idle timeout (section 1), if the owner wants one.
+- Webcam: **A, still frames** (section 5). The camera and its terms are picked in step 6.
+- Flights: **A, adsb.lol** (section 6). It answered without a key on 15.11; if it later asks
+  for one, the owner has a key in a local `.env` on his own dev machine. It is copied onto the
+  TV only (app folder, never in git, never printed or logged), read by the helper verb.
+- Next: start the build at step 1.
+- Still the owner's to veto: the room has no idle timeout (section 1).
