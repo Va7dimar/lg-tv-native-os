@@ -52,6 +52,7 @@ It runs the real helper and keeper with stand-ins for `luna-send`, `mount`,
 
 ```sh
 python scripts/build_ipk.py   # build/org.va7dimar.home_<version>_all.ipk and its SHA256
+python scripts/build_iceland_map.py   # app/iceland/map.js from pinned, hash-checked sources (only when they change)
 ```
 
 No LG SDK. The same files always give the same bytes.
@@ -85,6 +86,7 @@ Ideas that were wanted and parked, one issue each:
 | `app/` | the web app: `index.html`, `home.css`, `home.js` (rooms and keys), `logic.js` (pure functions), `luna.js` (the TV's services), `config.js` |
 | `app/bin/impetus-ctl` | the root helper and the keeper |
 | `app/bin/shield-count.js` | counts calls the shield stopped |
+| `app/iceland/` | the Iceland room's map, generated (coast CC BY 4.0, see `LICENSE-map.txt`) |
 | `boot/impetus-home` | the boot hook that makes Impetus the default Home |
 | `preview/` | the PC preview |
 | `tests/`, `scripts/` | host tests and the IPK build |
