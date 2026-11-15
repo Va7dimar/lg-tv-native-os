@@ -18,6 +18,7 @@
 #   engine                vitals, state, connections and log in one answer
 #   iceland quakes        the Met Office's 48-hour quake list (read only, no lock)
 #   iceland flights       aircraft over and around Iceland, adsb.lol (read only, no lock)
+#   iceland webcam        one road-camera frame near Sundhnukur, Vegagerdin (read only, no lock)
 #   restore               the way back: scene off, shield off, keeper stopped
 #   keeper | tick         the background loop, or one turn of it
 #
@@ -651,6 +652,10 @@ logtail() {
 QUAKE_URL=${IMPETUS_QUAKE_URL:-https://en.vedur.is/earthquakes-and-volcanism/earthquakes/}
 # Aircraft within 250 nm of the middle of Iceland (adsb.lol, ODbL, no key).
 FLIGHT_URL=${IMPETUS_FLIGHT_URL:-https://api.adsb.lol/v2/point/64.9/-19/250}
+# One road camera (Vegagerdin, CC BY 4.0): Gighaed on Grindavikurvegur, looking
+# north toward Svartsengi and Sundhnukur. A new 640x480 frame every minute.
+CAM_URL=${IMPETUS_CAM_URL:-https://www.vegagerdin.is/vgdata/vefmyndavelar/gighaed_1.jpg}
+CAM_MIN=2000                          # bytes; a smaller answer is not a frame
 FETCHWAIT=${IMPETUS_FETCHWAIT:-10}   # seconds one fetch may take
 FETCHMAX=2000000                     # bytes; a larger answer is not the page
 
@@ -736,6 +741,29 @@ iceland_flights() {
   if [ -s "$if_dir/flights.txt" ] && is_num "$if_at"; then
     echo "kind=last age=$(( $(now) - if_at ))"
     cat "$if_dir/flights.txt"
+  else
+    echo "kind=none age=0"
+  fi
+}
+
+# iceland webcam: the same header line, then the JPG bytes (the page checks
+# they start FF D8, as for the still). The last frame is kept with its age;
+# the page decides whether it is fresh enough to show.
+iceland_webcam() {
+  iw_dir="$RUN/iceland"
+  mkdir -p "$iw_dir"
+  if fetch_to "$iw_dir/cam.new" "$CAM_URL" && [ "$(fsize "$iw_dir/cam.new")" -ge "$CAM_MIN" ]; then
+    mv "$iw_dir/cam.new" "$iw_dir/cam.jpg"
+    now > "$iw_dir/cam.at"
+    echo "kind=fresh age=0"
+    cat "$iw_dir/cam.jpg"
+    return 0
+  fi
+  rm -f "$iw_dir/cam.new"
+  iw_at=$(cat "$iw_dir/cam.at" 2>/dev/null)
+  if [ -s "$iw_dir/cam.jpg" ] && is_num "$iw_at"; then
+    echo "kind=last age=$(( $(now) - iw_at ))"
+    cat "$iw_dir/cam.jpg"
   else
     echo "kind=none age=0"
   fi
@@ -1001,7 +1029,7 @@ case "$verb" in
     unlock ;;
   shield) case "$1" in on) shield_on ;; off) shield_off ;; *) die shield ;; esac ;;
   engine) engine ;;
-  iceland) case "$1" in quakes) iceland_quakes ;; flights) iceland_flights ;; *) die iceland ;; esac ;;
+  iceland) case "$1" in quakes) iceland_quakes ;; flights) iceland_flights ;; webcam) iceland_webcam ;; *) die iceland ;; esac ;;
   restore) restore_all ;;
   keeper) keeper ;;
   tick) mkdir -p "$RUN"; tick; echo ok=1 ;;

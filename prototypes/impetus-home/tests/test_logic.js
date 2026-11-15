@@ -465,8 +465,32 @@ t("flights: the feed state and its line", () => {
   assert.strictEqual(L.flightSource(L.flightStep(null, { kind: "none", age: 0, flights: null }, FLIGHT_NOW)), "Aircraft: adsb.lol (ODbL) · feed down");
 });
 
+t("webcam: the helper's answer, read", () => {
+  const jpg = "\xFF\xD8\xFF\xE0rest";
+  assert.deepStrictEqual(L.parseWebcam("kind=fresh age=0\n" + jpg), { kind: "fresh", age: 0, body: jpg });
+  assert.deepStrictEqual(L.parseWebcam("kind=last age=90\n" + jpg), { kind: "last", age: 90, body: jpg });
+  assert.strictEqual(L.parseWebcam("kind=fresh age=0\n<html>error</html>").kind, "none", "not a JPG");
+  assert.strictEqual(L.parseWebcam("kind=none age=0").kind, "none");
+  assert.strictEqual(L.parseWebcam("").kind, "none");
+  assert.strictEqual(L.parseWebcam("kind=live age=0\n" + jpg).kind, "none", "only fresh or last");
+});
+
+t("webcam: shown in daylight while the frame is young, with its credit", () => {
+  const noon = Date.UTC(2026, 10, 15, 13, 0);      // sun about +7° at Gíghæð
+  const night = Date.UTC(2026, 10, 15, 22, 0);
+  const dusk = Date.UTC(2026, 10, 15, 17, 45);     // sun about -7°: the camera only shows grey noise
+  assert.strictEqual(L.webcamShown("fresh", 0, noon), true);
+  assert.strictEqual(L.webcamShown("last", 300, noon), true);
+  assert.strictEqual(L.webcamShown("last", 301, noon), false, "older than 5 min");
+  assert.strictEqual(L.webcamShown("none", 0, noon), false);
+  assert.strictEqual(L.webcamShown("fresh", 0, night), false);
+  assert.strictEqual(L.webcamShown("fresh", 0, dusk), false);
+  const at = L.formatClock(new Date(noon - 90000));
+  assert.strictEqual(L.webcamCredit(90, noon), "Road camera: Vegagerðin (IRCA), CC BY 4.0 · " + at);
+});
+
 t("shield: none of its names blocks a host the Iceland room needs", () => {
-  const FEEDS = ["en.vedur.is", "vedur.is", "api.adsb.lol", "adsb.lol"];
+  const FEEDS = ["en.vedur.is", "vedur.is", "api.adsb.lol", "adsb.lol", "www.vegagerdin.is", "vegagerdin.is"];
   const names = fs.readFileSync(path.join(__dirname, "..", "app", "shield", "hosts.txt"), "utf8")
     .split(/\r?\n/).map(s => s.trim()).filter(s => s && s[0] !== "#");
   assert.strictEqual(names.length, 45);

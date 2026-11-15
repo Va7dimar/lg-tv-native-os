@@ -16,6 +16,7 @@
 //        room=iceland  quakes=fixture (the 15.11 list; sets t to 00:20 UTC unless t is given) | none
 //        feed=down (the helper has only its last copy)  fps=1 (frames per second, top left)
 //        flights=fixture (two aircraft of 15.11, a minute further on each call)
+//        cam=fixture (a stand-in road-camera frame; shown only in daylight at the camera)
 (function () {
   var q = location.search;
   function arg(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(q); return m ? decodeURIComponent(m[1]) : ""; }
@@ -132,6 +133,27 @@
     if (!nolive && mode === "live") return { kind: "live", age: 0, src: frame || (frame = makeFrame(false)) };
     if (!nolive && mode === "black") return { kind: "live", age: 0, src: makeFrame(true) };
     return { kind: "last", age: 720, src: frame || (frame = makeFrame(false)) };
+  };
+
+  // cam=fixture: a drawn 4:3 road-camera frame (lava field, ridge, title bar);
+  // feed=down makes it the last frame, 14 min old, so the window stays away.
+  var camFrame = null;
+  window.MOCK_WEBCAM = function () {
+    if (arg("cam") !== "fixture") return { kind: "none", age: 0, src: null };
+    if (!camFrame) {
+      var c = document.createElement("canvas"); c.width = 640; c.height = 480;
+      var g = c.getContext("2d"), sky = g.createLinearGradient(0, 0, 0, 300);
+      sky.addColorStop(0, "#6f7d8c"); sky.addColorStop(1, "#c9c3b4");
+      g.fillStyle = sky; g.fillRect(0, 0, 640, 480);
+      g.fillStyle = "#3b3a37"; g.beginPath(); g.moveTo(0, 300); g.lineTo(140, 262); g.lineTo(260, 284); g.lineTo(360, 236);
+      g.lineTo(420, 250); g.lineTo(520, 228); g.lineTo(640, 270); g.lineTo(640, 480); g.lineTo(0, 480); g.fill();
+      g.fillStyle = "#24231f"; g.fillRect(0, 380, 640, 100);
+      g.fillStyle = "#e8e8e8"; g.beginPath(); g.moveTo(290, 480); g.lineTo(318, 330); g.lineTo(322, 330); g.lineTo(350, 480); g.fill();
+      g.fillStyle = "#000"; g.fillRect(0, 0, 640, 22); g.fillRect(0, 458, 640, 22);
+      g.fillStyle = "#fff"; g.font = "14px sans-serif"; g.fillText("Gighaed - stand-in frame", 8, 16);
+      camFrame = c.toDataURL("image/jpeg", 0.8);
+    }
+    return arg("feed") === "down" ? { kind: "last", age: 840, src: camFrame } : { kind: "fresh", age: 0, src: camFrame };
   };
 
   var x = new XMLHttpRequest(); x.open("GET", "index.html", false); x.send();

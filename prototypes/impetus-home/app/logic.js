@@ -612,7 +612,33 @@
     return src + n + " in the air · updated " + formatClock(new Date(st.goodAt));
   }
 
-  var api = { parseFlightReply: parseFlightReply, flightTrails: flightTrails, flightStep: flightStep, flightSource: flightSource,
+  // ---------- Iceland: the road camera (Vegagerðin, Gíghæð) ----------
+  var CAM_LOC = { lat: 63.903, lon: -22.422 };
+
+  // The helper's "iceland webcam" bytes -> { kind: "fresh"|"last"|"none", age, body }.
+  function parseWebcam(bin) {
+    bin = String(bin || "");
+    var cut = bin.indexOf("\n");
+    var head = parseKv((cut < 0 ? bin : bin.slice(0, cut)).split(" ").join("\n"));
+    var kind = head.kind === "fresh" || head.kind === "last" ? head.kind : "none";
+    var body = cut < 0 ? "" : bin.slice(cut + 1);
+    if (kind === "none" || body.charCodeAt(0) !== 0xFF || body.charCodeAt(1) !== 0xD8) return { kind: "none", age: 0, body: "" };
+    return { kind: kind, age: Number(head.age) || 0, body: body };
+  }
+
+  // The window shows a frame no older than 5 min, and only in daylight at
+  // the camera (sun above -6°: its night frames are lifted to grey noise).
+  function webcamShown(kind, ageSec, nowMs) {
+    if (kind !== "fresh" && !(kind === "last" && ageSec >= 0 && ageSec <= 300)) return false;
+    return sunAltitude(nowMs, CAM_LOC) > -6;
+  }
+
+  // The credit CC BY 4.0 asks for: licensor, licence, and when the frame was taken.
+  function webcamCredit(ageSec, nowMs) {
+    return "Road camera: Vegagerðin (IRCA), CC BY 4.0 · " + formatClock(new Date(nowMs - (Number(ageSec) || 0) * 1000));
+  }
+
+  var api = { parseWebcam: parseWebcam, webcamShown: webcamShown, webcamCredit: webcamCredit, parseFlightReply: parseFlightReply, flightTrails: flightTrails, flightStep: flightStep, flightSource: flightSource,
     parseQuakeInfo: parseQuakeInfo, parseQuakeReply: parseQuakeReply, isleStep: isleStep, isleSource: isleSource, formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
     isSafeId: isSafeId, isSafeWord: isSafeWord, sunAltitude: sunAltitude, sunDay: sunDay,
     nightWindow: nightWindow, pickApps: pickApps, launchPayload: launchPayload,

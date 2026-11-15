@@ -757,6 +757,23 @@ is "flights: the last copy is whole" "$(echo "$out" | sed 1d)" "$(cat "$FPAGE")"
 yes "flights: the quake copy is untouched" [ -s "$RUN/iceland/quakes.txt" ]
 rm -f "$RUN/iceland/flights.txt"
 is "flights: nothing kept and no network is none" "$(sh "$CTL" iceland flights)" "kind=none age=0"
+rm -f "$STUB_TV/net.page"
+
+# ---------- iceland webcam: one road-camera frame, read only ----------
+export IMPETUS_NOW=1794700000
+{ printf '\377\330'; head -c 3000 /dev/zero; } > "$STUB_TV/net.page"
+sh "$CTL" iceland webcam > "$W/cam.out"
+is "webcam: a frame is fresh" "$(head -n 1 "$W/cam.out")" "kind=fresh age=0"
+is "webcam: the frame's bytes come back whole" "$(sed 1d "$W/cam.out" | wc -c | tr -d ' ')" 3002
+is "webcam: the fixed address is fetched" "$(calls 'fetch curl https://www.vegagerdin.is/vgdata/vefmyndavelar/gighaed_1.jpg')" 1
+no "webcam: no lock is left or taken" held
+export IMPETUS_NOW=1794700090
+echo "Not Found" > "$STUB_TV/net.page"
+is "webcam: a tiny answer keeps the last frame" "$(sh "$CTL" iceland webcam | head -n 1)" "kind=last age=90"
+rm -f "$STUB_TV/net.page"
+is "webcam: no network gives the last frame with its age" "$(sh "$CTL" iceland webcam | head -n 1)" "kind=last age=90"
+rm -f "$RUN/iceland/cam.jpg"
+is "webcam: nothing kept and no network is none" "$(sh "$CTL" iceland webcam)" "kind=none age=0"
 refused "an unknown feed" iceland iceland planes
 refused "an address from the page" word iceland quakes 'url=http://x;reboot'
 unset IMPETUS_FETCHWAIT IMPETUS_NOW

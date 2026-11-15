@@ -34,6 +34,7 @@ Enter (OK) and Backspace or Escape (BACK) drive it. The TV is a stand-in
 | `feed=down` | the helper has only its last copy: the quiet `feed down since` line |
 | `fps=1` | frames per second, top left |
 | `flights=fixture` | two aircraft of 15.11.2026, a minute further on each call; without it the flight feed has nothing |
+| `cam=fixture` | a stand-in road-camera frame; it shows only in daylight at the camera (try `t=2026-11-15T13:00:00Z`) |
 | `scene=film`, `scene=winddown` | a scene is already on |
 | `shield=on` | the shield is on and counting |
 | `still=live`, `last`, `none`, `black` | what the Apple TV slab gets |
@@ -43,8 +44,8 @@ Enter (OK) and Backspace or Escape (BACK) drive it. The TV is a stand-in
 ## Test
 
 ```sh
-node tests/test_logic.js      # the page's logic: 34 tests
-sh tests/test_ctl.sh          # the root helper against a stand-in TV: 267 checks
+node tests/test_logic.js      # the page's logic: 36 tests
+sh tests/test_ctl.sh          # the root helper against a stand-in TV: 274 checks
 python tests/test_ipk.py      # the package: layout, line ends, modes, same bytes twice
 ```
 

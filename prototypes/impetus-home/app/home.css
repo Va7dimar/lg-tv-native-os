@@ -272,6 +272,18 @@ body:not(.isle) .islemotion div { animation-play-state: paused; }
 .isleroom .mono { font-weight: 300; font-stretch: 100%; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; fill: var(--text); }
 .isleroom .read { font-weight: 400; font-stretch: 100%; fill: var(--muted); }
 .isleroom .place { font-weight: 400; font-stretch: 100%; fill: #6E7580; }
+/* The road camera: one still a minute, dimmed like the APPLE TV still, gone
+   when the frame is old, the feed is down or it is dark at the camera. */
+.islecam { position: absolute; left: 1500px; top: 812px; width: 300px; height: 169px; overflow: hidden;
+  background: #07090C; outline: 1px solid #34383E; visibility: hidden; }
+.islecam.on { visibility: visible; }
+.islecam img { position: absolute; left: 0; top: 0; width: 300px; height: 169px; object-fit: cover; opacity: 0.7; }
+.islecam::after { content: ""; position: absolute; left: 0; top: 0; right: 0; height: 64px;
+  background: linear-gradient(rgba(5,6,7,0.7), rgba(5,6,7,0)); }
+.islecam p { position: absolute; left: 14px; margin: 0; z-index: 1; font-family: "Saira", sans-serif; font-stretch: 100%; white-space: nowrap; }
+.islecam .camlbl { top: 12px; font-size: 12px; font-weight: 600; font-stretch: 125%; letter-spacing: 0.08em; color: #B8BEC7; }
+.islecam .camwhere { top: 30px; font-size: 14px; color: #8E959F; }
+.islecam .camsrc { left: auto; right: 8px; bottom: 5px; font-size: 11px; color: #B8BEC7; background: rgba(5,6,7,0.6); padding: 0 5px; }
 
 /* ---------- The sleep notice ---------- */
 

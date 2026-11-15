@@ -19,7 +19,7 @@
   var conns = [], hosts = {}, resolving = {};
   var noticeUntil = 0, dismissed = 0, cancelling = false;
   var isleBuilt = false, isleState = null, isleBusy = 0, isleFetchTimer = null, isleAgeTimer = null;
-  var flightState = null, flightBusy = 0, flightTimer = null;
+  var flightState = null, flightBusy = 0, flightTimer = null, camBusy = 0, camTimer = null;
 
   function every(seconds, fallback) { return (seconds || fallback) * 1000; }
   function noop() {}
@@ -359,6 +359,22 @@
     });
   }
 
+  // The road camera: a frame a minute while open. The window shows only a
+  // young frame in daylight at the camera; otherwise it is simply not there.
+  function fetchWebcam() {
+    if (camBusy && Date.now() - camBusy < 30000) return;
+    var mine = camBusy = Date.now();
+    LUNA.webcam().then(null, function () { return { kind: "none", age: 0, src: null }; }).then(function (c) {
+      if (camBusy === mine) camBusy = 0;
+      if (room !== "iceland") return;
+      var box = $("islecam"), now = Date.now();
+      if (!c.src || !L.webcamShown(c.kind, c.age, now)) { box.classList.remove("on"); return; }
+      $("islecamimg").src = c.src;
+      $("islecamsrc").textContent = L.webcamCredit(c.age, now);
+      box.classList.add("on");
+    });
+  }
+
   function openIceland() {
     var I = window.ImpetusIceland;
     if (!isleBuilt) { I.build($("islebase"), $("islequakes"), $("islemotion"), $("isleflights")); isleBuilt = true; }
@@ -368,9 +384,12 @@
     I.drawFlights(flightState, Date.now());
     fetchIceland();
     fetchFlights();
+    $("islecam").classList.remove("on");   // an old frame never shows on the way in
+    fetchWebcam();
     isleFetchTimer = setInterval(fetchIceland, 120000);
     isleAgeTimer = setInterval(drawIceland, 60000);
     flightTimer = setInterval(fetchFlights, 60000);
+    camTimer = setInterval(fetchWebcam, 60000);
   }
 
   // ?fps=1 (or launch params with "fps"): frames per second, top left, for the TV check.
@@ -479,7 +498,7 @@
     });
     clearInterval(stateTimer); clearInterval(stillTimer); clearInterval(engineTimer);
     clearInterval(noticeTimer); clearTimeout(idleTimer);
-    clearInterval(isleFetchTimer); clearInterval(isleAgeTimer); clearInterval(flightTimer);
+    clearInterval(isleFetchTimer); clearInterval(isleAgeTimer); clearInterval(flightTimer); clearInterval(camTimer);
     collect();
     if (next === "control") {
       // Arriving from the living room lands on APPLE TV; coming back out of

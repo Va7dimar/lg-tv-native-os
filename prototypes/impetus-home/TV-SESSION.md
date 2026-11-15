@@ -378,6 +378,18 @@ without a key, stop here and note it (the owner's key is not on the TV yet).
   within 4 min the arrows are gone (no frozen planes). Plug back: they return.
 - The fps readout still holds 30 or more.
 
+## 10e. Iceland room, webcam (#26, plan step 6; install, owner's yes)
+
+Needs 10c passed. By SSH first: `impetus-ctl iceland webcam | head -c 40 | od -c | head -3`
+gives `kind=fresh age=0` and then the bytes `377 330` (a JPG).
+
+- In daylight at Reykjanes: the WEBCAM window at the bottom right shows the
+  road toward Sundhnúkur, dimmed, with `Road camera: Vegagerðin (IRCA), CC BY 4.0 · HH:MM`;
+  the time moves on once a minute.
+- After dusk (sun below -6°, about an hour after sunset): the window is gone.
+- Pull the network cable: within 6 min the window is gone; plug back and it returns.
+- The fps readout still holds 30 or more.
+
 ## 11. Write it down
 
 One evidence note, `tvs/lg-65nano756pr/evidence/impetus-home-1.2-tv-run-<date>.md`,
