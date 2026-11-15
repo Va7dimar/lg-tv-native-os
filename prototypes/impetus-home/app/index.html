@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Impetus</title>
 <link rel="stylesheet" href="home.css">
+<link rel="stylesheet" href="overhead.css">
 </head>
 <body>
 <div id="stage">
@@ -60,6 +61,7 @@
       <h2 id="sceneslabel" class="label" hidden>SCENES</h2>
       <nav id="scenes" class="scenes"></nav>
       <p id="shieldline" class="shieldline" hidden><span class="what">SHIELD</span><span id="shieldcount" class="n">OFF</span></p>
+      <button id="skydoor" class="key door skydoor" data-focus hidden><span class="name">OVERHEAD</span><span id="skynote" class="skynote"></span></button>
       <button id="door" class="key door" data-focus hidden>ENGINE ROOM</button>
       <button id="isledoor" class="key door" data-focus hidden>ICELAND</button>
     </section>
@@ -106,6 +108,59 @@
     </section>
   </section>
 
+  <!-- The overhead room (#23): the sky over home, behind its door in the control room -->
+  <section id="overhead" class="room overhead" aria-hidden="true">
+    <svg class="dome" width="1920" height="1080" viewBox="0 0 1920 1080">
+      <defs>
+        <radialGradient id="isshalo">
+          <stop offset="0" stop-color="#1FB487" stop-opacity="0.6"/>
+          <stop offset="0.35" stop-color="#2C8C86" stop-opacity="0.22"/>
+          <stop offset="1" stop-color="#2C8C86" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle class="ring" cx="1330" cy="540" r="146.7"/>
+      <circle class="ring" cx="1330" cy="540" r="293.3"/>
+      <circle class="rim" cx="1330" cy="540" r="440"/>
+      <circle class="zenith" cx="1330" cy="540" r="3"/>
+      <text class="ringlabel" x="1336" y="244">30°</text>
+      <text class="ringlabel" x="1336" y="391">60°</text>
+      <text class="point" x="1330" y="82">N</text>
+      <text class="point" x="1330" y="1014">S</text>
+      <text class="point" x="862" y="547">E</text>
+      <text class="point" x="1798" y="547">W</text>
+      <g id="trainlines"></g>
+      <g id="satdots"></g>
+      <g id="passpath"></g>
+      <circle id="passmark" class="passmark" r="6" style="display:none"/>
+      <text id="passmarklabel" class="passmarklabel" style="display:none"></text>
+      <g id="planemarks"></g>
+      <circle id="issglow" r="110" fill="url(#isshalo)" style="display:none"/>
+      <circle id="issdot" class="iss" r="9" style="display:none"/>
+    </svg>
+    <section class="skytext">
+      <h2 class="label">OVERHEAD</h2>
+      <p id="skyfrom" class="skyfrom"></p>
+      <h2 class="label">ISS</h2>
+      <p id="issnow" class="issnow"></p>
+      <p id="isswhere" class="isswhere"></p>
+      <section class="passbox">
+        <h2 class="label">NEXT VISIBLE PASS</h2>
+        <p><span id="passtime" class="passtime"></span><span id="passday" class="passday"></span></p>
+        <p id="passline" class="passline"></p>
+      </section>
+      <section class="skyrow">
+        <h2 class="label">STARLINK · THE NEWEST TRAINS</h2>
+        <p id="trainline" class="trainline"></p>
+      </section>
+      <section class="skyrow">
+        <h2 class="label">PLANES</h2>
+        <ol id="planelist" class="planelist"></ol>
+        <p id="planecount" class="planecount"></p>
+      </section>
+    </section>
+    <p class="sources"><span id="orbitsline"></span><br><span id="planesline"></span></p>
+  </section>
+
   <!-- Room 4: Iceland, behind its door in the control room. Read only; drawn by iceland.js -->
   <section id="iceland" class="room isleroom" aria-hidden="true">
     <svg id="islebase" class="islelayer" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
@@ -144,6 +199,32 @@
     </section>
   </section>
 
+  <!-- The music piece (#22): opened by the MUSIC scene, any key leaves it -->
+  <section id="music" class="room music idle" aria-hidden="true">
+    <canvas id="mfield" class="mfield"></canvas>
+    <canvas id="mflow" class="mflow"></canvas>
+    <svg class="msky" width="1920" height="1080" viewBox="0 0 1920 1080">
+      <defs>
+        <radialGradient id="mhalo">
+          <stop id="mstop0" offset="0" stop-color="#1FB487" stop-opacity="0.6"/>
+          <stop id="mstop1" offset="1" stop-color="#2C8C86" stop-opacity="0"/>
+        </radialGradient>
+        <clipPath id="mabove"><rect x="0" y="0" width="1920" height="819"/></clipPath>
+      </defs>
+      <g clip-path="url(#mabove)">
+        <path id="marc" class="marc" d=""/>
+        <path id="mdone" class="mdone" d=""/>
+        <circle id="mglow" r="120" fill="url(#mhalo)"/>
+        <circle id="msun" class="msun" r="10"/>
+      </g>
+      <line class="mhorizon" x1="0" y1="820" x2="1920" y2="820"/>
+    </svg>
+    <section id="mcaption" class="mcaption">
+      <img id="mcover" class="mcover" alt="" hidden>
+      <p class="mwords"><span id="mtitle" class="mtitle"></span><span id="martist" class="martist"></span></p>
+    </section>
+  </section>
+
   <!-- The morning room (#25): on the set days, the first look at the day -->
   <section id="morning" class="room morning" aria-hidden="true">
     <span class="dawn"></span>
@@ -151,10 +232,10 @@
       <h2 class="label">MORNING</h2>
       <time id="mclock" class="clock">--:--</time>
       <p id="mdate" class="date"></p>
-      <p id="msun" class="sunline"></p>
+      <p id="msunline" class="sunline"></p>
     </section>
     <section id="mweather" class="mweather">
-      <p class="mnow"><span id="mtemp" class="mtemp"></span><span id="mwords" class="mwords"></span></p>
+      <p class="mnow"><span id="mtemp" class="mtemp"></span><span id="mnowwords" class="mnowwords"></span></p>
       <p id="mwind" class="mwind"></p>
       <ol id="mlater" class="mlater"></ol>
     </section>
@@ -166,8 +247,13 @@
 <script src="logic.js"></script>
 <script src="config.js"></script>
 <script src="luna.js"></script>
+<script src="sky/satellite.min.js"></script>
+<script src="sky-logic.js"></script>
+<script src="overhead.js"></script>
 <script src="iceland/map.js"></script>
 <script src="iceland.js"></script>
+<script src="music-logic.js"></script>
+<script src="music.js"></script>
 <script src="home.js"></script>
 </body>
 </html>

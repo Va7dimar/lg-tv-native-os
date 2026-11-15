@@ -21,7 +21,8 @@
 #   op=state t=<token>            the helper's state
 #   op=apps t=<token>             the TV's app list (the app manager's JSON)
 #   op=do t=<token> w=<word>...   one helper verb: scene on|off, shield on|off,
-#                                 morning set|off, open, standby. Nothing else.
+#                                 morning set|off (#25), open, standby, sky place
+#                                 (the home position, #23). Nothing else.
 #
 # Files: $KEEP/phones (mode 600, survives a restart): "<id> <token> <name>
 # <paired epoch>" per line. Only the TV holds it. $RUN/phone.code (memory):
@@ -171,7 +172,7 @@ authed() {
 # phone server itself, ...) stays with the TV.
 allowed() {
   case "$1 $2" in
-    "scene on"|"scene off"|"shield on"|"shield off"|"morning set"|"morning off") return 0 ;;
+    "scene on"|"scene off"|"shield on"|"shield off"|"morning set"|"morning off"|"sky place") return 0 ;;
   esac
   case "$1" in open|standby) return 0 ;; esac
   return 1

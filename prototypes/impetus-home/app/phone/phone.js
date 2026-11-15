@@ -316,6 +316,7 @@
     $("shield").hidden = $("shieldlabel").hidden = !caps.shield;
     paint();
     loadApps();
+    loadPlace();
     clearInterval(stateTimer);
     stateTimer = setInterval(refresh, STATE_EVERY);
   }
@@ -335,6 +336,31 @@
     });
   }
 
+  // ---------- the home position (#23) ----------
+  // Typed here, kept on the TV only (sky place set); the overhead room
+  // reads it from there. Nothing on this phone keeps it.
+  var SKY = window.ImpetusSky;
+
+  function placeLine(p) {
+    $("placeline").textContent = p ? "On the TV: " + SKY.placeText(p) + ". Kept on the TV only."
+      : "Not set: the sky view uses central Reykjavík. Copy your position from a map app.";
+  }
+
+  function loadPlace() {
+    return authed({ op: "do" }, ["sky", "place"]).then(function (text) {
+      placeLine(SKY.readPlace(L.parseKv(text)));
+    }, noop);
+  }
+
+  function savePlace(ev) {
+    ev.preventDefault();
+    var words = SKY.placeWords(SKY.parsePlace($("place").value));
+    if (!words) { $("placeline").textContent = "Two numbers, as a map app gives them: 64.1466, -21.9426"; return; }
+    press($("placesave"), function () {
+      return helper(words).then(function () { $("place").value = ""; return loadPlace(); });
+    });
+  }
+
   // ---------- start ----------
   $("ask").addEventListener("click", function () { press($("ask"), askCode); });
   $("again").addEventListener("click", function () { askCode().then(noop, noop); });
@@ -348,6 +374,7 @@
   ["mat", "mstation"].forEach(function (id) { $(id).addEventListener("input", function () { mTouched = true; }); });
   renderDays();
   $("standby").addEventListener("click", function () { press($("standby"), pressStandby); });
+  $("placeform").addEventListener("submit", savePlace);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
 
   token = loadToken();

@@ -1,0 +1,92 @@
+/* The overhead room (issue #23): the sky over home seen from below, behind
+   the OVERHEAD door in the control room. It turns in like the engine room.
+   Chromium 79: no flex gap, no inset. */
+
+.overhead {
+  transform: translateY(100%); transition: transform var(--turn);
+  background: radial-gradient(circle 560px at 1330px 540px, #07090C, var(--ground) 100%);
+}
+body.up .living { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0; }
+body.up .control { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0.35; }
+body.up .overhead { transform: translateY(0); }
+
+/* The door, above ENGINE ROOM; its note in green when a pass is near. */
+.skydoor { margin-bottom: 16px; }
+.skynote {
+  float: right; font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums;
+  font-size: 20px; letter-spacing: 0; color: var(--brand-light);
+}
+.skydoor.noted .name:before {
+  content: ""; display: inline-block; width: 10px; height: 10px; margin: 0 14px 3px 0; border-radius: 50%;
+  background: var(--brand-light); box-shadow: 0 0 12px 2px rgba(31, 180, 135, 0.6);
+}
+
+/* ---------- The chart ---------- */
+
+.dome { position: absolute; left: 0; top: 0; }
+.dome .rim { fill: none; stroke: var(--line); stroke-width: 2; }
+.dome .ring { fill: none; stroke: #1B1E23; stroke-width: 1.5; }
+.dome .zenith { fill: var(--line); }
+.dome .point {
+  font-family: "Saira", sans-serif; font-weight: 600; font-stretch: 125%; font-size: 20px; letter-spacing: 0.08em;
+  fill: var(--muted); text-anchor: middle;
+}
+.dome .ringlabel { font-family: "Saira", sans-serif; font-weight: 500; font-size: 15px; fill: var(--line); }
+
+.dome .whole { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 2 8; stroke-linecap: round; }
+.dome .seen { fill: none; stroke: var(--brand-light); stroke-width: 3; stroke-linecap: round; }
+.dome .travelled { fill: none; stroke: var(--text); stroke-width: 2.5; stroke-linecap: round; }
+.dome .passmark { fill: var(--brand-light); }
+.dome .passmarklabel {
+  font-family: "Saira", sans-serif; font-weight: 500; font-variant-numeric: tabular-nums; font-size: 22px; fill: var(--brand-light);
+}
+.dome .iss { fill: var(--text); }
+
+.dome .sat { fill: var(--line); }
+.dome .sat.lit { fill: var(--text); }
+.dome .train { fill: none; stroke: rgba(230, 234, 241, 0.28); stroke-width: 1.5; stroke-linecap: round; }
+
+.dome .plane path { fill: var(--muted); }
+.dome .plane text {
+  font-family: "Saira", sans-serif; font-weight: 500; font-stretch: 100%; font-size: 16px; letter-spacing: 0.04em; fill: var(--muted);
+}
+
+/* ---------- The words, left of the chart ---------- */
+
+.skytext { position: absolute; left: 112px; top: 112px; width: 640px; }
+.skytext .label { margin-bottom: 10px; }
+.skyfrom { font-size: 18px; color: var(--muted); margin-bottom: 40px; letter-spacing: 0.04em; }
+
+.issnow {
+  font-family: "Saira", sans-serif; font-weight: 600; font-stretch: 125%; font-size: 30px; letter-spacing: 0.06em; color: var(--text);
+}
+.isswhere { margin-top: 8px; font-size: 20px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.passbox { margin-top: 44px; }
+.passtime {
+  display: inline-block; font-family: "Saira", sans-serif; font-weight: 300; font-stretch: 100%; font-variant-numeric: tabular-nums;
+  font-size: 150px; line-height: 1; letter-spacing: -0.02em; color: var(--text);
+}
+.passday {
+  display: inline-block; margin-left: 24px; font-family: "Saira", sans-serif; font-weight: 600; font-stretch: 125%;
+  font-size: 22px; letter-spacing: 0.08em; color: var(--brand-light);
+}
+.passline { margin-top: 14px; font-size: 22px; line-height: 32px; color: var(--muted); }
+
+.skyrow { margin-top: 38px; }
+.trainline { font-size: 22px; color: var(--text); font-variant-numeric: tabular-nums; }
+
+.planelist { list-style: none; }
+.planelist li { height: 36px; line-height: 36px; font-size: 22px; overflow: hidden; }
+.planelist .call {
+  display: inline-block; width: 170px; font-family: "Saira", sans-serif; font-weight: 600; font-stretch: 125%;
+  letter-spacing: 0.06em; color: var(--text);
+}
+.planelist .n { color: var(--muted); }
+.planelist .none { color: var(--muted); }
+.planecount { margin-top: 4px; font-size: 18px; color: var(--muted); }
+
+.sources {
+  position: absolute; left: 112px; bottom: 40px; font-size: 17px; line-height: 26px; color: var(--line);
+  font-variant-numeric: tabular-nums;
+}

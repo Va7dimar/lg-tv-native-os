@@ -22,7 +22,7 @@ const apps = [
   { id: "bad id; rm", title: "Evil", visible: true },
   { id: "com.webos.app.hdmi2", title: "HDMI2", visible: false, systemApp: true },
 ];
-const ALL = { picture: true, screenoff: true, volume: true, sleep: true };
+const ALL = { exec: true, picture: true, screenoff: true, volume: true, sleep: true };
 const film = { id: "film", launch: "com.webos.app.hdmi2", pictureMode: "cinema",
   sunMode: { backlight: 30, colorTemperature: -20 } };
 const music = { id: "music", launch: "spotify-beehive", screenOffAfterSeconds: 20 };
@@ -573,13 +573,183 @@ t("openWords: a safe id, params base64-coded and capped", () => {
   assert.strictEqual(L.openWords("x; reboot"), null);
 });
 
+// ---------- the overhead room (issue #23): app/sky-logic.js ----------
+// Reference values from skyfield (de421, the same elements) for the
+// placeholder and the fixture's ISS elements (epoch 2026-11-15).
+const K = require("../app/sky-logic.js");
+const TLE = fs.readFileSync(path.join(__dirname, "fixtures", "celestrak-2026-11-15.tle"), "utf8");
+const P = K.PLACEHOLDER;
+const ALL_SATS = K.withOrbits(K.parseTle(TLE));
+const ISS = ALL_SATS.filter(o => o.num === 25544)[0];
+const near = (a, b, d) => Math.abs(a - b) <= d;
+
+t("sky place: what a map app gives, and the ways it is written", () => {
+  assert.deepStrictEqual(K.parsePlace("64.1466, -21.9426"), { lat: 64.1466, lon: -21.9426 });
+  assert.deepStrictEqual(K.parsePlace(" 64.1466 -21.9426 "), { lat: 64.1466, lon: -21.9426 });
+  assert.deepStrictEqual(K.parsePlace("64.1466° N, 21.9426° W"), { lat: 64.1466, lon: -21.9426 });
+  assert.deepStrictEqual(K.parsePlace("64.1466N 21.9426W"), { lat: 64.1466, lon: -21.9426 });
+  assert.deepStrictEqual(K.parsePlace("33.8688 S, 151.2093 E"), { lat: -33.8688, lon: 151.2093 });
+  assert.deepStrictEqual(K.parsePlace("64.14661234, -21.94269999"), { lat: 64.14661, lon: -21.9427 });
+  ["", "64.1466", "91, 0", "0, 181", "-64 S, 21", "64°08'N 21°56'W", "abc", "64.1;rm -rf /"]
+    .forEach(s => assert.strictEqual(K.parsePlace(s), null, s));
+  assert.strictEqual(K.parsePlace(null), null);
+});
+
+t("sky place: the words to the helper and the rounded point for planes", () => {
+  assert.deepStrictEqual(K.placeWords({ lat: 64.1466, lon: -21.9426 }),
+    ["sky", "place", "set", "lat=64.1466", "lon=-21.9426"]);
+  assert.deepStrictEqual(K.placeWords({ lat: 64, lon: -0.000001 }), ["sky", "place", "set", "lat=64", "lon=0"]);
+  assert.strictEqual(K.placeWords(null), null);
+  assert.strictEqual(K.placeWords({ lat: 95, lon: 0 }), null);
+  K.placeWords({ lat: 64.12345, lon: -21.98765 }).forEach(w => assert.ok(L.isSafeWord(w), w));
+  assert.strictEqual(K.placeAt({ lat: 64.1466, lon: -21.9426 }), "64.1,-21.9");
+  assert.strictEqual(K.placeAt({ lat: 64.16, lon: -21.96 }), "64.2,-22");
+  assert.strictEqual(K.placeAt({ lat: 0.04, lon: -0.04 }), "0,0");
+  assert.deepStrictEqual(K.readPlace({ ok: "1", lat: "64.1466", lon: "-21.9426" }), { lat: 64.1466, lon: -21.9426 });
+  assert.strictEqual(K.readPlace({ ok: "1", place: "none" }), null);
+  assert.strictEqual(K.readPlace({ lat: "x", lon: "1" }), null);
+  assert.strictEqual(K.placeText({ lat: 64.1466, lon: -21.9426 }), "64.1466° N  21.9426° W");
+});
+
+t("sky feeds: the header line, and TLE text with its launches", () => {
+  assert.deepStrictEqual(K.parseFeed("kind=fresh age=12\nA\nB"), { kind: "fresh", age: 12, body: "A\nB" });
+  assert.deepStrictEqual(K.parseFeed("kind=none age=0"), { kind: "none", age: 0, body: "" });
+  assert.strictEqual(K.parseFeed("<html>").kind, "none");
+  assert.strictEqual(K.parseFeed(undefined).kind, "none");
+  const list = K.parseTle(TLE);
+  assert.strictEqual(list.length, 310);
+  assert.strictEqual(ISS.name, "ISS (ZARYA)");
+  assert.strictEqual(ISS.launch, 1998067);
+  assert.strictEqual(list.filter(o => o.launch === 2019074).length, 4);
+  assert.strictEqual(K.parseTle(TLE.replace(/\n/g, "\r\n")).length, 310);
+  assert.strictEqual(K.parseTle("STARLINK-1\n1 broken\n2 broken").length, 0);
+  assert.strictEqual(ALL_SATS.length, 310);
+  assert.ok(ALL_SATS.every(o => o.rec));
+});
+
+t("sky: the sun's height matches the living room's sun", () => {
+  [Date.UTC(2026, 10, 16, 13, 0), Date.UTC(2026, 5, 21, 13, 30), Date.UTC(2026, 10, 16, 20, 0)].forEach(ms => {
+    assert.ok(near(K.sunAlt(ms, P), L.sunAltitude(ms), 0.05), new Date(ms).toISOString());
+  });
+});
+
+t("sky: the ISS where skyfield puts it, sunlit until it enters the shadow", () => {
+  const ref = [["2026-11-16T19:58:00Z", 6.27, 186.20, true], ["2026-11-16T19:59:00Z", 7.80, 171.76, false],
+    ["2026-11-16T20:00:00Z", 7.93, 156.13, false]];
+  ref.forEach(([iso, el, az, lit]) => {
+    const at = K.look(ISS.rec, Date.parse(iso), P);
+    assert.ok(near(at.el, el, 0.1), iso + " el " + at.el);
+    assert.ok(near(at.az, az, 0.2), iso + " az " + at.az);
+    assert.strictEqual(at.sunlit, lit, iso);
+    assert.ok(at.alt > 380 && at.alt < 440, "height " + at.alt);
+  });
+});
+
+t("sky: the next visible pass from the placeholder", () => {
+  const from = Date.parse("2026-11-15T02:00:00Z");
+  const p = K.nextVisible(ISS.rec, P, from, 48);
+  assert.strictEqual(new Date(p.visible.start).toISOString(), "2026-11-16T19:57:30.000Z");
+  assert.ok(p.visible.peakEl >= 5 && p.visible.peakEl < 11);
+  assert.ok(p.rise <= p.visible.start && p.visible.end <= p.set);
+  assert.ok(p.path.length > 4 && p.path.every(q => q.el > 0));
+  assert.strictEqual(K.compass(p.visible.startAz), "S");
+  // During it: the same pass. A day with nothing to see from up here: null.
+  assert.ok(near(K.nextVisible(ISS.rec, P, p.visible.start + 15000, 48).visible.start, p.visible.start, 30000));
+  assert.strictEqual(K.nextVisible(ISS.rec, P, from, 6), null);
+  // Every pass in a day starts and ends above the horizon, none is cut off.
+  K.passes(ISS.rec, P, from, 24, 30).forEach(q => { assert.ok(q.rise > from); assert.ok(q.set > q.rise); });
+});
+
+t("sky: the control room's note and the pass words", () => {
+  const v = { start: Date.parse("2026-11-16T19:57:30Z"), end: Date.parse("2026-11-16T19:58:30Z"), peakEl: 6.3, startAz: 190, endAz: 180 };
+  const pass = { visible: v };
+  assert.strictEqual(K.passNote(pass, v.start - 2 * 3600000), "ISS " + K.clock(v.start));
+  assert.strictEqual(K.passNote(pass, v.start - 13 * 3600000), null);
+  assert.strictEqual(K.passNote(pass, v.start + 30000), "ISS NOW");
+  assert.strictEqual(K.passNote(pass, v.end + 1000), null);
+  assert.strictEqual(K.passNote(null, v.start), null);
+  assert.strictEqual(K.passNote({ visible: null }, v.start), null);
+  assert.strictEqual(K.passDay(v.start, v.start), "TODAY");
+  assert.strictEqual(K.passDay(v.start + 86400000, v.start), "TOMORROW");
+  const later = v.start + 3 * 86400000;
+  assert.strictEqual(K.passDay(later, v.start),
+    ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"][new Date(later).getDay()]);
+  assert.strictEqual(K.passLine({ start: 0, end: 6 * 60000, peakEl: 54.2, startAz: 225, endAz: 45 }), "6 min · from SW · 54° high · to NE");
+  assert.strictEqual(K.passLine(v), "1 min · from S · 6° high · to S");
+  assert.strictEqual(K.compass(359), "N");
+  assert.strictEqual(K.compass(-90), "W");
+});
+
+t("sky: the dome, seen from below (north up, east left)", () => {
+  assert.deepStrictEqual(K.domeXY(123, 90, 100, 100, 90), { x: 100, y: 100 });
+  const n = K.domeXY(0, 0, 100, 100, 90), e = K.domeXY(90, 0, 100, 100, 90), s = K.domeXY(180, 45, 100, 100, 90);
+  assert.ok(near(n.x, 100, 1e-9) && near(n.y, 10, 1e-9));
+  assert.ok(near(e.x, 10, 1e-9) && near(e.y, 100, 1e-9));
+  assert.ok(near(s.x, 100, 1e-9) && near(s.y, 145, 1e-9));
+  assert.ok(near(K.domeXY(0, -30, 100, 100, 90).y, 5, 1e-9));   // below the rim, but only a little
+});
+
+t("sky: trains are one launch, in catalogue order, close together", () => {
+  const pts = [
+    { launch: 1, num: 3, az: 10, el: 30 }, { launch: 1, num: 1, az: 0, el: 30 }, { launch: 1, num: 2, az: 5, el: 30 },
+    { launch: 1, num: 9, az: 180, el: 30 },
+    { launch: 2, num: 5, az: 100, el: 40 },
+  ];
+  const runs = K.trains(pts);
+  assert.strictEqual(runs.length, 1);
+  assert.deepStrictEqual(runs[0].map(q => q.num), [1, 2, 3]);
+  assert.ok(near(K.apart({ az: 0, el: 0 }, { az: 90, el: 0 }), 90, 1e-9));
+  assert.ok(near(K.apart({ az: 0, el: 90 }, { az: 200, el: 90 }), 0, 1e-6));
+});
+
+t("sky: planes within 100 km, in the air, recently heard", () => {
+  const fixture = fs.readFileSync(require("path").join(__dirname, "fixtures", "adsb-lol-sky.json"), "utf8");
+  assert.deepStrictEqual(K.parsePlanes(fixture, P), []);           // its one plane is ~190 km out
+  const far = K.parsePlanes(fixture, { lat: 62.5, lon: -21 });
+  assert.strictEqual(far.length, 1);
+  assert.strictEqual(far[0].call, "ACA7054");
+  const body = JSON.stringify({ now: 1, ac: [
+    { hex: "4cc2a1", flight: "ICE614  ", lat: 64.3, lon: -21.9426, alt_baro: 35000, alt_geom: 35300, track: 62, seen_pos: 1 },
+    { hex: "4cc111", flight: "ICE1", lat: 64.0, lon: -22.6, alt_baro: "ground" },
+    { hex: "4cc222", flight: "OLD", lat: 64.2, lon: -21.9, alt_baro: 9000, seen_pos: 120 },
+    { hex: "4cc333", flight: "LOW", lat: 64.2, lon: -21.9, alt_baro: 50 },
+    { hex: "4cc444", lat: 64.12, lon: -21.9, alt_baro: 3000 },
+    { hex: "4cc555", flight: "NOPOS", alt_baro: 30000 },
+  ] });
+  const got = K.parsePlanes(body, P);
+  assert.deepStrictEqual(got.map(q => q.call), ["4CC444", "ICE614"]);
+  const ice = got[1];
+  assert.ok(near(ice.km, 17.1, 0.3), "km " + ice.km);
+  assert.strictEqual(ice.dir, "N");
+  assert.ok(near(ice.az, 0, 1) || near(ice.az, 360, 1), "az " + ice.az);
+  assert.ok(ice.el > 25 && ice.el < 35, "el " + ice.el);
+  assert.strictEqual(ice.altM, 10759);
+  assert.strictEqual(ice.track, 62);
+  assert.strictEqual(K.planeLine(ice), "10,800 m · 17 km N");
+  assert.strictEqual(K.parsePlanes("<html>", P), null);
+  assert.strictEqual(K.parsePlanes('{"msg":"rate limited"}', P), null);
+});
+
+t("sky: the quiet source lines", () => {
+  assert.strictEqual(K.orbitsLine(null), "Orbits: CelesTrak · feed down");
+  assert.strictEqual(K.orbitsLine({ kind: "none", age: 0 }), "Orbits: CelesTrak · feed down");
+  assert.strictEqual(K.orbitsLine({ kind: "fresh", age: 3600 }), "Orbits: CelesTrak · 60 min old");
+  assert.strictEqual(K.orbitsLine({ kind: "last", age: 30 * 3600 }), "Orbits: CelesTrak · 30 h old");
+  assert.strictEqual(K.orbitsLine({ kind: "last", age: 4 * 86400 }), "Orbits: CelesTrak · feed down · elements 4 days old");
+  assert.strictEqual(K.planesLine({ goodAt: 0, down: true }), "Aircraft: adsb.lol (ODbL) · feed down");
+  const at = Date.parse("2026-11-16T19:40:00Z");
+  assert.strictEqual(K.planesLine({ goodAt: at, down: false }), "Aircraft: adsb.lol (ODbL) · updated " + K.clock(at));
+  assert.strictEqual(K.planesLine({ goodAt: at, down: true }), "Aircraft: adsb.lol (ODbL) · feed down since " + K.clock(at));
+  assert.strictEqual(K.ageText(30), "just now");
+});
+
 // ---------- the morning room (#25) ----------
 const VXML = require("fs").readFileSync(require("path").join(__dirname, "fixtures", "vedur-forecast-2026-11-15.xml"), "utf8");
-const at = (y, mo, d, h, mi) => new Date(y, mo - 1, d, h, mi || 0).getTime();
+const mAt = (y, mo, d, h, mi) => new Date(y, mo - 1, d, h, mi || 0).getTime();
 
 t("metTime reads the Met Office's local times", () => {
-  assert.strictEqual(L.metTime("2026-11-16 07:00:00"), at(2026, 11, 16, 7));
-  assert.strictEqual(L.metTime("2026-11-16 07:30"), at(2026, 11, 16, 7, 30));
+  assert.strictEqual(L.metTime("2026-11-16 07:00:00"), mAt(2026, 11, 16, 7));
+  assert.strictEqual(L.metTime("2026-11-16 07:30"), mAt(2026, 11, 16, 7, 30));
   assert.strictEqual(L.metTime("16.11.2026 07:00"), null);
   assert.strictEqual(L.metTime(""), null);
   assert.strictEqual(L.metTime(undefined), null);
@@ -588,11 +758,11 @@ t("metTime reads the Met Office's local times", () => {
 t("parseForecast reads the fixture", () => {
   const fc = L.parseForecast(VXML);
   assert.strictEqual(fc.name, "Reykjavík");
-  assert.strictEqual(fc.issued, at(2026, 11, 15, 0));
+  assert.strictEqual(fc.issued, mAt(2026, 11, 15, 0));
   assert.ok(fc.rows.length > 90);
-  assert.deepStrictEqual(fc.rows[0], { t: at(2026, 11, 15, 1), temp: -5, wind: 2, dir: "ESE", words: "Overcast" });
+  assert.deepStrictEqual(fc.rows[0], { t: mAt(2026, 11, 15, 1), temp: -5, wind: 2, dir: "ESE", words: "Overcast" });
   const last = fc.rows[fc.rows.length - 1];
-  assert.strictEqual(last.t, at(2026, 11, 24, 12));
+  assert.strictEqual(last.t, mAt(2026, 11, 24, 12));
   for (let i = 1; i < fc.rows.length; i++) assert.ok(fc.rows[i].t > fc.rows[i - 1].t);
   assert.ok(fc.rows.some((r) => r.dir === "" && r.wind === 0), "a calm row keeps no direction");
 });
@@ -608,7 +778,7 @@ t("parseForecast refuses what is not a forecast", () => {
   const fc = L.parseForecast(odd);
   assert.strictEqual(fc.name, "A & B");
   assert.strictEqual(fc.issued, null);
-  assert.deepStrictEqual(fc.rows, [{ t: at(2026, 11, 16, 7), temp: -3, wind: null, dir: "", words: "w".repeat(40) }]);
+  assert.deepStrictEqual(fc.rows, [{ t: mAt(2026, 11, 16, 7), temp: -3, wind: null, dir: "", words: "w".repeat(40) }]);
 });
 
 t("parseWeatherReply: fresh, last, none and broken", () => {
@@ -628,20 +798,20 @@ t("parseWeatherReply: fresh, last, none and broken", () => {
 
 t("morningWeather: the hour now and the rest of today", () => {
   const fc = L.parseForecast(VXML);
-  const w = L.morningWeather(fc, at(2026, 11, 16, 7, 30));
-  assert.strictEqual(w.now.t, at(2026, 11, 16, 7));
+  const w = L.morningWeather(fc, mAt(2026, 11, 16, 7, 30));
+  assert.strictEqual(w.now.t, mAt(2026, 11, 16, 7));
   assert.strictEqual(w.now.temp, -4);
   assert.deepStrictEqual(w.later.map((r) => new Date(r.t).getHours()), [10, 13, 16, 19, 22]);
-  const late = L.morningWeather(fc, at(2026, 11, 16, 21, 10));
-  assert.strictEqual(late.now.t, at(2026, 11, 16, 21));
+  const late = L.morningWeather(fc, mAt(2026, 11, 16, 21, 10));
+  assert.strictEqual(late.now.t, mAt(2026, 11, 16, 21));
   assert.deepStrictEqual(late.later, []);
   // Before the first row: that row, if it is ahead.
-  assert.strictEqual(L.morningWeather(fc, at(2026, 11, 14, 23)).now.t, at(2026, 11, 15, 1));
+  assert.strictEqual(L.morningWeather(fc, mAt(2026, 11, 14, 23)).now.t, mAt(2026, 11, 15, 1));
   // Long after the last row: nothing to show.
-  assert.strictEqual(L.morningWeather(fc, at(2026, 11, 25, 9)), null);
+  assert.strictEqual(L.morningWeather(fc, mAt(2026, 11, 25, 9)), null);
   // Where the rows are 6 h apart, the hour now may be up to 3 h old.
-  assert.strictEqual(L.morningWeather(fc, at(2026, 11, 22, 8, 59)).now.t, at(2026, 11, 22, 6));
-  assert.strictEqual(L.morningWeather(fc, at(2026, 11, 22, 9, 30)), null);
+  assert.strictEqual(L.morningWeather(fc, mAt(2026, 11, 22, 8, 59)).now.t, mAt(2026, 11, 22, 6));
+  assert.strictEqual(L.morningWeather(fc, mAt(2026, 11, 22, 9, 30)), null);
   assert.strictEqual(L.morningWeather(null, Date.now()), null);
   assert.strictEqual(L.morningWeather({ rows: [] }, Date.now()), null);
 });
@@ -658,7 +828,7 @@ t("formatTemp and windLine", () => {
 });
 
 t("weatherSource stays calm in every failure", () => {
-  const now = at(2026, 11, 16, 7, 30);
+  const now = mAt(2026, 11, 16, 7, 30);
   const fresh = L.parseWeatherReply("kind=fresh age=0\n" + VXML);
   const last = L.parseWeatherReply("kind=last age=1800\n" + VXML);
   const none = L.parseWeatherReply("kind=none age=0");

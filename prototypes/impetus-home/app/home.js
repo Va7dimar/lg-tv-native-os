@@ -4,6 +4,7 @@
 (function () {
   "use strict";
   var L = window.ImpetusLogic, LUNA = window.ImpetusLuna, CFG = window.IMPETUS_CONFIG;
+  var ML = window.ImpetusMusicLogic, MUSIC = window.ImpetusMusic;
   var $ = function (id) { return document.getElementById(id); };
 
   var HORIZON = 691, ARC_RISE = 330, X0 = -140, X1 = 2060;
@@ -11,13 +12,14 @@
   var NOTICE_SECONDS = 120;   // the keeper brings the notice up this long before standby
   var TALK_ROWS = 9, LOG_LINES = 14, PHONE_ROWS = 4;
 
-  var room = "living";        // living | control | engine | iceland | notice | bedtime | morning
+  var room = "living";        // living | control | engine | overhead | iceland | notice | bedtime | music | morning
   var focusIdx = 0, focusables = [];
   var idleTimer = null, stateTimer = null, stillTimer = null, engineTimer = null, noticeTimer = null;
   var caps = {}, state = {}, sceneKeys = [];
   var stillBusy = false, liveDead = false;
   var conns = [], hosts = {}, resolving = {};
   var noticeUntil = 0, dismissed = 0, cancelling = false;
+  var musicTaken = 0;         // the "at" of the last {show: "music"} params taken
   var isleBuilt = false, isleState = null, isleBusy = 0, isleFetchTimer = null, isleAgeTimer = null;
   var flightState = null, flightBusy = 0, flightTimer = null, camBusy = 0, camTimer = null;
   var BED_CARD = 60;          // the keeper takes over (dims) when the card is left this long
@@ -584,7 +586,7 @@
     $("msource").textContent = L.weatherSource(weatherReply, Date.now(), /^[0-9]+$/.test(state.station || ""));
     if (!w) return;
     $("mtemp").textContent = L.formatTemp(w.now.temp);
-    $("mwords").textContent = w.now.words;
+    $("mnowwords").textContent = w.now.words;
     $("mwind").textContent = L.windLine(w.now);
     var ol = $("mlater");
     ol.innerHTML = "";
@@ -601,7 +603,7 @@
     var now = new Date(), day = L.sunDay(now);
     $("mclock").textContent = L.formatClock(now);
     $("mdate").textContent = L.formatDate(now);
-    $("msun").textContent = day.rise === null || day.set === null ? "" :
+    $("msunline").textContent = day.rise === null || day.set === null ? "" :
       "sunrise " + hm(day.rise) + "  ·  sunset " + hm(day.set);
     drawMorningWeather();
   }
@@ -642,7 +644,8 @@
   function collect() {
     var keep = focusables[focusIdx];
     var sel = room === "engine" ? "#engine [data-focus]" : room === "iceland" ? "#iceland [data-focus]" :
-      room === "bedtime" ? "#bedtime [data-focus]" : "#control [data-focus]";
+      room === "bedtime" ? "#bedtime [data-focus]" : room === "overhead" ? "#overhead [data-focus]" :
+      "#control [data-focus]";
     focusables = Array.prototype.slice.call(document.querySelectorAll(sel))
       .filter(function (el) { return !el.hidden; });
     var i = focusables.indexOf(keep);
@@ -689,22 +692,27 @@
     b.toggle("instant", !!instant);
     b.toggle("open", next === "control");
     b.toggle("deep", next === "engine");
+    b.toggle("up", next === "overhead");
     b.toggle("isle", next === "iceland");
     b.toggle("notice", next === "notice");
+    b.toggle("music", next === "music");
     b.toggle("bedtime", next === "bedtime");
     b.toggle("morning", next === "morning");
-    ["control", "engine", "iceland", "notice", "bedtime", "morning"].forEach(function (id) {
+    ["control", "engine", "overhead", "iceland", "notice", "bedtime", "music", "morning"].forEach(function (id) {
       $(id).setAttribute("aria-hidden", next === id ? "false" : "true");
     });
+    if (prev === "overhead" && next !== "overhead") window.ImpetusOverhead.leave();
     clearInterval(stateTimer); clearInterval(stillTimer); clearInterval(engineTimer);
     clearInterval(noticeTimer); clearTimeout(idleTimer); clearTimeout(bedTimer);
     clearInterval(isleFetchTimer); clearInterval(isleAgeTimer); clearInterval(flightTimer); clearInterval(camTimer);
     clearInterval(morningTimer); clearInterval(weatherTimer);
+    if (next === "music") MUSIC.start(); else if (prev === "music") MUSIC.stop();
     collect();
     if (next === "control") {
       // Arriving from the living room lands on APPLE TV; coming back out of
-      // the engine room or Iceland lands on that room's door.
-      var back = prev === "engine" ? $("door") : prev === "iceland" ? $("isledoor") : null;
+      // the engine room, Iceland or the overhead room lands on that room's door.
+      var back = prev === "engine" ? $("door") : prev === "iceland" ? $("isledoor") :
+        prev === "overhead" ? $("skydoor") : null;
       focusIdx = back ? Math.max(0, focusables.indexOf(back)) : 0;
       liveDead = false;
       refreshState(); refreshStill();
@@ -716,6 +724,11 @@
       refreshEngine();
       engineTimer = setInterval(refreshEngine, every(CFG.engineEverySeconds, 5));
       bumpIdle();
+    } else if (next === "overhead") {
+      window.ImpetusOverhead.enter();
+      bumpIdle();
+    } else if (next === "music") {
+      // The piece runs on its own; no timers of the rooms behind it.
     } else if (next === "iceland") {
       focusIdx = 0;
       openIceland();               // a resting view: no idle timer
@@ -750,9 +763,11 @@
       else if (k === KEY.OK) press();
       return;
     }
-    if (room === "living" || room === "morning") { setRoom("control"); return; } // the opening key does nothing else
+    if (room === "living" || room === "music" || room === "morning") { setRoom("control"); return; } // the opening key does nothing else
     if (room !== "iceland") bumpIdle();
-    if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) setRoom(room === "engine" || room === "iceland" ? "control" : "living");
+    if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) {
+      setRoom(room === "engine" || room === "iceland" || room === "overhead" ? "control" : "living");
+    }
     else if (k === KEY.LEFT) moveFocus("left");
     else if (k === KEY.RIGHT) moveFocus("right");
     else if (k === KEY.UP) moveFocus("up");
@@ -767,7 +782,14 @@
     if (p.notice === "sleep" && until > Date.now() / 1000 && until !== dismissed) { showNotice(until); return; }
     var at = Number(p.at);
     if (p.notice === "bedtime" && at > 0 && at !== bedAnswered && room !== "notice") { showBedtime(at); return; }
-    if (p.notice === "morning" && at > 0 && at !== morningSeen && room !== "notice" && room !== "bedtime") {
+    // The MUSIC scene: the keeper opens Impetus with {show: "music", at}.
+    // A relaunch and the page coming back in front both bring the same params:
+    // the second one leaves the piece on.
+    if (ML.showMusic(p, Date.now(), musicTaken)) { musicTaken = at; setRoom("music", true); return; }
+    if (room === "music" && p.show === "music" && at === musicTaken) return;
+    // The morning view never takes over the music piece (the keeper does not
+    // ask while a scene is on; this is the page's own guard).
+    if (p.notice === "morning" && at > 0 && at !== morningSeen && room !== "notice" && room !== "bedtime" && room !== "music") {
       showMorning(at); refreshState(); return;
     }
     if (room !== "notice" && room !== "bedtime" && room !== "morning") setRoom("living", true);
@@ -776,7 +798,7 @@
   }
 
   function launchParams() {
-    // PC preview: ?notice=sleep|bedtime|morning shows that view, ?room=control|engine|iceland opens a room.
+    // PC preview: ?notice=sleep|bedtime|morning shows that view, ?room=control|engine|iceland|music opens a room.
     var q = location.search || "";
     if (/[?&]notice=sleep/.test(q)) return { notice: "sleep", until: Math.round(Date.now() / 1000) + NOTICE_SECONDS };
     if (/[?&]notice=bedtime/.test(q)) return { notice: "bedtime", at: Math.round(Date.now() / 1000) };
@@ -790,10 +812,15 @@
   window.addEventListener("resize", fit);
   document.addEventListener("keydown", onKey);
   document.addEventListener("webOSRelaunch", function (e) { arrive(e && e.detail); });
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) arrive(launchParams()); });
+  document.addEventListener("visibilitychange", function () {
+    // The piece stops (no drawing, no asking Spotify) whenever another app is in front.
+    if (document.hidden) { if (room === "music") setRoom("living", true); return; }
+    arrive(launchParams());
+  });
 
   $("appletv")._press = function () { return LUNA.launch(CFG.appleTv.id); };
   $("door")._press = function () { setRoom("engine"); };
+  $("skydoor")._press = function () { setRoom("overhead"); };
   $("isledoor")._press = function () { setRoom("iceland"); };
   $("shield")._press = pressShield;
   $("bedgo")._press = pressBedGo;
@@ -813,6 +840,8 @@
     caps = c;
     renderScenes();
     $("door").hidden = !caps.exec;
+    $("skydoor").hidden = !caps.exec;
+    if (caps.exec) window.ImpetusOverhead.start(LUNA.ctl);
     $("isledoor").hidden = !caps.exec;
     $("shieldline").hidden = !caps.shield;
     $("shield").hidden = !caps.shield;
@@ -820,7 +849,7 @@
     if (caps.exec) LUNA.ctl(["start", "target=" + CFG.appleTv.id]).then(noop, noop);
     sendBedtime(true);
     arrive(launchParams());
-    var m = /[?&]room=(control|engine|iceland)/.exec(location.search || "");
+    var m = /[?&]room=(control|engine|overhead|iceland|music)/.exec(location.search || "");
     if (m) setRoom(m[1], true);
   });
 })();

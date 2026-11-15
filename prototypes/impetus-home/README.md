@@ -40,8 +40,12 @@ Enter (OK) and Backspace or Escape (BACK) drive it. The TV is a stand-in
 | `still=live`, `last`, `none`, `black` | what the Apple TV slab gets |
 | `caps=capture,picture` | parts this TV cannot do (see `probe`) |
 | `notice=sleep` | the two-minute notice before standby |
+| `room=music` | the music piece (#22); with `np=demo` three made-up tracks, `np=paused` one held, none the quiet idle state; `beat=demo` a stand-in beat |
 | `notice=bedtime` | the bedtime card (WIND DOWN or NOT TONIGHT) |
 | `phone=on` | the phone remote's server is on (engine room) |
+| `room=overhead` | opens the overhead room (#23); `t=2026-11-16T19:58:30Z` is mid-pass |
+| `sky=down` | the orbit and plane feeds are down |
+| `place=none` | no home position set (central Reykjavík) |
 
 The phone remote's page: `http://localhost:8765/preview/phone.html` at phone
 width (e.g. 390×844), with `paired=1`, `scene=`, `shield=on`, `caps=` and
@@ -50,8 +54,9 @@ width (e.g. 390×844), with `paired=1`, `scene=`, `shield=on`, `caps=` and
 ## Test
 
 ```sh
-node tests/test_logic.js      # the page's logic: 53 tests
-sh tests/test_ctl.sh          # the root helper against a stand-in TV: 473 checks
+node tests/test_logic.js      # the page's logic: 64 tests
+node tests/test_music.js      # the music piece's logic and its scene words: 23 tests
+sh tests/test_ctl.sh          # the root helper against a stand-in TV: 577 checks
 python tests/test_ipk.py      # the package: layout, line ends, modes, same bytes twice
 ```
 
@@ -103,11 +108,12 @@ Ideas that were wanted and parked, one issue each:
 
 | Path | Holds |
 |---|---|
-| `app/` | the web app: `index.html`, `home.css`, `home.js` (rooms and keys), `logic.js` (pure functions), `luna.js` (the TV's services), `config.js` |
+| `app/` | the web app: `index.html`, `home.css`, `home.js` (rooms and keys), `logic.js` (pure functions), `luna.js` (the TV's services), `config.js`, `music.js` and `music-logic.js` (the music piece, #22) |
 | `app/bin/impetus-ctl` | the root helper and the keeper |
 | `app/bin/shield-count.js` | counts calls the shield stopped |
 | `app/iceland/` | the Iceland room's map, generated (coast CC BY 4.0, see `LICENSE-map.txt`) |
 | `app/bin/impetus-phone`, `app/bin/phone-serve.js`, `app/phone/` | the phone remote: its CGI door (pairing, tokens), the node fallback server, the phone page |
+| `app/bin/impetus-sky`, `app/sky-logic.js`, `app/overhead.js`, `app/overhead.css`, `app/sky/` | the overhead room (#23): the feeds and the home position, the orbit math, the room, satellite.js |
 | `boot/impetus-home` | the boot hook that makes Impetus the default Home |
 | `preview/` | the PC preview |
-| `tests/`, `scripts/` | host tests and the IPK build |
+| `tests/`, `scripts/` | host tests, the IPK build, and `probe_sound.sh` (run at the TV: can root read the sound?) |

@@ -145,6 +145,51 @@ should drive the control room's main actions without an app install.
 - **Known gaps.** Plain HTTP on the home network: anyone on the Wi-Fi who
   sees a request can copy its token. Revoke from the engine room ends it.
 
+## Overhead (issue #23)
+
+What is over the house right now: the ISS, the Starlink trains, the planes.
+Machines only; moon, aurora and weather are #9. The door OVERHEAD sits in
+the control room above ENGINE ROOM; the room rises from below (`body.up`),
+as the engine room turns in from the side. BACK returns to the control room.
+
+- **The dome.** The left third holds the words, the right two thirds a sky
+  dome from the home position: zenith in the middle, horizon at the rim,
+  north up, east left (looking up). Rings at 30° and 60°. The ISS is a white
+  dot with a halo; during a pass its whole path is drawn dashed, the part it
+  is visible on in green, the part behind it in white. Before a pass, the
+  next one's path, its start mark and its time. Starlink satellites are small
+  dots (sunlit ones brighter), a train is a line through one launch's dots.
+  Planes are arrows along their track, the three nearest named.
+- **The words.** Where the ISS is now (over which point, how high), the next
+  visible pass in big type (the time, TODAY / TOMORROW / the weekday, and
+  "rises in the W, 61° high, sets in the E"), the trains and the planes in
+  plain lines, and a quiet sources line with each feed's age.
+- **Visible** means at least 5° up, the ISS in sunlight and the sun at least
+  6° under the home horizon. 5° and not 10°: from a city the low part of a
+  pass is still worth looking for, and the path shows where.
+- **The control-room note.** When a visible pass starts within the next
+  12 hours (tonight), the door gets a green dot and `ISS 19:57`.
+- **The math is on the TV.** `sky/satellite.min.js` (satellite.js 4.1.4,
+  MIT) runs SGP4 on the elements the helper fetched; `sky-logic.js` adds the
+  sun, the look angles, the passes and the dome. The home position never
+  leaves the TV: the elements are the same for everyone, and the planes feed
+  is asked about a point rounded to 0.1° (about 11 km).
+- **Feeds** (public, no key): CelesTrak GP elements for the ISS (`CATNR=25544`)
+  and the Starlink group, cut to the 8 newest launches, fetched at most every
+  6 h, 30 min after a failure; adsb.lol `v2/point/<lat>/<lon>/54` for planes,
+  at most every 20 s, asked every 30 s while the room is open. The helper
+  answers at once from its copy and fetches in the background; a hung network
+  is given up, never waited on.
+- **The home position** is typed on the phone remote (HOME POSITION, "64.1466,
+  -21.9426" as a map app gives it) and kept on the TV only, in `keep/place`
+  (mode 600). Not set: central Reykjavík, said as such on the phone.
+- **Calm failure.** A feed that is down shows as "feed down" in the sources
+  line; the ISS falls back to its last elements (good for days), planes
+  simply are not drawn. No box, no spinner. Nothing in the room blocks Home
+  or the control room: every helper call is answered from the copy.
+- **Not the shield's business.** None of the shield's 45 hosts is a feed
+  host (checked by the tests).
+
 ## Room 4: Iceland
 
 **Problem.** The owner wants Iceland, live, as a picture worth resting on: the
@@ -247,8 +292,8 @@ glance on the way out: the time, the light and the weather, nothing to press.
   whether anything runs while it sleeps. Until it says yes, the fallback
   stands: the view shows at the first power-on within the window.
 - **Someone is watching.** Another app in front for 15 s inside the window
-  (Apple TV on HDMI, Netflix) gives the day up: the morning view never takes
-  over a programme. After three hours the day is given up too.
+  (Apple TV on HDMI, Netflix), or a scene on (MUSIC keeps Impetus itself in
+  front), gives the day up: the morning view never takes over a programme. After three hours the day is given up too.
 - **Leaving.** Any key opens the control room. The view stays until then.
 - **Calm failure.** No station: `no station set: pick one on the phone`. No
   answer: `feed down`; an old copy: `feed down since HH:MM` with the old
@@ -291,8 +336,8 @@ The page cannot change the TV by itself, so the work is split in three:
 | Part | File | Runs as | Does |
 |---|---|---|---|
 | Page | `app/*.js` | the web app | draws the rooms, decides nothing about the TV |
-| Helper | `app/bin/impetus-ctl` | root, one call at a time through Homebrew Channel's exec service | a fixed list of verbs: `probe`, `start`, `state`, `still`, `scene`, `sleep`, `shield`, `engine`, `iceland`, `open`, `standby`, `phone`, `restore` |
-| Keeper | `impetus-ctl keeper` | root, one background loop | the timed jobs: sleep timer, SUN MODE, scene end, last-seen still, shield and phone server after a restart |
+| Helper | `app/bin/impetus-ctl` | root, one call at a time through Homebrew Channel's exec service | a fixed list of verbs: `probe`, `start`, `state`, `still`, `scene`, `sleep`, `shield`, `spotify`, `engine`, `iceland`, `open`, `standby`, `phone`, `restore` |
+| Keeper | `impetus-ctl keeper` | root, one background loop | the timed jobs: sleep timer, SUN MODE, scene end, the music piece, last-seen still, shield and phone server after a restart |
 | Phone door | `app/bin/impetus-phone` | root, as CGI under the phone server | pairing, tokens, and the phone's allowed verbs, handed to the helper |
 
 - Everything that changes the TV goes through the helper. The page sends a
@@ -306,8 +351,8 @@ The page cannot change the TV by itself, so the work is split in three:
 - State lives in `/tmp/impetus/` (memory; a restart clears it). A few small
   files are also kept in the app's own folder (`state/`), because they must
   survive a restart: the picture values and the volume from before a scene
-  (so a restart in the middle of a scene can still put them back) and the
-  flag that the shield is wanted. They are written before the TV is changed:
+  (so a restart in the middle of a scene can still put them back) the
+  flag that the shield is wanted, and the Spotify sign-in (#22). They are written before the TV is changed:
   a value that cannot be written down is not changed. Nothing is written
   anywhere else.
 - **One change at a time.** The helper, the keeper and a scene's background
@@ -465,3 +510,95 @@ launcher, and the side-feature connections panel held the second-best spot.
 - Parked as issues, not built: your TV day (a timeline), remote keys as direct
   doors, the room learning the hour, aurora and weather in the sky, Bluetooth
   headphones, Apple TV wake and sleep (CEC), Apple TV app control (pyatv).
+
+## Music made visible (#22, built host-side 2026-11-15)
+
+When music plays, the screen draws it: one full-screen generative piece in the
+house shape. The **sky** is a deep colour field (five soft lights drawn at
+320×180 and stretched) with a flow of light over it (about 560 strokes
+following slow waves, drawn at 960×540, long trails). The **arc** is the
+track's progress drawn as the living room draws the sun's day: the whole arc
+faint, the part played bright, a glowing point at now. Under the **horizon**
+the ground carries the cover, the title and the artist; the words dim after
+15 s and come back at each new track. Files: `app/music.js` (drawing and the
+Spotify feed), `app/music-logic.js` (pure, `tests/test_music.js`).
+
+**Two drivers, one piece.** A beat source answers once a frame:
+`read(nowMs) -> null | {energy: 0..1, beat: 0..1}`. With values (a sound
+tap) the flow speeds with the energy, the lights swell and the point flares
+on the beat. With `null` (the stand-in until the TV probe answers) the
+cover drives it: the palette comes from the cover, the light drifts left to
+right through the track as the sun does through the day, and the flow's
+direction turns with the progress. A new track crossfades the palette over
+3.5 s. Paused: everything slows to a third. A sound tap would feed the same
+interface (`window.ImpetusBeat`); nothing else changes.
+
+**Colours.** The cover is read from a 24 px drawing: hues are binned and
+weighted by how much colour they carry, the strongest bins that sit apart
+become four lights (kept bright enough to glow), the main hue at 7 % becomes
+the ground. A grey cover takes its hue from the track id. When the picture
+host does not allow reading (CORS), the palette comes from the track id alone.
+
+**Calm failure.** No sign-in, a revoked sign-in, no network, nothing playing,
+an ad: the same sky in the living room's teal, quieter, with no arc and no
+words. Never an error box, never a spinner. Trouble keeps what is on the
+screen and backs off (doubling, at most 2 min; a 429 waits as long as Spotify
+says). A revoked sign-in stops the asking until the piece is opened again.
+
+**How it is opened.** The MUSIC scene has `pieceAfterSeconds: 20` in place of
+`screenOffAfterSeconds`: the helper writes the hour (`/tmp/impetus/piece.at`),
+and the keeper's turn at that hour opens Impetus with
+`{"show": "music", "at": <epoch>}`, but only while the scene's app (Spotify)
+is still in front; someone who moved on is left alone. The scene stays on
+(its key reads `ON · DRAWN FROM 21:04`). Params are taken once and only
+within 2 minutes. Any key leaves the piece for the control room, as from the
+living room. When another app comes to the front the piece stops (no drawing,
+no asking). For the dark screen again, swap the key back in `config.js`.
+Both keys set: the piece wins. `config.js` `music: {fps, particles}` lowers
+the load if the TV stutters.
+
+**The Spotify sign-in.** A PKCE sign-in: there is no client secret anywhere,
+and nothing about the sign-in is in this repo. The TV keeps it in the app's
+`state/spotify` (mode 600, survives restarts, same folder as the other kept
+files):
+
+```
+v=1
+client=<Spotify app client id>
+refresh=<refresh token>
+saved=<epoch s>
+```
+
+`impetus-ctl spotify get` answers `linked=1`, `client=`, `refresh=` (or
+`linked=0`); `spotify set client=.. refresh=.. [was=..]` writes it atomically
+under the lock; `spotify forget` drops it. Values are `[A-Za-z0-9._-]`, at
+most 512 characters. The page turns the refresh token into an access token
+itself (`POST accounts.spotify.com/api/token`, `grant_type=refresh_token`,
+`client_id`) and keeps that in memory only. When Spotify hands out a new
+refresh token, the page writes it back with `was=<old>`, so a token turn
+never overwrites a new sign-in the phone wrote in the meantime. Scope needed:
+`user-read-currently-playing`. Hosts: `accounts.spotify.com`,
+`api.spotify.com`, `i.scdn.co` (covers); none is on the shield's list (a test
+checks it).
+
+**The phone sign-in (#21) writes the file**, with `spotify set client=..
+refresh=..` through the phone page's API. One thing to settle there: Spotify
+now accepts only HTTPS redirect addresses, or plain HTTP to the loopback
+address `127.0.0.1` on the device doing the sign-in. A redirect to the
+phone page at `http://<tv>:<port>` is refused. Ways through: a static HTTPS
+return page (for example on GitHub Pages) that passes the code on to the
+phone page; or the PKCE code exchange done on a laptop with a loopback
+redirect and the result typed in. Owner's call when #21 builds the sign-in.
+
+**Sound tap.** `scripts/probe_sound.sh`, run at the TV as root with music
+playing, reads only: ALSA cards, PCM devices and capture devices, loopback,
+sound servers and their sockets, PulseAudio sources and monitors, tools
+(`parec`, `arecord`, `gst-launch-1.0`, ...), webOS audio services and their
+capture-like methods. `sh probe_sound.sh try` also listens 2 s on each place
+found and says whether real sound (not silence) came out: `tap=yes` with the
+places, or `tap=no`. Its answer decides whether a beat source gets built.
+
+**Open until the TV:** whether Spotify keeps playing with Impetus in front;
+whether Spotify's endpoints answer a page whose origin is `file://` (CORS);
+whether `i.scdn.co` lets the cover be read (else the id's palette); the frame
+rate on the TV's chip; how it looks on the 65" panel.

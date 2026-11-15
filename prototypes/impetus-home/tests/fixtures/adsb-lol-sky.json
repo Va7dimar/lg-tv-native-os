@@ -1,0 +1,9 @@
+{"ac":[
+{"hex":"c023c5","type":"adsb_icao","flight":"ACA7054 ","r":"C-FNOE","t":"B789","alt_baro":41000,"alt_geom":39575,"gs":517.3,"ias":259,"tas":502,"mach":0.868,"wd":327,"ws":39,"oat":-53,"tat":-20,"track":81.78,"track_rate":0.00,"roll":-0.18,"mag_heading":87.54,"true_heading":77.67,"baro_rate":-96,"geom_rate":-128,"squawk":"3546","emergency":"none","category":"A5","nav_qnh":1012.8,"nav_altitude_mcp":40992,"nav_heading":85.78,"nav_modes":["autopilot","vnav","lnav","tcas"],"lat":62.443775,"lon":-20.871277,"nic":8,"rc":186,"seen_pos":0.074,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":14329,"seen":0.1,"rssi":-2.7,"dst":103.338,"dir":163.9}
+]
+,"msg": "No error"
+,"now": 1794707395501
+,"total": 1
+,"ctime": 1794707395501
+,"ptime": 0
+}

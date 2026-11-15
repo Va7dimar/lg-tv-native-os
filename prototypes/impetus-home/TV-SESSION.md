@@ -314,6 +314,22 @@ before it is left in place.
   (`impetus-ctl`) gives a different line shape on this TV.
 - **Relaunch:** with Impetus already open in the background, opening it
   again shows the living room, not a stale room.
+- **Overhead (#23):**
+  - `which curl wget` and `curl -sS -o /dev/null -w '%{http_code}' https://celestrak.org/`
+    print a fetcher and 200 (HTTPS works from the helper). Then the same for
+    `https://api.adsb.lol/`. If only wget is there, set nothing: the helper
+    picks it.
+  - `impetus-ctl sky orbits` answers at once with `kind=none` the first time,
+    and a few seconds later `kind=fresh` with the elements: the background
+    fetch outlived the exec call.
+  - The orbits answer (about 35 KB) arrives whole through the exec service;
+    the room shows the trains.
+  - Enter the home position from the phone remote; `sky place` on the TV reads
+    it back, and the room's top line names it.
+  - Compare the next pass with Heavens-Above for the same position: the start
+    time within a minute.
+  - On the 65": the dome and the big pass time read from the sofa; the
+    OVERHEAD door fits in the control room's column with three scenes.
 
 ## 10a. Iceland feed (#26, plan step 1; SSH only, no install)
 
@@ -390,7 +406,29 @@ gives `kind=fresh age=0` and then the bytes `377 330` (a JPG).
 - Pull the network cable: within 6 min the window is gone; plug back and it returns.
 - The fps readout still holds 30 or more.
 
-## 10f. Morning room (#25; probe by SSH, then install, owner's yes)
+## 10f. Music made visible (#22), when that build is installed
+
+1. **Sound tap probe (reads only).** Copy `scripts/probe_sound.sh` to the TV.
+   Start a Spotify track, then `sh probe_sound.sh try`. Keep the `@verdict`
+   lines and the device and source lines for the evidence note (they name
+   devices only; look before pasting).
+2. **Spotify keeps playing behind Impetus.** With a track playing, open
+   Impetus from the remote: the sound must go on. If Spotify pauses when it
+   leaves the front, the piece can only follow the beat of other apps.
+3. **Sign-in.** Until the phone page (#21) writes it, a sign-in made on a
+   laptop is written by hand: `sh <app dir>/bin/impetus-ctl spotify set
+   client=<id> refresh=<token>`, then `spotify get` prints `linked=1`. Type
+   it over SSH; never into a file in the repo.
+4. **The feed.** Start MUSIC, wait 20 s. Impetus comes to the
+   front with the piece, the title and cover of what plays, the arc moving.
+   No sign-in: the quiet teal sky with no words. Any key opens the control
+   room; the MUSIC key reads `ON · DRAWN FROM <hour>`.
+5. **Look and speed.** Watch it for a full track on the 65": smooth or
+   stuttering? If it stutters, lower `music.fps` or `music.particles` in
+   `config.js`. Covers with strong colours should colour the sky; a grey
+   cover gets one soft hue.
+
+## 10g. Morning room (#25; probe by SSH, then install, owner's yes)
 
 The probe first; it reads only.
 
