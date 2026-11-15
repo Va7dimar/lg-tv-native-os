@@ -371,6 +371,18 @@ t("quakes: nothing in the page is evaluated", () => {
   assert.ok(Array.isArray(q));
 });
 
+t("quakes: the helper's reply gives kind, age and the list", () => {
+  const fresh = L.parseQuakeReply("kind=fresh age=0\n" + QUAKE_PAGE, QUAKE_NOW);
+  assert.strictEqual(fresh.kind, "fresh"); assert.strictEqual(fresh.age, 0); assert.strictEqual(fresh.quakes.length, 75);
+  const last = L.parseQuakeReply("kind=last age=300\n" + QUAKE_PAGE, QUAKE_NOW);
+  assert.strictEqual(last.kind, "last"); assert.strictEqual(last.age, 300);
+  for (const bad of ["kind=none age=0", "kind=none age=0\n", "", null, "error=iceland", "kind=fresh age=0",
+    "kind=fresh age=0\n<html>maintenance</html>", "kind=freshest age=0\n" + QUAKE_PAGE]) {
+    const r = L.parseQuakeReply(bad, QUAKE_NOW);
+    assert.deepStrictEqual(r, { kind: "none", age: 0, quakes: null }, String(bad).slice(0, 40));
+  }
+});
+
 t("shield: none of its names blocks a host the Iceland room needs", () => {
   const FEEDS = ["en.vedur.is", "vedur.is", "api.adsb.lol", "adsb.lol"];
   const names = fs.readFileSync(path.join(__dirname, "..", "app", "shield", "hosts.txt"), "utf8")

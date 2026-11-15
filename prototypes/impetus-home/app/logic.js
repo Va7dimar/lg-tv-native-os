@@ -507,7 +507,18 @@
     return out;
   }
 
-  var api = { parseQuakeInfo: parseQuakeInfo, formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
+  // The helper's answer to `iceland quakes`: a head line `kind=fresh|last|none
+  // age=<s>`, then the page's quakeInfo lines. A list that does not parse is
+  // "none": the room shows what it had, never an error.
+  function parseQuakeReply(text, nowMs) {
+    var s = typeof text === "string" ? text : "", nl = s.indexOf("\n");
+    var head = nl < 0 ? s : s.slice(0, nl);
+    var kind = /(?:^|\s)kind=(fresh|last|none)(?=\s|$)/.exec(head), age = /(?:^|\s)age=(\d+)(?=\s|$)/.exec(head);
+    var quakes = kind && kind[1] !== "none" && nl >= 0 ? parseQuakeInfo(s.slice(nl + 1), nowMs) : null;
+    return { kind: quakes ? kind[1] : "none", age: quakes && age ? Number(age[1]) : 0, quakes: quakes };
+  }
+
+  var api = { parseQuakeInfo: parseQuakeInfo, parseQuakeReply: parseQuakeReply, formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
     isSafeId: isSafeId, isSafeWord: isSafeWord, sunAltitude: sunAltitude, sunDay: sunDay,
     nightWindow: nightWindow, pickApps: pickApps, launchPayload: launchPayload,
     parseLaunchParams: parseLaunchParams, ctlCommand: ctlCommand, parseKv: parseKv,

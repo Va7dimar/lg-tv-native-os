@@ -333,6 +333,21 @@ Read only; nothing on the TV changes but `/tmp/impetus/iceland/`.
 - Write in the evidence note which fetcher the TV has and the XHR result.
   The room's later steps follow it.
 
+## 10b. Iceland room, still (#26, plan step 3; install, owner's yes)
+
+Needs 10a passed (the helper fetches on this TV).
+
+- From the control room: the `ICELAND` door sits under `ENGINE ROOM`, the
+  column ends above the screen's foot, and both doors read at 80 px.
+- OK on the door: the room turns in like the engine room; the island, the lens
+  and the count show within a second or two (first open builds the map), and
+  the source line reads `updated HH:MM`.
+- Arrows and OK do nothing; after 60 s the room is still there (no idle return).
+- BACK: the control room, focus on `ICELAND`.
+- The owner judges it against the mock on the 65" screen, from the sofa.
+  Note anything that reads dimmer than the mock (the mock used a screen blend
+  for overlapping halos; the TV build does not).
+
 ## 11. Write it down
 
 One evidence note, `tvs/lg-65nano756pr/evidence/impetus-home-1.2-tv-run-<date>.md`,

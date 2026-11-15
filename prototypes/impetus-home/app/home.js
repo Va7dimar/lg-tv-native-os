@@ -1,5 +1,5 @@
 // Impetus Home controller: the living room, the control room, the engine
-// room, the sleep notice and the turns between them. Rules: DESIGN.md.
+// room, Iceland, the sleep notice and the turns between them. Rules: DESIGN.md.
 // Chromium 79: ES5 only.
 (function () {
   "use strict";
@@ -11,13 +11,14 @@
   var NOTICE_SECONDS = 120;   // the keeper brings the notice up this long before standby
   var TALK_ROWS = 9, LOG_LINES = 14;
 
-  var room = "living";        // living | control | engine | notice
+  var room = "living";        // living | control | engine | iceland | notice
   var focusIdx = 0, focusables = [];
   var idleTimer = null, stateTimer = null, stillTimer = null, engineTimer = null, noticeTimer = null;
   var caps = {}, state = {}, sceneKeys = [];
   var stillBusy = false, liveDead = false;
   var conns = [], hosts = {}, resolving = {};
   var noticeUntil = 0, dismissed = 0, cancelling = false;
+  var isleBuilt = false, isleReply = null;
 
   function every(seconds, fallback) { return (seconds || fallback) * 1000; }
   function noop() {}
@@ -322,6 +323,21 @@
     });
   }
 
+  // ---------- Room 4: Iceland ----------
+  // Drawn at once from what it last had, then from one fetch on the way in.
+  // A failed fetch changes nothing on screen.
+  function openIceland() {
+    var I = window.ImpetusIceland;
+    if (!isleBuilt) { I.build($("islebase"), $("islequakes")); isleBuilt = true; }
+    I.draw(isleReply || { kind: "none", age: 0, quakes: null }, Date.now());
+    LUNA.ctl(["iceland", "quakes"]).then(function (text) {
+      var r = L.parseQuakeReply(text, Date.now());
+      if (r.kind === "none" && isleReply) return;
+      isleReply = r;
+      if (room === "iceland") I.draw(r, Date.now());
+    }, noop);
+  }
+
   // ---------- The sleep notice ----------
   function showNotice(until) {
     noticeUntil = until;
@@ -361,7 +377,7 @@
   // ---------- Focus ----------
   function collect() {
     var keep = focusables[focusIdx];
-    var sel = room === "engine" ? "#engine [data-focus]" : "#control [data-focus]";
+    var sel = room === "engine" ? "#engine [data-focus]" : room === "iceland" ? "#iceland [data-focus]" : "#control [data-focus]";
     focusables = Array.prototype.slice.call(document.querySelectorAll(sel))
       .filter(function (el) { return !el.hidden; });
     var i = focusables.indexOf(keep);
@@ -408,8 +424,9 @@
     b.toggle("instant", !!instant);
     b.toggle("open", next === "control");
     b.toggle("deep", next === "engine");
+    b.toggle("isle", next === "iceland");
     b.toggle("notice", next === "notice");
-    ["control", "engine", "notice"].forEach(function (id) {
+    ["control", "engine", "iceland", "notice"].forEach(function (id) {
       $(id).setAttribute("aria-hidden", next === id ? "false" : "true");
     });
     clearInterval(stateTimer); clearInterval(stillTimer); clearInterval(engineTimer);
@@ -417,8 +434,9 @@
     collect();
     if (next === "control") {
       // Arriving from the living room lands on APPLE TV; coming back out of
-      // the engine room lands on its door.
-      focusIdx = prev === "engine" ? Math.max(0, focusables.indexOf($("door"))) : 0;
+      // the engine room or Iceland lands on that room's door.
+      var back = prev === "engine" ? $("door") : prev === "iceland" ? $("isledoor") : null;
+      focusIdx = back ? Math.max(0, focusables.indexOf(back)) : 0;
       liveDead = false;
       refreshState(); refreshStill();
       stateTimer = setInterval(refreshState, every(CFG.stateEverySeconds, 5));
@@ -429,6 +447,9 @@
       refreshEngine();
       engineTimer = setInterval(refreshEngine, every(CFG.engineEverySeconds, 5));
       bumpIdle();
+    } else if (next === "iceland") {
+      focusIdx = 0;
+      openIceland();               // a resting view: no idle timer
     } else if (next === "notice") {
       drawNotice();
       noticeTimer = setInterval(drawNotice, 500);
@@ -443,8 +464,8 @@
     e.preventDefault();
     if (room === "notice") { cancelNotice(); return; }
     if (room === "living") { setRoom("control"); return; } // the opening key does nothing else
-    bumpIdle();
-    if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) setRoom(room === "engine" ? "control" : "living");
+    if (room !== "iceland") bumpIdle();
+    if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) setRoom(room === "engine" || room === "iceland" ? "control" : "living");
     else if (k === KEY.LEFT) moveFocus("left");
     else if (k === KEY.RIGHT) moveFocus("right");
     else if (k === KEY.UP) moveFocus("up");
@@ -462,7 +483,7 @@
   }
 
   function launchParams() {
-    // PC preview: ?notice=sleep shows the notice, ?room=control|engine opens a room.
+    // PC preview: ?notice=sleep shows the notice, ?room=control|engine|iceland opens a room.
     var q = location.search || "";
     if (/[?&]notice=sleep/.test(q)) return { notice: "sleep", until: Math.round(Date.now() / 1000) + NOTICE_SECONDS };
     return window.PalmSystem ? window.PalmSystem.launchParams : null;
@@ -477,6 +498,7 @@
 
   $("appletv")._press = function () { return LUNA.launch(CFG.appleTv.id); };
   $("door")._press = function () { setRoom("engine"); };
+  $("isledoor")._press = function () { setRoom("iceland"); };
   $("shield")._press = pressShield;
 
   drawLiving();
@@ -492,12 +514,13 @@
     caps = c;
     renderScenes();
     $("door").hidden = !caps.exec;
+    $("isledoor").hidden = !caps.exec;
     $("shieldline").hidden = !caps.shield;
     $("shield").hidden = !caps.shield;
     collect(); paintFocus();
     if (caps.exec) LUNA.ctl(["start", "target=" + CFG.appleTv.id]).then(noop, noop);
     arrive(launchParams());
-    var m = /[?&]room=(control|engine)/.exec(location.search || "");
+    var m = /[?&]room=(control|engine|iceland)/.exec(location.search || "");
     if (m) setRoom(m[1], true);
   });
 })();

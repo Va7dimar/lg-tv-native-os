@@ -76,6 +76,13 @@ body.open .living { transform: translateY(-66%) perspective(1400px) rotateX(10de
 body.deep .living { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0; }
 body.deep .control { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0.35; }
 body.deep .engine { transform: translateY(0); }
+.isleroom {
+  transform: translateY(100%); transition: transform var(--turn);
+  background: var(--ground);
+}
+body.isle .living { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0; }
+body.isle .control { transform: translateY(-66%) perspective(1400px) rotateX(10deg); opacity: 0.35; }
+body.isle .isleroom { transform: translateY(0); }
 body.instant .room { transition: none; }
 
 .lead {
@@ -176,7 +183,7 @@ body.instant .room { transition: none; }
 }
 .shieldline .n { float: right; font-size: 22px; color: var(--text); }
 
-.door { width: 328px; height: 98px; padding: 0 24px; font-size: 22px; line-height: 98px; }
+.door { width: 328px; height: 80px; margin-bottom: 16px; padding: 0 24px; font-size: 22px; line-height: 80px; }
 
 /* ---------- Room 3: the engine room. Slabs on the ground, 16 px apart. ---------- */
 
@@ -236,6 +243,16 @@ body.instant .room { transition: none; }
   margin-bottom: 14px; word-wrap: break-word; overflow-wrap: break-word;
 }
 .loglist .who { color: var(--text); }
+
+/* ---------- Room 4: Iceland. Two stacked SVG layers; text roles as everywhere. ---------- */
+
+.islelayer { position: absolute; left: 0; top: 0; }
+.isleroom text { font-family: "Saira", sans-serif; }
+.isleroom .lbl { font-weight: 600; font-stretch: 125%; letter-spacing: 0.08em; fill: var(--muted); }
+.isleroom .num { font-weight: 500; font-stretch: 100%; font-variant-numeric: tabular-nums; fill: var(--text); }
+.isleroom .mono { font-weight: 300; font-stretch: 100%; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; fill: var(--text); }
+.isleroom .read { font-weight: 400; font-stretch: 100%; fill: var(--muted); }
+.isleroom .place { font-weight: 400; font-stretch: 100%; fill: #6E7580; }
 
 /* ---------- The sleep notice ---------- */
 

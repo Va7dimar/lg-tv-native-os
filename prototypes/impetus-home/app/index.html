@@ -61,6 +61,7 @@
       <nav id="scenes" class="scenes"></nav>
       <p id="shieldline" class="shieldline" hidden><span class="what">SHIELD</span><span id="shieldcount" class="n">OFF</span></p>
       <button id="door" class="key door" data-focus hidden>ENGINE ROOM</button>
+      <button id="isledoor" class="key door" data-focus hidden>ICELAND</button>
     </section>
   </section>
 
@@ -97,6 +98,12 @@
     </section>
   </section>
 
+  <!-- Room 4: Iceland, behind its door in the control room. Read only; drawn by iceland.js -->
+  <section id="iceland" class="room isleroom" aria-hidden="true">
+    <svg id="islebase" class="islelayer" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+    <svg id="islequakes" class="islelayer" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+  </section>
+
   <!-- The sleep notice: two minutes before standby, any key cancels -->
   <section id="notice" class="room notice" aria-hidden="true">
     <h2 class="label">STANDBY IN</h2>
@@ -108,6 +115,8 @@
 <script src="logic.js"></script>
 <script src="config.js"></script>
 <script src="luna.js"></script>
+<script src="iceland/map.js"></script>
+<script src="iceland.js"></script>
 <script src="home.js"></script>
 </body>
 </html>

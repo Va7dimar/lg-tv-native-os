@@ -13,12 +13,15 @@
 // Query: t=<ISO time>  room=control|engine  notice=sleep
 //        still=live|last|none|black  caps=<names to switch off, comma separated>
 //        scene=<id> (a scene already on)  shield=on
+//        room=iceland  quakes=fixture (the 15.11 list; sets t to 00:20 UTC unless t is given) | none
 (function () {
   var q = location.search;
   function arg(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(q); return m ? decodeURIComponent(m[1]) : ""; }
-  if (arg("t")) { var fixed = new Date(arg("t")).getTime(), base = Date.now(), RD = Date;
+  var at = arg("t") || (arg("quakes") === "fixture" ? "2026-11-15T00:20:00Z" : "");
+  if (at) { var fixed = new Date(at).getTime(), base = Date.now(), RD = Date;
     window.Date = function (a, b, c, d, e, f, g) { if (arguments.length === 0) return new RD(fixed + (RD.now() - base)); return arguments.length === 1 ? new RD(a) : new RD(a, b, c || 1, d || 0, e || 0, f || 0, g || 0); };
-    window.Date.now = function () { return fixed + (RD.now() - base); }; window.Date.prototype = RD.prototype; }
+    window.Date.now = function () { return fixed + (RD.now() - base); }; window.Date.prototype = RD.prototype;
+    window.Date.UTC = RD.UTC; window.Date.parse = RD.parse; }
   function nowS() { return Math.round(Date.now() / 1000); }
 
   var off = arg("caps").split(",");
@@ -79,6 +82,11 @@
     if (verb === "scene") { tv.scene = ""; tv.end = tv.sleep = tv.screenoff = ""; return "ok=1"; }
     if (verb === "sleep") { tv.sleep = ""; return "prev=netflix"; }
     if (verb === "shield") { tv.shield = w[1] === "on"; tv.hits = 0; return "ok=1"; }
+    if (verb === "iceland" && w[1] === "quakes") {
+      if (arg("quakes") !== "fixture") return "kind=none age=0";
+      var fx = new XMLHttpRequest(); fx.open("GET", "../tests/fixtures/vedur-quakeinfo-2026-11-15.txt", false); fx.send();
+      return "kind=fresh age=0\n" + fx.responseText;
+    }
     if (verb === "engine") {
       return ["@vitals", "temp=" + (46000 + Math.floor(Math.random() * 3000)), "uptime=" + (93784 + (nowS() % 1000)),
         "memtotal=1543168", "memavail=" + (612000 + Math.floor(Math.random() * 20000)), "disktotal=1048576", "diskused=412300",
@@ -114,7 +122,7 @@
   var x = new XMLHttpRequest(); x.open("GET", "index.html", false); x.send();
   var m = /<div id="stage">([\s\S]*?)<\/div>\s*<script/.exec(x.responseText);
   document.getElementById("stage").innerHTML = m[1];
-  ["../preview/mock-apps.js", "logic.js", "config.js", "luna.js", "home.js"].forEach(function (s) {
+  ["../preview/mock-apps.js", "logic.js", "config.js", "luna.js", "iceland/map.js", "iceland.js", "home.js"].forEach(function (s) {
     var e = document.createElement("script"); e.src = s; e.async = false; document.body.appendChild(e);
   });
 })();
