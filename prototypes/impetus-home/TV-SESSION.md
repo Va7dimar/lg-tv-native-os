@@ -390,6 +390,37 @@ gives `kind=fresh age=0` and then the bytes `377 330` (a JPG).
 - Pull the network cable: within 6 min the window is gone; plug back and it returns.
 - The fps readout still holds 30 or more.
 
+## 10f. Morning room (#25; probe by SSH, then install, owner's yes)
+
+The probe first; it reads only.
+
+- `sh probe_wake.sh > /tmp/wake.txt`, then read it before pasting any of it:
+  `@methods` lists what tvpower offers (look for anything that sets a
+  power-on time), `@settings` whether an On Timer exists, `@rtc` whether the
+  kernel has a wake alarm and whether root may write it.
+- The sleep test: `sh probe_wake.sh clock`, note the line; power off with the
+  remote, wait 3 minutes, power on; `sh probe_wake.sh clock "<line>"`.
+  `ran=yes`: the keeper runs while the TV sleeps. `ran=no`: it is frozen,
+  and only a TV-kept timer can wake it.
+- By SSH: `impetus-ctl morning set at=<a minute or two ahead> days=1234567
+  station=1`, then `impetus-ctl morning weather | head -c 200` gives
+  `kind=fresh age=0` and `<?xml`. (Set the owner's own station afterwards,
+  from the phone.)
+- Installed, Home in front, at the time: the morning view comes within a few
+  seconds; clock, date, sun line, the temperature and the later hours read
+  from the sofa on the 65". Any key: the control room. No second view that
+  morning, also after a restart.
+- At the time with the screen turned off (a scene's screen off, or the
+  remote's screen-off): the screen comes on once (`turnOnScreen`), then the
+  view. If it does not, note what the TV did.
+- At the time with the Apple TV in front: no view; it stays where it is.
+- In standby at the time, power on within three hours: the view comes at
+  power-on (the fallback), or at the time if the probe found a wake.
+- Pull the network cable, open the view: `feed down` or `feed down since
+  HH:MM`, nothing else changes, keys still answer at once.
+- From the phone: MORNING shows the time and days; set a new time, it reads
+  back; `Turn the morning view off` gives `OFF`.
+
 ## 11. Write it down
 
 One evidence note, `tvs/lg-65nano756pr/evidence/impetus-home-1.2-tv-run-<date>.md`,

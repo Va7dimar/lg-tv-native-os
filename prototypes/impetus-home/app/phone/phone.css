@@ -115,3 +115,19 @@ button, input { font: inherit; color: inherit; border: 0; background: none; text
 
 .standby { height: 64px; margin-top: 36px; padding: 0 20px; font-size: 15px; line-height: 64px; color: var(--muted); }
 .standby.armed { color: var(--text); }
+
+/* ---------- The morning room (#25): time, days, weather station ---------- */
+#morninglabel .state { margin-left: 10px; font-weight: 500; font-stretch: 100%; letter-spacing: 0; color: var(--text); }
+.morningform .read { margin: 0 0 6px; }
+.field {
+  display: block; width: 100%; height: 60px; padding: 0 18px;
+  background: linear-gradient(180deg, var(--slab-top), var(--slab-foot)); box-shadow: var(--edge);
+  font-family: inherit; font-weight: 400; font-stretch: 100%; font-variant-numeric: tabular-nums; font-size: 26px;
+  color: var(--text); border: 0; border-radius: 0; -webkit-appearance: none; color-scheme: dark;
+}
+.field::placeholder { color: var(--line); }
+.field:focus { outline: 2px solid var(--text); outline-offset: 2px; }
+.days { display: flex; flex-wrap: wrap; }
+.days .key { width: 13%; margin-right: 1.5%; height: 48px; padding: 0; font-size: 11px; line-height: 48px; text-align: center; }
+.days .key:last-child { margin-right: 0; }
+.morningform .wide { margin-top: 24px; }

@@ -13,18 +13,21 @@
 // PC preview of the phone remote: loads app/phone/index.html's markup and
 // stands in for bin/impetus-phone. Open at phone width (e.g. 390x844).
 // Query: paired=1 (start paired)  scene=<id>  shield=on  caps=<names off>  tv=down
+//        morning=on (a morning time already set on the TV)
 (function () {
   var q = location.search;
   function arg(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(q); return m ? decodeURIComponent(m[1]) : ""; }
   try { if (arg("paired") === "1") localStorage.setItem("impetus.phone.token", "0123456789abcdef0123456789abcdef");
         else localStorage.removeItem("impetus.phone.token"); } catch (e) {}
   var off = arg("caps").split(",");
-  var tv = { scene: arg("scene"), shield: arg("shield") === "on", hits: 1204, code: "" };
+  var tv = { scene: arg("scene"), shield: arg("shield") === "on", hits: 1204, code: "",
+    mat: arg("morning") === "on" ? "0715" : "", mdays: arg("morning") === "on" ? "12345" : "", mst: arg("morning") === "on" ? "1" : "" };
   function nowS() { return Math.round(Date.now() / 1000); }
   function stateText() {
     return ["now=" + nowS(), "scene=" + tv.scene, "end=" + (tv.scene === "film" ? nowS() + 9 * 3600 : ""),
       "sleep=" + (tv.scene === "winddown" ? nowS() + 47 * 60 : ""), "screenoff=",
-      "shield=" + (tv.shield ? "on" : "off"), tv.shield ? "hits=" + tv.hits : "", "hosts=45", "keeper=1", "phone=on"].join("\n");
+      "shield=" + (tv.shield ? "on" : "off"), tv.shield ? "hits=" + tv.hits : "", "hosts=45", "keeper=1", "phone=on",
+      "morningat=" + tv.mat, "morningdays=" + tv.mdays, "station=" + tv.mst].join("\n");
   }
   window.MOCK_API = function (f, w) {
     if (arg("tv") === "down") throw new Error("no answer");
@@ -40,6 +43,14 @@
     if (f.op === "apps") return JSON.stringify({ returnValue: true, apps: window.MOCK_APPS || [] });
     if (w[0] === "scene") { tv.scene = w[1] === "on" ? w[2].slice(3) : ""; return "ok=1"; }
     if (w[0] === "shield") { tv.shield = w[1] === "on"; return "ok=1"; }
+    if (w[0] === "morning" && w[1] === "off") { tv.mat = tv.mdays = tv.mst = ""; return "ok=1"; }
+    if (w[0] === "morning") {
+      w.slice(2).forEach(function (a) {
+        var k = a.split("=")[0], v = a.slice(k.length + 1);
+        if (k === "at") tv.mat = v; if (k === "days") tv.mdays = v; if (k === "station") tv.mst = v;
+      });
+      return "ok=1";
+    }
     return "ok=1";
   };
   var x = new XMLHttpRequest(); x.open("GET", "phone/index.html", false); x.send();

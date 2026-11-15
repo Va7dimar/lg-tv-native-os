@@ -1,5 +1,5 @@
 // Impetus Home controller: the living room, the control room, the engine
-// room, Iceland, the sleep notice, the bedtime card and the turns between them. Rules: DESIGN.md.
+// room, Iceland, the sleep notice, the bedtime card, the morning room and the turns between them. Rules: DESIGN.md.
 // Chromium 79: ES5 only.
 (function () {
   "use strict";
@@ -11,7 +11,7 @@
   var NOTICE_SECONDS = 120;   // the keeper brings the notice up this long before standby
   var TALK_ROWS = 9, LOG_LINES = 14, PHONE_ROWS = 4;
 
-  var room = "living";        // living | control | engine | iceland | notice
+  var room = "living";        // living | control | engine | iceland | notice | bedtime | morning
   var focusIdx = 0, focusables = [];
   var idleTimer = null, stateTimer = null, stillTimer = null, engineTimer = null, noticeTimer = null;
   var caps = {}, state = {}, sceneKeys = [];
@@ -23,6 +23,8 @@
   var BED_CARD = 60;          // the keeper takes over (dims) when the card is left this long
   var bedAt = 0, bedAnswered = 0, bedTimer = null, bedSent = 0;
   var phonesSig = null, armedPhone = null, armTimer = null;
+  var MORNING_ASK = 600;      // a lost launch: the state's ask still counts this long
+  var morningSeen = 0, morningTimer = null, weatherTimer = null, weatherReply = null, weatherBusy = 0;
 
   function every(seconds, fallback) { return (seconds || fallback) * 1000; }
   function noop() {}
@@ -205,6 +207,7 @@
       paintState();
       checkNotice();
       checkBedtime();
+      checkMorning();
     }, noop);
   }
 
@@ -570,6 +573,71 @@
     if (state.dim && room === "control") LUNA.ctl(["bedtime", "wake"]).then(noop, noop);
   }
 
+  // ---------- The morning room (#25) ----------
+  // The keeper opens Impetus with {notice: "morning", at} on the set days.
+  // Weather from the Met Office through the helper; a failed fetch only
+  // turns the source line to "feed down". Any key opens the control room.
+
+  function drawMorningWeather() {
+    var w = L.morningWeather(weatherReply && weatherReply.forecast, Date.now());
+    $("mweather").hidden = !w;
+    $("msource").textContent = L.weatherSource(weatherReply, Date.now(), /^[0-9]+$/.test(state.station || ""));
+    if (!w) return;
+    $("mtemp").textContent = L.formatTemp(w.now.temp);
+    $("mwords").textContent = w.now.words;
+    $("mwind").textContent = L.windLine(w.now);
+    var ol = $("mlater");
+    ol.innerHTML = "";
+    w.later.forEach(function (r) {
+      var li = document.createElement("li");
+      li.appendChild(span("when", L.formatClock(new Date(r.t))));
+      li.appendChild(span("t", L.formatTemp(r.temp)));
+      li.appendChild(span("w", r.words));
+      ol.appendChild(li);
+    });
+  }
+
+  function drawMorning() {
+    var now = new Date(), day = L.sunDay(now);
+    $("mclock").textContent = L.formatClock(now);
+    $("mdate").textContent = L.formatDate(now);
+    $("msun").textContent = day.rise === null || day.set === null ? "" :
+      "sunrise " + hm(day.rise) + "  ·  sunset " + hm(day.set);
+    drawMorningWeather();
+  }
+
+  // One fetch at a time. A failed fetch keeps the forecast it had, marked
+  // as down since it was got.
+  function fetchWeather() {
+    if (weatherBusy && Date.now() - weatherBusy < 30000) return;
+    var mine = weatherBusy = Date.now();
+    LUNA.ctl(["morning", "weather"]).then(L.parseWeatherReply, function () {
+      return { kind: "none", age: 0, forecast: null };
+    }).then(function (r) {
+      if (weatherBusy === mine) weatherBusy = 0;
+      var now = Date.now();
+      if (r.forecast) { weatherReply = r; weatherReply.gotAt = now - r.age * 1000; }
+      else if (weatherReply && weatherReply.forecast) {
+        weatherReply = { kind: "last", age: Math.round((now - weatherReply.gotAt) / 1000),
+          forecast: weatherReply.forecast, gotAt: weatherReply.gotAt };
+      } else weatherReply = r;
+      if (room === "morning") drawMorningWeather();
+    });
+  }
+
+  function showMorning(at) {
+    morningSeen = at;
+    LUNA.ctl(["morning", "seen"]).then(noop, noop);
+    setRoom("morning", true);
+  }
+
+  // The keeper's params lost on the way: the state says the view is asked.
+  function checkMorning() {
+    var asked = Number(state.morningask);
+    if (room !== "morning" && room !== "notice" && room !== "bedtime" && asked > 0 && asked !== morningSeen &&
+        Date.now() / 1000 - asked < MORNING_ASK) showMorning(asked);
+  }
+
   // ---------- Focus ----------
   function collect() {
     var keep = focusables[focusIdx];
@@ -624,12 +692,14 @@
     b.toggle("isle", next === "iceland");
     b.toggle("notice", next === "notice");
     b.toggle("bedtime", next === "bedtime");
-    ["control", "engine", "iceland", "notice", "bedtime"].forEach(function (id) {
+    b.toggle("morning", next === "morning");
+    ["control", "engine", "iceland", "notice", "bedtime", "morning"].forEach(function (id) {
       $(id).setAttribute("aria-hidden", next === id ? "false" : "true");
     });
     clearInterval(stateTimer); clearInterval(stillTimer); clearInterval(engineTimer);
     clearInterval(noticeTimer); clearTimeout(idleTimer); clearTimeout(bedTimer);
     clearInterval(isleFetchTimer); clearInterval(isleAgeTimer); clearInterval(flightTimer); clearInterval(camTimer);
+    clearInterval(morningTimer); clearInterval(weatherTimer);
     collect();
     if (next === "control") {
       // Arriving from the living room lands on APPLE TV; coming back out of
@@ -653,6 +723,11 @@
       focusIdx = 0;
       // Left alone: the keeper brings back what was on; this page steps aside.
       bedTimer = setTimeout(function () { bedAnswered = bedAt; setRoom("living", true); }, (BED_CARD + 5) * 1000);
+    } else if (next === "morning") {
+      drawMorning();               // a resting view: no idle timer
+      fetchWeather();
+      morningTimer = setInterval(drawMorning, 30000);
+      weatherTimer = setInterval(fetchWeather, 900000);
     } else if (next === "notice") {
       drawNotice();
       noticeTimer = setInterval(drawNotice, 500);
@@ -675,7 +750,7 @@
       else if (k === KEY.OK) press();
       return;
     }
-    if (room === "living") { setRoom("control"); return; } // the opening key does nothing else
+    if (room === "living" || room === "morning") { setRoom("control"); return; } // the opening key does nothing else
     if (room !== "iceland") bumpIdle();
     if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) setRoom(room === "engine" || room === "iceland" ? "control" : "living");
     else if (k === KEY.LEFT) moveFocus("left");
@@ -692,16 +767,20 @@
     if (p.notice === "sleep" && until > Date.now() / 1000 && until !== dismissed) { showNotice(until); return; }
     var at = Number(p.at);
     if (p.notice === "bedtime" && at > 0 && at !== bedAnswered && room !== "notice") { showBedtime(at); return; }
-    if (room !== "notice" && room !== "bedtime") setRoom("living", true);
+    if (p.notice === "morning" && at > 0 && at !== morningSeen && room !== "notice" && room !== "bedtime") {
+      showMorning(at); refreshState(); return;
+    }
+    if (room !== "notice" && room !== "bedtime" && room !== "morning") setRoom("living", true);
     sendBedtime(false);
     refreshState();
   }
 
   function launchParams() {
-    // PC preview: ?notice=sleep shows the notice, ?room=control|engine|iceland opens a room.
+    // PC preview: ?notice=sleep|bedtime|morning shows that view, ?room=control|engine|iceland opens a room.
     var q = location.search || "";
     if (/[?&]notice=sleep/.test(q)) return { notice: "sleep", until: Math.round(Date.now() / 1000) + NOTICE_SECONDS };
     if (/[?&]notice=bedtime/.test(q)) return { notice: "bedtime", at: Math.round(Date.now() / 1000) };
+    if (/[?&]notice=morning/.test(q)) return { notice: "morning", at: Math.round(Date.now() / 1000) };
     return window.PalmSystem ? window.PalmSystem.launchParams : null;
   }
 

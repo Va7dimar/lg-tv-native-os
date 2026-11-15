@@ -50,8 +50,8 @@ width (e.g. 390×844), with `paired=1`, `scene=`, `shield=on`, `caps=` and
 ## Test
 
 ```sh
-node tests/test_logic.js      # the page's logic: 44 tests
-sh tests/test_ctl.sh          # the root helper against a stand-in TV: 410 checks
+node tests/test_logic.js      # the page's logic: 53 tests
+sh tests/test_ctl.sh          # the root helper against a stand-in TV: 473 checks
 python tests/test_ipk.py      # the package: layout, line ends, modes, same bytes twice
 ```
 
@@ -62,6 +62,11 @@ It runs the real helper and keeper with stand-ins for `luna-send`, `mount`,
 `scripts/probe_phone.sh` is run on the TV, not the PC: it reads (and changes
 nothing) whether the TV can serve the phone remote (busybox httpd and CGI, nc,
 node, free ports 8090–8093, a /tmp that can run a script).
+
+`scripts/probe_wake.sh` is also run on the TV: it reads (and changes nothing)
+whether root can wake the TV from sleep at a set time (issue #25). Its
+`clock` mode, run before and after a sleep, tells whether anything runs
+while the TV sleeps.
 
 ## Build
 

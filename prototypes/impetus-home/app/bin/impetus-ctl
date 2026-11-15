@@ -33,6 +33,10 @@
 #                         the bedtime nudge (#24): when, and how the picture dims
 #   bedtime off | wake    no nudge | end the dimming, the picture goes back
 #   bedtime answer winddown|later   the card was answered; prints prev=<app>
+#   morning set at=<HHMM> [days=<1-7..>] [station=<n>]   the morning room (#25):
+#                         when (local time, Monday is 1) and which forecast
+#   morning off | seen    no morning view | the view was shown, forget the ask
+#   morning weather       the Met Office forecast for the station (read only, no lock)
 #   restore              the way back: scene off, shield off, phone server
 #                         and keeper stopped
 #   keeper | tick         the background loop, or one turn of it
@@ -644,6 +648,10 @@ state() {
   echo "bedtime=$(cat "$RUN/bedtime.at" 2>/dev/null)"
   echo "bedask=$(cat "$RUN/bedtime.asked" 2>/dev/null)"
   echo "dim=$(cat "$RUN/bedtime.dim" 2>/dev/null)"
+  echo "morningat=$(morning_get at)"
+  echo "morningdays=$(morning_get days)"
+  echo "station=$(morning_get station)"
+  echo "morningask=$(cat "$RUN/morning.asked" 2>/dev/null)"
   if phone_alive; then
     read -r st_p st_port st_kind < "$RUN/phone.server"
     echo "phone=on"; echo "phoneport=$st_port"; echo "phoneaddr=$(lan_addr)"
@@ -997,6 +1005,153 @@ bed_verb() {
   esac
 }
 
+# ---------- the morning room (#25) ----------
+
+# On the set days at the set time (local), the morning view: the keeper opens
+# Impetus with {notice:"morning"} once the TV is on with Home (Impetus or
+# stock Home) in front. That is the TV woken at the time when a timed wake
+# works, else its first power-on after the time. A TV that sits in Screen Off
+# at the time is asked once to turn its screen on (the one wake known to be
+# safe; the wake probe decides whether more is possible). A TV on with another
+# app in front for $FRONTWAIT seconds is being watched: no view that day.
+# Nothing after $MORNING_WINDOW minutes past the time. Settings live in
+# $KEEP/morning (the phone page writes them): at=HHMM, days=<1-7, Monday is
+# 1>, station=<Met Office station number>. The day's done mark is kept there
+# too, so a restart the same morning does not show the view again.
+MORNING="$KEEP/morning"
+MORNING_WINDOW=${IMPETUS_MORNING_WINDOW:-180}
+# One fixed address; only the station number is filled in (from $MORNING).
+WEATHER_URL=${IMPETUS_WEATHER_URL:-https://xmlweather.vedur.is/?op_w=xml&type=forec&lang=en&view=xml&ids=}
+
+hhmm_ok() {
+  case "$1" in [01][0-9][0-5][0-9]|2[0-3][0-5][0-9]) return 0 ;; esac
+  return 1
+}
+# HHMM -> minutes of the day, without the shell reading 08 as octal.
+mins() { mi_h=${1%??}; mi_m=${1#??}; echo $(( ${mi_h#0} * 60 + ${mi_m#0} )); }
+# "<weekday 1-7> <HHMM> <YYYYMMDD>" in local time, for $(now).
+local_now() {
+  date -d "@$(now)" '+%u %H%M %Y%m%d' 2>/dev/null || date '+%u %H%M %Y%m%d'
+}
+morning_get() { sed -n "s/^$1=//p" "$MORNING" 2>/dev/null | head -n 1; }
+
+morning_set() {
+  ms_at= ms_days=12345 ms_st=
+  for a in "$@"; do
+    k=${a%%=*}; v=${a#*=}
+    case "$k" in
+      at) hhmm_ok "$v" || die at; ms_at=$v ;;
+      days)
+        case "$v" in ""|*[!1-7]*) die days ;; esac
+        [ ${#v} -le 7 ] || die days
+        ms_days=$v ;;
+      station) is_num "$v" && [ ${#v} -le 7 ] || die station; ms_st=$v ;;
+      *) die word ;;
+    esac
+  done
+  [ -n "$ms_at" ] || die at
+  # A station left out keeps the one set before.
+  [ -n "$ms_st" ] || ms_st=$(morning_get station)
+  mkdir -p "$KEEP" 2>/dev/null
+  ms_done=$(morning_get done)
+  { echo "at=$ms_at"; echo "days=$ms_days"; echo "station=$ms_st"
+    if [ -n "$ms_done" ]; then echo "done=$ms_done"; fi; } > "$MORNING.new" 2>/dev/null &&
+    mv "$MORNING.new" "$MORNING" 2>/dev/null || die write
+  keeper_ensure
+  echo ok=1
+}
+
+morning_done() { # YYYYMMDD
+  { grep -v '^done=' "$MORNING" 2>/dev/null; echo "done=$1"; } > "$MORNING.new" 2>/dev/null &&
+    mv "$MORNING.new" "$MORNING" 2>/dev/null
+  rm -f "$RUN/morning.seen" "$RUN/morning.tried"
+}
+
+# The TV's power state word: Active, Screen Off, Suspend, ...; "Active" when
+# the TV answers without one; empty when it does not answer.
+power_word() {
+  pw_r=$(luna "$PWR/getPowerState" '{}')
+  ok "$pw_r" || return 0
+  pw_s=$(printf '%s\n' "$pw_r" | jget state)
+  echo "${pw_s:-Active}"
+}
+
+# One turn, under the lock.
+morning_tick() {
+  mt_at=$(morning_get at)
+  hhmm_ok "$mt_at" || return 0
+  mt_days=$(morning_get days)
+  set -- $(local_now)
+  [ $# -eq 3 ] && hhmm_ok "$2" || return 0
+  case "${mt_days:-12345}" in *"$1"*) ;; *) return 0 ;; esac
+  [ "$(morning_get done)" = "$3" ] && return 0
+  mt_n=$(mins "$2"); mt_t=$(mins "$mt_at")
+  [ "$mt_n" -ge "$mt_t" ] || return 0
+  if [ "$mt_n" -ge $((mt_t + MORNING_WINDOW)) ]; then morning_done "$3"; return 0; fi
+  mt_p=$(power_word)
+  if [ "$mt_p" != Active ]; then
+    rm -f "$RUN/morning.seen"
+    if [ "$mt_p" = "Screen Off" ] && [ "$(cat "$RUN/morning.tried" 2>/dev/null)" != "$3" ]; then
+      echo "$3" > "$RUN/morning.tried"
+      luna "$PWR/turnOnScreen" '{}' >/dev/null
+    fi
+    return 0
+  fi
+  mt_f=$(front)
+  case "$mt_f" in
+    "$APP"|"$STOCK")
+      morning_done "$3"
+      echo "$(now)" > "$RUN/morning.asked"
+      launch "$APP" "{\"notice\":\"morning\",\"at\":$(now)}" ;;
+    *)
+      mt_s=$(cat "$RUN/morning.seen" 2>/dev/null)
+      if ! is_num "$mt_s"; then now > "$RUN/morning.seen"
+      elif [ "$(now)" -ge $((mt_s + FRONTWAIT)) ]; then morning_done "$3"; fi ;;
+  esac
+  return 0
+}
+
+# morning weather: "kind=fresh|last|none age=<s>", then the Met Office's XML
+# forecast for the set station. Read only, no lock, as the Iceland feeds.
+morning_weather() {
+  mw_dir="$RUN/morning"
+  mkdir -p "$mw_dir"
+  mw_st=$(morning_get station)
+  if ! is_num "$mw_st"; then echo "kind=none age=0"; return 0; fi
+  # A copy kept for another station is not this one's.
+  [ "$(cat "$mw_dir/weather.station" 2>/dev/null)" = "$mw_st" ] || rm -f "$mw_dir/weather.xml" "$mw_dir/weather.at"
+  if fetch_to "$mw_dir/weather.new" "$WEATHER_URL$mw_st" &&
+     grep -q '<forecast>' "$mw_dir/weather.new" && grep -q "<station id=\"$mw_st\"" "$mw_dir/weather.new"; then
+    mv "$mw_dir/weather.new" "$mw_dir/weather.xml"
+    now > "$mw_dir/weather.at"
+    echo "$mw_st" > "$mw_dir/weather.station"
+    echo "kind=fresh age=0"
+    cat "$mw_dir/weather.xml"
+    return 0
+  fi
+  rm -f "$mw_dir/weather.new"
+  mw_at=$(cat "$mw_dir/weather.at" 2>/dev/null)
+  if [ -s "$mw_dir/weather.xml" ] && is_num "$mw_at"; then
+    echo "kind=last age=$(( $(now) - mw_at ))"
+    cat "$mw_dir/weather.xml"
+  else
+    echo "kind=none age=0"
+  fi
+}
+
+morning_verb() {
+  mkdir -p "$RUN"
+  mv_w=$1
+  [ $# -gt 0 ] && shift
+  case "$mv_w" in
+    set) morning_set "$@" ;;
+    off) rm -f "$MORNING" "$MORNING.new" "$RUN/morning.seen" "$RUN/morning.tried" "$RUN/morning.asked"; echo ok=1 ;;
+    weather) morning_weather ;;
+    seen) rm -f "$RUN/morning.asked"; echo ok=1 ;;
+    *) die morning ;;
+  esac
+}
+
 # ---------- the keeper ----------
 
 keeper_alive() {
@@ -1108,6 +1263,7 @@ tick() {
   if [ -e "$RUN/vol.tries" ] && [ ! -e "$RUN/scene.id" ]; then lock; vol_restore; unlock; fi
   lock; due; unlock
   lock; bed_tick; unlock
+  lock; morning_tick; unlock
   phone_keep
 }
 
@@ -1349,6 +1505,7 @@ case "$verb" in
   engine) engine ;;
   iceland) case "$1" in quakes) iceland_quakes ;; flights) iceland_flights ;; webcam) iceland_webcam ;; *) die iceland ;; esac ;;
   bedtime) bed_verb "$@" ;;
+  morning) morning_verb "$@" ;;
   open) open_app "$@" ;;
   standby)
     mkdir -p "$RUN"

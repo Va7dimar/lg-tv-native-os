@@ -1059,5 +1059,155 @@ is "phone: every port taken" "$(sh "$CTL" phone start)" "error=noport"
 is "phone: an unknown phone word" "$(sh "$CTL" phone maybe)" "error=phone"
 is "phone helper: an unknown mode" "$(sh "$HERE/../app/bin/impetus-phone" bogus)" "error=mode"
 
+# ---------- the morning room (issue #25) ----------
+# Local time is UTC here. MON is Monday 2026-11-16 07:30. A wrapper in front
+# of the stub answers getPowerState from $STUB_TV/power.state when it is there.
+export TZ=UTC
+MON=1794814200
+DAY=86400
+mkdir -p "$W/mstubs"
+cat > "$W/mstubs/luna-send" <<EOF
+#!/bin/sh
+case " \$* " in *" -i "*) ;; *tvpower/power/getPowerState*)
+  if [ -r "\$STUB_TV/power.state" ]; then
+    echo "luna://com.webos.service.tvpower/power/getPowerState {}" >> "\$STUB_TV/calls"
+    echo "{\"returnValue\":true,\"state\":\"\$(cat "\$STUB_TV/power.state")\"}"; exit 0
+  fi ;;
+esac
+exec "$HERE/stubs/luna-send" "\$@"
+EOF
+chmod +x "$W/mstubs/luna-send"
+PATH="$W/mstubs:$PATH"
+mtick() { IMPETUS_NOW=$1 sh "$CTL" tick >/dev/null; }
+mviews() { grep -c '"notice":"morning"' "$STUB_TV/calls"; }
+
+reset
+refused "morning: no time" at morning set days=12345
+refused "morning: a three-digit time" at morning set at=730
+refused "morning: 24:00" at morning set at=2400
+refused "morning: minute 60" at morning set at=0760
+refused "morning: day 8" days morning set at=0730 days=8
+refused "morning: no days" days morning set at=0730 days=
+refused "morning: eight days" days morning set at=0730 days=12345671
+refused "morning: a station with a leading zero" station morning set at=0730 station=01
+refused "morning: a station of eight digits" station morning set at=0730 station=12345678
+refused "morning: an unknown word" word morning set at=0730 bogus=1
+refused "morning: shell text" word morning set 'at=$(reboot)'
+refused "morning: an unknown morning word" morning morning maybe
+no "morning: nothing kept after refusals" test -e "$KEEP/morning"
+is "morning: set answers" "$(sh "$CTL" morning set at=0730 station=1)" "ok=1"
+is "morning: state has the time" "$(st morningat)" 0730
+is "morning: days default to Monday to Friday" "$(st morningdays)" 12345
+is "morning: state has the station" "$(st station)" 1
+sh "$CTL" morning set at=0730 days=12345 >/dev/null
+is "morning: a station left out keeps the one before" "$(st station)" 1
+
+: > "$STUB_TV/calls"
+mtick $((MON - 60))
+is "morning: not before the time" "$(mviews)" 0
+mtick $MON
+is "morning: at the time with Impetus in front, the view" "$(mviews)" 1
+is "morning: the view is opened in Impetus" "$(grep -c "applicationmanager/launch {\"id\":\"$US\",\"params\":{\"notice\":\"morning\",\"at\":$MON}}" "$STUB_TV/calls")" 1
+is "morning: the ask is in the state" "$(st morningask)" "$MON"
+is "morning: the day is marked done" "$(sed -n 's/^done=//p' "$KEEP/morning")" 20261116
+mtick $((MON + 30))
+is "morning: not twice the same day" "$(mviews)" 1
+rm -rf "$RUN"/morning*; mkdir -p "$RUN"; echo "$FAKE" > "$RUN/keeper.pid"; echo "$US" > "$RUN/front"
+mtick $((MON + 60))
+is "morning: not twice after a restart either" "$(mviews)" 1
+is "morning seen: answers" "$(sh "$CTL" morning seen)" "ok=1"
+is "morning seen: the ask is forgotten" "$(st morningask)" ""
+
+mtick $((MON + 5 * DAY))
+is "morning: Saturday is not a set day" "$(mviews)" 1
+
+# Tuesday: the TV sits in Screen Off at the time.
+echo "Screen Off" > "$STUB_TV/power.state"
+mtick $((MON + DAY))
+is "morning: Screen Off, the screen is asked on" "$(calls 'power/turnOnScreen')" 1
+is "morning: Screen Off, no view yet" "$(mviews)" 1
+mtick $((MON + DAY + 10))
+is "morning: the screen is asked once a day" "$(calls 'power/turnOnScreen')" 1
+echo "Active" > "$STUB_TV/power.state"
+mtick $((MON + DAY + 20))
+is "morning: on again with Impetus in front, the view" "$(mviews)" 2
+echo "Suspend" > "$STUB_TV/power.state"
+mtick $((MON + 2 * DAY))
+is "morning: suspended, no screen call and no view" "$(calls 'power/turnOnScreen') $(mviews)" "1 2"
+
+# Wednesday, cont.: turned on later, another app in front for 15 s.
+echo "Active" > "$STUB_TV/power.state"
+tv_front netflix
+mtick $((MON + 2 * DAY + 600))
+mtick $((MON + 2 * DAY + 610))
+no "morning: another app in front, not yet given up" grep -q '^done=20261118' "$KEEP/morning"
+mtick $((MON + 2 * DAY + 616))
+yes "morning: another app in front for 15 s, the day is given up" grep -q '^done=20261118' "$KEEP/morning"
+tv_front "$US"
+mtick $((MON + 2 * DAY + 620))
+is "morning: and Home later that morning shows nothing" "$(mviews)" 2
+
+# Thursday: first on more than three hours after the time.
+mtick $((MON + 3 * DAY + 181 * 60))
+is "morning: past the window, no view" "$(mviews)" 2
+yes "morning: past the window, the day is done" grep -q '^done=20261119' "$KEEP/morning"
+
+# Friday: stock Home in front counts as Home.
+tv_front com.webos.app.home
+mtick $((MON + 4 * DAY + 5))
+is "morning: stock Home in front, the view" "$(mviews)" 3
+
+# A time with an 8 in it is not read as octal.
+sh "$CTL" morning set at=0805 days=1 >/dev/null
+tv_front "$US"
+mtick $((MON + 7 * DAY + 34 * 60))
+is "morning: 08:04 is before 08:05" "$(mviews)" 3
+mtick $((MON + 7 * DAY + 35 * 60))
+is "morning: 08:05 is the time" "$(mviews)" 4
+is "morning off: answers" "$(sh "$CTL" morning off)" "ok=1"
+no "morning off: the settings are gone" test -e "$KEEP/morning"
+mtick $((MON + 8 * DAY))
+is "morning off: no view" "$(mviews)" 4
+rm -f "$STUB_TV/power.state"
+
+# The weather: the Met Office forecast for the set station.
+VPAGE="$HERE/fixtures/vedur-forecast-2026-11-15.xml"
+is "weather: no station is none" "$(IMPETUS_NOW=$MON sh "$CTL" morning weather)" "kind=none age=0"
+is "weather: no fetch without a station" "$(calls 'fetch ')" 0
+sh "$CTL" morning set at=0730 station=1 >/dev/null
+cp "$VPAGE" "$STUB_TV/net.page"
+out=$(IMPETUS_NOW=$MON sh "$CTL" morning weather)
+is "weather: a good page is fresh" "$(echo "$out" | head -n 1)" "kind=fresh age=0"
+is "weather: the page comes back whole" "$(echo "$out" | sed 1d)" "$(cat "$VPAGE")"
+is "weather: the fixed address with the station" "$(calls 'fetch curl https://xmlweather.vedur.is/?op_w=xml&type=forec&lang=en&view=xml&ids=1')" 1
+no "weather: no lock is left or taken" held
+rm -f "$STUB_TV/net.page"
+is "weather: no network gives the last copy with its age" "$(IMPETUS_NOW=$((MON + 300)) sh "$CTL" morning weather | head -n 1)" "kind=last age=300"
+printf '<?xml version="1.0"?>\n<forecasts></forecasts>\n' > "$STUB_TV/net.page"
+is "weather: an empty answer keeps the last copy" "$(IMPETUS_NOW=$((MON + 300)) sh "$CTL" morning weather | head -n 1)" "kind=last age=300"
+cp "$VPAGE" "$STUB_TV/net.page"
+sh "$CTL" morning set at=0730 station=2 >/dev/null
+is "weather: another station's page is not this one's" "$(IMPETUS_NOW=$((MON + 400)) sh "$CTL" morning weather)" "kind=none age=0"
+rm -f "$STUB_TV/net.page"
+is "weather: and the old station's copy is dropped" "$(IMPETUS_NOW=$((MON + 400)) sh "$CTL" morning weather)" "kind=none age=0"
+
+# The phone page sets the time; it cannot fetch the weather.
+sh "$CTL" morning off >/dev/null
+sh "$CTL" phone start >/dev/null
+IMPETUS_NOW=1000 api op=pair >/dev/null
+code=$(cut -d' ' -f1 "$RUN/phone.code")
+tok=$(kv "$(IMPETUS_NOW=1010 api op=confirm code=$code n=Phone)" token)
+is "phone: morning set" "$(api op=do t=$tok w=morning w=set w=at=0645 w=days=12345 w=station=1)" "ok=1"
+is "phone: the time reached the TV" "$(st morningat)" 0645
+is "phone: the state shows it" "$(api op=state t=$tok | sed -n 's/^morningat=//p')" 0645
+is "phone: a bad time is refused" "$(api op=do t=$tok w=morning w=set w=at=2560)" "error=at"
+is "phone: the weather fetch is not a phone verb" "$(api op=do t=$tok w=morning w=weather)" "error=verb"
+is "phone: morning seen is not a phone verb" "$(api op=do t=$tok w=morning w=seen)" "error=verb"
+is "phone: morning off" "$(api op=do t=$tok w=morning w=off)" "ok=1"
+is "phone: off reached the TV" "$(st morningat)" ""
+sh "$CTL" phone stop >/dev/null
+
+is "shield: no Met Office name is in the list" "$(grep -c -i 'vedur' "$HERE/../app/shield/hosts.txt")" 0
+
 echo "$n checks, $failed failed"
 [ "$failed" = 0 ]

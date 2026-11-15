@@ -1,7 +1,7 @@
 // Impetus phone remote (issue #21): the page the TV serves to a phone on the
 // home network. It pairs with the code on the TV screen, keeps the token in
 // this phone's storage, and runs what the remote runs: the Apple TV, a scene
-// on or off, the shield, an app, standby. Every request goes to
+// on or off, the shield, an app, standby, and the morning room's settings. Every request goes to
 // cgi-bin/api (bin/impetus-phone), which checks the token and each word.
 // Calm failures: a quiet line in the corner, never a box or a spinner.
 // On a PC preview, window.MOCK_API stands in for the TV.
@@ -210,6 +210,57 @@
     $("standby").firstChild.textContent = "STANDBY";
   }
 
+  // ---------- the morning room (#25) ----------
+  // The form shows what the TV holds until it is touched; then the phone's
+  // own choice stands until it is sent.
+  var DAY_KEYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+  var mDays = [1, 2, 3, 4, 5], mTouched = false;
+
+  function renderDays() {
+    var box = $("mdays");
+    box.innerHTML = "";
+    DAY_KEYS.forEach(function (name, i) {
+      var n = i + 1;
+      var b = key("day", function () {
+        mTouched = true;
+        var at = mDays.indexOf(n);
+        if (at >= 0) mDays.splice(at, 1); else mDays.push(n);
+        renderDays();
+        return null;
+      });
+      b.textContent = name;
+      b.classList.toggle("latched", mDays.indexOf(n) >= 0);
+      box.appendChild(b);
+    });
+  }
+
+  function paintMorning() {
+    $("morningstate").textContent = L.morningLine(state);
+    if (mTouched) return;
+    var at = /^(\d\d)(\d\d)$/.exec(state.morningat || "");
+    if (at) $("mat").value = at[1] + ":" + at[2];
+    if (/^[1-7]+$/.test(state.morningdays || "")) {
+      mDays = state.morningdays.split("").map(Number);
+      renderDays();
+    }
+    if (document.activeElement !== $("mstation")) $("mstation").value = state.station || "";
+  }
+
+  function saveMorning(ev) {
+    ev.preventDefault();
+    var w = L.morningWords($("mat").value, mDays, $("mstation").value);
+    if (!w) { quiet(mDays.length ? "CHECK THE TIME AND STATION" : "PICK A DAY", 4000); return; }
+    press($("msave"), function () {
+      return helper(w).then(function () { mTouched = false; return refresh(); });
+    });
+  }
+
+  function morningOff() {
+    press($("moff"), function () {
+      return helper(["morning", "off"]).then(function () { mTouched = false; return refresh(); });
+    });
+  }
+
   function renderShortcuts() {
     var box = $("shortcuts");
     box.innerHTML = "";
@@ -249,6 +300,7 @@
     });
     $("shield").classList.toggle("latched", state.shield === "on");
     $("shieldstate").textContent = L.shieldLine(state);
+    paintMorning();
   }
 
   function refresh() {
@@ -291,6 +343,10 @@
     press($("appletv"), function () { return open(CFG.appleTv && CFG.appleTv.id); });
   });
   $("shield").addEventListener("click", function () { press($("shield"), pressShield); });
+  $("morningform").addEventListener("submit", saveMorning);
+  $("moff").addEventListener("click", morningOff);
+  ["mat", "mstation"].forEach(function (id) { $(id).addEventListener("input", function () { mTouched = true; }); });
+  renderDays();
   $("standby").addEventListener("click", function () { press($("standby"), pressStandby); });
   document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
 

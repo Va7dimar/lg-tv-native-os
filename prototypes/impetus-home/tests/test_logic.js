@@ -573,4 +573,133 @@ t("openWords: a safe id, params base64-coded and capped", () => {
   assert.strictEqual(L.openWords("x; reboot"), null);
 });
 
+// ---------- the morning room (#25) ----------
+const VXML = require("fs").readFileSync(require("path").join(__dirname, "fixtures", "vedur-forecast-2026-11-15.xml"), "utf8");
+const at = (y, mo, d, h, mi) => new Date(y, mo - 1, d, h, mi || 0).getTime();
+
+t("metTime reads the Met Office's local times", () => {
+  assert.strictEqual(L.metTime("2026-11-16 07:00:00"), at(2026, 11, 16, 7));
+  assert.strictEqual(L.metTime("2026-11-16 07:30"), at(2026, 11, 16, 7, 30));
+  assert.strictEqual(L.metTime("16.11.2026 07:00"), null);
+  assert.strictEqual(L.metTime(""), null);
+  assert.strictEqual(L.metTime(undefined), null);
+});
+
+t("parseForecast reads the fixture", () => {
+  const fc = L.parseForecast(VXML);
+  assert.strictEqual(fc.name, "Reykjavík");
+  assert.strictEqual(fc.issued, at(2026, 11, 15, 0));
+  assert.ok(fc.rows.length > 90);
+  assert.deepStrictEqual(fc.rows[0], { t: at(2026, 11, 15, 1), temp: -5, wind: 2, dir: "ESE", words: "Overcast" });
+  const last = fc.rows[fc.rows.length - 1];
+  assert.strictEqual(last.t, at(2026, 11, 24, 12));
+  for (let i = 1; i < fc.rows.length; i++) assert.ok(fc.rows[i].t > fc.rows[i - 1].t);
+  assert.ok(fc.rows.some((r) => r.dir === "" && r.wind === 0), "a calm row keeps no direction");
+});
+
+t("parseForecast refuses what is not a forecast", () => {
+  assert.strictEqual(L.parseForecast('<?xml version="1.0"?><forecasts></forecasts>'), null);
+  assert.strictEqual(L.parseForecast('<forecasts><station id="1"><name>X</name></station></forecasts>'), null);
+  assert.strictEqual(L.parseForecast("<html>busy</html>"), null);
+  assert.strictEqual(L.parseForecast(""), null);
+  assert.strictEqual(L.parseForecast(null), null);
+  const odd = '<station id="9"><name>A &amp; B</name><forecast><ftime>2026-11-16 07:00:00</ftime><F>x</F><D>ZZ</D><T>-2.6</T><W>' +
+    "w".repeat(80) + "</W></forecast><forecast><ftime>bad</ftime><T>1</T></forecast><forecast><ftime>2026-11-16 08:00:00</ftime><T>n/a</T></forecast></station>";
+  const fc = L.parseForecast(odd);
+  assert.strictEqual(fc.name, "A & B");
+  assert.strictEqual(fc.issued, null);
+  assert.deepStrictEqual(fc.rows, [{ t: at(2026, 11, 16, 7), temp: -3, wind: null, dir: "", words: "w".repeat(40) }]);
+});
+
+t("parseWeatherReply: fresh, last, none and broken", () => {
+  const fresh = L.parseWeatherReply("kind=fresh age=0\n" + VXML);
+  assert.strictEqual(fresh.kind, "fresh");
+  assert.strictEqual(fresh.age, 0);
+  assert.strictEqual(fresh.forecast.name, "Reykjavík");
+  const last = L.parseWeatherReply("kind=last age=900\n" + VXML);
+  assert.strictEqual(last.kind, "last");
+  assert.strictEqual(last.age, 900);
+  assert.deepStrictEqual(L.parseWeatherReply("kind=none age=0"), { kind: "none", age: 0, forecast: null });
+  assert.deepStrictEqual(L.parseWeatherReply("kind=fresh age=0\n<forecasts></forecasts>"), { kind: "none", age: 0, forecast: null });
+  assert.deepStrictEqual(L.parseWeatherReply("error=lock"), { kind: "none", age: 0, forecast: null });
+  assert.deepStrictEqual(L.parseWeatherReply("kind=stale age=1\n" + VXML), { kind: "none", age: 0, forecast: null });
+  assert.deepStrictEqual(L.parseWeatherReply(undefined), { kind: "none", age: 0, forecast: null });
+});
+
+t("morningWeather: the hour now and the rest of today", () => {
+  const fc = L.parseForecast(VXML);
+  const w = L.morningWeather(fc, at(2026, 11, 16, 7, 30));
+  assert.strictEqual(w.now.t, at(2026, 11, 16, 7));
+  assert.strictEqual(w.now.temp, -4);
+  assert.deepStrictEqual(w.later.map((r) => new Date(r.t).getHours()), [10, 13, 16, 19, 22]);
+  const late = L.morningWeather(fc, at(2026, 11, 16, 21, 10));
+  assert.strictEqual(late.now.t, at(2026, 11, 16, 21));
+  assert.deepStrictEqual(late.later, []);
+  // Before the first row: that row, if it is ahead.
+  assert.strictEqual(L.morningWeather(fc, at(2026, 11, 14, 23)).now.t, at(2026, 11, 15, 1));
+  // Long after the last row: nothing to show.
+  assert.strictEqual(L.morningWeather(fc, at(2026, 11, 25, 9)), null);
+  // Where the rows are 6 h apart, the hour now may be up to 3 h old.
+  assert.strictEqual(L.morningWeather(fc, at(2026, 11, 22, 8, 59)).now.t, at(2026, 11, 22, 6));
+  assert.strictEqual(L.morningWeather(fc, at(2026, 11, 22, 9, 30)), null);
+  assert.strictEqual(L.morningWeather(null, Date.now()), null);
+  assert.strictEqual(L.morningWeather({ rows: [] }, Date.now()), null);
+});
+
+t("formatTemp and windLine", () => {
+  assert.strictEqual(L.formatTemp(-6), "−6°");
+  assert.strictEqual(L.formatTemp(0), "0°");
+  assert.strictEqual(L.formatTemp(12), "12°");
+  assert.strictEqual(L.windLine({ wind: 2, dir: "ESE" }), "2 m/s ESE");
+  assert.strictEqual(L.windLine({ wind: 7, dir: "" }), "7 m/s");
+  assert.strictEqual(L.windLine({ wind: 0, dir: "" }), "calm");
+  assert.strictEqual(L.windLine({ wind: null, dir: "E" }), "");
+  assert.strictEqual(L.windLine(null), "");
+});
+
+t("weatherSource stays calm in every failure", () => {
+  const now = at(2026, 11, 16, 7, 30);
+  const fresh = L.parseWeatherReply("kind=fresh age=0\n" + VXML);
+  const last = L.parseWeatherReply("kind=last age=1800\n" + VXML);
+  const none = L.parseWeatherReply("kind=none age=0");
+  assert.strictEqual(L.weatherSource(fresh, now, false), "Icelandic Met Office · no station set: pick one on the phone");
+  assert.strictEqual(L.weatherSource(null, now, true), "Icelandic Met Office · waiting for the forecast");
+  assert.strictEqual(L.weatherSource(none, now, true), "Icelandic Met Office · feed down");
+  assert.strictEqual(L.weatherSource(fresh, now, true), "Icelandic Met Office · Reykjavík · forecast of 00:00");
+  assert.strictEqual(L.weatherSource(last, now, true), "Icelandic Met Office · Reykjavík · feed down since 07:00");
+  for (const s of [L.weatherSource(none, now, true), L.weatherSource(last, now, true)]) assert.ok(!/error|fail/i.test(s));
+});
+
+t("daysLine and morningLine", () => {
+  assert.strictEqual(L.daysLine("12345"), "MON–FRI");
+  assert.strictEqual(L.daysLine("1234567"), "EVERY DAY");
+  assert.strictEqual(L.daysLine("67"), "SAT SUN");
+  assert.strictEqual(L.daysLine("135"), "MON WED FRI");
+  assert.strictEqual(L.daysLine("234"), "TUE–THU");
+  assert.strictEqual(L.daysLine("1"), "MON");
+  assert.strictEqual(L.daysLine(""), "");
+  assert.strictEqual(L.morningLine({ morningat: "0730", morningdays: "12345" }), "07:30 · MON–FRI");
+  assert.strictEqual(L.morningLine({ morningat: "0615", morningdays: "67" }), "06:15 · SAT SUN");
+  assert.strictEqual(L.morningLine({ morningat: "0730", morningdays: "" }), "07:30 · MON–FRI");
+  assert.strictEqual(L.morningLine({ morningat: "" }), "OFF");
+  assert.strictEqual(L.morningLine({ morningat: "2460" }), "OFF");
+  assert.strictEqual(L.morningLine(null), "OFF");
+});
+
+t("morningWords builds the helper's words or refuses", () => {
+  assert.deepStrictEqual(L.morningWords("07:30", [1, 2, 3, 4, 5], "1"), ["morning", "set", "at=0730", "days=12345", "station=1"]);
+  assert.deepStrictEqual(L.morningWords("0645", [7, 6, 6], ""), ["morning", "set", "at=0645", "days=67"]);
+  assert.deepStrictEqual(L.morningWords("23:59", [3], null), ["morning", "set", "at=2359", "days=3"]);
+  assert.deepStrictEqual(L.morningWords("08:05", [1], " 422 "), ["morning", "set", "at=0805", "days=1", "station=422"]);
+  assert.strictEqual(L.morningWords("7:30", [1], ""), null);
+  assert.strictEqual(L.morningWords("24:00", [1], ""), null);
+  assert.strictEqual(L.morningWords("07:30", [], ""), null);
+  assert.strictEqual(L.morningWords("07:30", [0, 8, 1.5], ""), null);
+  assert.strictEqual(L.morningWords("07:30", [1], "01"), null);
+  assert.strictEqual(L.morningWords("07:30", [1], "12345678"), null);
+  assert.strictEqual(L.morningWords("07:30", [1], "1;reboot"), null);
+  assert.strictEqual(L.morningWords("", [1], ""), null);
+  for (const w of L.morningWords("07:30", [1, 2], "1")) assert.ok(L.isSafeWord(w), w);
+});
+
 console.log(n + " tests, 0 failed");

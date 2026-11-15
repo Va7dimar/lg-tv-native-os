@@ -17,10 +17,12 @@
 //        feed=down (the helper has only its last copy)  fps=1 (frames per second, top left)
 //        flights=fixture (two aircraft of 15.11, a minute further on each call)
 //        cam=fixture (a stand-in road-camera frame; shown only in daylight at the camera)
+//        notice=morning  weather=fixture (Reykjavik's forecast of 15.11; feed=down for the last copy)
 (function () {
   var q = location.search;
   function arg(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(q); return m ? decodeURIComponent(m[1]) : ""; }
-  var at = arg("t") || (arg("quakes") === "fixture" ? "2026-11-15T00:20:00Z" : "");
+  var at = arg("t") || (arg("quakes") === "fixture" ? "2026-11-15T00:20:00Z" :
+    arg("weather") === "fixture" ? "2026-11-15T07:40:00" : "");
   if (at) { var fixed = new Date(at).getTime(), base = Date.now(), RD = Date;
     window.Date = function (a, b, c, d, e, f, g) { if (arguments.length === 0) return new RD(fixed + (RD.now() - base)); return arguments.length === 1 ? new RD(a) : new RD(a, b, c || 1, d || 0, e || 0, f || 0, g || 0); };
     window.Date.now = function () { return fixed + (RD.now() - base); }; window.Date.prototype = RD.prototype;
@@ -37,7 +39,7 @@
     if (tv.shield) tv.hits += Math.floor(Math.random() * 3);
     return ["now=" + nowS(), "scene=" + tv.scene, "target=", "end=" + tv.end, "sleep=" + tv.sleep,
       "screenoff=" + tv.screenoff, "shield=" + (tv.shield ? "on" : "off")].concat(tv.shield ? ["hits=" + tv.hits] : [])
-      .concat(["hosts=45", "keeper=1"])
+      .concat(["hosts=45", "keeper=1", "morningat=0700", "morningdays=12345", "station=" + (arg("weather") ? "1" : "")])
       .concat(off.indexOf("phone") >= 0 ? ["phone=none"]
         : tv.phone ? ["phone=on", "phoneport=8090", "phoneaddr=192.168.1.50"] : ["phone=off"]).join("\n");
   }
@@ -106,6 +108,13 @@
       var fx = new XMLHttpRequest(); fx.open("GET", "../tests/fixtures/vedur-quakeinfo-2026-11-15.txt", false); fx.send();
       // feed=down: the helper could not reach the Met Office and answers with its last copy, 14 min old.
       return (arg("feed") === "down" ? "kind=last age=840\n" : "kind=fresh age=0\n") + fx.responseText;
+    }
+    if (verb === "morning" && w[1] === "weather") {
+      // weather=fixture: Reykjavik's forecast of 15.11 (sets t to 07:40 local unless t is given);
+      // feed=down: the helper's last copy, 14 min old; anything else: no forecast.
+      if (arg("weather") !== "fixture") return "kind=none age=0";
+      var wx = new XMLHttpRequest(); wx.open("GET", "../tests/fixtures/vedur-forecast-2026-11-15.xml", false); wx.send();
+      return (arg("feed") === "down" ? "kind=last age=840\n" : "kind=fresh age=0\n") + wx.responseText;
     }
     if (verb === "phone" && w[1] === "revoke") {
       tv.phones = tv.phones.filter(function (p) { return "id=" + p[0] !== w[2]; }); return "ok=1";

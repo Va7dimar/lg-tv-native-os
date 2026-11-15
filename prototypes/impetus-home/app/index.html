@@ -144,6 +144,24 @@
     </section>
   </section>
 
+  <!-- The morning room (#25): on the set days, the first look at the day -->
+  <section id="morning" class="room morning" aria-hidden="true">
+    <span class="dawn"></span>
+    <section class="mornclock">
+      <h2 class="label">MORNING</h2>
+      <time id="mclock" class="clock">--:--</time>
+      <p id="mdate" class="date"></p>
+      <p id="msun" class="sunline"></p>
+    </section>
+    <section id="mweather" class="mweather">
+      <p class="mnow"><span id="mtemp" class="mtemp"></span><span id="mwords" class="mwords"></span></p>
+      <p id="mwind" class="mwind"></p>
+      <ol id="mlater" class="mlater"></ol>
+    </section>
+    <p id="msource" class="msource"></p>
+    <p class="mhint">Any key opens Home</p>
+  </section>
+
 </div>
 <script src="logic.js"></script>
 <script src="config.js"></script>

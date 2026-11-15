@@ -744,7 +744,127 @@
     return w;
   }
 
-  var api = { parseWebcam: parseWebcam, webcamShown: webcamShown, webcamCredit: webcamCredit, parseFlightReply: parseFlightReply, flightTrails: flightTrails, flightStep: flightStep, flightSource: flightSource,
+  // ---------- The morning room (#25) ----------
+  var DAY_SHORT = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+
+  // "2026-11-15 07:00:00" (the Met Office's local time; Iceland keeps UTC) -> ms, or null.
+  function metTime(s) {
+    var m = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/.exec(String(s || ""));
+    if (!m) return null;
+    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5])).getTime();
+  }
+
+  function xmlText(s) {
+    return String(s || "").replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, "&").trim();
+  }
+
+  // The Met Office's XML forecast for one station -> { name, issued (ms),
+  // rows: [{ t, temp, wind, dir, words }] } in time order, or null when it
+  // holds no forecast we can read.
+  function parseForecast(xml) {
+    var s = typeof xml === "string" ? xml : "";
+    var st = /<station\b[^>]*>([\s\S]*?)<\/station>/.exec(s);
+    if (!st) return null;
+    var body = st[1], rows = [], re = /<forecast>([\s\S]*?)<\/forecast>/g, f;
+    function tag(src, name) { var m = new RegExp("<" + name + ">([\\s\\S]*?)</" + name + ">").exec(src); return m ? xmlText(m[1]) : ""; }
+    while ((f = re.exec(body))) {
+      var t = metTime(tag(f[1], "ftime")), temp = tag(f[1], "T"), wind = tag(f[1], "F");
+      if (t === null || !/^-?\d+(\.\d+)?$/.test(temp)) continue;
+      rows.push({ t: t, temp: Math.round(Number(temp)), wind: /^\d+$/.test(wind) ? Number(wind) : null,
+        dir: /^[NSEWC]{1,3}$/.test(tag(f[1], "D")) ? tag(f[1], "D") : "", words: tag(f[1], "W").slice(0, 40) });
+    }
+    if (!rows.length) return null;
+    rows.sort(function (a, b) { return a.t - b.t; });
+    return { name: tag(body, "name").slice(0, 40), issued: metTime(tag(body, "atime")), rows: rows };
+  }
+
+  // The helper's `morning weather` answer -> { kind, age, forecast }. A
+  // forecast that does not parse is "none": the view shows its quiet line.
+  function parseWeatherReply(text) {
+    var s = typeof text === "string" ? text : "", nl = s.indexOf("\n");
+    var head = nl < 0 ? s : s.slice(0, nl);
+    var kind = /(?:^|\s)kind=(fresh|last|none)(?=\s|$)/.exec(head), age = /(?:^|\s)age=(\d+)(?=\s|$)/.exec(head);
+    var fc = kind && kind[1] !== "none" ? parseForecast(s.slice(nl + 1)) : null;
+    return { kind: fc ? kind[1] : "none", age: fc && age ? Number(age[1]) : 0, forecast: fc };
+  }
+
+  // What the view draws: the hour now (the last row at or before now, else
+  // the first), and the rest of today in steps of at least 3 hours, up to 5.
+  // null when the forecast holds nothing from today on.
+  function morningWeather(fc, nowMs) {
+    if (!fc || !fc.rows || !fc.rows.length) return null;
+    var rows = fc.rows, cur = null, i;
+    for (i = 0; i < rows.length; i++) if (rows[i].t <= nowMs) cur = rows[i];
+    if (!cur || nowMs - cur.t > 3 * 3600000) cur = rows[0].t > nowMs ? rows[0] : null;
+    if (!cur) return null;
+    var d = new Date(nowMs), end = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime();
+    var later = [], last = cur.t;
+    for (i = 0; i < rows.length && later.length < 5; i++) {
+      if (rows[i].t >= last + 3 * 3600000 && rows[i].t < end) { later.push(rows[i]); last = rows[i].t; }
+    }
+    return { now: cur, later: later };
+  }
+
+  // -6 -> "−6°" (a true minus sign, figures of one width in the view).
+  function formatTemp(t) { return (t < 0 ? "−" + (-t) : String(t)) + "°"; }
+
+  function windLine(row) {
+    if (!row || row.wind === null) return "";
+    if (row.wind === 0) return "calm";
+    return row.wind + " m/s" + (row.dir ? " " + row.dir : "");
+  }
+
+  // The source line under the weather: calm in every failure.
+  function weatherSource(reply, nowMs, hasStation) {
+    var src = "Icelandic Met Office";
+    if (!hasStation) return src + " · no station set: pick one on the phone";
+    if (!reply) return src + " · waiting for the forecast";
+    var fc = reply.forecast, name = fc && fc.name ? " · " + fc.name : "";
+    if (!fc) return src + " · feed down";
+    var made = fc.issued ? " · forecast of " + formatClock(new Date(fc.issued)) : "";
+    if (reply.kind === "last") return src + name + " · feed down since " + formatClock(new Date(nowMs - reply.age * 1000));
+    return src + name + made;
+  }
+
+  // "1234567" style days -> "MON–FRI", "SAT SUN", "EVERY DAY".
+  function daysLine(days) {
+    var s = String(days || ""), on = [], i;
+    for (i = 1; i <= 7; i++) if (s.indexOf(String(i)) >= 0) on.push(i);
+    if (!on.length) return "";
+    if (on.length === 7) return "EVERY DAY";
+    var run = on.length > 2 && on[on.length - 1] - on[0] === on.length - 1;
+    if (run) return DAY_SHORT[on[0] - 1] + "–" + DAY_SHORT[on[on.length - 1] - 1];
+    return on.map(function (n) { return DAY_SHORT[n - 1]; }).join(" ");
+  }
+
+  // The helper's state -> the phone's line: "07:30 · MON–FRI", or "OFF".
+  function morningLine(state) {
+    var at = /^([01]\d|2[0-3])([0-5]\d)$/.exec((state && state.morningat) || "");
+    if (!at) return "OFF";
+    return at[1] + ":" + at[2] + " · " + (daysLine(state.morningdays) || "MON–FRI");
+  }
+
+  // The phone's form -> the words for `impetus-ctl morning set`, or null.
+  // at "07:30", days an array of 1-7 (Monday is 1), station digits or "".
+  function morningWords(at, days, station) {
+    var m = /^([01]\d|2[0-3]):?([0-5]\d)$/.exec(String(at || ""));
+    if (!m) return null;
+    var d = (days || []).filter(function (n) { return n >= 1 && n <= 7 && Math.floor(n) === n; })
+      .sort().filter(function (n, i, a) { return a.indexOf(n) === i; }).join("");
+    if (!d) return null;
+    var w = ["morning", "set", "at=" + m[1] + m[2], "days=" + d];
+    var st = String(station === undefined || station === null ? "" : station).trim();
+    if (st) {
+      if (!/^[1-9]\d{0,6}$/.test(st)) return null;
+      w.push("station=" + st);
+    }
+    return w;
+  }
+
+  var api = { metTime: metTime, parseForecast: parseForecast, parseWeatherReply: parseWeatherReply, morningWeather: morningWeather,
+    formatTemp: formatTemp, windLine: windLine, weatherSource: weatherSource, daysLine: daysLine, morningLine: morningLine, morningWords: morningWords,
+    parseWebcam: parseWebcam, webcamShown: webcamShown, webcamCredit: webcamCredit, parseFlightReply: parseFlightReply, flightTrails: flightTrails, flightStep: flightStep, flightSource: flightSource,
     parseQuakeInfo: parseQuakeInfo, parseQuakeReply: parseQuakeReply, isleStep: isleStep, isleSource: isleSource, formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
     isSafeId: isSafeId, isSafeWord: isSafeWord, sunAltitude: sunAltitude, sunDay: sunDay,
     nightWindow: nightWindow, pickApps: pickApps, launchPayload: launchPayload,

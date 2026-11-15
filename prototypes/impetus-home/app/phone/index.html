@@ -48,6 +48,20 @@
   <h2 id="appslabel" class="label" hidden>APPS</h2>
   <nav id="apps" class="apps"></nav>
 
+  <h2 id="morninglabel" class="label">MORNING <span id="morningstate" class="state">OFF</span></h2>
+  <form id="morningform" class="morningform">
+    <p class="read">On these days at this time the TV shows the morning view with the weather: on waking, or when it is first turned on after the time.</p>
+    <label class="label" for="mat">TIME</label>
+    <input id="mat" class="field" type="time" value="07:00" required>
+    <p class="label">DAYS</p>
+    <nav id="mdays" class="days"></nav>
+    <label class="label" for="mstation">WEATHER STATION</label>
+    <input id="mstation" class="field" type="text" inputmode="numeric" maxlength="7" pattern="[0-9]*" placeholder="1">
+    <p class="line">The Icelandic Met Office's station number (1 is Reykjavík). It stays on the TV.</p>
+    <button id="msave" class="key wide" type="submit"><span class="name">SET MORNING</span></button>
+    <button id="moff" class="link" type="button">Turn the morning view off</button>
+  </form>
+
   <button id="standby" class="key standby" type="button"><span class="name">STANDBY</span></button>
 </main>
 
