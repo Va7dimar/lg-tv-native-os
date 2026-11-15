@@ -17,6 +17,7 @@
 #   shield on|off         block the hosts in shield/hosts.txt (memory only)
 #   engine                vitals, state, connections and log in one answer
 #   iceland quakes        the Met Office's 48-hour quake list (read only, no lock)
+#   iceland flights       aircraft over and around Iceland, adsb.lol (read only, no lock)
 #   restore               the way back: scene off, shield off, keeper stopped
 #   keeper | tick         the background loop, or one turn of it
 #
@@ -648,6 +649,8 @@ logtail() {
 
 # One fixed address per feed; the page names a feed, never an address.
 QUAKE_URL=${IMPETUS_QUAKE_URL:-https://en.vedur.is/earthquakes-and-volcanism/earthquakes/}
+# Aircraft within 250 nm of the middle of Iceland (adsb.lol, ODbL, no key).
+FLIGHT_URL=${IMPETUS_FLIGHT_URL:-https://api.adsb.lol/v2/point/64.9/-19/250}
 FETCHWAIT=${IMPETUS_FETCHWAIT:-10}   # seconds one fetch may take
 FETCHMAX=2000000                     # bytes; a larger answer is not the page
 
@@ -710,6 +713,29 @@ iceland_quakes() {
   if [ -s "$iq_dir/quakes.txt" ] && is_num "$iq_at"; then
     echo "kind=last age=$(( $(now) - iq_at ))"
     cat "$iq_dir/quakes.txt"
+  else
+    echo "kind=none age=0"
+  fi
+}
+
+# iceland flights: the same shape as quakes, then adsb.lol's JSON answer
+# (the page reads it with JSON.parse). A good answer carries "ac" and "now".
+iceland_flights() {
+  if_dir="$RUN/iceland"
+  mkdir -p "$if_dir"
+  if fetch_to "$if_dir/flights.new" "$FLIGHT_URL" &&
+     grep -q '"ac"' "$if_dir/flights.new" && grep -q '"now"' "$if_dir/flights.new"; then
+    mv "$if_dir/flights.new" "$if_dir/flights.txt"
+    now > "$if_dir/flights.at"
+    echo "kind=fresh age=0"
+    cat "$if_dir/flights.txt"
+    return 0
+  fi
+  rm -f "$if_dir/flights.new"
+  if_at=$(cat "$if_dir/flights.at" 2>/dev/null)
+  if [ -s "$if_dir/flights.txt" ] && is_num "$if_at"; then
+    echo "kind=last age=$(( $(now) - if_at ))"
+    cat "$if_dir/flights.txt"
   else
     echo "kind=none age=0"
   fi
@@ -975,7 +1001,7 @@ case "$verb" in
     unlock ;;
   shield) case "$1" in on) shield_on ;; off) shield_off ;; *) die shield ;; esac ;;
   engine) engine ;;
-  iceland) case "$1" in quakes) iceland_quakes ;; *) die iceland ;; esac ;;
+  iceland) case "$1" in quakes) iceland_quakes ;; flights) iceland_flights ;; *) die iceland ;; esac ;;
   restore) restore_all ;;
   keeper) keeper ;;
   tick) mkdir -p "$RUN"; tick; echo ok=1 ;;

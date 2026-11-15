@@ -736,7 +736,28 @@ is "iceland: nothing kept and no network is none" "$(sh "$CTL" iceland quakes)" 
 cp "$QPAGE" "$STUB_TV/net.page"
 is "iceland: busybox wget works the same" "$(IMPETUS_FETCHER=wget sh "$CTL" iceland quakes | head -n 1)" "kind=fresh age=0"
 is "iceland: wget was the one used" "$(calls 'fetch wget ')" 1
-refused "an unknown feed" iceland iceland flights
+rm -f "$STUB_TV/net.page"
+
+# ---------- iceland flights: adsb.lol, read only ----------
+FPAGE="$HERE/fixtures/adsb-lol-2026-11-15.json"
+export IMPETUS_NOW=1794700000
+cp "$FPAGE" "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland flights)
+is "flights: a good answer is fresh" "$(echo "$out" | head -n 1)" "kind=fresh age=0"
+is "flights: the answer comes back whole" "$(echo "$out" | sed 1d)" "$(cat "$FPAGE")"
+is "flights: the fixed address is fetched" "$(calls 'fetch curl https://api.adsb.lol/v2/point/64.9/-19/250')" 1
+no "flights: no lock is left or taken" held
+export IMPETUS_NOW=1794700060
+echo '{"error":"rate limited"}' > "$STUB_TV/net.page"
+is "flights: an answer without aircraft keeps the last copy" "$(sh "$CTL" iceland flights | head -n 1)" "kind=last age=60"
+rm -f "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland flights)
+is "flights: no network gives the last copy with its age" "$(echo "$out" | head -n 1)" "kind=last age=60"
+is "flights: the last copy is whole" "$(echo "$out" | sed 1d)" "$(cat "$FPAGE")"
+yes "flights: the quake copy is untouched" [ -s "$RUN/iceland/quakes.txt" ]
+rm -f "$RUN/iceland/flights.txt"
+is "flights: nothing kept and no network is none" "$(sh "$CTL" iceland flights)" "kind=none age=0"
+refused "an unknown feed" iceland iceland planes
 refused "an address from the page" word iceland quakes 'url=http://x;reboot'
 unset IMPETUS_FETCHWAIT IMPETUS_NOW
 

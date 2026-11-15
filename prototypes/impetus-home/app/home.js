@@ -19,6 +19,7 @@
   var conns = [], hosts = {}, resolving = {};
   var noticeUntil = 0, dismissed = 0, cancelling = false;
   var isleBuilt = false, isleState = null, isleBusy = 0, isleFetchTimer = null, isleAgeTimer = null;
+  var flightState = null, flightBusy = 0, flightTimer = null;
 
   function every(seconds, fallback) { return (seconds || fallback) * 1000; }
   function noop() {}
@@ -343,12 +344,33 @@
     });
   }
 
+  // Aircraft: every 60 s while open, one fetch at a time, the same calm rule.
+  function fetchFlights() {
+    if (flightBusy && Date.now() - flightBusy < 30000) return;
+    var mine = flightBusy = Date.now();
+    LUNA.ctl(["iceland", "flights"]).then(function (text) {
+      return L.parseFlightReply(text, Date.now());
+    }, function () {
+      return { kind: "none", age: 0, flights: null };
+    }).then(function (r) {
+      if (flightBusy === mine) flightBusy = 0;
+      flightState = L.flightStep(flightState, r, Date.now());
+      if (room === "iceland") window.ImpetusIceland.drawFlights(flightState, Date.now());
+    });
+  }
+
   function openIceland() {
-    if (!isleBuilt) { window.ImpetusIceland.build($("islebase"), $("islequakes"), $("islemotion")); isleBuilt = true; }
+    var I = window.ImpetusIceland;
+    if (!isleBuilt) { I.build($("islebase"), $("islequakes"), $("islemotion"), $("isleflights")); isleBuilt = true; }
     drawIceland();
+    // Planes last seen over 3 min ago are not drawn again on the way back in.
+    if (flightState) flightState = { trails: L.flightTrails(flightState.trails, [], Date.now()), goodAt: flightState.goodAt, down: flightState.down };
+    I.drawFlights(flightState, Date.now());
     fetchIceland();
+    fetchFlights();
     isleFetchTimer = setInterval(fetchIceland, 120000);
     isleAgeTimer = setInterval(drawIceland, 60000);
+    flightTimer = setInterval(fetchFlights, 60000);
   }
 
   // ?fps=1 (or launch params with "fps"): frames per second, top left, for the TV check.
@@ -457,7 +479,7 @@
     });
     clearInterval(stateTimer); clearInterval(stillTimer); clearInterval(engineTimer);
     clearInterval(noticeTimer); clearTimeout(idleTimer);
-    clearInterval(isleFetchTimer); clearInterval(isleAgeTimer);
+    clearInterval(isleFetchTimer); clearInterval(isleAgeTimer); clearInterval(flightTimer);
     collect();
     if (next === "control") {
       // Arriving from the living room lands on APPLE TV; coming back out of

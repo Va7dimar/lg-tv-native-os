@@ -277,11 +277,35 @@
     ["r1", "r2", "r3"].forEach(function (c) { div("ripple " + c, x - m.ox, y - m.oy, r * 2, m.box); });
   }
 
-  var base = null, layer = null, motion = null;
+  var base = null, layer = null, motion = null, planes = null;
 
-  function build(baseSvg, quakeSvg, motionBox) {
-    base = baseSvg; layer = quakeSvg; motion = motionBox;
+  function build(baseSvg, quakeSvg, motionBox, flightSvg) {
+    base = baseSvg; layer = quakeSvg; motion = motionBox; planes = flightSvg;
     drawBase(base);
+  }
+
+  // ---------- Aircraft (own SVG on top, redrawn from each flight reply) ----------
+  // Cool and small beside the warm quakes: a trail of the last fixes and an
+  // arrow on the newest, pointing along the track. Only over the map's side
+  // of the screen (the left column keeps its text); not in the lens.
+  function drawFlights(st, now) {
+    if (!planes) return;
+    while (planes.firstChild) planes.removeChild(planes.firstChild);
+    var clip = el("clipPath", { id: "ice-sky" }, el("defs", {}, planes));
+    el("rect", { x: 580, y: 130, width: 1340, height: 856 }, clip);   // under the source lines, above the ribbon
+    var g = el("g", { "clip-path": "url(#ice-sky)" }, planes), trails = (st && st.trails) || {};
+    for (var id in trails) {
+      if (!Object.prototype.hasOwnProperty.call(trails, id)) continue;
+      var tr = trails[id], pts = [];
+      for (var i = 0; i < tr.length; i++) { var p = P(tr[i].lon, tr[i].lat); pts.push(f1(p[0]) + "," + f1(p[1])); }
+      if (pts.length > 1) el("polyline", { points: pts.join(" "), fill: "none", stroke: "#7F9BB8", "stroke-width": 1.5,
+        "stroke-opacity": 0.4, "stroke-linecap": "round", "stroke-linejoin": "round" }, g);
+      var last = tr[tr.length - 1], xy = P(last.lon, last.lat);
+      el("path", { d: "M0,-9 L5.5,6 L0,3 L-5.5,6 Z", fill: "#CFE0F2", "fill-opacity": 0.85,
+        transform: "translate(" + f1(xy[0]) + "," + f1(xy[1]) + ") rotate(" + Math.round(last.track) + ")" }, g);
+    }
+    el("text", { x: 1824, y: 116, "class": "read", "font-size": 15, "text-anchor": "end", fill: st && st.down ? "#8E959F" : "#6E7580" }, planes,
+      L.flightSource(st));
   }
 
   // st: the feed state from L.isleStep ({ quakes, goodAt, down }), or null
@@ -315,5 +339,5 @@
       L.isleSource(st));
   }
 
-  root.ImpetusIceland = { build: build, draw: draw, heat: heat, project: P };
+  root.ImpetusIceland = { build: build, draw: draw, drawFlights: drawFlights, heat: heat, project: P };
 })(window);

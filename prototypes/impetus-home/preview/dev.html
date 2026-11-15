@@ -15,6 +15,7 @@
 //        scene=<id> (a scene already on)  shield=on
 //        room=iceland  quakes=fixture (the 15.11 list; sets t to 00:20 UTC unless t is given) | none
 //        feed=down (the helper has only its last copy)  fps=1 (frames per second, top left)
+//        flights=fixture (two aircraft of 15.11, a minute further on each call)
 (function () {
   var q = location.search;
   function arg(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(q); return m ? decodeURIComponent(m[1]) : ""; }
@@ -83,6 +84,18 @@
     if (verb === "scene") { tv.scene = ""; tv.end = tv.sleep = tv.screenoff = ""; return "ok=1"; }
     if (verb === "sleep") { tv.sleep = ""; return "prev=netflix"; }
     if (verb === "shield") { tv.shield = w[1] === "on"; tv.hits = 0; return "ok=1"; }
+    if (verb === "iceland" && w[1] === "flights") {
+      // flights=fixture: the two aircraft of 15.11 01:09, flown on a minute per call so trails grow.
+      if (arg("flights") !== "fixture") return "kind=none age=0";
+      var fq = new XMLHttpRequest(); fq.open("GET", "../tests/fixtures/adsb-lol-2026-11-15.json", false); fq.send();
+      var fd = JSON.parse(fq.responseText), dt = 60 * (tv.flightCalls = (tv.flightCalls || 0) + 1);
+      fd.ac.forEach(function (a) {
+        var nm = a.gs * dt / 3600, rad = a.track * Math.PI / 180;
+        a.lat += nm * Math.cos(rad) / 60; a.lon += nm * Math.sin(rad) / 60 / Math.cos(a.lat * Math.PI / 180); a.seen_pos = 1;
+      });
+      fd.now = Date.now();
+      return (arg("feed") === "down" ? "kind=last age=840\n" : "kind=fresh age=0\n") + JSON.stringify(fd);
+    }
     if (verb === "iceland" && w[1] === "quakes") {
       if (arg("quakes") !== "fixture") return "kind=none age=0";
       var fx = new XMLHttpRequest(); fx.open("GET", "../tests/fixtures/vedur-quakeinfo-2026-11-15.txt", false); fx.send();

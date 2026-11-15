@@ -417,6 +417,54 @@ t("quakes: the feed state keeps the last list and says since when it is down", (
   assert.strictEqual(L.isleSource(st), "Icelandic Met Office · updated " + at(later));
 });
 
+const FLIGHTS = fs.readFileSync(path.join(__dirname, "fixtures", "adsb-lol-2026-11-15.json"), "utf8");
+const FLIGHT_NOW = 1794704979500;
+
+t("flights: adsb.lol's answer gives the aircraft with their fix times", () => {
+  const r = L.parseFlightReply("kind=fresh age=0\n" + FLIGHTS, FLIGHT_NOW);
+  assert.strictEqual(r.kind, "fresh");
+  assert.deepStrictEqual(r.flights.map(f => [f.id, f.call, f.track]), [["48ae25", "LOT2E", 269.38], ["471f41", "WZZ89J", 290.87]]);
+  assert.strictEqual(r.flights[1].t, FLIGHT_NOW - 17762);
+  const ac = (o) => "kind=fresh age=0\n" + JSON.stringify({ now: FLIGHT_NOW, ac: [Object.assign({ hex: "4cc2a1", lat: 64, lon: -22, track: 90, seen_pos: 1 }, o)] });
+  assert.strictEqual(L.parseFlightReply(ac({}), FLIGHT_NOW).flights.length, 1);
+  for (const bad of [{ alt_baro: "ground" }, { lat: null }, { track: undefined }, { lat: 55 }, { lon: 10 }, { seen_pos: 90 },
+    { hex: "<img>" }]) {
+    assert.strictEqual(L.parseFlightReply(ac(bad), FLIGHT_NOW).flights.length, 0, JSON.stringify(bad));
+  }
+  assert.strictEqual(L.parseFlightReply(ac({ flight: "<b>x</b>" }), FLIGHT_NOW).flights[0].call, "");
+  for (const bad of ["kind=none age=0", "kind=fresh age=0\n{not json", "kind=fresh age=0\n{\"msg\":\"x\"}", "", null,
+    "kind=fresh age=0"]) {
+    assert.deepStrictEqual(L.parseFlightReply(bad, FLIGHT_NOW), { kind: "none", age: 0, flights: null }, String(bad));
+  }
+});
+
+t("flights: trails keep ten fixes, add only newer ones and drop a plane gone for 3 min", () => {
+  const fix = (id, t) => ({ id, call: "", lat: 64, lon: -20, track: 0, t });
+  let tr = {};
+  for (let i = 1; i <= 12; i++) tr = L.flightTrails(tr, [fix("a", i * 60000)], i * 60000);
+  assert.strictEqual(tr.a.length, 10);
+  assert.strictEqual(tr.a[0].t, 3 * 60000);
+  const same = L.flightTrails(tr, [fix("a", 12 * 60000), fix("a", 5 * 60000)], 12 * 60000);
+  assert.strictEqual(same.a.length, 10);
+  assert.strictEqual(tr.a.length, 10, "the old trails are not changed");
+  assert.deepStrictEqual(L.flightTrails(tr, [], 12 * 60000 + 180001), {});
+});
+
+t("flights: the feed state and its line", () => {
+  const at = (ms) => L.formatClock(new Date(ms));
+  const fresh = L.parseFlightReply("kind=fresh age=0\n" + FLIGHTS, FLIGHT_NOW);
+  assert.strictEqual(L.flightSource(null), "Aircraft: adsb.lol (ODbL) · waiting");
+  let st = L.flightStep(null, fresh, FLIGHT_NOW);
+  assert.strictEqual(L.flightSource(st), "Aircraft: adsb.lol (ODbL) · 2 in the air · updated " + at(FLIGHT_NOW));
+  st = L.flightStep(st, { kind: "none", age: 0, flights: null }, FLIGHT_NOW + 60000);
+  assert.strictEqual(st.down, true);
+  assert.strictEqual(Object.keys(st.trails).length, 2, "kept while under 3 min");
+  assert.strictEqual(L.flightSource(st), "Aircraft: adsb.lol (ODbL) · feed down since " + at(FLIGHT_NOW));
+  st = L.flightStep(st, { kind: "none", age: 0, flights: null }, FLIGHT_NOW + 240000);
+  assert.deepStrictEqual(st.trails, {}, "no frozen planes");
+  assert.strictEqual(L.flightSource(L.flightStep(null, { kind: "none", age: 0, flights: null }, FLIGHT_NOW)), "Aircraft: adsb.lol (ODbL) · feed down");
+});
+
 t("shield: none of its names blocks a host the Iceland room needs", () => {
   const FEEDS = ["en.vedur.is", "vedur.is", "api.adsb.lol", "adsb.lol"];
   const names = fs.readFileSync(path.join(__dirname, "..", "app", "shield", "hosts.txt"), "utf8")

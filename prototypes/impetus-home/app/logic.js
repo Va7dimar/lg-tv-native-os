@@ -542,7 +542,78 @@
     return src + "feed down" + (st.goodAt ? " since " + formatClock(new Date(st.goodAt)) : "");
   }
 
-  var api = { parseQuakeInfo: parseQuakeInfo, parseQuakeReply: parseQuakeReply, isleStep: isleStep, isleSource: isleSource, formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
+  // ---------- Iceland: aircraft (adsb.lol) ----------
+  var TRAIL = 10, FLIGHT_STALE = 180000;   // points per trail; a plane not heard for 3 min is gone
+
+  // The helper's "iceland flights" reply -> { kind, age, flights } where each
+  // flight is { id, call, lat, lon, track, t (ms of its fix) }. Read with
+  // JSON.parse, never evaluated. Ground traffic, planes without a position or
+  // track, and fixes older than 60 s are left out.
+  function parseFlightReply(text, nowMs) {
+    var none = { kind: "none", age: 0, flights: null };
+    var s = typeof text === "string" ? text : "", nl = s.indexOf("\n");
+    if (nl < 0) return none;
+    var head = s.slice(0, nl);
+    var kind = /(?:^|\s)kind=(fresh|last)(?=\s|$)/.exec(head), age = /(?:^|\s)age=(\d+)(?=\s|$)/.exec(head);
+    if (!kind) return none;
+    var data;
+    try { data = JSON.parse(s.slice(nl + 1)); } catch (e) { return none; }
+    if (!data || !isArray(data.ac)) return none;
+    var at = typeof data.now === "number" && isFinite(data.now) ? data.now : nowMs, out = [];
+    for (var i = 0; i < data.ac.length; i++) {
+      var a = data.ac[i];
+      if (!a || typeof a.hex !== "string" || !/^~?[0-9a-f]{6}$/.test(a.hex)) continue;
+      if (a.alt_baro === "ground" || !isNum(a.lat) || !isNum(a.lon) || !isNum(a.track)) continue;
+      if (a.lat < 60 || a.lat > 70 || a.lon < -32 || a.lon > -6) continue;
+      var seen = isNum(a.seen_pos) ? a.seen_pos : isNum(a.seen) ? a.seen : 999;
+      if (seen < 0 || seen > 60) continue;
+      var call = typeof a.flight === "string" ? a.flight.replace(/\s+$/, "") : "";
+      out.push({ id: a.hex, call: /^[A-Z0-9]{1,8}$/.test(call) ? call : "", lat: a.lat, lon: a.lon,
+        track: ((a.track % 360) + 360) % 360, t: Math.round(at - seen * 1000) });
+    }
+    return { kind: kind[1], age: age ? Number(age[1]) : 0, flights: out };
+  }
+
+  function isNum(v) { return typeof v === "number" && isFinite(v); }
+  function isArray(v) { return Object.prototype.toString.call(v) === "[object Array]"; }
+
+  // Trails: { id: [fix, ...] } oldest first, at most TRAIL fixes; a fix is
+  // added only when newer than the trail's last; a trail whose last fix is
+  // older than 3 min is dropped. Returns a new object.
+  function flightTrails(prev, flights, nowMs) {
+    var next = {}, id, k;
+    for (id in prev) if (Object.prototype.hasOwnProperty.call(prev, id)) next[id] = prev[id].slice();
+    for (k = 0; k < flights.length; k++) {
+      var f = flights[k], tr = next[f.id] || (next[f.id] = []);
+      if (!tr.length || f.t > tr[tr.length - 1].t) tr.push(f);
+      if (tr.length > TRAIL) tr.splice(0, tr.length - TRAIL);
+    }
+    for (id in next) if (Object.prototype.hasOwnProperty.call(next, id) && nowMs - next[id][next[id].length - 1].t > FLIGHT_STALE) delete next[id];
+    return next;
+  }
+
+  // The flights' state after one reply: { trails, goodAt, down }, as isleStep.
+  function flightStep(prev, reply, nowMs) {
+    var trails = prev ? prev.trails : {}, goodAt = prev ? prev.goodAt : null;
+    if (reply.kind === "fresh") return { trails: flightTrails(trails, reply.flights, nowMs), goodAt: nowMs - reply.age * 1000, down: false };
+    if (reply.kind === "last") {
+      var at = nowMs - reply.age * 1000;
+      return { trails: flightTrails(trails, reply.flights, nowMs), goodAt: goodAt !== null && goodAt >= at ? goodAt : at, down: true };
+    }
+    return { trails: flightTrails(trails, [], nowMs), goodAt: goodAt, down: true };
+  }
+
+  function flightSource(st) {
+    var src = "Aircraft: adsb.lol (ODbL) · ";
+    if (!st) return src + "waiting";
+    if (st.down) return src + "feed down" + (st.goodAt ? " since " + formatClock(new Date(st.goodAt)) : "");
+    var n = 0;
+    for (var id in st.trails) if (Object.prototype.hasOwnProperty.call(st.trails, id)) n++;
+    return src + n + " in the air · updated " + formatClock(new Date(st.goodAt));
+  }
+
+  var api = { parseFlightReply: parseFlightReply, flightTrails: flightTrails, flightStep: flightStep, flightSource: flightSource,
+    parseQuakeInfo: parseQuakeInfo, parseQuakeReply: parseQuakeReply, isleStep: isleStep, isleSource: isleSource, formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
     isSafeId: isSafeId, isSafeWord: isSafeWord, sunAltitude: sunAltitude, sunDay: sunDay,
     nightWindow: nightWindow, pickApps: pickApps, launchPayload: launchPayload,
     parseLaunchParams: parseLaunchParams, ctlCommand: ctlCommand, parseKv: parseKv,

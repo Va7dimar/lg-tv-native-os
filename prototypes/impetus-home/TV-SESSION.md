@@ -364,6 +364,20 @@ Needs 10b passed. Launch with the readout on:
 - During a fetch, press BACK and open the Apple TV: no delay.
 - If 30 fps is missed: note it; the ripple and breathing are the first to go.
 
+## 10d. Iceland room, aircraft (#26, plan step 5; install, owner's yes)
+
+Needs 10c passed. By SSH first: `impetus-ctl iceland flights | head -c 300` gives
+`kind=fresh age=0` and JSON starting `{"ac":[`. If adsb.lol now refuses
+without a key, stop here and note it (the owner's key is not on the TV yet).
+
+- In the room, by daylight traffic hours: arrows over and around the island
+  move along their trails over 5 min; the second source line reads
+  `Aircraft: adsb.lol (ODbL) · N in the air · updated HH:MM`.
+- No arrow over the left column's text or inside the lens.
+- Pull the network cable: within 2 min the line reads `feed down since`, and
+  within 4 min the arrows are gone (no frozen planes). Plug back: they return.
+- The fps readout still holds 30 or more.
+
 ## 11. Write it down
 
 One evidence note, `tvs/lg-65nano756pr/evidence/impetus-home-1.2-tv-run-<date>.md`,
