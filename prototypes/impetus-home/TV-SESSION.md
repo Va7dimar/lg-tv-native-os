@@ -315,7 +315,29 @@ before it is left in place.
 - **Relaunch:** with Impetus already open in the background, opening it
   again shows the living room, not a stale room.
 
-## 11. Write it down
+## 11. Music made visible (#22), when that build is installed
+
+1. **Sound tap probe (reads only).** Copy `scripts/probe_sound.sh` to the TV.
+   Start a Spotify track, then `sh probe_sound.sh try`. Keep the `@verdict`
+   lines and the device and source lines for the evidence note (they name
+   devices only; look before pasting).
+2. **Spotify keeps playing behind Impetus.** With a track playing, open
+   Impetus from the remote: the sound must go on. If Spotify pauses when it
+   leaves the front, the piece can only follow the beat of other apps.
+3. **Sign-in.** Until the phone page (#21) writes it, a sign-in made on a
+   laptop is written by hand: `sh <app dir>/bin/impetus-ctl spotify set
+   client=<id> refresh=<token>`, then `spotify get` prints `linked=1`. Type
+   it over SSH; never into a file in the repo.
+4. **The feed.** Start MUSIC, wait 20 s. Impetus comes to the
+   front with the piece, the title and cover of what plays, the arc moving.
+   No sign-in: the quiet teal sky with no words. Any key opens the control
+   room; the MUSIC key reads `ON · DRAWN FROM <hour>`.
+5. **Look and speed.** Watch it for a full track on the 65": smooth or
+   stuttering? If it stutters, lower `music.fps` or `music.particles` in
+   `config.js`. Covers with strong colours should colour the sky; a grey
+   cover gets one soft hue.
+
+## 12. Write it down
 
 One evidence note, `tvs/lg-65nano756pr/evidence/impetus-home-1.2-tv-run-<date>.md`,
 same shape as the photo-frame notes: the probe answer, each open question

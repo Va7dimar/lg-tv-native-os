@@ -710,5 +710,65 @@ sleep 1
 is "boot hook: the screen coming back on is not a wake" "$(calls applicationmanager/launch)" 1
 kill "$(cat "$W/hook.pid")" 2>/dev/null
 
+# ---------- #22: MUSIC with the piece instead of a dark screen ----------
+reset
+refused "the piece after 601 s" piece scene on id=music piece=601
+refused "the piece with a leading zero" piece scene on id=music piece=020
+reset
+IMPETUS_NOW=40000 sh "$CTL" scene on id=music launch=spotify-beehive piece=20 screenoff=20 >/dev/null
+wait_for '[ -s "$RUN/piece.at" ]'; settle
+is "piece: Spotify is opened" "$(cat "$STUB_TV/front")" spotify-beehive
+is "piece: the hour is set" "$(st piece)" 40020
+is "piece: it takes the place of the dark screen" "$(st screenoff)" ""
+is "piece: no screen-off toast" "$(calls 'Screen off in')" 0
+tv_front spotify-beehive
+IMPETUS_NOW=40010 sh "$CTL" tick >/dev/null
+is "piece: nothing opens before its hour" "$(calls '"show":"music"')" 0
+IMPETUS_NOW=40021 sh "$CTL" tick >/dev/null
+is "piece: Impetus opens with the piece" "$(calls "{\"id\":\"$US\",\"params\":{\"show\":\"music\",\"at\":40021}}")" 1
+is "piece: the screen is never turned off" "$(calls turnOffScreen)" 0
+is "piece: once" "$(st piece)" ""
+is "piece: the scene stays on" "$(st scene)" music
+IMPETUS_NOW=40030 sh "$CTL" tick >/dev/null
+is "piece: not opened again" "$(calls '"show":"music"')" 1
+reset
+IMPETUS_NOW=40000 sh "$CTL" scene on id=music launch=spotify-beehive piece=20 >/dev/null
+wait_for '[ -s "$RUN/piece.at" ]'; settle
+tv_front netflix
+IMPETUS_NOW=40021 sh "$CTL" tick >/dev/null
+is "piece: not over another app in front" "$(calls '"show":"music"')" 0
+reset
+IMPETUS_NOW=40000 sh "$CTL" scene on id=music launch=spotify-beehive piece=20 >/dev/null
+wait_for '[ -s "$RUN/piece.at" ]'; settle
+sh "$CTL" scene off >/dev/null
+no "piece: scene off drops its hour" test -e "$RUN/piece.at"
+
+# ---------- #22: the Spotify sign-in file ----------
+reset
+is "spotify: no sign-in" "$(sh "$CTL" spotify get)" "linked=0"
+refused "spotify: an unknown sub-verb" spotify spotify show
+refused "spotify: shell text in a token" word spotify set client=abc 'refresh=a;b'
+refused "spotify: no client" client spotify set refresh=abc
+refused "spotify: no refresh token" refresh spotify set client=abc
+refused "spotify: an unknown word" word spotify set client=abc refresh=def extra=1
+is "spotify: set" "$(IMPETUS_NOW=50000 sh "$CTL" spotify set client=c0ffee12 refresh=AQB-x_y.z1)" "ok=1"
+is "spotify: get" "$(sh "$CTL" spotify get | tr '\n' ' ')" "linked=1 client=c0ffee12 refresh=AQB-x_y.z1 "
+is "spotify: the file format" "$(tr '\n' ' ' < "$KEEP/spotify")" "v=1 client=c0ffee12 refresh=AQB-x_y.z1 saved=50000 "
+is "spotify: only root reads it" "$(ls -l "$KEEP/spotify" | cut -c1-10)" "-rw-------"
+out=$(sh "$CTL" spotify set client=c0ffee12 refresh=NEWNEW was=OLDOLD)
+is "spotify: a token turn after a new sign-in is refused" "$out" "error=changed"
+is "spotify: and the new sign-in stays" "$(sh "$CTL" spotify get | sed -n 's/^refresh=//p')" "AQB-x_y.z1"
+is "spotify: a token turn on the kept token" "$(sh "$CTL" spotify set client=c0ffee12 refresh=NEWNEW was=AQB-x_y.z1)" "ok=1"
+is "spotify: the turned token is kept" "$(sh "$CTL" spotify get | sed -n 's/^refresh=//p')" "NEWNEW"
+no "spotify: no lock left" held
+printf 'v=1\nclient=c0ffee12\nrefresh=bad token\n' > "$KEEP/spotify"
+is "spotify: a damaged file is no sign-in" "$(sh "$CTL" spotify get)" "linked=0"
+sh "$CTL" spotify set client=c0ffee12 refresh=AQB >/dev/null
+sh "$CTL" restore >/dev/null
+yes "spotify: restore keeps the sign-in" test -s "$KEEP/spotify"
+is "spotify: forget" "$({ sh "$CTL" spotify forget; sh "$CTL" spotify get; } | tr '\n' ' ')" "ok=1 linked=0 "
+no "spotify: forget leaves no file" test -e "$KEEP/spotify"
+yes "spotify: the shipped shield blocks no Spotify host" sh -c "! grep -qiE 'spotify|scdn' '$HERE/../app/shield/hosts.txt'"
+
 echo "$n checks, $failed failed"
 [ "$failed" = 0 ]

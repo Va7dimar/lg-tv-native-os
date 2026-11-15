@@ -220,7 +220,14 @@
         w.push("night=" + night, "nightstart=" + ctx.night.start, "end=" + ctx.night.end); parts++;
       }
     }
-    if (caps.screenoff && scene.screenOffAfterSeconds !== undefined) {
+    // The music piece instead of a dark screen: the helper opens Impetus with
+    // the piece after this long. When both are set, the piece wins.
+    var piece = caps.exec && scene.pieceAfterSeconds !== undefined;
+    if (piece) {
+      if (!wholeIn(scene.pieceAfterSeconds, 0, 600)) return null;
+      w.push("piece=" + scene.pieceAfterSeconds); parts++;
+    }
+    if (!piece && caps.screenoff && scene.screenOffAfterSeconds !== undefined) {
       if (!wholeIn(scene.screenOffAfterSeconds, 0, 600)) return null;
       w.push("screenoff=" + scene.screenOffAfterSeconds); parts++;
     }
@@ -236,13 +243,14 @@
   }
 
   // The state line of a latched scene key, or null when the scene is off.
-  // state: parseKv of `impetus-ctl state` (scene, sleep, end, screenoff in epoch s).
+  // state: parseKv of `impetus-ctl state` (scene, sleep, end, screenoff, piece in epoch s).
   function sceneLine(state, sceneId) {
     if (!state || !sceneId || state.scene !== sceneId) return null;
     function at(s) { return formatClock(new Date(Number(s) * 1000)); }
     if (Number(state.sleep) > 0) return "ON · SLEEPS " + at(state.sleep);
     if (Number(state.end) > 0) return "ON · UNTIL " + at(state.end);
     if (Number(state.screenoff) > 0) return "ON · SCREEN OFF " + at(state.screenoff);
+    if (Number(state.piece) > 0) return "ON · DRAWN FROM " + at(state.piece);
     return "ON";
   }
 

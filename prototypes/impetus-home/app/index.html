@@ -104,10 +104,38 @@
     <p class="noticeline">Press any key to stay up.</p>
   </section>
 
+  <!-- The music piece (#22): opened by the MUSIC scene, any key leaves it -->
+  <section id="music" class="room music idle" aria-hidden="true">
+    <canvas id="mfield" class="mfield"></canvas>
+    <canvas id="mflow" class="mflow"></canvas>
+    <svg class="msky" width="1920" height="1080" viewBox="0 0 1920 1080">
+      <defs>
+        <radialGradient id="mhalo">
+          <stop id="mstop0" offset="0" stop-color="#1FB487" stop-opacity="0.6"/>
+          <stop id="mstop1" offset="1" stop-color="#2C8C86" stop-opacity="0"/>
+        </radialGradient>
+        <clipPath id="mabove"><rect x="0" y="0" width="1920" height="819"/></clipPath>
+      </defs>
+      <g clip-path="url(#mabove)">
+        <path id="marc" class="marc" d=""/>
+        <path id="mdone" class="mdone" d=""/>
+        <circle id="mglow" r="120" fill="url(#mhalo)"/>
+        <circle id="msun" class="msun" r="10"/>
+      </g>
+      <line class="mhorizon" x1="0" y1="820" x2="1920" y2="820"/>
+    </svg>
+    <section id="mcaption" class="mcaption">
+      <img id="mcover" class="mcover" alt="" hidden>
+      <p class="mwords"><span id="mtitle" class="mtitle"></span><span id="martist" class="martist"></span></p>
+    </section>
+  </section>
+
 </div>
 <script src="logic.js"></script>
 <script src="config.js"></script>
 <script src="luna.js"></script>
+<script src="music-logic.js"></script>
+<script src="music.js"></script>
 <script src="home.js"></script>
 </body>
 </html>

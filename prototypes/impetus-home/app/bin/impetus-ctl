@@ -11,8 +11,14 @@
 #   state                 scene, timers and shield as key=value lines
 #   still [nolive]        one line "kind=live|last|none age=<s>", then the JPG bytes
 #   scene on id=.. [launch=..] [mode=..] [set=k:v,..] [night=k:v,..]
-#            [nightstart=<epoch>] [end=<epoch>] [screenoff=<s>] [volmax=<n>] [sleep=<min>]
+#            [nightstart=<epoch>] [end=<epoch>] [screenoff=<s>] [piece=<s>] [volmax=<n>] [sleep=<min>]
 #   scene off             end the scene, put the TV back as it was
+#   spotify get           the Spotify sign-in for the music piece: linked=1, client=, refresh=
+#                         (or linked=0)
+#   spotify set client=<id> refresh=<token> [was=<token>]
+#                         write the sign-in (the phone page, #21; the piece after a
+#                         token turn). With was=, only when the kept token is still that one.
+#   spotify forget        drop the sign-in
 #   sleep cancel          drop the sleep timer; prints prev=<app that was in front>
 #   shield on|off         block the hosts in shield/hosts.txt (memory only)
 #   engine                vitals, state, connections and log in one answer
@@ -20,8 +26,8 @@
 #   keeper | tick         the background loop, or one turn of it
 #
 # Files: /tmp/impetus (memory) and <app dir>/state (small files that must
-# survive a restart: the picture values and volume from before a scene, and
-# whether the shield is on). Nothing else is written. Never reboots; the
+# survive a restart: the picture values and volume from before a scene,
+# whether the shield is on, and the Spotify sign-in). Nothing else is written. Never reboots; the
 # sleep timer ends in a normal power-off.
 #
 # busybox ash and dash both run this file.
@@ -308,7 +314,8 @@ vol_restore() {
 # ---------- scenes ----------
 
 scene_clear() {
-  rm -f "$RUN"/scene.* "$RUN/sleep.until" "$RUN/sleep.noticed" "$RUN/sleep.prev" "$RUN/standby.tries" "$RUN/screenoff.at"
+  rm -f "$RUN"/scene.* "$RUN/sleep.until" "$RUN/sleep.noticed" "$RUN/sleep.prev" "$RUN/standby.tries" "$RUN/screenoff.at" \
+    "$RUN/piece.at"
 }
 
 # End the active scene. Picture values go back now when the scene's target is
@@ -347,7 +354,7 @@ due() {
 }
 
 scene_on() {
-  ID= LAUNCH= FALLBACK= MODE= SETP= NIGHT= NSTART= END= SOFF= VOLMAX= SLEEPM=
+  ID= LAUNCH= FALLBACK= MODE= SETP= NIGHT= NSTART= END= SOFF= PIECE= VOLMAX= SLEEPM=
   for a in "$@"; do
     k=${a%%=*}; v=${a#*=}
     case "$k" in
@@ -360,12 +367,15 @@ scene_on() {
       nightstart) is_num "$v" || die nightstart; NSTART=$v ;;
       end) is_num "$v" || die end; END=$v ;;
       screenoff) is_num "$v" && [ "$v" -le 600 ] || die screenoff; SOFF=$v ;;
+      piece) is_num "$v" && [ "$v" -le 600 ] || die piece; PIECE=$v ;;
       volmax) is_num "$v" && [ "$v" -le 100 ] || die volmax; VOLMAX=$v ;;
       sleep) is_num "$v" && [ "$v" -ge 1 ] && [ "$v" -le 600 ] || die sleep; SLEEPM=$v ;;
       *) die "word" ;;
     esac
   done
   [ -n "$ID" ] || die id
+  # The piece takes the place of the dark screen; never both.
+  [ -n "$PIECE" ] && SOFF=
   if [ -n "$NIGHT" ]; then is_num "$NSTART" && is_num "$END" || die night; fi
   mkdir -p "$RUN"
   keeper_ensure
@@ -417,6 +427,7 @@ scene_apply() {
     echo $((n + SOFF)) > "$RUN/screenoff.at"
     [ "$SOFF" -ge 5 ] && luna "$TOAST" "{\"sourceId\":\"$APP\",\"message\":\"Screen off in $SOFF seconds\"}" >/dev/null
   fi
+  [ -n "$PIECE" ] && echo $((n + PIECE)) > "$RUN/piece.at"
   unlock
   safe_id "$t" && launch "$t"
   # Picture values wait for the target to be in front; the keeper takes over
@@ -607,6 +618,55 @@ shield_off() {
   else unlock; echo "error=busy"; return 1; fi
 }
 
+# ---------- the Spotify sign-in (#22) ----------
+
+# $KEEP/spotify, mode 600, key=value lines (DESIGN.md, "Music made visible"):
+#   v=1
+#   client=<Spotify app client id>
+#   refresh=<refresh token>
+#   saved=<epoch s>
+# A PKCE sign-in: there is no client secret anywhere. The page turns the
+# refresh token into short-lived access tokens itself and keeps those in
+# memory only. This file never leaves the TV.
+tok_ok() { case "$1" in ""|*[!A-Za-z0-9._-]*) return 1 ;; esac; [ ${#1} -le 512 ]; }
+sp_val() { sed -n "s/^$1=//p" "$KEEP/spotify" 2>/dev/null | head -n 1; }
+
+spotify_get() {
+  sg_c=$(sp_val client); sg_r=$(sp_val refresh)
+  if tok_ok "$sg_c" && tok_ok "$sg_r"; then
+    echo "linked=1"; echo "client=$sg_c"; echo "refresh=$sg_r"
+  else
+    echo "linked=0"
+  fi
+}
+
+spotify_set() {
+  ss_c= ss_r= ss_w=
+  for a in "$@"; do
+    case "$a" in
+      client=*) ss_c=${a#client=} ;;
+      refresh=*) ss_r=${a#refresh=} ;;
+      was=*) ss_w=${a#was=} ;;
+      *) die word ;;
+    esac
+  done
+  tok_ok "$ss_c" || die client
+  tok_ok "$ss_r" || die refresh
+  [ -z "$ss_w" ] || tok_ok "$ss_w" || die was
+  mkdir -p "$RUN" "$KEEP"
+  lock
+  # A token turn from the page must not undo a new sign-in from the phone.
+  if [ -n "$ss_w" ] && [ "$(sp_val refresh)" != "$ss_w" ]; then unlock; echo "error=changed"; return 1; fi
+  if { ( umask 077; printf 'v=1\nclient=%s\nrefresh=%s\nsaved=%s\n' "$ss_c" "$ss_r" "$(now)" > "$KEEP/spotify.new" ) &&
+       chmod 600 "$KEEP/spotify.new" && mv "$KEEP/spotify.new" "$KEEP/spotify"; } 2>/dev/null; then
+    unlock; echo ok=1
+  else
+    rm -f "$KEEP/spotify.new" 2>/dev/null; unlock; echo "error=write"; return 1
+  fi
+}
+
+spotify_forget() { rm -f "$KEEP/spotify" "$KEEP/spotify.new"; echo ok=1; }
+
 # ---------- reads ----------
 
 state() {
@@ -616,6 +676,7 @@ state() {
   echo "end=$(cat "$RUN/scene.end" 2>/dev/null)"
   echo "sleep=$(cat "$RUN/sleep.until" 2>/dev/null)"
   echo "screenoff=$(cat "$RUN/screenoff.at" 2>/dev/null)"
+  echo "piece=$(cat "$RUN/piece.at" 2>/dev/null)"
   if [ -e "$RUN/shield.on" ]; then echo "shield=on"; echo "hits=$(shield_hits)"; else echo "shield=off"; fi
   echo "hosts=$(grep -c '^[A-Za-z0-9]' "$DIR/shield/hosts.txt" 2>/dev/null)"
   if keeper_alive; then echo "keeper=1"; else echo "keeper=0"; fi
@@ -787,6 +848,15 @@ tick() {
     if [ ! -e "$RUN/scene.apply" ] && [ ! -s "$RUN/scene.night" ] && [ ! -s "$RUN/sleep.until" ] &&
        [ ! -s "$RUN/vol" ] && { ! safe_id "$t" || [ ! -e "$RUN/orig.$t" ]; }; then scene_clear; fi
   fi
+  # The music piece: Impetus comes to the front over the scene's app (which
+  # keeps playing) and draws what plays. Only while that app is in front:
+  # someone who moved on to something else is left alone. The scene stays on.
+  s=$(cat "$RUN/piece.at" 2>/dev/null)
+  if is_num "$s" && [ "$n" -ge "$s" ]; then
+    rm -f "$RUN/piece.at"
+    t=$(cat "$RUN/scene.target" 2>/dev/null)
+    [ "$(front)" = "$t" ] && launch "$APP" "{\"show\":\"music\",\"at\":$n}"
+  fi
   # A volume that could not be put back when its scene ended (or was found
   # after a restart) is tried again while no scene is on.
   if [ -e "$RUN/vol.tries" ] && [ ! -e "$RUN/scene.id" ]; then lock; vol_restore; unlock; fi
@@ -902,6 +972,10 @@ case "$verb" in
     rm -f "$RUN/sleep.until" "$RUN/sleep.noticed" "$RUN/sleep.prev" "$RUN/standby.tries"
     unlock ;;
   shield) case "$1" in on) shield_on ;; off) shield_off ;; *) die shield ;; esac ;;
+  spotify)
+    sub=$1
+    [ $# -gt 0 ] && shift
+    case "$sub" in get) spotify_get ;; set) spotify_set "$@" ;; forget) spotify_forget ;; *) die spotify ;; esac ;;
   engine) engine ;;
   restore) restore_all ;;
   keeper) keeper ;;

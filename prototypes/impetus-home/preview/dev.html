@@ -13,6 +13,7 @@
 // Query: t=<ISO time>  room=control|engine  notice=sleep
 //        still=live|last|none|black  caps=<names to switch off, comma separated>
 //        scene=<id> (a scene already on)  shield=on
+//        room=music  np=demo|paused  beat=demo   (the music piece, #22)
 (function () {
   var q = location.search;
   function arg(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(q); return m ? decodeURIComponent(m[1]) : ""; }
@@ -79,6 +80,7 @@
     if (verb === "scene") { tv.scene = ""; tv.end = tv.sleep = tv.screenoff = ""; return "ok=1"; }
     if (verb === "sleep") { tv.sleep = ""; return "prev=netflix"; }
     if (verb === "shield") { tv.shield = w[1] === "on"; tv.hits = 0; return "ok=1"; }
+    if (verb === "spotify") return w[1] === "get" ? "linked=0" : "ok=1";
     if (verb === "engine") {
       return ["@vitals", "temp=" + (46000 + Math.floor(Math.random() * 3000)), "uptime=" + (93784 + (nowS() % 1000)),
         "memtotal=1543168", "memavail=" + (612000 + Math.floor(Math.random() * 20000)), "disktotal=1048576", "diskused=412300",
@@ -111,10 +113,41 @@
     return { kind: "last", age: 720, src: frame || (frame = makeFrame(false)) };
   };
 
+  // The music piece (#22): room=music opens it. np=demo plays three made-up
+  // tracks of 40 s with drawn covers (np=paused holds the first, no np = the
+  // quiet idle state); beat=demo adds a 118 bpm stand-in beat.
+  function makeCover(stops, sun) {
+    var c = document.createElement("canvas"); c.width = 300; c.height = 300;
+    var g = c.getContext("2d"), grad = g.createLinearGradient(0, 0, 300, 300);
+    stops.forEach(function (s, i) { grad.addColorStop(i / (stops.length - 1), s); });
+    g.fillStyle = grad; g.fillRect(0, 0, 300, 300);
+    g.fillStyle = sun; g.beginPath(); g.arc(196, 118, 54, 0, 7); g.fill();
+    g.fillStyle = "rgba(0,0,0,0.55)"; g.fillRect(0, 214, 300, 86);
+    return c.toDataURL("image/png");
+  }
+  var demo = [
+    { id: "demo-1", title: "Northern Lights Over Esja", artist: "The Stand-ins", stops: ["#2a0b3d", "#c2185b", "#ff8a3d"], sun: "#ffd27a" },
+    { id: "demo-2", title: "Harbour at Dusk", artist: "Preview Orchestra", stops: ["#03122b", "#0d47a1", "#26c6da"], sun: "#b2ebf2" },
+    { id: "demo-3", title: "Glacier Run", artist: "Mock Ensemble, Placeholder", stops: ["#0b2a12", "#2e7d32", "#cddc39"], sun: "#fff59d" }
+  ];
+  var npMode = arg("np"), t0 = Date.now();
+  if (npMode === "demo" || npMode === "paused") {
+    window.MOCK_NOWPLAYING = function (now) {
+      var dur = 40000, el = now - t0, i = npMode === "paused" ? 0 : Math.floor(el / dur) % demo.length, d = demo[i];
+      if (!d.cover) d.cover = makeCover(d.stops, d.sun);
+      return { kind: "track", id: d.id, title: d.title, artist: d.artist, cover: d.cover, playing: npMode !== "paused",
+        progressMs: npMode === "paused" ? 13000 : el % dur, durationMs: dur, at: now };
+    };
+  }
+  if (arg("beat") === "demo") {
+    var demoBeat = null;
+    window.ImpetusBeat = { read: function (ms) { return (demoBeat || (demoBeat = window.ImpetusMusicLogic.demoSource(118))).read(ms); } };
+  }
+
   var x = new XMLHttpRequest(); x.open("GET", "index.html", false); x.send();
   var m = /<div id="stage">([\s\S]*?)<\/div>\s*<script/.exec(x.responseText);
   document.getElementById("stage").innerHTML = m[1];
-  ["../preview/mock-apps.js", "logic.js", "config.js", "luna.js", "home.js"].forEach(function (s) {
+  ["../preview/mock-apps.js", "logic.js", "config.js", "luna.js", "music-logic.js", "music.js", "home.js"].forEach(function (s) {
     var e = document.createElement("script"); e.src = s; e.async = false; document.body.appendChild(e);
   });
 })();

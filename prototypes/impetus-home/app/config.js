@@ -29,6 +29,8 @@ window.IMPETUS_CONFIG = {
   //                          energySaving
   //   sunMode                values set after sunset; the scene ends at sunrise
   //   screenOffAfterSeconds  the screen goes dark, the sound stays on
+  //   pieceAfterSeconds      instead of a dark screen: the music drawn (#22),
+  //                          any key leaves it; wins over screenOffAfterSeconds
   //   volumeMax              the volume is lowered to this if it is higher
   //   sleepMinutes           standby after this long, with a 2 minute notice
   // Everything a scene changes is put back when it goes off.
@@ -38,8 +40,9 @@ window.IMPETUS_CONFIG = {
       // Unconfirmed until the TV session: a negative colorTemperature is
       // taken to be the warm side. If the picture goes blue, flip the sign.
       sunMode: { backlight: 30, colorTemperature: -20 } },
-    { id: "music", label: "MUSIC", does: "Spotify · screen off, sound on",
-      launch: "spotify-beehive", screenOffAfterSeconds: 20 },
+    // For the dark screen again: screenOffAfterSeconds: 20 in place of pieceAfterSeconds.
+    { id: "music", label: "MUSIC", does: "Spotify · the music drawn on screen",
+      launch: "spotify-beehive", pieceAfterSeconds: 20 },
     { id: "winddown", label: "WIND DOWN", does: "Dim · quiet · standby in 60 min",
       launch: "last", picture: { backlight: 25 }, volumeMax: 12, sleepMinutes: 60 }
   ],
@@ -57,5 +60,8 @@ window.IMPETUS_CONFIG = {
   idleSeconds: 60,       // no key for this long: back to the living room
   stateEverySeconds: 5,  // scene and shield state, while the control room is open
   stillEverySeconds: 3,  // the APPLE TV still, while the control room is open
-  engineEverySeconds: 5  // vitals, talkers and log, while the engine room is open
+  engineEverySeconds: 5, // vitals, talkers and log, while the engine room is open
+
+  // The music piece (#22). Lower these if the TV stutters.
+  music: { fps: 30, particles: 560 }
 };

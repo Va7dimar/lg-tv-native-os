@@ -22,7 +22,7 @@ const apps = [
   { id: "bad id; rm", title: "Evil", visible: true },
   { id: "com.webos.app.hdmi2", title: "HDMI2", visible: false, systemApp: true },
 ];
-const ALL = { picture: true, screenoff: true, volume: true, sleep: true };
+const ALL = { exec: true, picture: true, screenoff: true, volume: true, sleep: true };
 const film = { id: "film", launch: "com.webos.app.hdmi2", pictureMode: "cinema",
   sunMode: { backlight: 30, colorTemperature: -20 } };
 const music = { id: "music", launch: "spotify-beehive", screenOffAfterSeconds: 20 };

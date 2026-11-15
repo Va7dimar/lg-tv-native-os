@@ -4,6 +4,7 @@
 (function () {
   "use strict";
   var L = window.ImpetusLogic, LUNA = window.ImpetusLuna, CFG = window.IMPETUS_CONFIG;
+  var ML = window.ImpetusMusicLogic, MUSIC = window.ImpetusMusic;
   var $ = function (id) { return document.getElementById(id); };
 
   var HORIZON = 691, ARC_RISE = 330, X0 = -140, X1 = 2060;
@@ -11,13 +12,14 @@
   var NOTICE_SECONDS = 120;   // the keeper brings the notice up this long before standby
   var TALK_ROWS = 9, LOG_LINES = 14;
 
-  var room = "living";        // living | control | engine | notice
+  var room = "living";        // living | control | engine | notice | music
   var focusIdx = 0, focusables = [];
   var idleTimer = null, stateTimer = null, stillTimer = null, engineTimer = null, noticeTimer = null;
   var caps = {}, state = {}, sceneKeys = [];
   var stillBusy = false, liveDead = false;
   var conns = [], hosts = {}, resolving = {};
   var noticeUntil = 0, dismissed = 0, cancelling = false;
+  var musicTaken = 0;         // the "at" of the last {show: "music"} params taken
 
   function every(seconds, fallback) { return (seconds || fallback) * 1000; }
   function noop() {}
@@ -409,11 +411,13 @@
     b.toggle("open", next === "control");
     b.toggle("deep", next === "engine");
     b.toggle("notice", next === "notice");
-    ["control", "engine", "notice"].forEach(function (id) {
+    b.toggle("music", next === "music");
+    ["control", "engine", "notice", "music"].forEach(function (id) {
       $(id).setAttribute("aria-hidden", next === id ? "false" : "true");
     });
     clearInterval(stateTimer); clearInterval(stillTimer); clearInterval(engineTimer);
     clearInterval(noticeTimer); clearTimeout(idleTimer);
+    if (next === "music") MUSIC.start(); else if (prev === "music") MUSIC.stop();
     collect();
     if (next === "control") {
       // Arriving from the living room lands on APPLE TV; coming back out of
@@ -429,6 +433,8 @@
       refreshEngine();
       engineTimer = setInterval(refreshEngine, every(CFG.engineEverySeconds, 5));
       bumpIdle();
+    } else if (next === "music") {
+      // The piece runs on its own; no timers of the rooms behind it.
     } else if (next === "notice") {
       drawNotice();
       noticeTimer = setInterval(drawNotice, 500);
@@ -442,7 +448,7 @@
     var k = e.keyCode;
     e.preventDefault();
     if (room === "notice") { cancelNotice(); return; }
-    if (room === "living") { setRoom("control"); return; } // the opening key does nothing else
+    if (room === "living" || room === "music") { setRoom("control"); return; } // the opening key does nothing else
     bumpIdle();
     if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) setRoom(room === "engine" ? "control" : "living");
     else if (k === KEY.LEFT) moveFocus("left");
@@ -457,12 +463,17 @@
   function arrive(raw) {
     var p = L.parseLaunchParams(raw), until = Number(p.until);
     if (p.notice === "sleep" && until > Date.now() / 1000 && until !== dismissed) { showNotice(until); return; }
+    // The MUSIC scene: the keeper opens Impetus with {show: "music", at}.
+    // A relaunch and the page coming back in front both bring the same params:
+    // the second one leaves the piece on.
+    if (ML.showMusic(p, Date.now(), musicTaken)) { musicTaken = Number(p.at); setRoom("music", true); return; }
+    if (room === "music" && p.show === "music" && Number(p.at) === musicTaken) return;
     if (room !== "notice") setRoom("living", true);
     refreshState();
   }
 
   function launchParams() {
-    // PC preview: ?notice=sleep shows the notice, ?room=control|engine opens a room.
+    // PC preview: ?notice=sleep shows the notice, ?room=control|engine|music opens a room.
     var q = location.search || "";
     if (/[?&]notice=sleep/.test(q)) return { notice: "sleep", until: Math.round(Date.now() / 1000) + NOTICE_SECONDS };
     return window.PalmSystem ? window.PalmSystem.launchParams : null;
@@ -473,7 +484,11 @@
   window.addEventListener("resize", fit);
   document.addEventListener("keydown", onKey);
   document.addEventListener("webOSRelaunch", function (e) { arrive(e && e.detail); });
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) arrive(launchParams()); });
+  document.addEventListener("visibilitychange", function () {
+    // The piece stops (no drawing, no asking Spotify) whenever another app is in front.
+    if (document.hidden) { if (room === "music") setRoom("living", true); return; }
+    arrive(launchParams());
+  });
 
   $("appletv")._press = function () { return LUNA.launch(CFG.appleTv.id); };
   $("door")._press = function () { setRoom("engine"); };
@@ -497,7 +512,7 @@
     collect(); paintFocus();
     if (caps.exec) LUNA.ctl(["start", "target=" + CFG.appleTv.id]).then(noop, noop);
     arrive(launchParams());
-    var m = /[?&]room=(control|engine)/.exec(location.search || "");
+    var m = /[?&]room=(control|engine|music)/.exec(location.search || "");
     if (m) setRoom(m[1], true);
   });
 })();

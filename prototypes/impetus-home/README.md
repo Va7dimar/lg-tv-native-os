@@ -35,12 +35,14 @@ Enter (OK) and Backspace or Escape (BACK) drive it. The TV is a stand-in
 | `still=live`, `last`, `none`, `black` | what the Apple TV slab gets |
 | `caps=capture,picture` | parts this TV cannot do (see `probe`) |
 | `notice=sleep` | the two-minute notice before standby |
+| `room=music` | the music piece (#22); with `np=demo` three made-up tracks, `np=paused` one held, none the quiet idle state; `beat=demo` a stand-in beat |
 
 ## Test
 
 ```sh
 node tests/test_logic.js      # the page's logic: 24 tests
-sh tests/test_ctl.sh          # the root helper against a stand-in TV: 244 checks
+node tests/test_music.js      # the music piece's logic and its scene words: 23 tests
+sh tests/test_ctl.sh          # the root helper against a stand-in TV: 278 checks
 python tests/test_ipk.py      # the package: layout, line ends, modes, same bytes twice
 ```
 
@@ -82,9 +84,9 @@ Ideas that were wanted and parked, one issue each:
 
 | Path | Holds |
 |---|---|
-| `app/` | the web app: `index.html`, `home.css`, `home.js` (rooms and keys), `logic.js` (pure functions), `luna.js` (the TV's services), `config.js` |
+| `app/` | the web app: `index.html`, `home.css`, `home.js` (rooms and keys), `logic.js` (pure functions), `luna.js` (the TV's services), `config.js`, `music.js` and `music-logic.js` (the music piece, #22) |
 | `app/bin/impetus-ctl` | the root helper and the keeper |
 | `app/bin/shield-count.js` | counts calls the shield stopped |
 | `boot/impetus-home` | the boot hook that makes Impetus the default Home |
 | `preview/` | the PC preview |
-| `tests/`, `scripts/` | host tests and the IPK build |
+| `tests/`, `scripts/` | host tests, the IPK build, and `probe_sound.sh` (run at the TV: can root read the sound?) |
