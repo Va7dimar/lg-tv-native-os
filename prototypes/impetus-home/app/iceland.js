@@ -1,7 +1,9 @@
 // Room 4: Iceland (#26). The island at 1920x1080 and the last 48 hours of
-// earthquakes as warm light, as in the approved mock. Two layers: the base
+// earthquakes as warm light, as in the approved mock. Three layers: the base
 // (land, lens frame, ribbon axis, legend, credit) is drawn once; the quakes
-// layer is redrawn from each list. Rules: DESIGN.md "Room 4: Iceland".
+// layer is redrawn from each list and each minute; the motion layer (HTML:
+// the live dot, the ripple on the newest quake, the breathing of halos under
+// 6 h) moves by CSS transform and opacity only. Rules: DESIGN.md "Room 4: Iceland".
 // Chromium 79: ES5 only. No blend modes, no blur on anything that moves.
 (function (root) {
   "use strict";
@@ -9,6 +11,7 @@
   var L = root.ImpetusLogic, MAP = root.ICELAND_MAP, PJ = MAP.projection;
   var LENS = { lon: MAP.lens.lon, lat: MAP.lens.lat, k: MAP.lens.k, r: MAP.lens.r, cx: 420, cy: 770 };
   var GLOWS = 400;              // halos drawn at most, half on the map and half in the lens (the newest); every quake keeps its core
+  var BREATHE = 40;             // halos under 6 h that breathe (HTML, layer 3) at most; the rest stay still in the SVG
   var HOUR = 3600000, DAY = 24 * HOUR;
   var DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   var RIBBON = { x0: 600, x1: 1824, base: 1032 };
@@ -147,7 +150,6 @@
 
     // Left column, the ribbon's axis, the legend and the map credit.
     var X = 112;
-    el("circle", { cx: X + 6, cy: 128, r: 6, fill: "#1FB487" }, svg);
     el("text", { x: X + 24, y: 135, "class": "lbl", "font-size": 18 }, svg, "ICELAND · NOW");
     el("text", { x: X, y: 334, "class": "read", "font-size": 28, fill: "#C9CED6" }, svg, "earthquakes in the last 48 hours");
 
@@ -177,13 +179,16 @@
   }
 
   // ---------- Layer 2: from each list ----------
-  function drawQuakes(parent, list, now, proj, scale, glows) {
+  // m: the motion layer's box for these quakes ({box, ox, oy}); the halo of
+  // one of the newest BREATHE/2 under 6 h goes there to breathe, else into the SVG.
+  function drawQuakes(parent, list, now, proj, scale, glows, m) {
     var g = el("g", {}, parent);
     // Oldest first so the fresh ones sit on top; only the newest `glows` get a halo.
     for (var i = list.length - 1; i >= 0; i--) {
       var q = list[i], h = (now - q.t) / HOUR, c = heat(h), a = alpha(h), r = coreR(q.m) * scale, xy = proj(q.lon, q.lat);
       var x = f1(xy[0]), y = f1(xy[1]);
-      if (i < glows) el("circle", { cx: x, cy: y, r: f1(r * 9), fill: "url(#ice-glow" + Math.min(7, Math.floor(Math.max(h, 0) / 6)) + ")",
+      if (i < glows && h < 6 && i < BREATHE / 2) breathe(m, xy[0], xy[1], r * 9, heat(3), a * 0.95);
+      else if (i < glows) el("circle", { cx: x, cy: y, r: f1(r * 9), fill: "url(#ice-glow" + Math.min(7, Math.floor(Math.max(h, 0) / 6)) + ")",
         opacity: (a * 0.95).toFixed(3) }, g);
       el("circle", { cx: x, cy: y, r: f1(r), fill: rgb(c, a) }, g);
       el("circle", { cx: x, cy: y, r: f1(r * 0.45), fill: rgb([255, 252, 245], a * 0.9) }, g);
@@ -248,34 +253,66 @@
     });
   }
 
-  function sourceLine(reply, now) {
-    if (reply.kind === "none") return "Icelandic Met Office · waiting for the list";
-    return "Icelandic Met Office · updated " + L.formatClock(new Date(now - reply.age * 1000));
+  // ---------- Layer 3: motion (HTML, placed once per draw, moved by CSS only) ----------
+  function div(cls, x, y, size, parent) {
+    var d = document.createElement("div");
+    d.className = cls;
+    d.style.left = f1(x - size / 2) + "px"; d.style.top = f1(y - size / 2) + "px";
+    d.style.width = d.style.height = f1(size) + "px";
+    parent.appendChild(d);
+    return d;
   }
 
-  var base = null, layer = null;
+  // A halo that breathes: the outer box holds its age's opacity, the inner one breathes.
+  function breathe(m, x, y, r, c, a) {
+    var o = div("halo", x - m.ox, y - m.oy, r * 2, m.box), s = "rgba(" + c.join(",") + ",";
+    o.style.opacity = a.toFixed(3);
+    var i = document.createElement("div");
+    i.className = "breathe";
+    i.style.backgroundImage = "radial-gradient(circle closest-side, " + s + "0.9) 0%, " + s + "0.45) 16%, " + s + "0.1) 45%, " + s + "0) 100%)";
+    o.appendChild(i);
+  }
 
-  function build(baseSvg, quakeSvg) {
-    base = baseSvg; layer = quakeSvg;
+  function ripple(m, x, y, r) {
+    ["r1", "r2", "r3"].forEach(function (c) { div("ripple " + c, x - m.ox, y - m.oy, r * 2, m.box); });
+  }
+
+  var base = null, layer = null, motion = null;
+
+  function build(baseSvg, quakeSvg, motionBox) {
+    base = baseSvg; layer = quakeSvg; motion = motionBox;
     drawBase(base);
   }
 
-  // reply: L.parseQuakeReply's { kind, age, quakes }. Redraws layer 2 only.
-  function draw(reply, now) {
+  // st: the feed state from L.isleStep ({ quakes, goodAt, down }), or null
+  // before the first reply. Redraws layers 2 and 3; the base stays.
+  function draw(st, now) {
     if (!layer) return;
     while (layer.firstChild) layer.removeChild(layer.firstChild);
+    while (motion.firstChild) motion.removeChild(motion.firstChild);
     glowDefs(layer);
-    var list = reply.quakes || [];
-    drawQuakes(layer, list, now, P, 1, GLOWS / 2);
+    var list = (st && st.quakes) || [], down = !!(st && st.down);
+    var mMap = { box: motion, ox: 0, oy: 0 };
+    var lensBox = div("lensclip", LENS.cx, LENS.cy, LENS.r * 2, motion);
+    var mLens = { box: lensBox, ox: LENS.cx - LENS.r, oy: LENS.cy - LENS.r };
+    div(down ? "dot down" : "dot live", 118, 128, 12, motion);
+    drawQuakes(layer, list, now, P, 1, GLOWS / 2, mMap);
     drawLabels(layer, list);
     var lensList = list.filter(inLens), lens = el("g", { "clip-path": "url(#ice-lens2)" }, layer);
-    drawQuakes(lens, lensList, now, LP, 1.55, GLOWS / 2);
+    drawQuakes(lens, lensList, now, LP, 1.55, GLOWS / 2, mLens);
+    var newest = list[0];
+    if (newest && now - newest.t < 48 * HOUR) {
+      var xy = P(newest.lon, newest.lat);
+      ripple(mMap, xy[0], xy[1], 9);
+      if (inLens(newest)) { xy = LP(newest.lon, newest.lat); ripple(mLens, xy[0], xy[1], 12); }
+    }
     el("circle", { cx: LENS.cx, cy: LENS.cy, r: LENS.r, fill: "none", stroke: "#4A5058", "stroke-width": 1.2 }, layer);
     el("text", { x: LENS.cx - LENS.r + 6, y: LENS.cy - LENS.r - 10, "class": "read", "font-size": 17 }, layer,
       lensList.length + " of " + list.length + " quakes · drawn " + LENS.k + "× larger");
-    drawHead(layer, reply.quakes, now);
+    drawHead(layer, st && st.quakes, now);
     drawRibbon(layer, list, now);
-    el("text", { x: 1824, y: 92, "class": "read", "font-size": 15, "text-anchor": "end", fill: "#6E7580" }, layer, sourceLine(reply, now));
+    el("text", { x: 1824, y: 92, "class": "read", "font-size": 15, "text-anchor": "end", fill: down ? "#8E959F" : "#6E7580" }, layer,
+      L.isleSource(st));
   }
 
   root.ImpetusIceland = { build: build, draw: draw, heat: heat, project: P };

@@ -18,7 +18,7 @@
   var stillBusy = false, liveDead = false;
   var conns = [], hosts = {}, resolving = {};
   var noticeUntil = 0, dismissed = 0, cancelling = false;
-  var isleBuilt = false, isleReply = null;
+  var isleBuilt = false, isleState = null, isleBusy = 0, isleFetchTimer = null, isleAgeTimer = null;
 
   function every(seconds, fallback) { return (seconds || fallback) * 1000; }
   function noop() {}
@@ -324,18 +324,44 @@
   }
 
   // ---------- Room 4: Iceland ----------
-  // Drawn at once from what it last had, then from one fetch on the way in.
-  // A failed fetch changes nothing on screen.
-  function openIceland() {
-    var I = window.ImpetusIceland;
-    if (!isleBuilt) { I.build($("islebase"), $("islequakes")); isleBuilt = true; }
-    I.draw(isleReply || { kind: "none", age: 0, quakes: null }, Date.now());
+  // Drawn at once from what it last had, then fetched on the way in and every
+  // 120 s, one fetch at a time; the lights age once a minute. A failed fetch
+  // only turns the source line to "feed down since"; keys never wait on it.
+  function drawIceland() { window.ImpetusIceland.draw(isleState, Date.now()); }
+
+  function fetchIceland() {
+    if (isleBusy && Date.now() - isleBusy < 30000) return;   // one in flight; a lost answer frees the slot after 30 s
+    var mine = isleBusy = Date.now();
     LUNA.ctl(["iceland", "quakes"]).then(function (text) {
-      var r = L.parseQuakeReply(text, Date.now());
-      if (r.kind === "none" && isleReply) return;
-      isleReply = r;
-      if (room === "iceland") I.draw(r, Date.now());
-    }, noop);
+      return L.parseQuakeReply(text, Date.now());
+    }, function () {
+      return { kind: "none", age: 0, quakes: null };
+    }).then(function (r) {
+      if (isleBusy === mine) isleBusy = 0;
+      isleState = L.isleStep(isleState, r, Date.now());
+      if (room === "iceland") drawIceland();
+    });
+  }
+
+  function openIceland() {
+    if (!isleBuilt) { window.ImpetusIceland.build($("islebase"), $("islequakes"), $("islemotion")); isleBuilt = true; }
+    drawIceland();
+    fetchIceland();
+    isleFetchTimer = setInterval(fetchIceland, 120000);
+    isleAgeTimer = setInterval(drawIceland, 60000);
+  }
+
+  // ?fps=1 (or launch params with "fps"): frames per second, top left, for the TV check.
+  function showFps() {
+    var box = document.createElement("div"), n = 0, t0 = Date.now();
+    box.className = "fps";
+    document.body.appendChild(box);
+    (function tick() {
+      n++;
+      var t = Date.now();
+      if (t - t0 >= 1000) { box.textContent = Math.round(n * 1000 / (t - t0)) + " fps"; n = 0; t0 = t; }
+      requestAnimationFrame(tick);
+    })();
   }
 
   // ---------- The sleep notice ----------
@@ -431,6 +457,7 @@
     });
     clearInterval(stateTimer); clearInterval(stillTimer); clearInterval(engineTimer);
     clearInterval(noticeTimer); clearTimeout(idleTimer);
+    clearInterval(isleFetchTimer); clearInterval(isleAgeTimer);
     collect();
     if (next === "control") {
       // Arriving from the living room lands on APPLE TV; coming back out of
@@ -491,6 +518,7 @@
 
   // ---------- Start ----------
   fit();
+  if (/[?&]fps=1/.test(location.search || "") || /fps/.test(String((window.PalmSystem && window.PalmSystem.launchParams) || ""))) showFps();
   window.addEventListener("resize", fit);
   document.addEventListener("keydown", onKey);
   document.addEventListener("webOSRelaunch", function (e) { arrive(e && e.detail); });

@@ -14,6 +14,7 @@
 //        still=live|last|none|black  caps=<names to switch off, comma separated>
 //        scene=<id> (a scene already on)  shield=on
 //        room=iceland  quakes=fixture (the 15.11 list; sets t to 00:20 UTC unless t is given) | none
+//        feed=down (the helper has only its last copy)  fps=1 (frames per second, top left)
 (function () {
   var q = location.search;
   function arg(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(q); return m ? decodeURIComponent(m[1]) : ""; }
@@ -85,7 +86,8 @@
     if (verb === "iceland" && w[1] === "quakes") {
       if (arg("quakes") !== "fixture") return "kind=none age=0";
       var fx = new XMLHttpRequest(); fx.open("GET", "../tests/fixtures/vedur-quakeinfo-2026-11-15.txt", false); fx.send();
-      return "kind=fresh age=0\n" + fx.responseText;
+      // feed=down: the helper could not reach the Met Office and answers with its last copy, 14 min old.
+      return (arg("feed") === "down" ? "kind=last age=840\n" : "kind=fresh age=0\n") + fx.responseText;
     }
     if (verb === "engine") {
       return ["@vitals", "temp=" + (46000 + Math.floor(Math.random() * 3000)), "uptime=" + (93784 + (nowS() % 1000)),

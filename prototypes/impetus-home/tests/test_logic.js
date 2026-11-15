@@ -381,6 +381,40 @@ t("quakes: the helper's reply gives kind, age and the list", () => {
     const r = L.parseQuakeReply(bad, QUAKE_NOW);
     assert.deepStrictEqual(r, { kind: "none", age: 0, quakes: null }, String(bad).slice(0, 40));
   }
+  // Entries on the page but none readable: the page changed, so the feed is down.
+  const changed = QUAKE_PAGE.replace(/new Date\(/g, "new Datum(");
+  assert.deepStrictEqual(L.parseQuakeReply("kind=fresh age=0\n" + changed, QUAKE_NOW), { kind: "none", age: 0, quakes: null });
+  // A quiet island: an empty list is still a good list.
+  assert.deepStrictEqual(L.parseQuakeReply("kind=fresh age=0\nquakeInfo = [];", QUAKE_NOW).quakes, []);
+});
+
+t("quakes: the feed state keeps the last list and says since when it is down", () => {
+  const NOW = QUAKE_NOW, A = [{ t: NOW - 60000 }], B = [{ t: NOW - 1000 }];
+  const at = (ms) => L.formatClock(new Date(ms));
+  assert.strictEqual(L.isleSource(null), "Icelandic Met Office · waiting for the list");
+  // Nothing yet, and the helper has nothing: down, no time, no list.
+  let st = L.isleStep(null, { kind: "none", age: 0, quakes: null }, NOW);
+  assert.deepStrictEqual(st, { quakes: null, goodAt: null, down: true });
+  assert.strictEqual(L.isleSource(st), "Icelandic Met Office · feed down");
+  // A fresh list.
+  st = L.isleStep(st, { kind: "fresh", age: 30, quakes: A }, NOW);
+  assert.deepStrictEqual(st, { quakes: A, goodAt: NOW - 30000, down: false });
+  assert.strictEqual(L.isleSource(st), "Icelandic Met Office · updated " + at(NOW - 30000));
+  // The fetch fails: the list stays, the line says since when.
+  const later = NOW + 120000;
+  st = L.isleStep(st, { kind: "none", age: 0, quakes: null }, later);
+  assert.deepStrictEqual(st, { quakes: A, goodAt: NOW - 30000, down: true });
+  assert.strictEqual(L.isleSource(st), "Icelandic Met Office · feed down since " + at(NOW - 30000));
+  // The helper's older copy never replaces a newer list the page holds.
+  st = L.isleStep(st, { kind: "last", age: 600, quakes: B }, later);
+  assert.deepStrictEqual(st, { quakes: A, goodAt: NOW - 30000, down: true });
+  // A newer copy from the helper is shown, still as down.
+  st = L.isleStep(st, { kind: "last", age: 10, quakes: B }, later);
+  assert.deepStrictEqual(st, { quakes: B, goodAt: later - 10000, down: true });
+  // Back up.
+  st = L.isleStep(st, { kind: "fresh", age: 0, quakes: A }, later);
+  assert.strictEqual(st.down, false);
+  assert.strictEqual(L.isleSource(st), "Icelandic Met Office · updated " + at(later));
 });
 
 t("shield: none of its names blocks a host the Iceland room needs", () => {

@@ -514,11 +514,35 @@
     var s = typeof text === "string" ? text : "", nl = s.indexOf("\n");
     var head = nl < 0 ? s : s.slice(0, nl);
     var kind = /(?:^|\s)kind=(fresh|last|none)(?=\s|$)/.exec(head), age = /(?:^|\s)age=(\d+)(?=\s|$)/.exec(head);
-    var quakes = kind && kind[1] !== "none" && nl >= 0 ? parseQuakeInfo(s.slice(nl + 1), nowMs) : null;
+    var body = nl >= 0 ? s.slice(nl + 1) : "";
+    var quakes = kind && kind[1] !== "none" ? parseQuakeInfo(body, nowMs) : null;
+    // Entries on the page but none we can read: the page changed, so the feed is down.
+    if (quakes && !quakes.length && /\{\s*'t'\s*:/.test(body)) quakes = null;
     return { kind: quakes ? kind[1] : "none", age: quakes && age ? Number(age[1]) : 0, quakes: quakes };
   }
 
-  var api = { parseQuakeInfo: parseQuakeInfo, parseQuakeReply: parseQuakeReply, formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
+  // The room's feed state after one reply: { quakes, goodAt (ms of the list
+  // shown), down }. A failed fetch keeps the list it had; the lights age on
+  // their own clock.
+  function isleStep(prev, reply, nowMs) {
+    var kept = prev && prev.quakes ? prev : null;
+    if (reply.kind === "fresh") return { quakes: reply.quakes, goodAt: nowMs - reply.age * 1000, down: false };
+    if (reply.kind === "last") {
+      var at = nowMs - reply.age * 1000;
+      if (kept && kept.goodAt >= at) return { quakes: kept.quakes, goodAt: kept.goodAt, down: true };
+      return { quakes: reply.quakes, goodAt: at, down: true };
+    }
+    return { quakes: kept ? kept.quakes : null, goodAt: kept ? kept.goodAt : null, down: true };
+  }
+
+  function isleSource(st) {
+    var src = "Icelandic Met Office · ";
+    if (!st) return src + "waiting for the list";
+    if (!st.down) return src + "updated " + formatClock(new Date(st.goodAt));
+    return src + "feed down" + (st.goodAt ? " since " + formatClock(new Date(st.goodAt)) : "");
+  }
+
+  var api = { parseQuakeInfo: parseQuakeInfo, parseQuakeReply: parseQuakeReply, isleStep: isleStep, isleSource: isleSource, formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
     isSafeId: isSafeId, isSafeWord: isSafeWord, sunAltitude: sunAltitude, sunDay: sunDay,
     nightWindow: nightWindow, pickApps: pickApps, launchPayload: launchPayload,
     parseLaunchParams: parseLaunchParams, ctlCommand: ctlCommand, parseKv: parseKv,

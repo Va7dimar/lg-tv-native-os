@@ -348,6 +348,22 @@ Needs 10a passed (the helper fetches on this TV).
   Note anything that reads dimmer than the mock (the mock used a screen blend
   for overlapping halos; the TV build does not).
 
+## 10c. Iceland room, live (#26, plan step 4; install, owner's yes)
+
+Needs 10b passed. Launch with the readout on:
+`luna-send -n 1 luna://com.webos.applicationManager/launch '{"id":"org.va7dimar.home","params":{"fps":1}}'`.
+
+- Ten minutes in the room with the fps readout (top left): 30 or more while
+  the newest quake ripples. Note the engine room's CPU temperature before and
+  after; it is no higher than after ten minutes in the living room.
+- The newest quake ripples, fresh halos breathe, the dot by `ICELAND · NOW`
+  pulses. After a minute the lights have aged (NEWEST's "min ago" moves).
+- Pull the network cable for one refresh (up to 2 min): only the source line
+  changes, to `feed down since HH:MM`, and the dot goes grey and still. Plug it
+  back: within 2 min the line reads `updated HH:MM` again.
+- During a fetch, press BACK and open the Apple TV: no delay.
+- If 30 fps is missed: note it; the ripple and breathing are the first to go.
+
 ## 11. Write it down
 
 One evidence note, `tvs/lg-65nano756pr/evidence/impetus-home-1.2-tv-run-<date>.md`,
