@@ -10,20 +10,27 @@
 <div id="stage"></div>
 <script>
 // PC preview: load index.html's stage markup, mock the TV, then the app.
-// Query: t=<ISO time>  room=control|engine  notice=sleep
+// Query: t=<ISO time>  room=control|engine  notice=sleep|bedtime
 //        still=live|last|none|black  caps=<names to switch off, comma separated>
 //        scene=<id> (a scene already on)  shield=on
+//        room=iceland  quakes=fixture (the 15.11 list; sets t to 00:20 UTC unless t is given) | none
+//        feed=down (the helper has only its last copy)  fps=1 (frames per second, top left)
+//        flights=fixture (two aircraft of 15.11, a minute further on each call)
+//        cam=fixture (a stand-in road-camera frame; shown only in daylight at the camera)
 //        room=music  np=demo|paused  beat=demo   (the music piece, #22)
 (function () {
   var q = location.search;
   function arg(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(q); return m ? decodeURIComponent(m[1]) : ""; }
-  if (arg("t")) { var fixed = new Date(arg("t")).getTime(), base = Date.now(), RD = Date;
+  var at = arg("t") || (arg("quakes") === "fixture" ? "2026-11-15T00:20:00Z" : "");
+  if (at) { var fixed = new Date(at).getTime(), base = Date.now(), RD = Date;
     window.Date = function (a, b, c, d, e, f, g) { if (arguments.length === 0) return new RD(fixed + (RD.now() - base)); return arguments.length === 1 ? new RD(a) : new RD(a, b, c || 1, d || 0, e || 0, f || 0, g || 0); };
-    window.Date.now = function () { return fixed + (RD.now() - base); }; window.Date.prototype = RD.prototype; }
+    window.Date.now = function () { return fixed + (RD.now() - base); }; window.Date.prototype = RD.prototype;
+    window.Date.UTC = RD.UTC; window.Date.parse = RD.parse; }
   function nowS() { return Math.round(Date.now() / 1000); }
 
   var off = arg("caps").split(",");
-  var tv = { scene: arg("scene"), end: "", sleep: "", screenoff: "", shield: arg("shield") === "on", hits: 1204 };
+  var tv = { scene: arg("scene"), end: "", sleep: "", screenoff: "", shield: arg("shield") === "on", hits: 1204,
+    phone: arg("phone") === "on", phones: [["3fa91c", "iPhone", 1763100000], ["b07e22", "Android", 1763142000]] };
   if (tv.scene === "film") tv.end = nowS() + 12 * 3600;
   if (tv.scene === "winddown") tv.sleep = nowS() + 47 * 60;
 
@@ -31,7 +38,9 @@
     if (tv.shield) tv.hits += Math.floor(Math.random() * 3);
     return ["now=" + nowS(), "scene=" + tv.scene, "target=", "end=" + tv.end, "sleep=" + tv.sleep,
       "screenoff=" + tv.screenoff, "shield=" + (tv.shield ? "on" : "off")].concat(tv.shield ? ["hits=" + tv.hits] : [])
-      .concat(["hosts=45", "keeper=1"]).join("\n");
+      .concat(["hosts=45", "keeper=1"])
+      .concat(off.indexOf("phone") >= 0 ? ["phone=none"]
+        : tv.phone ? ["phone=on", "phoneport=8090", "phoneaddr=192.168.1.50"] : ["phone=off"]).join("\n");
   }
   var talk = [["142.250.74.46", "WebAppMgr", 6], ["142.250.74.78", "WebAppMgr", 3], ["52.94.236.248", "amazon", 2],
     ["18.66.112.9", "lgecloud", 4], ["34.120.5.11", "rdxd", 2], ["3.248.12.1", "netflix", 5], ["104.18.32.7", "WebAppMgr", 1],
@@ -79,12 +88,36 @@
     }
     if (verb === "scene") { tv.scene = ""; tv.end = tv.sleep = tv.screenoff = ""; return "ok=1"; }
     if (verb === "sleep") { tv.sleep = ""; return "prev=netflix"; }
+    if (verb === "bedtime" && w[1] === "answer") { console.log("ctl", w.join(" ")); return "prev=netflix"; }
     if (verb === "shield") { tv.shield = w[1] === "on"; tv.hits = 0; return "ok=1"; }
+    if (verb === "iceland" && w[1] === "flights") {
+      // flights=fixture: the two aircraft of 15.11 01:09, flown on a minute per call so trails grow.
+      if (arg("flights") !== "fixture") return "kind=none age=0";
+      var fq = new XMLHttpRequest(); fq.open("GET", "../tests/fixtures/adsb-lol-2026-11-15.json", false); fq.send();
+      var fd = JSON.parse(fq.responseText), dt = 60 * (tv.flightCalls = (tv.flightCalls || 0) + 1);
+      fd.ac.forEach(function (a) {
+        var nm = a.gs * dt / 3600, rad = a.track * Math.PI / 180;
+        a.lat += nm * Math.cos(rad) / 60; a.lon += nm * Math.sin(rad) / 60 / Math.cos(a.lat * Math.PI / 180); a.seen_pos = 1;
+      });
+      fd.now = Date.now();
+      return (arg("feed") === "down" ? "kind=last age=840\n" : "kind=fresh age=0\n") + JSON.stringify(fd);
+    }
+    if (verb === "iceland" && w[1] === "quakes") {
+      if (arg("quakes") !== "fixture") return "kind=none age=0";
+      var fx = new XMLHttpRequest(); fx.open("GET", "../tests/fixtures/vedur-quakeinfo-2026-11-15.txt", false); fx.send();
+      // feed=down: the helper could not reach the Met Office and answers with its last copy, 14 min old.
+      return (arg("feed") === "down" ? "kind=last age=840\n" : "kind=fresh age=0\n") + fx.responseText;
+    }
+    if (verb === "phone" && w[1] === "revoke") {
+      tv.phones = tv.phones.filter(function (p) { return "id=" + p[0] !== w[2]; }); return "ok=1";
+    }
+    if (verb === "phone") { tv.phone = w[1] === "start"; return tv.phone ? "ok=1\nport=8090" : "ok=1"; }
     if (verb === "spotify") return w[1] === "get" ? "linked=0" : "ok=1";
     if (verb === "engine") {
       return ["@vitals", "temp=" + (46000 + Math.floor(Math.random() * 3000)), "uptime=" + (93784 + (nowS() % 1000)),
         "memtotal=1543168", "memavail=" + (612000 + Math.floor(Math.random() * 20000)), "disktotal=1048576", "diskused=412300",
-        "@state", stateText(), "@talk", netstat(), "@log", log].join("\n");
+        "@state", stateText(), tv.phones.map(function (p) { return "paired=" + p.join(" "); }).join("\n"),
+        "@talk", netstat(), "@log", log].join("\n");
     }
     return "ok=1";
   };
@@ -111,6 +144,27 @@
     if (!nolive && mode === "live") return { kind: "live", age: 0, src: frame || (frame = makeFrame(false)) };
     if (!nolive && mode === "black") return { kind: "live", age: 0, src: makeFrame(true) };
     return { kind: "last", age: 720, src: frame || (frame = makeFrame(false)) };
+  };
+
+  // cam=fixture: a drawn 4:3 road-camera frame (lava field, ridge, title bar);
+  // feed=down makes it the last frame, 14 min old, so the window stays away.
+  var camFrame = null;
+  window.MOCK_WEBCAM = function () {
+    if (arg("cam") !== "fixture") return { kind: "none", age: 0, src: null };
+    if (!camFrame) {
+      var c = document.createElement("canvas"); c.width = 640; c.height = 480;
+      var g = c.getContext("2d"), sky = g.createLinearGradient(0, 0, 0, 300);
+      sky.addColorStop(0, "#6f7d8c"); sky.addColorStop(1, "#c9c3b4");
+      g.fillStyle = sky; g.fillRect(0, 0, 640, 480);
+      g.fillStyle = "#3b3a37"; g.beginPath(); g.moveTo(0, 300); g.lineTo(140, 262); g.lineTo(260, 284); g.lineTo(360, 236);
+      g.lineTo(420, 250); g.lineTo(520, 228); g.lineTo(640, 270); g.lineTo(640, 480); g.lineTo(0, 480); g.fill();
+      g.fillStyle = "#24231f"; g.fillRect(0, 380, 640, 100);
+      g.fillStyle = "#e8e8e8"; g.beginPath(); g.moveTo(290, 480); g.lineTo(318, 330); g.lineTo(322, 330); g.lineTo(350, 480); g.fill();
+      g.fillStyle = "#000"; g.fillRect(0, 0, 640, 22); g.fillRect(0, 458, 640, 22);
+      g.fillStyle = "#fff"; g.font = "14px sans-serif"; g.fillText("Gighaed - stand-in frame", 8, 16);
+      camFrame = c.toDataURL("image/jpeg", 0.8);
+    }
+    return arg("feed") === "down" ? { kind: "last", age: 840, src: camFrame } : { kind: "fresh", age: 0, src: camFrame };
   };
 
   // The music piece (#22): room=music opens it. np=demo plays three made-up
@@ -147,7 +201,7 @@
   var x = new XMLHttpRequest(); x.open("GET", "index.html", false); x.send();
   var m = /<div id="stage">([\s\S]*?)<\/div>\s*<script/.exec(x.responseText);
   document.getElementById("stage").innerHTML = m[1];
-  ["../preview/mock-apps.js", "logic.js", "config.js", "luna.js", "music-logic.js", "music.js", "home.js"].forEach(function (s) {
+  ["../preview/mock-apps.js", "logic.js", "config.js", "luna.js", "iceland/map.js", "iceland.js", "music-logic.js", "music.js", "home.js"].forEach(function (s) {
     var e = document.createElement("script"); e.src = s; e.async = false; document.body.appendChild(e);
   });
 })();

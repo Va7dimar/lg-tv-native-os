@@ -272,6 +272,39 @@
     return Math.floor(left / 60) + ":" + pad2(left % 60);
   }
 
+  // ---- The bedtime nudge (#24) ----
+
+  var BED_WINDOW = 10800; // the keeper still asks this long after the hour
+
+  // "22:30" -> the hour to send, in epoch seconds: tonight's while it is not
+  // more than BED_WINDOW past (a TV turned on late is still asked), else
+  // tomorrow's. Local time, so a clock change is followed. null when malformed.
+  function nextBedtime(nowMs, at) {
+    var m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(String(at || ""));
+    if (!m) return null;
+    var d = new Date(nowMs);
+    var t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Number(m[1]), Number(m[2])).getTime();
+    if (nowMs >= t + BED_WINDOW * 1000) {
+      t = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, Number(m[1]), Number(m[2])).getTime();
+    }
+    return Math.round(t / 1000);
+  }
+
+  // cfg.bedtime -> the words for `impetus-ctl bedtime set`, or null when the
+  // nudge is off or malformed.
+  function bedtimeWords(bed, nowMs) {
+    if (!bed || !bed.at) return null;
+    var at = nextBedtime(nowMs, bed.at);
+    if (at === null) return null;
+    var w = ["bedtime", "set", "at=" + at];
+    var step = bed.stepBacklight === undefined ? 10 : bed.stepBacklight;
+    var every = bed.everyMinutes === undefined ? 15 : bed.everyMinutes;
+    var floor = bed.floorBacklight === undefined ? 10 : bed.floorBacklight;
+    if (!wholeIn(step, 1, 50) || !wholeIn(every, 1, 120) || !wholeIn(floor, 0, 100)) return null;
+    w.push("step=" + step, "every=" + every, "floor=" + floor);
+    return w;
+  }
+
   // The answer of `impetus-ctl still` (a binary string): one header line
   // "kind=live|last|none age=<s>", then the JPG. -> {kind, age, body}.
   function parseStill(bin) {
@@ -471,16 +504,268 @@
     return best;
   }
 
-  var api = { formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
+  // ---------- Iceland: the Met Office's 48-hour quake list ----------
+  // The earthquakes page carries one inline array:
+  //   quakeInfo = [{'t':new Date(2026,11-1,15,0,4,18),'lat':'63.910','lon':'-21.186',
+  //                 'dep':'5.5','s':'0.4','q':'50.0','dR':'Selfoss', ...}, ...];
+  // Times are UTC. Read with patterns, never evaluated. Returns null when the
+  // text has no such array (the page changed or did not arrive), else the
+  // quakes that pass every range check, newest first.
+  var QUAKE_DATE = /'t'\s*:\s*new Date\((\d{4}),(\d{1,2})-1,(\d{1,2}),(\d{1,2}),(\d{1,2}),(\d{1,2})\)/;
+  var QUAKE_MAX_AGE = 49 * 3600 * 1000;
+  function quakeField(obj, key) {
+    var m = new RegExp("'" + key + "'\\s*:\\s*'([^']*)'").exec(obj);
+    return m ? m[1] : null;
+  }
+  function quakeNum(obj, key) {
+    var s = quakeField(obj, key);
+    if (s === null || !/^\s*-?\d+(\.\d+)?\s*$/.test(s)) return NaN;
+    return parseFloat(s);
+  }
+  function parseQuakeInfo(text, nowMs) {
+    if (typeof text !== "string") return null;
+    var start = text.search(/quakeInfo\s*=\s*\[/);
+    if (start < 0) return null;
+    var end = text.indexOf("];", start);
+    if (end < 0) return null;
+    var body = text.slice(text.indexOf("[", start) + 1, end);
+    var objs = body.match(/\{[^{}]*\}/g) || [];
+    var out = [];
+    for (var i = 0; i < objs.length; i++) {
+      var o = objs[i], d = QUAKE_DATE.exec(o);
+      if (!d) continue;
+      var t = Date.UTC(+d[1], +d[2] - 1, +d[3], +d[4], +d[5], +d[6]);
+      var q = { t: t, lat: quakeNum(o, "lat"), lon: quakeNum(o, "lon"), dep: quakeNum(o, "dep"),
+        m: quakeNum(o, "s"), quality: quakeNum(o, "q"), place: (quakeField(o, "dR") || "").replace(/^\s+|\s+$/g, "") };
+      if (!(q.lat >= 62.5 && q.lat <= 67.5 && q.lon >= -25.5 && q.lon <= -12.5)) continue;
+      if (!(q.m >= -1 && q.m <= 8)) continue;
+      if (typeof nowMs === "number" && (t > nowMs + 600000 || nowMs - t > QUAKE_MAX_AGE)) continue;
+      if (isNaN(q.dep)) q.dep = null;
+      if (isNaN(q.quality)) q.quality = null;
+      out.push(q);
+    }
+    out.sort(function (a, b) { return b.t - a.t; });
+    return out;
+  }
+
+  // The helper's answer to `iceland quakes`: a head line `kind=fresh|last|none
+  // age=<s>`, then the page's quakeInfo lines. A list that does not parse is
+  // "none": the room shows what it had, never an error.
+  function parseQuakeReply(text, nowMs) {
+    var s = typeof text === "string" ? text : "", nl = s.indexOf("\n");
+    var head = nl < 0 ? s : s.slice(0, nl);
+    var kind = /(?:^|\s)kind=(fresh|last|none)(?=\s|$)/.exec(head), age = /(?:^|\s)age=(\d+)(?=\s|$)/.exec(head);
+    var body = nl >= 0 ? s.slice(nl + 1) : "";
+    var quakes = kind && kind[1] !== "none" ? parseQuakeInfo(body, nowMs) : null;
+    // Entries on the page but none we can read: the page changed, so the feed is down.
+    if (quakes && !quakes.length && /\{\s*'t'\s*:/.test(body)) quakes = null;
+    return { kind: quakes ? kind[1] : "none", age: quakes && age ? Number(age[1]) : 0, quakes: quakes };
+  }
+
+  // The room's feed state after one reply: { quakes, goodAt (ms of the list
+  // shown), down }. A failed fetch keeps the list it had; the lights age on
+  // their own clock.
+  function isleStep(prev, reply, nowMs) {
+    var kept = prev && prev.quakes ? prev : null;
+    if (reply.kind === "fresh") return { quakes: reply.quakes, goodAt: nowMs - reply.age * 1000, down: false };
+    if (reply.kind === "last") {
+      var at = nowMs - reply.age * 1000;
+      if (kept && kept.goodAt >= at) return { quakes: kept.quakes, goodAt: kept.goodAt, down: true };
+      return { quakes: reply.quakes, goodAt: at, down: true };
+    }
+    return { quakes: kept ? kept.quakes : null, goodAt: kept ? kept.goodAt : null, down: true };
+  }
+
+  function isleSource(st) {
+    var src = "Icelandic Met Office · ";
+    if (!st) return src + "waiting for the list";
+    if (!st.down) return src + "updated " + formatClock(new Date(st.goodAt));
+    return src + "feed down" + (st.goodAt ? " since " + formatClock(new Date(st.goodAt)) : "");
+  }
+
+  // ---------- Iceland: aircraft (adsb.lol) ----------
+  var TRAIL = 10, FLIGHT_STALE = 180000;   // points per trail; a plane not heard for 3 min is gone
+
+  // The helper's "iceland flights" reply -> { kind, age, flights } where each
+  // flight is { id, call, lat, lon, track, t (ms of its fix) }. Read with
+  // JSON.parse, never evaluated. Ground traffic, planes without a position or
+  // track, and fixes older than 60 s are left out.
+  function parseFlightReply(text, nowMs) {
+    var none = { kind: "none", age: 0, flights: null };
+    var s = typeof text === "string" ? text : "", nl = s.indexOf("\n");
+    if (nl < 0) return none;
+    var head = s.slice(0, nl);
+    var kind = /(?:^|\s)kind=(fresh|last)(?=\s|$)/.exec(head), age = /(?:^|\s)age=(\d+)(?=\s|$)/.exec(head);
+    if (!kind) return none;
+    var data;
+    try { data = JSON.parse(s.slice(nl + 1)); } catch (e) { return none; }
+    if (!data || !isArray(data.ac)) return none;
+    var at = typeof data.now === "number" && isFinite(data.now) ? data.now : nowMs, out = [];
+    for (var i = 0; i < data.ac.length; i++) {
+      var a = data.ac[i];
+      if (!a || typeof a.hex !== "string" || !/^~?[0-9a-f]{6}$/.test(a.hex)) continue;
+      if (a.alt_baro === "ground" || !isNum(a.lat) || !isNum(a.lon) || !isNum(a.track)) continue;
+      if (a.lat < 60 || a.lat > 70 || a.lon < -32 || a.lon > -6) continue;
+      var seen = isNum(a.seen_pos) ? a.seen_pos : isNum(a.seen) ? a.seen : 999;
+      if (seen < 0 || seen > 60) continue;
+      var call = typeof a.flight === "string" ? a.flight.replace(/\s+$/, "") : "";
+      out.push({ id: a.hex, call: /^[A-Z0-9]{1,8}$/.test(call) ? call : "", lat: a.lat, lon: a.lon,
+        track: ((a.track % 360) + 360) % 360, t: Math.round(at - seen * 1000) });
+    }
+    return { kind: kind[1], age: age ? Number(age[1]) : 0, flights: out };
+  }
+
+  function isNum(v) { return typeof v === "number" && isFinite(v); }
+  function isArray(v) { return Object.prototype.toString.call(v) === "[object Array]"; }
+
+  // Trails: { id: [fix, ...] } oldest first, at most TRAIL fixes; a fix is
+  // added only when newer than the trail's last; a trail whose last fix is
+  // older than 3 min is dropped. Returns a new object.
+  function flightTrails(prev, flights, nowMs) {
+    var next = {}, id, k;
+    for (id in prev) if (Object.prototype.hasOwnProperty.call(prev, id)) next[id] = prev[id].slice();
+    for (k = 0; k < flights.length; k++) {
+      var f = flights[k], tr = next[f.id] || (next[f.id] = []);
+      if (!tr.length || f.t > tr[tr.length - 1].t) tr.push(f);
+      if (tr.length > TRAIL) tr.splice(0, tr.length - TRAIL);
+    }
+    for (id in next) if (Object.prototype.hasOwnProperty.call(next, id) && nowMs - next[id][next[id].length - 1].t > FLIGHT_STALE) delete next[id];
+    return next;
+  }
+
+  // The flights' state after one reply: { trails, goodAt, down }, as isleStep.
+  function flightStep(prev, reply, nowMs) {
+    var trails = prev ? prev.trails : {}, goodAt = prev ? prev.goodAt : null;
+    if (reply.kind === "fresh") return { trails: flightTrails(trails, reply.flights, nowMs), goodAt: nowMs - reply.age * 1000, down: false };
+    if (reply.kind === "last") {
+      var at = nowMs - reply.age * 1000;
+      return { trails: flightTrails(trails, reply.flights, nowMs), goodAt: goodAt !== null && goodAt >= at ? goodAt : at, down: true };
+    }
+    return { trails: flightTrails(trails, [], nowMs), goodAt: goodAt, down: true };
+  }
+
+  function flightSource(st) {
+    var src = "Aircraft: adsb.lol (ODbL) · ";
+    if (!st) return src + "waiting";
+    if (st.down) return src + "feed down" + (st.goodAt ? " since " + formatClock(new Date(st.goodAt)) : "");
+    var n = 0;
+    for (var id in st.trails) if (Object.prototype.hasOwnProperty.call(st.trails, id)) n++;
+    return src + n + " in the air · updated " + formatClock(new Date(st.goodAt));
+  }
+
+  // ---------- Iceland: the road camera (Vegagerðin, Gíghæð) ----------
+  var CAM_LOC = { lat: 63.903, lon: -22.422 };
+
+  // The helper's "iceland webcam" bytes -> { kind: "fresh"|"last"|"none", age, body }.
+  function parseWebcam(bin) {
+    bin = String(bin || "");
+    var cut = bin.indexOf("\n");
+    var head = parseKv((cut < 0 ? bin : bin.slice(0, cut)).split(" ").join("\n"));
+    var kind = head.kind === "fresh" || head.kind === "last" ? head.kind : "none";
+    var body = cut < 0 ? "" : bin.slice(cut + 1);
+    if (kind === "none" || body.charCodeAt(0) !== 0xFF || body.charCodeAt(1) !== 0xD8) return { kind: "none", age: 0, body: "" };
+    return { kind: kind, age: Number(head.age) || 0, body: body };
+  }
+
+  // The window shows a frame no older than 5 min, and only in daylight at
+  // the camera (sun above -6°: its night frames are lifted to grey noise).
+  function webcamShown(kind, ageSec, nowMs) {
+    if (kind !== "fresh" && !(kind === "last" && ageSec >= 0 && ageSec <= 300)) return false;
+    return sunAltitude(nowMs, CAM_LOC) > -6;
+  }
+
+  // The credit CC BY 4.0 asks for: licensor, licence, and when the frame was taken.
+  function webcamCredit(ageSec, nowMs) {
+    return "Road camera: Vegagerðin (IRCA), CC BY 4.0 · " + formatClock(new Date(nowMs - (Number(ageSec) || 0) * 1000));
+  }
+
+  // ---- The phone remote (issue #21) ----
+
+  // One request body for bin/impetus-phone: "key=value" lines, the helper
+  // words as w= lines. null when any value is outside the safe set.
+  function phoneBody(fields, words) {
+    var lines = [];
+    var keys = Object.keys(fields || {});
+    for (var i = 0; i < keys.length; i++) {
+      var v = fields[keys[i]];
+      if (v === undefined || v === null || v === "") continue;
+      if (!/^[a-z]+$/.test(keys[i]) || !isSafeWord(String(v))) return null;
+      lines.push(keys[i] + "=" + v);
+    }
+    for (var j = 0; j < (words || []).length; j++) {
+      if (!isSafeWord(words[j])) return null;
+      lines.push("w=" + words[j]);
+    }
+    return lines.join("\n") + "\n";
+  }
+
+  // A short name for the engine room's list, from the phone's user agent.
+  function phoneName(ua) {
+    ua = String(ua || "");
+    if (/iPhone/.test(ua)) return "iPhone";
+    if (/iPad/.test(ua)) return "iPad";
+    if (/Android/.test(ua)) return "Android";
+    return "Phone";
+  }
+
+  // Six digits, typed with or without spaces -> "123456", else null.
+  function pairCode(s) {
+    var c = String(s || "").replace(/\s+/g, "");
+    return /^\d{6}$/.test(c) ? c : null;
+  }
+
+  // `impetus-ctl phone list` (phone=..) or the engine's state part (paired=..)
+  // -> [{id, name, at}] (at in epoch s).
+  function parsePhones(text) {
+    var out = [];
+    String(text || "").split("\n").forEach(function (line) {
+      var m = /^(?:phone|paired)=([0-9a-f]{6}) ([A-Za-z0-9-]{1,20}) (\d+)$/.exec(line.trim());
+      if (m) out.push({ id: m[1], name: m[2], at: Number(m[3]) });
+    });
+    return out;
+  }
+
+  // "PAIRED 14 NOV" for one phone.
+  function pairedLine(at) {
+    var d = new Date(at * 1000);
+    return "PAIRED " + d.getDate() + " " + MONTHS[d.getMonth()].slice(0, 3).toUpperCase();
+  }
+
+  // The state line on the engine room's PHONE key.
+  function phoneLine(state) {
+    if (!state || state.phone !== "on") return "OFF";
+    var port = /^\d+$/.test(state.phoneport || "") ? state.phoneport : "";
+    var addr = /^[0-9.]+$/.test(state.phoneaddr || "") ? state.phoneaddr : "";
+    if (addr && port) return "ON · " + addr + ":" + port;
+    return port ? "ON · PORT " + port : "ON";
+  }
+
+  // The helper words that open an app from the phone. Deep-link params
+  // travel base64-coded (b64: btoa in a browser), so they pass the word check.
+  function openWords(id, params, b64) {
+    if (!isSafeId(id)) return null;
+    var w = ["open", "id=" + id];
+    if (params && b64) {
+      var p = b64(JSON.stringify(params));
+      if (p.length <= 700 && isSafeWord(p)) w.push("params=" + p);
+    }
+    return w;
+  }
+
+  var api = { parseWebcam: parseWebcam, webcamShown: webcamShown, webcamCredit: webcamCredit, parseFlightReply: parseFlightReply, flightTrails: flightTrails, flightStep: flightStep, flightSource: flightSource,
+    parseQuakeInfo: parseQuakeInfo, parseQuakeReply: parseQuakeReply, isleStep: isleStep, isleSource: isleSource, formatClock: formatClock, formatDate: formatDate, formatDuration: formatDuration,
     isSafeId: isSafeId, isSafeWord: isSafeWord, sunAltitude: sunAltitude, sunDay: sunDay,
     nightWindow: nightWindow, pickApps: pickApps, launchPayload: launchPayload,
     parseLaunchParams: parseLaunchParams, ctlCommand: ctlCommand, parseKv: parseKv,
     parseSections: parseSections, parseCaps: parseCaps, sceneWords: sceneWords,
     sceneLine: sceneLine, shieldText: shieldText, shieldLine: shieldLine, countdown: countdown,
+    nextBedtime: nextBedtime, bedtimeWords: bedtimeWords,
     parseStill: parseStill, stillAge: stillAge,
     parseNetstat: parseNetstat, parseNslookup: parseNslookup, ownerOf: ownerOf,
     groupTalkers: groupTalkers, scrubLog: scrubLog, shortLog: shortLog, filterLog: filterLog,
-    formatUptime: formatUptime, parseVitals: parseVitals, nearest: nearest };
+    formatUptime: formatUptime, parseVitals: parseVitals, nearest: nearest,
+    phoneBody: phoneBody, phoneName: phoneName, pairCode: pairCode, parsePhones: parsePhones,
+    pairedLine: pairedLine, phoneLine: phoneLine, openWords: openWords };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.ImpetusLogic = api;
 })(this);

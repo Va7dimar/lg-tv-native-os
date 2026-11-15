@@ -325,4 +325,252 @@ t("the shipped config: every scene yields safe words", () => {
   }
 });
 
+// ---------- Iceland: the quake list ----------
+const fs = require("fs"), path = require("path");
+const QUAKE_PAGE = fs.readFileSync(path.join(__dirname, "fixtures", "vedur-quakeinfo-2026-11-15.txt"), "utf8");
+const QUAKE_NOW = Date.UTC(2026, 10, 15, 0, 20, 0);
+
+t("quakes: the 15.11 page gives 75, newest first, read as UTC", () => {
+  const q = L.parseQuakeInfo("<script>\n" + QUAKE_PAGE + "</script>", QUAKE_NOW);
+  assert.strictEqual(q.length, 75);
+  assert.strictEqual(q[0].t, Date.UTC(2026, 10, 15, 0, 4, 18));
+  assert.strictEqual(q[0].lat, 63.91); assert.strictEqual(q[0].lon, -21.186);
+  assert.strictEqual(q[0].m, 0.4); assert.strictEqual(q[0].dep, 5.5); assert.strictEqual(q[0].place, "Selfoss");
+  for (let i = 1; i < q.length; i++) assert.ok(q[i - 1].t >= q[i].t);
+  assert.ok(q.some(x => x.place === "Goðabunga"), "Icelandic letters survive");
+});
+
+t("quakes: older than 49 h and out-of-range entries are dropped", () => {
+  const one = (t, lat, lon, s) => "{'t':new Date(" + t + "),'lat':'" + lat + "','lon':'" + lon + "','dep':'1.0','s':'" + s + "','q':'90.0','dR':'X'}";
+  const text = "quakeInfo = [" + [
+    one("2026,11-1,14,12,0,0", "63.9", "-22.1", "1.2"),   // kept
+    one("2026,11-1,12,12,0,0", "63.9", "-22.1", "1.2"),   // 60 h old
+    one("2026,11-1,14,12,0,0", "51.5", "-0.1", "1.2"),    // London
+    one("2026,11-1,14,12,0,0", "63.9", "-22.1", "9.9"),   // magnitude out of range
+    one("2026,11-1,14,12,0,0", "63.9", "-22.1", "abc"),   // not a number
+    "{'t':'yesterday','lat':'63.9','lon':'-22.1','s':'1.0'}" // no date
+  ].join(",") + "];";
+  const q = L.parseQuakeInfo(text, QUAKE_NOW);
+  assert.strictEqual(q.length, 1);
+  assert.strictEqual(q[0].m, 1.2);
+});
+
+t("quakes: no array is null (feed down); an empty array is an empty list", () => {
+  assert.strictEqual(L.parseQuakeInfo("<html>maintenance</html>", QUAKE_NOW), null);
+  assert.strictEqual(L.parseQuakeInfo("", QUAKE_NOW), null);
+  assert.strictEqual(L.parseQuakeInfo(null, QUAKE_NOW), null);
+  assert.strictEqual(L.parseQuakeInfo("quakeInfo = [ ];", QUAKE_NOW).length, 0);
+  assert.strictEqual(L.parseQuakeInfo("quakeInfo = [{'t':new Date(2026,11-1,14,1,2,3)", QUAKE_NOW), null);
+});
+
+t("quakes: nothing in the page is evaluated", () => {
+  global.__pwned = false;
+  const text = "quakeInfo = [{'t':new Date(2026,11-1,14,12,0,0),'lat':'63.9','lon':'-22.1','s':'1.0','dR':'');__pwned=true;('x'}];";
+  const q = L.parseQuakeInfo(text, QUAKE_NOW);
+  assert.strictEqual(global.__pwned, false);
+  assert.ok(Array.isArray(q));
+});
+
+t("quakes: the helper's reply gives kind, age and the list", () => {
+  const fresh = L.parseQuakeReply("kind=fresh age=0\n" + QUAKE_PAGE, QUAKE_NOW);
+  assert.strictEqual(fresh.kind, "fresh"); assert.strictEqual(fresh.age, 0); assert.strictEqual(fresh.quakes.length, 75);
+  const last = L.parseQuakeReply("kind=last age=300\n" + QUAKE_PAGE, QUAKE_NOW);
+  assert.strictEqual(last.kind, "last"); assert.strictEqual(last.age, 300);
+  for (const bad of ["kind=none age=0", "kind=none age=0\n", "", null, "error=iceland", "kind=fresh age=0",
+    "kind=fresh age=0\n<html>maintenance</html>", "kind=freshest age=0\n" + QUAKE_PAGE]) {
+    const r = L.parseQuakeReply(bad, QUAKE_NOW);
+    assert.deepStrictEqual(r, { kind: "none", age: 0, quakes: null }, String(bad).slice(0, 40));
+  }
+  // Entries on the page but none readable: the page changed, so the feed is down.
+  const changed = QUAKE_PAGE.replace(/new Date\(/g, "new Datum(");
+  assert.deepStrictEqual(L.parseQuakeReply("kind=fresh age=0\n" + changed, QUAKE_NOW), { kind: "none", age: 0, quakes: null });
+  // A quiet island: an empty list is still a good list.
+  assert.deepStrictEqual(L.parseQuakeReply("kind=fresh age=0\nquakeInfo = [];", QUAKE_NOW).quakes, []);
+});
+
+t("quakes: the feed state keeps the last list and says since when it is down", () => {
+  const NOW = QUAKE_NOW, A = [{ t: NOW - 60000 }], B = [{ t: NOW - 1000 }];
+  const at = (ms) => L.formatClock(new Date(ms));
+  assert.strictEqual(L.isleSource(null), "Icelandic Met Office · waiting for the list");
+  // Nothing yet, and the helper has nothing: down, no time, no list.
+  let st = L.isleStep(null, { kind: "none", age: 0, quakes: null }, NOW);
+  assert.deepStrictEqual(st, { quakes: null, goodAt: null, down: true });
+  assert.strictEqual(L.isleSource(st), "Icelandic Met Office · feed down");
+  // A fresh list.
+  st = L.isleStep(st, { kind: "fresh", age: 30, quakes: A }, NOW);
+  assert.deepStrictEqual(st, { quakes: A, goodAt: NOW - 30000, down: false });
+  assert.strictEqual(L.isleSource(st), "Icelandic Met Office · updated " + at(NOW - 30000));
+  // The fetch fails: the list stays, the line says since when.
+  const later = NOW + 120000;
+  st = L.isleStep(st, { kind: "none", age: 0, quakes: null }, later);
+  assert.deepStrictEqual(st, { quakes: A, goodAt: NOW - 30000, down: true });
+  assert.strictEqual(L.isleSource(st), "Icelandic Met Office · feed down since " + at(NOW - 30000));
+  // The helper's older copy never replaces a newer list the page holds.
+  st = L.isleStep(st, { kind: "last", age: 600, quakes: B }, later);
+  assert.deepStrictEqual(st, { quakes: A, goodAt: NOW - 30000, down: true });
+  // A newer copy from the helper is shown, still as down.
+  st = L.isleStep(st, { kind: "last", age: 10, quakes: B }, later);
+  assert.deepStrictEqual(st, { quakes: B, goodAt: later - 10000, down: true });
+  // Back up.
+  st = L.isleStep(st, { kind: "fresh", age: 0, quakes: A }, later);
+  assert.strictEqual(st.down, false);
+  assert.strictEqual(L.isleSource(st), "Icelandic Met Office · updated " + at(later));
+});
+
+const FLIGHTS = fs.readFileSync(path.join(__dirname, "fixtures", "adsb-lol-2026-11-15.json"), "utf8");
+const FLIGHT_NOW = 1794704979500;
+
+t("flights: adsb.lol's answer gives the aircraft with their fix times", () => {
+  const r = L.parseFlightReply("kind=fresh age=0\n" + FLIGHTS, FLIGHT_NOW);
+  assert.strictEqual(r.kind, "fresh");
+  assert.deepStrictEqual(r.flights.map(f => [f.id, f.call, f.track]), [["48ae25", "LOT2E", 269.38], ["471f41", "WZZ89J", 290.87]]);
+  assert.strictEqual(r.flights[1].t, FLIGHT_NOW - 17762);
+  const ac = (o) => "kind=fresh age=0\n" + JSON.stringify({ now: FLIGHT_NOW, ac: [Object.assign({ hex: "4cc2a1", lat: 64, lon: -22, track: 90, seen_pos: 1 }, o)] });
+  assert.strictEqual(L.parseFlightReply(ac({}), FLIGHT_NOW).flights.length, 1);
+  for (const bad of [{ alt_baro: "ground" }, { lat: null }, { track: undefined }, { lat: 55 }, { lon: 10 }, { seen_pos: 90 },
+    { hex: "<img>" }]) {
+    assert.strictEqual(L.parseFlightReply(ac(bad), FLIGHT_NOW).flights.length, 0, JSON.stringify(bad));
+  }
+  assert.strictEqual(L.parseFlightReply(ac({ flight: "<b>x</b>" }), FLIGHT_NOW).flights[0].call, "");
+  for (const bad of ["kind=none age=0", "kind=fresh age=0\n{not json", "kind=fresh age=0\n{\"msg\":\"x\"}", "", null,
+    "kind=fresh age=0"]) {
+    assert.deepStrictEqual(L.parseFlightReply(bad, FLIGHT_NOW), { kind: "none", age: 0, flights: null }, String(bad));
+  }
+});
+
+t("flights: trails keep ten fixes, add only newer ones and drop a plane gone for 3 min", () => {
+  const fix = (id, t) => ({ id, call: "", lat: 64, lon: -20, track: 0, t });
+  let tr = {};
+  for (let i = 1; i <= 12; i++) tr = L.flightTrails(tr, [fix("a", i * 60000)], i * 60000);
+  assert.strictEqual(tr.a.length, 10);
+  assert.strictEqual(tr.a[0].t, 3 * 60000);
+  const same = L.flightTrails(tr, [fix("a", 12 * 60000), fix("a", 5 * 60000)], 12 * 60000);
+  assert.strictEqual(same.a.length, 10);
+  assert.strictEqual(tr.a.length, 10, "the old trails are not changed");
+  assert.deepStrictEqual(L.flightTrails(tr, [], 12 * 60000 + 180001), {});
+});
+
+t("flights: the feed state and its line", () => {
+  const at = (ms) => L.formatClock(new Date(ms));
+  const fresh = L.parseFlightReply("kind=fresh age=0\n" + FLIGHTS, FLIGHT_NOW);
+  assert.strictEqual(L.flightSource(null), "Aircraft: adsb.lol (ODbL) · waiting");
+  let st = L.flightStep(null, fresh, FLIGHT_NOW);
+  assert.strictEqual(L.flightSource(st), "Aircraft: adsb.lol (ODbL) · 2 in the air · updated " + at(FLIGHT_NOW));
+  st = L.flightStep(st, { kind: "none", age: 0, flights: null }, FLIGHT_NOW + 60000);
+  assert.strictEqual(st.down, true);
+  assert.strictEqual(Object.keys(st.trails).length, 2, "kept while under 3 min");
+  assert.strictEqual(L.flightSource(st), "Aircraft: adsb.lol (ODbL) · feed down since " + at(FLIGHT_NOW));
+  st = L.flightStep(st, { kind: "none", age: 0, flights: null }, FLIGHT_NOW + 240000);
+  assert.deepStrictEqual(st.trails, {}, "no frozen planes");
+  assert.strictEqual(L.flightSource(L.flightStep(null, { kind: "none", age: 0, flights: null }, FLIGHT_NOW)), "Aircraft: adsb.lol (ODbL) · feed down");
+});
+
+t("webcam: the helper's answer, read", () => {
+  const jpg = "\xFF\xD8\xFF\xE0rest";
+  assert.deepStrictEqual(L.parseWebcam("kind=fresh age=0\n" + jpg), { kind: "fresh", age: 0, body: jpg });
+  assert.deepStrictEqual(L.parseWebcam("kind=last age=90\n" + jpg), { kind: "last", age: 90, body: jpg });
+  assert.strictEqual(L.parseWebcam("kind=fresh age=0\n<html>error</html>").kind, "none", "not a JPG");
+  assert.strictEqual(L.parseWebcam("kind=none age=0").kind, "none");
+  assert.strictEqual(L.parseWebcam("").kind, "none");
+  assert.strictEqual(L.parseWebcam("kind=live age=0\n" + jpg).kind, "none", "only fresh or last");
+});
+
+t("webcam: shown in daylight while the frame is young, with its credit", () => {
+  const noon = Date.UTC(2026, 10, 15, 13, 0);      // sun about +7° at Gíghæð
+  const night = Date.UTC(2026, 10, 15, 22, 0);
+  const dusk = Date.UTC(2026, 10, 15, 17, 45);     // sun about -7°: the camera only shows grey noise
+  assert.strictEqual(L.webcamShown("fresh", 0, noon), true);
+  assert.strictEqual(L.webcamShown("last", 300, noon), true);
+  assert.strictEqual(L.webcamShown("last", 301, noon), false, "older than 5 min");
+  assert.strictEqual(L.webcamShown("none", 0, noon), false);
+  assert.strictEqual(L.webcamShown("fresh", 0, night), false);
+  assert.strictEqual(L.webcamShown("fresh", 0, dusk), false);
+  const at = L.formatClock(new Date(noon - 90000));
+  assert.strictEqual(L.webcamCredit(90, noon), "Road camera: Vegagerðin (IRCA), CC BY 4.0 · " + at);
+});
+
+t("shield: none of its names blocks a host the Iceland room needs", () => {
+  const FEEDS = ["en.vedur.is", "vedur.is", "api.adsb.lol", "adsb.lol", "www.vegagerdin.is", "vegagerdin.is"];
+  const names = fs.readFileSync(path.join(__dirname, "..", "app", "shield", "hosts.txt"), "utf8")
+    .split(/\r?\n/).map(s => s.trim()).filter(s => s && s[0] !== "#");
+  assert.strictEqual(names.length, 45);
+  for (const host of FEEDS) {
+    for (const name of names) {
+      assert.ok(host !== name && !host.endsWith("." + name), name + " would block " + host);
+    }
+  }
+});
+
+t("nextBedtime: tonight's hour, still tonight's a while after, then tomorrow's", () => {
+  const at = (h, m, day) => new Date(2026, 10, day || 14, h, m).getTime();
+  assert.strictEqual(L.nextBedtime(at(20, 0), "22:30"), at(22, 30) / 1000);
+  assert.strictEqual(L.nextBedtime(at(23, 59), "22:30"), at(22, 30) / 1000);     // TV turned on late
+  assert.strictEqual(L.nextBedtime(at(1, 30, 15), "22:30"), at(22, 30, 15) / 1000); // past the window
+  assert.strictEqual(L.nextBedtime(at(23, 0), "00:15"), at(0, 15, 15) / 1000);    // after midnight
+  assert.strictEqual(L.nextBedtime(at(0, 20, 15), "00:15"), at(0, 15, 15) / 1000);
+  for (const bad of ["24:00", "7:30", "22.30", "", null, "22:30;reboot"]) assert.strictEqual(L.nextBedtime(at(20, 0), bad), null);
+});
+
+t("bedtimeWords: safe helper words, defaults, off and malformed", () => {
+  const now = new Date(2026, 10, 14, 20, 0).getTime();
+  const w = L.bedtimeWords({ at: "22:30", scene: "winddown" }, now);
+  assert.deepStrictEqual(w, ["bedtime", "set", "at=" + new Date(2026, 10, 14, 22, 30).getTime() / 1000, "step=10", "every=15", "floor=10"]);
+  assert.ok(L.ctlCommand("/media/developer/apps/usr/palm/applications/org.va7dimar.home", w));
+  assert.deepStrictEqual(L.bedtimeWords({ at: "23:00", stepBacklight: 5, everyMinutes: 10, floorBacklight: 0 }, now).slice(3),
+    ["step=5", "every=10", "floor=0"]);
+  assert.strictEqual(L.bedtimeWords(null, now), null);
+  assert.strictEqual(L.bedtimeWords({ scene: "winddown" }, now), null);
+  assert.strictEqual(L.bedtimeWords({ at: "22:30", stepBacklight: 0 }, now), null);
+  assert.strictEqual(L.bedtimeWords({ at: "22:30", everyMinutes: "15" }, now), null);
+  assert.strictEqual(L.bedtimeWords({ at: "22:30", floorBacklight: 101 }, now), null);
+});
+
+t("the shipped config: the bedtime nudge offers a scene that exists", () => {
+  const c = global.window.IMPETUS_CONFIG;
+  assert.ok(L.bedtimeWords(c.bedtime, Date.now()));
+  assert.ok(c.scenes.some(s => s.id === c.bedtime.scene));
+});
+
+t("phoneBody: key lines and word lines, nothing unsafe", () => {
+  assert.strictEqual(L.phoneBody({ op: "do", t: "ab12" }, ["scene", "off"]), "op=do\nt=ab12\nw=scene\nw=off\n");
+  assert.strictEqual(L.phoneBody({ op: "hello", t: "" }, []), "op=hello\n");
+  assert.strictEqual(L.phoneBody({ op: "do" }, ["a;reboot"]), null);
+  assert.strictEqual(L.phoneBody({ op: "x\nw=restore" }, []), null);
+  assert.strictEqual(L.phoneBody({ "o p": "do" }, []), null);
+});
+
+t("phoneName and pairCode", () => {
+  assert.strictEqual(L.phoneName("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)"), "iPhone");
+  assert.strictEqual(L.phoneName("Mozilla/5.0 (Linux; Android 15; Pixel 9)"), "Android");
+  assert.strictEqual(L.phoneName(undefined), "Phone");
+  assert.strictEqual(L.pairCode("123 456"), "123456");
+  assert.strictEqual(L.pairCode(" 012345 "), "012345");
+  assert.strictEqual(L.pairCode("12345"), null);
+  assert.strictEqual(L.pairCode("12a456"), null);
+});
+
+t("parsePhones reads the list and the engine's paired lines", () => {
+  const text = "phone=3fa91c iPhone 1763100000\npaired=b07e22 Android 1763142000\nphone=on\nphone=XYZ bad 1\npaired=abcdef a;b 1";
+  assert.deepStrictEqual(L.parsePhones(text), [
+    { id: "3fa91c", name: "iPhone", at: 1763100000 }, { id: "b07e22", name: "Android", at: 1763142000 }]);
+  assert.deepStrictEqual(L.parsePhones(undefined), []);
+});
+
+t("pairedLine and phoneLine", () => {
+  assert.strictEqual(L.pairedLine(new Date(2026, 10, 14, 12).getTime() / 1000), "PAIRED 14 NOV");
+  assert.strictEqual(L.phoneLine({ phone: "off" }), "OFF");
+  assert.strictEqual(L.phoneLine({ phone: "none" }), "OFF");
+  assert.strictEqual(L.phoneLine({ phone: "on", phoneport: "8090", phoneaddr: "192.0.2.7" }), "ON · 192.0.2.7:8090");
+  assert.strictEqual(L.phoneLine({ phone: "on", phoneport: "8090", phoneaddr: "" }), "ON · PORT 8090");
+  assert.strictEqual(L.phoneLine({ phone: "on", phoneport: "x" }), "ON");
+});
+
+t("openWords: a safe id, params base64-coded and capped", () => {
+  const b64 = (s) => Buffer.from(s).toString("base64");
+  assert.deepStrictEqual(L.openWords("netflix"), ["open", "id=netflix"]);
+  assert.deepStrictEqual(L.openWords("netflix", { a: 1 }, b64), ["open", "id=netflix", "params=" + b64('{"a":1}')]);
+  assert.deepStrictEqual(L.openWords("netflix", { a: "x".repeat(600) }, b64), ["open", "id=netflix"]);
+  assert.strictEqual(L.openWords("x; reboot"), null);
+});
+
 console.log(n + " tests, 0 failed");

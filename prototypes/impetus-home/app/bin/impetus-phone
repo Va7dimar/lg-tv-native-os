@@ -1,0 +1,237 @@
+#!/bin/sh
+# impetus-phone: the phone remote's side of the helper (issue #21).
+#
+# The web server (busybox httpd, or bin/phone-serve.js where it is missing)
+# runs this as CGI for every request from the phone page; impetus-ctl runs it
+# for the engine room's list of phones. It never changes the TV by itself:
+# every action goes to impetus-ctl, which checks each word again.
+#
+# Modes
+#   cgi                 one POST from the phone page (see "Requests")
+#   list                paired phones, one line each: phone=<id> <name> <paired epoch>
+#   revoke id=<id>      forget one phone; prints ok=1
+#
+# Requests: a text/plain body, one key=value per line, every value in the
+# helper's safe set. Answers are text/plain key=value lines, always with
+# status 200 (busybox httpd passes no CGI status); a refusal is error=<why>.
+#   op=pair                       show a 6-digit code on the TV (a toast)
+#   op=confirm code=<6 digits> n=<name>
+#                                 the code from the screen -> token=<hex> id=<id>
+#   op=hello t=<token>            paired=1|0, then @caps and @state sections
+#   op=state t=<token>            the helper's state
+#   op=apps t=<token>             the TV's app list (the app manager's JSON)
+#   op=do t=<token> w=<word>...   one helper verb: scene on|off, shield on|off,
+#                                 open, standby. Nothing else.
+#
+# Files: $KEEP/phones (mode 600, survives a restart): "<id> <token> <name>
+# <paired epoch>" per line. Only the TV holds it. $RUN/phone.code (memory):
+# "<code> <expires epoch> <wrong tries> <shown epoch>".
+
+umask 077
+
+APP=org.va7dimar.home
+DIR=$(cd "$(dirname "$0")/.." 2>/dev/null && pwd)
+RUN=${IMPETUS_RUN:-/tmp/impetus}
+KEEP=${IMPETUS_KEEP:-$DIR/state}
+CTL="$DIR/bin/impetus-ctl"
+PHONES="$KEEP/phones"
+CODE="$RUN/phone.code"
+TOAST=luna://com.webos.notification/createToast
+APPS=luna://com.webos.service.applicationmanager/listApps
+
+CODE_LIFE=120     # seconds a code on the screen is good for
+CODE_TRIES=5      # wrong codes before it is dropped
+CODE_RESHOW=5     # seconds before the same code may be shown again
+MAX_PHONES=8
+BODY_MAX=4096
+
+now() { if [ -n "$IMPETUS_NOW" ]; then echo "$IMPETUS_NOW"; else date +%s; fi; }
+safe() { case "$1" in ""|*[!A-Za-z0-9._:,=+@/-]*) return 1 ;; esac; return 0; }
+is_num() { case "$1" in ""|*[!0-9]*) return 1 ;; esac; [ ${#1} -le 12 ]; }
+is_hex() { case "$1" in ""|*[!0-9a-f]*) return 1 ;; esac; [ ${#1} -eq "$2" ]; }
+
+# Random hex of $1 bytes, and a code of six digits, from the kernel.
+rand_hex() { od -An -tx1 -N"$1" /dev/urandom 2>/dev/null | tr -d ' \n'; }
+rand_code() {
+  set -- $(od -An -tu1 -N3 /dev/urandom 2>/dev/null)
+  [ $# -eq 3 ] || return 1
+  printf '%06d' $(( ($1 * 65536 + $2 * 256 + $3) % 1000000 ))
+}
+
+toast() { luna-send -n 1 "$TOAST" "{\"sourceId\":\"$APP\",\"message\":\"$1\"}" >/dev/null 2>&1 </dev/null; }
+
+# One writer of the phones file at a time: a folder as the lock. A lock older
+# than a few tries is taken over (its holder was stopped half-way).
+plock() {
+  pl_i=0
+  mkdir -p "$RUN" 2>/dev/null
+  while ! mkdir "$RUN/phone.lock" 2>/dev/null; do
+    pl_i=$((pl_i + 1))
+    [ "$pl_i" -ge 5 ] && { rm -rf "$RUN/phone.lock"; mkdir "$RUN/phone.lock" 2>/dev/null; return 0; }
+    sleep 1
+  done
+}
+punlock() { rmdir "$RUN/phone.lock" 2>/dev/null; }
+
+count_phones() { cp_n=$(grep -c . "$PHONES" 2>/dev/null); is_num "$cp_n" || cp_n=0; echo "$cp_n"; }
+
+# The phones file without the line whose field $1 is $2, written whole first.
+phones_drop() {
+  mkdir -p "$KEEP" 2>/dev/null
+  awk -v f="$1" -v v="$2" '$f != v' "$PHONES" > "$PHONES.new" 2>/dev/null &&
+    mv "$PHONES.new" "$PHONES" 2>/dev/null
+}
+
+list() {
+  [ -r "$PHONES" ] || return 0
+  while read -r li_id li_tok li_name li_at; do
+    is_hex "$li_id" 6 || continue
+    echo "phone=$li_id $li_name $li_at"
+  done < "$PHONES"
+}
+
+revoke() {
+  rv_id=
+  for a in "$@"; do case "$a" in id=*) rv_id=${a#id=} ;; esac; done
+  is_hex "$rv_id" 6 || { echo "error=id"; return 1; }
+  grep -q "^$rv_id " "$PHONES" 2>/dev/null || { echo "error=unknown"; return 1; }
+  plock
+  if phones_drop 1 "$rv_id"; then punlock; echo "ok=1"; else punlock; echo "error=write"; return 1; fi
+}
+
+# ---------- pairing ----------
+
+pair() {
+  [ "$(count_phones)" -lt "$MAX_PHONES" ] || { echo "error=full"; return; }
+  n=$(now)
+  plock
+  pa_code= pa_exp= pa_tries= pa_shown=
+  [ -r "$CODE" ] && read -r pa_code pa_exp pa_tries pa_shown < "$CODE"
+  if is_num "$pa_exp" && [ "$n" -lt "$pa_exp" ] && [ ${#pa_code} -eq 6 ]; then
+    # A code is still on its way: the same one is shown again, not a new one.
+    if is_num "$pa_shown" && [ "$n" -lt $((pa_shown + CODE_RESHOW)) ]; then punlock; echo "ok=1"; echo "life=$((pa_exp - n))"; return; fi
+  else
+    pa_code=$(rand_code) || { punlock; echo "error=random"; return; }
+    pa_exp=$((n + CODE_LIFE)); pa_tries=0
+  fi
+  echo "$pa_code $pa_exp $pa_tries $n" > "$CODE"
+  punlock
+  toast "Phone pairing code: ${pa_code%???} ${pa_code#???}"
+  echo "ok=1"
+  echo "life=$((pa_exp - n))"
+}
+
+confirm() { # code name
+  is_hex "$1" 6 || { echo "error=code"; return; }   # six digits are hex too
+  case "$1" in *[!0-9]*) echo "error=code"; return ;; esac
+  n=$(now)
+  plock
+  cf_code= cf_exp= cf_tries= cf_shown=
+  [ -r "$CODE" ] && read -r cf_code cf_exp cf_tries cf_shown < "$CODE"
+  if ! is_num "$cf_exp" || [ "$n" -ge "$cf_exp" ]; then
+    rm -f "$CODE"; punlock; echo "error=expired"; return
+  fi
+  if [ "$1" != "$cf_code" ]; then
+    cf_tries=$((cf_tries + 1))
+    if [ "$cf_tries" -ge "$CODE_TRIES" ]; then rm -f "$CODE"; punlock; echo "error=expired"; return; fi
+    echo "$cf_code $cf_exp $cf_tries $cf_shown" > "$CODE"
+    punlock; echo "error=code"; echo "left=$((CODE_TRIES - cf_tries))"; return
+  fi
+  rm -f "$CODE"
+  if [ "$(count_phones)" -ge "$MAX_PHONES" ]; then punlock; echo "error=full"; return; fi
+  cf_tok=$(rand_hex 16); cf_id=$(rand_hex 3)
+  is_hex "$cf_tok" 32 && is_hex "$cf_id" 6 || { punlock; echo "error=random"; return; }
+  cf_name=$(printf '%s' "$2" | tr -cd 'A-Za-z0-9-' | cut -c1-20)
+  [ -n "$cf_name" ] || cf_name=Phone
+  mkdir -p "$KEEP" 2>/dev/null
+  # Written whole and then moved into place, so a cut-off write never loses
+  # the phones already paired.
+  if { cat "$PHONES" 2>/dev/null; echo "$cf_id $cf_tok $cf_name $n"; } > "$PHONES.new" 2>/dev/null &&
+     chmod 600 "$PHONES.new" 2>/dev/null && mv "$PHONES.new" "$PHONES" 2>/dev/null; then
+    punlock
+    toast "Phone paired: $cf_name"
+    echo "token=$cf_tok"; echo "id=$cf_id"
+  else
+    rm -f "$PHONES.new" 2>/dev/null; punlock; echo "error=write"
+  fi
+}
+
+# True when $1 is the token of a paired phone; its id goes to au_id.
+authed() {
+  au_id=
+  is_hex "$1" 32 || return 1
+  [ -r "$PHONES" ] || return 1
+  while read -r au_i au_t au_rest; do
+    if [ "$au_t" = "$1" ]; then au_id=$au_i; return 0; fi
+  done < "$PHONES"
+  return 1
+}
+
+# The helper verbs a phone may send. Everything else (restore, keeper, the
+# phone server itself, ...) stays with the TV.
+allowed() {
+  case "$1 $2" in
+    "scene on"|"scene off"|"shield on"|"shield off") return 0 ;;
+  esac
+  case "$1" in open|standby) return 0 ;; esac
+  return 1
+}
+
+caps() {
+  if [ ! -s "$RUN/caps" ]; then sh "$CTL" probe >/dev/null 2>&1; fi
+  cat "$RUN/caps" 2>/dev/null
+}
+
+# ---------- CGI ----------
+
+cgi() {
+  printf 'Content-Type: text/plain; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'
+  [ "$REQUEST_METHOD" = POST ] || { echo "error=method"; return; }
+  cg_len=${CONTENT_LENGTH:-0}
+  is_num "$cg_len" && [ "$cg_len" -le "$BODY_MAX" ] || { echo "error=body"; return; }
+  cg_body=$(dd bs=1 count="$cg_len" 2>/dev/null | tr -d '\r')
+  cg_op= cg_t= cg_code= cg_name=
+  set --
+  while IFS= read -r cg_line || [ -n "$cg_line" ]; do
+    [ -n "$cg_line" ] || continue
+    cg_k=${cg_line%%=*}; cg_v=${cg_line#*=}
+    [ "$cg_k" != "$cg_line" ] || { echo "error=word"; return; }
+    safe "$cg_v" || { echo "error=word"; return; }
+    case "$cg_k" in
+      op) cg_op=$cg_v ;;
+      t) cg_t=$cg_v ;;
+      code) cg_code=$cg_v ;;
+      n) cg_name=$cg_v ;;
+      w) [ $# -lt 24 ] || { echo "error=word"; return; }; set -- "$@" "$cg_v" ;;
+      *) echo "error=word"; return ;;
+    esac
+    cg_line=
+  done <<EOF
+$cg_body
+EOF
+  case "$cg_op" in
+    pair) pair; return ;;
+    confirm) confirm "$cg_code" "$cg_name"; return ;;
+    hello|state|apps|do) ;;
+    *) echo "error=op"; return ;;
+  esac
+  if ! authed "$cg_t"; then echo "paired=0"; return; fi
+  case "$cg_op" in
+    hello)
+      echo "paired=1"; echo "id=$au_id"
+      echo "@caps"; caps
+      echo "@state"; sh "$CTL" state ;;
+    state) sh "$CTL" state ;;
+    apps) luna-send -n 1 "$APPS" '{}' 2>/dev/null </dev/null ;;
+    do)
+      allowed "$1" "$2" || { echo "error=verb"; return; }
+      sh "$CTL" "$@" ;;
+  esac
+}
+
+case "$1" in
+  cgi) cgi ;;
+  list) list ;;
+  revoke) shift; revoke "$@" ;;
+  *) echo "error=mode"; exit 2 ;;
+esac

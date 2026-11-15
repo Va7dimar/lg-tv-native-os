@@ -710,6 +710,355 @@ sleep 1
 is "boot hook: the screen coming back on is not a wake" "$(calls applicationmanager/launch)" 1
 kill "$(cat "$W/hook.pid")" 2>/dev/null
 
+# ---------- iceland quakes: the Met Office feed, read only ----------
+reset
+export IMPETUS_FETCHWAIT=2 IMPETUS_NOW=1794700000
+QPAGE="$HERE/fixtures/vedur-quakeinfo-2026-11-15.txt"
+{ echo "<html><script>"; cat "$QPAGE"; echo "</script>nothing else</html>"; } > "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland quakes)
+is "iceland: a good page is fresh" "$(echo "$out" | head -n 1)" "kind=fresh age=0"
+is "iceland: only the quakeInfo lines come back" "$(echo "$out" | sed 1d)" "$(cat "$QPAGE")"
+is "iceland: the fixed address is fetched" "$(calls 'fetch curl https://en.vedur.is/earthquakes-and-volcanism/earthquakes/')" 1
+no "iceland: no lock is left or taken" held
+rm -f "$STUB_TV/net.page"
+export IMPETUS_NOW=1794700300
+out=$(sh "$CTL" iceland quakes)
+is "iceland: no network gives the last copy with its age" "$(echo "$out" | head -n 1)" "kind=last age=300"
+is "iceland: the last copy is whole" "$(echo "$out" | sed 1d)" "$(cat "$QPAGE")"
+echo "<html>We are down for maintenance</html>" > "$STUB_TV/net.page"
+is "iceland: a page without the list keeps the last copy" "$(sh "$CTL" iceland quakes | head -n 1)" "kind=last age=300"
+rm -f "$STUB_TV/net.page"; touch "$STUB_TV/net.hang"
+t0=$(date +%s); out=$(sh "$CTL" iceland quakes | head -n 1); t1=$(date +%s)
+is "iceland: a hanging fetch falls back to the last copy" "$out" "kind=last age=300"
+yes "iceland: a hanging fetch is given up within its wait" [ $((t1 - t0)) -le 4 ]
+rm -f "$STUB_TV/net.hang" "$RUN/iceland/quakes.txt"
+is "iceland: nothing kept and no network is none" "$(sh "$CTL" iceland quakes)" "kind=none age=0"
+cp "$QPAGE" "$STUB_TV/net.page"
+is "iceland: busybox wget works the same" "$(IMPETUS_FETCHER=wget sh "$CTL" iceland quakes | head -n 1)" "kind=fresh age=0"
+is "iceland: wget was the one used" "$(calls 'fetch wget ')" 1
+rm -f "$STUB_TV/net.page"
+
+# ---------- iceland flights: adsb.lol, read only ----------
+FPAGE="$HERE/fixtures/adsb-lol-2026-11-15.json"
+export IMPETUS_NOW=1794700000
+cp "$FPAGE" "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland flights)
+is "flights: a good answer is fresh" "$(echo "$out" | head -n 1)" "kind=fresh age=0"
+is "flights: the answer comes back whole" "$(echo "$out" | sed 1d)" "$(cat "$FPAGE")"
+is "flights: the fixed address is fetched" "$(calls 'fetch curl https://api.adsb.lol/v2/point/64.9/-19/250')" 1
+no "flights: no lock is left or taken" held
+export IMPETUS_NOW=1794700060
+echo '{"error":"rate limited"}' > "$STUB_TV/net.page"
+is "flights: an answer without aircraft keeps the last copy" "$(sh "$CTL" iceland flights | head -n 1)" "kind=last age=60"
+rm -f "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland flights)
+is "flights: no network gives the last copy with its age" "$(echo "$out" | head -n 1)" "kind=last age=60"
+is "flights: the last copy is whole" "$(echo "$out" | sed 1d)" "$(cat "$FPAGE")"
+yes "flights: the quake copy is untouched" [ -s "$RUN/iceland/quakes.txt" ]
+rm -f "$RUN/iceland/flights.txt"
+is "flights: nothing kept and no network is none" "$(sh "$CTL" iceland flights)" "kind=none age=0"
+rm -f "$STUB_TV/net.page"
+
+# ---------- iceland webcam: one road-camera frame, read only ----------
+export IMPETUS_NOW=1794700000
+{ printf '\377\330'; head -c 3000 /dev/zero; } > "$STUB_TV/net.page"
+sh "$CTL" iceland webcam > "$W/cam.out"
+is "webcam: a frame is fresh" "$(head -n 1 "$W/cam.out")" "kind=fresh age=0"
+is "webcam: the frame's bytes come back whole" "$(sed 1d "$W/cam.out" | wc -c | tr -d ' ')" 3002
+is "webcam: the fixed address is fetched" "$(calls 'fetch curl https://www.vegagerdin.is/vgdata/vefmyndavelar/gighaed_1.jpg')" 1
+no "webcam: no lock is left or taken" held
+export IMPETUS_NOW=1794700090
+echo "Not Found" > "$STUB_TV/net.page"
+is "webcam: a tiny answer keeps the last frame" "$(sh "$CTL" iceland webcam | head -n 1)" "kind=last age=90"
+rm -f "$STUB_TV/net.page"
+is "webcam: no network gives the last frame with its age" "$(sh "$CTL" iceland webcam | head -n 1)" "kind=last age=90"
+rm -f "$RUN/iceland/cam.jpg"
+is "webcam: nothing kept and no network is none" "$(sh "$CTL" iceland webcam)" "kind=none age=0"
+refused "an unknown feed" iceland iceland planes
+refused "an address from the page" word iceland quakes 'url=http://x;reboot'
+unset IMPETUS_FETCHWAIT IMPETUS_NOW
+
+
+# ---------- the bedtime nudge (#24) ----------
+# A fifo stands in for the remote: nothing comes out of it until a test
+# writes a byte, as a key press would.
+export IMPETUS_INPUT="$W/input"
+bed_reset() {
+  [ -r "$RUN/bedtime.watch" ] && kill $(cat "$RUN/bedtime.watch") 2>/dev/null
+  reset
+  rm -f "$W/input"; mkfifo "$W/input"
+  tv_front netflix
+}
+asks() { calls '"notice":"bedtime"'; }
+AT=100000
+reset
+refused "a bedtime hour that is not a number" at bedtime set at=x
+refused "a bedtime without an hour" at bedtime set step=5
+refused "a dimming step of 0" step bedtime set at=$AT step=0
+refused "a floor above 100" floor bedtime set at=$AT floor=101
+refused "an unknown bedtime word" word bedtime set at=$AT bogus=1
+refused "an unknown answer" answer bedtime answer maybe
+refused "an unknown bedtime verb" bedtime bedtime soon
+
+bed_reset
+is "bedtime: set answers at once" "$(sh "$CTL" bedtime set at=$AT)" "ok=1"
+is "bedtime: state names the hour" "$(st bedtime)" "$AT"
+IMPETUS_NOW=$((AT - 10)) sh "$CTL" tick >/dev/null
+is "bedtime: before the hour, no card" "$(asks)" 0
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+is "bedtime: at the hour the card is opened" "$(asks)" 1
+is "bedtime: state says the card is asked" "$(st bedask)" "$AT"
+is "bedtime: the next hour is a day on" "$(st bedtime)" "$((AT + 86400))"
+sh "$CTL" bedtime set at=$AT >/dev/null
+is "bedtime: the page sending tonight's hour again does not ask again" "$(st bedtime)" "$((AT + 86400))"
+IMPETUS_NOW=$((AT + 3)) sh "$CTL" tick >/dev/null
+is "bedtime: asked once" "$(asks)" 1
+is "bedtime: NOT TONIGHT names the app that was on" "$(sh "$CTL" bedtime answer later | head -n 1)" "prev=netflix"
+tv_front "$US"
+IMPETUS_NOW=$((AT + 61)) sh "$CTL" tick >/dev/null
+is "bedtime: answered, nothing dims" "$(st dim)" ""
+is "bedtime: answered, no picture change" "$(calls setSystemSettings)" 0
+
+# Left alone: what was on comes back and steps down, never below the floor.
+bed_reset
+sh "$CTL" bedtime set at=$AT step=20 every=15 floor=25 >/dev/null
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+tv_front "$US"
+IMPETUS_NOW=$((AT + 61)) sh "$CTL" tick >/dev/null
+is "bedtime: left alone, the app that was on is brought back" "$(cat "$STUB_TV/front")" netflix
+is "bedtime: and it is dimming" "$(st dim)" netflix
+is "bedtime: the card is no longer asked" "$(st bedask)" ""
+tv_front netflix
+IMPETUS_NOW=$((AT + 64)) sh "$CTL" tick >/dev/null
+is "bedtime: first step down" "$(pic netflix backlight)" 50
+is "bedtime: the backlight from before is kept where a restart finds it" "$(grep -c '^pic|backlight|70|' "$KEEP/orig.netflix")" 1
+IMPETUS_NOW=$((AT + 300)) sh "$CTL" tick >/dev/null
+is "bedtime: no step before 15 minutes" "$(pic netflix backlight)" 50
+IMPETUS_NOW=$((AT + 64 + 900)) sh "$CTL" tick >/dev/null
+is "bedtime: the next step after 15 minutes" "$(pic netflix backlight)" 30
+IMPETUS_NOW=$((AT + 64 + 1800)) sh "$CTL" tick >/dev/null
+is "bedtime: never below the floor" "$(pic netflix backlight)" 25
+printf 'x' > "$W/input"
+wait_for '[ -e "$RUN/bedtime.key" ]'
+IMPETUS_NOW=$((AT + 64 + 1810)) sh "$CTL" tick >/dev/null
+is "bedtime: a key brings the picture back" "$(pic netflix backlight)" 70
+is "bedtime: and ends the dimming" "$(st dim)" ""
+is "bedtime: nothing is left on disk" "$(ls "$KEEP" | wc -l | tr -d ' ')" 0
+c=$(calls setSystemSettings)
+IMPETUS_NOW=$((AT + 64 + 2800)) sh "$CTL" tick >/dev/null
+is "bedtime: no step after the key" "$(calls setSystemSettings)" "$c"
+
+# Another app in front ends it too; the backlight waits for its own app.
+bed_reset
+sh "$CTL" bedtime set at=$AT >/dev/null
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+tv_front "$US"
+IMPETUS_NOW=$((AT + 61)) sh "$CTL" tick >/dev/null
+tv_front netflix
+IMPETUS_NOW=$((AT + 62)) sh "$CTL" tick >/dev/null
+is "bedtime: default step of 10" "$(pic netflix backlight)" 60
+tv_front "$HDMI"
+IMPETUS_NOW=$((AT + 100)) sh "$CTL" tick >/dev/null
+is "bedtime: another app in front ends the dimming" "$(st dim)" ""
+is "bedtime: its picture is untouched" "$(pic $HDMI backlight)" 80
+tv_front netflix
+IMPETUS_NOW=$((AT + 110)) sh "$CTL" tick >/dev/null
+is "bedtime: the dimmed app gets its backlight back when it is in front" "$(pic netflix backlight)" 70
+
+# The card left, but someone went elsewhere: up, so nothing dims.
+bed_reset
+sh "$CTL" bedtime set at=$AT >/dev/null
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+tv_front "$HDMI"
+IMPETUS_NOW=$((AT + 61)) sh "$CTL" tick >/dev/null
+is "bedtime: card left for another app, nothing dims" "$(st dim)$(calls setSystemSettings)" "0"
+
+# No card while a scene or a sleep timer runs, or long after the hour.
+bed_reset
+sh "$CTL" bedtime set at=$AT >/dev/null
+echo winddown > "$RUN/scene.id"
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+is "bedtime: no card while a scene is on" "$(asks)" 0
+rm -f "$RUN/scene.id"
+echo $((AT + 86400 + 5000)) > "$RUN/sleep.until"
+IMPETUS_NOW=$((AT + 86400)) sh "$CTL" tick >/dev/null
+is "bedtime: no card while the sleep timer runs" "$(asks)" 0
+rm -f "$RUN/sleep.until"
+IMPETUS_NOW=$((AT + 2 * 86400 + 4 * 3600)) sh "$CTL" tick >/dev/null
+is "bedtime: no card four hours after the hour" "$(asks)" 0
+is "bedtime: the hour still moves on to the next day" "$(st bedtime)" "$((AT + 3 * 86400))"
+echo getPowerState > "$STUB_TV/hang"
+IMPETUS_LUNAWAIT=1 IMPETUS_NOW=$((AT + 3 * 86400)) sh "$CTL" tick >/dev/null
+is "bedtime: no card when the TV gives no power state" "$(asks)" 0
+rm -f "$STUB_TV/hang"
+
+# off, wake and the way back.
+bed_reset
+sh "$CTL" bedtime set at=$AT >/dev/null
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+tv_front "$US"
+IMPETUS_NOW=$((AT + 61)) sh "$CTL" tick >/dev/null
+tv_front netflix
+IMPETUS_NOW=$((AT + 62)) sh "$CTL" tick >/dev/null
+is "bedtime: wake answers" "$(sh "$CTL" bedtime wake)" "ok=1"
+is "bedtime: wake puts the backlight back" "$(pic netflix backlight)" 70
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+IMPETUS_NOW=$((AT + 86400)) sh "$CTL" tick >/dev/null
+tv_front "$US"
+IMPETUS_NOW=$((AT + 86461)) sh "$CTL" tick >/dev/null
+tv_front netflix
+IMPETUS_NOW=$((AT + 86462)) sh "$CTL" tick >/dev/null
+is "bedtime: dimming again the next night" "$(pic netflix backlight)" 60
+sh "$CTL" restore >/dev/null
+is "way back: a dimmed backlight is put back" "$(pic netflix backlight)" 70
+is "way back: no bedtime is left" "$(ls "$RUN" | grep -c '^bedtime')" 0
+bed_reset
+sh "$CTL" bedtime set at=$AT >/dev/null
+is "bedtime: off answers" "$(sh "$CTL" bedtime off)" "ok=1"
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+is "bedtime: off, no card" "$(asks)" 0
+unset IMPETUS_INPUT
+# ---------- the phone remote (issue #21) ----------
+# tests/stubs/httpd stands in for busybox httpd; the CGI door is run by hand
+# the way httpd runs it: POST, CONTENT_LENGTH, the body on stdin.
+reset
+api() { # body lines...
+  ap_b=$(printf '%s\n' "$@")
+  printf '%s\n' "$ap_b" | REQUEST_METHOD=POST CONTENT_LENGTH=$((${#ap_b} + 1)) sh "$RUN/www/cgi-bin/api" | tr -d '\r' | sed '1,/^$/d'
+}
+kv() { echo "$1" | sed -n "s/^$2=//p" | head -n 1; }
+is "phone: state says off when a server is here" "$(st phone)" off
+is "phone: probe output has no phone line" "$(sh "$CTL" probe | grep -c '^phone')" 0
+is "phone: start answers on the first port" "$(sh "$CTL" phone start | tr '\n' ' ')" "ok=1 port=8090 "
+is "phone: state says on" "$(st phone)" on
+is "phone: state names the port" "$(st phoneport)" 8090
+is "phone: httpd serves the www copy with its conf" "$(cat "$STUB_TV/httpd.args")" "-f -p 8090 -h $RUN/www -c $RUN/phone-httpd.conf"
+yes "phone: the www copy has the page" test -s "$RUN/www/index.html"
+yes "phone: the www copy has logic.js and the font" test -s "$RUN/www/logic.js" -a -s "$RUN/www/fonts/Saira-Variable.woff2"
+yes "phone: the CGI door is executable" test -x "$RUN/www/cgi-bin/api"
+no "phone: the www copy holds no state" test -e "$RUN/www/state"
+is "phone: httpd allows the home network only" "$(tail -n 2 "$RUN/phone-httpd.conf" | head -n 1)" "D:*"
+yes "phone: the wish is kept for a restart" test -e "$KEEP/phone.on"
+sp=$(cut -d' ' -f1 "$RUN/phone.server")
+sh "$CTL" phone start >/dev/null
+is "phone: a second start keeps the same server" "$(cut -d' ' -f1 "$RUN/phone.server")" "$sp"
+
+is "phone cgi: GET is refused" "$(REQUEST_METHOD=GET sh "$RUN/www/cgi-bin/api" | tr -d '\r' | sed '1,/^$/d')" "error=method"
+is "phone cgi: a body over 4096 bytes is refused" "$(REQUEST_METHOD=POST CONTENT_LENGTH=5000 sh "$RUN/www/cgi-bin/api" </dev/null | tr -d '\r' | sed '1,/^$/d')" "error=body"
+is "phone cgi: shell text is refused" "$(api op=hello 't=$(reboot)')" "error=word"
+is "phone cgi: an unknown key is refused" "$(api op=hello x=1)" "error=word"
+is "phone cgi: an unknown op is refused" "$(api op=restore)" "error=op"
+is "phone cgi: no token, not paired" "$(api op=hello)" "paired=0"
+is "phone cgi: a made-up token, not paired" "$(api op=state t=0123456789abcdef0123456789abcdef)" "paired=0"
+is "phone cgi: no token, no action" "$(api op=do w=scene w=off)" "paired=0"
+
+: > "$STUB_TV/calls"
+out=$(IMPETUS_NOW=1000 api op=pair)
+is "pair: answers with the code's life" "$(echo "$out" | tr '\n' ' ')" "ok=1 life=120 "
+code=$(cut -d' ' -f1 "$RUN/phone.code")
+yes "pair: the code is six digits" sh -c "echo '$code' | grep -qx '[0-9][0-9][0-9][0-9][0-9][0-9]'"
+is "pair: the code is shown on the TV" "$(grep -c "createToast.*Phone pairing code: ${code%???} ${code#???}" "$STUB_TV/calls")" 1
+IMPETUS_NOW=1002 api op=pair >/dev/null
+is "pair: asked again at once, no second toast" "$(calls createToast)" 1
+IMPETUS_NOW=1010 api op=pair >/dev/null
+is "pair: asked again later, the same code again" "$(cut -d' ' -f1 "$RUN/phone.code") $(calls createToast)" "$code 2"
+wrong=$(echo "$code" | awk '{ printf "%06d", ($1 + 1) % 1000000 }')
+is "confirm: a wrong code, four tries left" "$(IMPETUS_NOW=1020 api op=confirm code=$wrong | tr '\n' ' ')" "error=code left=4 "
+is "confirm: letters are not a code" "$(IMPETUS_NOW=1020 api op=confirm code=12a45b)" "error=code"
+out=$(IMPETUS_NOW=1030 api op=confirm code=$code n=iPhone)
+tok=$(kv "$out" token); pid=$(kv "$out" id)
+yes "confirm: a 32-hex token" sh -c "echo '$tok' | grep -qx '[0-9a-f]\{32\}'"
+yes "confirm: a 6-hex id" sh -c "echo '$pid' | grep -qx '[0-9a-f]\{6\}'"
+no "confirm: the code is used up" test -e "$RUN/phone.code"
+is "confirm: the phones file is the owner's only" "$(ls -l "$KEEP/phones" | cut -c1-10)" "-rw-------"
+is "confirm: the phone is listed with its name" "$(sh "$CTL" phone list)" "phone=$pid iPhone 1030"
+is "confirm: paired toast" "$(calls 'Phone paired: iPhone')" 1
+is "confirm: the same code twice does not pair again" "$(IMPETUS_NOW=1031 api op=confirm code=$code)" "error=expired"
+IMPETUS_NOW=2000 api op=pair >/dev/null
+is "confirm: an old code has expired" "$(IMPETUS_NOW=2200 api op=confirm code="$(cut -d' ' -f1 "$RUN/phone.code" 2>/dev/null || echo 000000)")" "error=expired"
+IMPETUS_NOW=3000 api op=pair >/dev/null
+c3=$(cut -d' ' -f1 "$RUN/phone.code"); w3=$(echo "$c3" | awk '{ printf "%06d", ($1 + 1) % 1000000 }')
+for i in 1 2 3 4; do IMPETUS_NOW=3001 api op=confirm code=$w3 >/dev/null; done
+is "confirm: the fifth wrong code drops the code" "$(IMPETUS_NOW=3001 api op=confirm code=$w3)" "error=expired"
+is "confirm: and the right one is no good after it" "$(IMPETUS_NOW=3002 api op=confirm code=$c3)" "error=expired"
+is "confirm: a name is cut to its safe letters" "$(IMPETUS_NOW=4000 api op=pair >/dev/null; IMPETUS_NOW=4001 api op=confirm code="$(cut -d' ' -f1 "$RUN/phone.code")" n=My.Phone:Pro >/dev/null; sh "$CTL" phone list | tail -n 1 | cut -d' ' -f2)" "MyPhonePro"
+
+h=$(api op=hello t=$tok)
+is "hello: paired, with the phone's id" "$(echo "$h" | head -n 2 | tr '\n' ' ')" "paired=1 id=$pid "
+is "hello: caps and state sections" "$(echo "$h" | grep '^@' | tr '\n' ' ')" "@caps @state "
+is "hello: the state says the phone server is on" "$(echo "$h" | sed -n 's/^phone=//p')" on
+is "state: through the CGI door" "$(api op=state t=$tok | sed -n 's/^shield=//p')" off
+is "apps: the TV's app list" "$(api op=apps t=$tok | grep -c returnValue)" 1
+for v in "restore" "keeper" "phone stop" "phone revoke id=$pid" "start" "sleep cancel" "engine" "tick"; do
+  # shellcheck disable=SC2086
+  set -- $v; ws=; for x in "$@"; do ws="$ws w=$x"; done
+  # shellcheck disable=SC2086
+  is "do: a phone may not send '$v'" "$(api op=do t=$tok $ws)" "error=verb"
+done
+yes "do: the server still runs after the refusals" test -e "$RUN/phone.server"
+: > "$STUB_TV/calls"
+is "do: shield on" "$(api op=do t=$tok w=shield w=on)" "ok=1"
+is "do: the shield is on" "$(st shield)" on
+is "do: shield off" "$(api op=do t=$tok w=shield w=off)" "ok=1"
+is "do: a word with shell text is refused before the helper" "$(api op=do t=$tok w=open 'w=id=x;reboot')" "error=word"
+is "open: an app" "$(api op=do t=$tok w=open w=id=netflix)" "ok=1"
+is "open: the launch call" "$(grep -c 'applicationmanager/launch {"id":"netflix"}' "$STUB_TV/calls")" 1
+pj=$(printf '{"contentTarget":"x1"}' | base64 | tr -d '\n')
+is "open: with deep-link params" "$(api op=do t=$tok w=open w=id=netflix w=params=$pj)" "ok=1"
+is "open: the params reach the launch" "$(grep -c 'launch {"id":"netflix","params":{"contentTarget":"x1"}}' "$STUB_TV/calls")" 1
+pb=$(printf 'not json' | base64 | tr -d '\n')
+api op=do t=$tok w=open w=id=netflix w=params=$pb >/dev/null
+is "open: params that are not an object are dropped" "$(tail -n 1 "$STUB_TV/calls")" 'luna://com.webos.service.applicationmanager/launch {"id":"netflix"}'
+is "open: no id" "$(sh "$CTL" open)" "error=id"
+: > "$STUB_TV/nolaunch"
+is "open: the TV refuses" "$(api op=do t=$tok w=open w=id=netflix)" "error=refused"
+rm -f "$STUB_TV/nolaunch"
+: > "$STUB_TV/calls"
+is "standby: answers" "$(api op=do t=$tok w=standby)" "ok=1"
+is "standby: one power-off call" "$(calls 'power/turnOff {')" 1
+: > "$STUB_TV/nopower"
+is "standby: the TV refuses" "$(sh "$CTL" standby)" "error=refused"
+rm -f "$STUB_TV/nopower"
+
+eng=$(sh "$CTL" engine)
+is "engine: the paired phones ride in the state part" "$(echo "$eng" | sed -n '/^@state/,/^@talk/p' | grep -c '^paired=')" 2
+is "revoke: a bad id" "$(sh "$CTL" phone revoke id=xyz)" "error=id"
+is "revoke: an unknown id" "$(sh "$CTL" phone revoke id=000000)" "error=unknown"
+is "revoke: forgets the phone" "$(sh "$CTL" phone revoke id=$pid)" "ok=1"
+is "revoke: its token no longer works" "$(api op=hello t=$tok)" "paired=0"
+is "revoke: the other phone stays" "$(sh "$CTL" phone list | wc -l | tr -d ' ')" 1
+
+# Eight phones at most.
+i=0; while [ "$i" -lt 7 ]; do echo "a0000$i 0000000000000000000000000000000$i P$i 1" >> "$KEEP/phones"; i=$((i + 1)); done
+is "pair: eight phones, no more" "$(api op=pair)" "error=full"
+
+# The keeper brings the server back; restore and stop end it.
+kill "$(cut -d' ' -f1 "$RUN/phone.server")" 2>/dev/null; sleep 0.2
+IMPETUS_NOW=5000 sh "$CTL" tick >/dev/null
+is "keeper: the server is back after it died" "$(st phone)" on
+kill "$(cut -d' ' -f1 "$RUN/phone.server")" 2>/dev/null; sleep 0.2
+IMPETUS_NOW=5010 sh "$CTL" tick >/dev/null
+is "keeper: tries again once a minute at most" "$(st phone)" off
+IMPETUS_NOW=5061 sh "$CTL" tick >/dev/null
+is "keeper: and a minute later it is back" "$(st phone)" on
+is "phone stop: answers" "$(sh "$CTL" phone stop)" "ok=1"
+is "phone stop: off" "$(st phone)" off
+no "phone stop: the wish is dropped" test -e "$KEEP/phone.on"
+no "phone stop: the www copy is gone" test -e "$RUN/www"
+yes "phone stop: paired phones stay" test -s "$KEEP/phones"
+IMPETUS_NOW=6000 sh "$CTL" tick >/dev/null
+is "phone stop: the keeper leaves it off" "$(st phone)" off
+echo 8090 > "$STUB_TV/httpd.busy"
+is "phone: a taken port, the next one" "$(sh "$CTL" phone start | tr '\n' ' ')" "ok=1 port=8091 "
+sp=$(cut -d' ' -f1 "$RUN/phone.server")
+sh "$CTL" restore >/dev/null
+no "restore: the phone server ends" kill -0 "$sp" 2>/dev/null
+no "restore: and is not wanted back" test -e "$KEEP/phone.on"
+printf '8090\n8091\n8092\n8093\n' > "$STUB_TV/httpd.busy"
+is "phone: every port taken" "$(sh "$CTL" phone start)" "error=noport"
+is "phone: an unknown phone word" "$(sh "$CTL" phone maybe)" "error=phone"
+is "phone helper: an unknown mode" "$(sh "$HERE/../app/bin/impetus-phone" bogus)" "error=mode"
+
 # ---------- #22: MUSIC with the piece instead of a dark screen ----------
 reset
 refused "the piece after 601 s" piece scene on id=music piece=601

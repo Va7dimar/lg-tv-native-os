@@ -8,7 +8,8 @@
 # Verbs
 #   probe                 what works on this TV, as key=1|0 lines (changes nothing)
 #   start [target=<id>]   put back anything a restart interrupted, start the keeper
-#   state                 scene, timers and shield as key=value lines
+#   state                 scene, timers, shield and phone server as key=value
+#                         lines (phone=on|off, or none when no server is here)
 #   still [nolive]        one line "kind=live|last|none age=<s>", then the JPG bytes
 #   scene on id=.. [launch=..] [mode=..] [set=k:v,..] [night=k:v,..]
 #            [nightstart=<epoch>] [end=<epoch>] [screenoff=<s>] [piece=<s>] [volmax=<n>] [sleep=<min>]
@@ -22,12 +23,31 @@
 #   sleep cancel          drop the sleep timer; prints prev=<app that was in front>
 #   shield on|off         block the hosts in shield/hosts.txt (memory only)
 #   engine                vitals, state, connections and log in one answer
+#   iceland quakes        the Met Office's 48-hour quake list (read only, no lock)
+#   iceland flights       aircraft over and around Iceland, adsb.lol (read only, no lock)
+#   iceland webcam        one road-camera frame near Sundhnukur, Vegagerdin (read only, no lock)
 #   restore               the way back: scene off, shield off, keeper stopped
+#   engine                vitals, state, connections and log in one answer; the
+#                         state part also lists paired phones as paired=<id> ..
+#   open id=<app> [params=<base64 JSON>]   open an app (the phone remote)
+#   standby               end the scene, then a normal power-off (the phone remote)
+#   phone start|stop      the phone remote's web server (issue #21); start
+#                         prints port=<n>, stop also drops the wish to have it
+#   phone list            paired phones: phone=<id> <name> <paired epoch>
+#   phone revoke id=<id>  forget one phone
+#   bedtime set at=<epoch> [step=<n>] [every=<min>] [floor=<n>]
+#                         the bedtime nudge (#24): when, and how the picture dims
+#   bedtime off | wake    no nudge | end the dimming, the picture goes back
+#   bedtime answer winddown|later   the card was answered; prints prev=<app>
+#   restore              the way back: scene off, shield off, phone server
+#                         and keeper stopped
 #   keeper | tick         the background loop, or one turn of it
 #
 # Files: /tmp/impetus (memory) and <app dir>/state (small files that must
 # survive a restart: the picture values and volume from before a scene,
-# whether the shield is on, and the Spotify sign-in). Nothing else is written. Never reboots; the
+# whether the shield and the phone server are on, the paired phones, and the
+# Spotify sign-in). The phone server's pages are copied to /tmp/impetus/www.
+# Nothing else is written. Never reboots; the
 # sleep timer ends in a normal power-off.
 #
 # busybox ash and dash both run this file.
@@ -66,6 +86,8 @@ FRONTWAIT=${IMPETUS_FRONTWAIT:-15}   # seconds `restore` waits for an app to com
 LUNAWAIT=${IMPETUS_LUNAWAIT:-10}     # seconds one call to the TV may take
 LOCKWAIT=${IMPETUS_LOCKWAIT:-16}     # tries (about a second each) a verb waits for the lock
 LOCKMAX=${IMPETUS_LOCKMAX:-120}      # seconds after which a lock is taken over though its holder runs
+PHONE_PORTS=${IMPETUS_PHONE_PORTS:-8090 8091 8092 8093}   # the first free one is taken
+PHONE_RETRY=60                       # seconds between the keeper's tries to bring the server back
 
 now() { if [ -n "$IMPETUS_NOW" ]; then echo "$IMPETUS_NOW"; else date +%s; fi; }
 
@@ -680,6 +702,17 @@ state() {
   if [ -e "$RUN/shield.on" ]; then echo "shield=on"; echo "hits=$(shield_hits)"; else echo "shield=off"; fi
   echo "hosts=$(grep -c '^[A-Za-z0-9]' "$DIR/shield/hosts.txt" 2>/dev/null)"
   if keeper_alive; then echo "keeper=1"; else echo "keeper=0"; fi
+  echo "bedtime=$(cat "$RUN/bedtime.at" 2>/dev/null)"
+  echo "bedask=$(cat "$RUN/bedtime.asked" 2>/dev/null)"
+  echo "dim=$(cat "$RUN/bedtime.dim" 2>/dev/null)"
+  if phone_alive; then
+    read -r st_p st_port st_kind < "$RUN/phone.server"
+    echo "phone=on"; echo "phoneport=$st_port"; echo "phoneaddr=$(lan_addr)"
+  elif [ -n "$(server_kind)" ]; then
+    echo "phone=off"
+  else
+    echo "phone=none"
+  fi
 }
 
 vitals() {
@@ -704,9 +737,133 @@ logtail() {
   dmesg 2>/dev/null | tail -n 40
 }
 
+# ---------- Iceland: outside feeds (read only) ----------
+
+# One fixed address per feed; the page names a feed, never an address.
+QUAKE_URL=${IMPETUS_QUAKE_URL:-https://en.vedur.is/earthquakes-and-volcanism/earthquakes/}
+# Aircraft within 250 nm of the middle of Iceland (adsb.lol, ODbL, no key).
+FLIGHT_URL=${IMPETUS_FLIGHT_URL:-https://api.adsb.lol/v2/point/64.9/-19/250}
+# One road camera (Vegagerdin, CC BY 4.0): Gighaed on Grindavikurvegur, looking
+# north toward Svartsengi and Sundhnukur. A new 640x480 frame every minute.
+CAM_URL=${IMPETUS_CAM_URL:-https://www.vegagerdin.is/vgdata/vefmyndavelar/gighaed_1.jpg}
+CAM_MIN=2000                          # bytes; a smaller answer is not a frame
+FETCHWAIT=${IMPETUS_FETCHWAIT:-10}   # seconds one fetch may take
+FETCHMAX=2000000                     # bytes; a larger answer is not the page
+
+# Which tool fetches on this TV: curl when there is one, else busybox wget.
+fetcher() {
+  if [ -n "$IMPETUS_FETCHER" ]; then echo "$IMPETUS_FETCHER"; return; fi
+  if command -v curl >/dev/null 2>&1; then echo curl
+  elif command -v wget >/dev/null 2>&1; then echo wget
+  fi
+}
+
+# fetch_to <file> <url>: the whole answer or nothing, given up after
+# $FETCHWAIT seconds (busybox wget's own timeout is per read, not in all).
+fetch_to() {
+  ft_tool=$(fetcher)
+  [ -n "$ft_tool" ] || return 1
+  rm -f "$1.part"
+  (
+    case "$ft_tool" in
+      curl) curl -fsSL -m "$FETCHWAIT" -o "$1.part" "$2" </dev/null >/dev/null 2>&1 & ;;
+      *) wget -q -T "$FETCHWAIT" -O "$1.part" "$2" </dev/null >/dev/null 2>&1 & ;;
+    esac
+    ft_p=$!
+    (
+      trap 'kill "$ft_s" 2>/dev/null; exit 0' TERM
+      sleep "$FETCHWAIT" & ft_s=$!
+      wait "$ft_s" && kill "$ft_p" 2>/dev/null
+    ) >/dev/null 2>&1 </dev/null &
+    ft_w=$!
+    wait "$ft_p"; ft_r=$?
+    kill "$ft_w" 2>/dev/null
+    exit "$ft_r"
+  ) 2>/dev/null || { rm -f "$1.part"; return 1; }
+  ft_n=$(wc -c < "$1.part" 2>/dev/null)
+  if [ -z "$ft_n" ] || [ "$ft_n" -eq 0 ] || [ "$ft_n" -gt "$FETCHMAX" ]; then rm -f "$1.part"; return 1; fi
+  mv "$1.part" "$1"
+}
+
+# iceland quakes: one line "kind=fresh|last|none age=<s>", then the lines of
+# the Met Office page that hold its quakeInfo array (the page parses them).
+# fresh: fetched now. last: this fetch failed, the copy kept from the last
+# good one follows. none: nothing to show. Takes no lock: it changes nothing
+# on the TV and must never hold up a scene, the still or `restore`.
+iceland_quakes() {
+  iq_dir="$RUN/iceland"
+  mkdir -p "$iq_dir"
+  if fetch_to "$iq_dir/page.html" "$QUAKE_URL" &&
+     awk '/quakeInfo *= *\[/ { on = 1 } on { print } on && /\];/ { exit }' \
+       "$iq_dir/page.html" > "$iq_dir/quakes.new" &&
+     grep -q 'quakeInfo' "$iq_dir/quakes.new"; then
+    mv "$iq_dir/quakes.new" "$iq_dir/quakes.txt"
+    now > "$iq_dir/quakes.at"
+    rm -f "$iq_dir/page.html"
+    echo "kind=fresh age=0"
+    cat "$iq_dir/quakes.txt"
+    return 0
+  fi
+  rm -f "$iq_dir/quakes.new" "$iq_dir/page.html"
+  iq_at=$(cat "$iq_dir/quakes.at" 2>/dev/null)
+  if [ -s "$iq_dir/quakes.txt" ] && is_num "$iq_at"; then
+    echo "kind=last age=$(( $(now) - iq_at ))"
+    cat "$iq_dir/quakes.txt"
+  else
+    echo "kind=none age=0"
+  fi
+}
+
+# iceland flights: the same shape as quakes, then adsb.lol's JSON answer
+# (the page reads it with JSON.parse). A good answer carries "ac" and "now".
+iceland_flights() {
+  if_dir="$RUN/iceland"
+  mkdir -p "$if_dir"
+  if fetch_to "$if_dir/flights.new" "$FLIGHT_URL" &&
+     grep -q '"ac"' "$if_dir/flights.new" && grep -q '"now"' "$if_dir/flights.new"; then
+    mv "$if_dir/flights.new" "$if_dir/flights.txt"
+    now > "$if_dir/flights.at"
+    echo "kind=fresh age=0"
+    cat "$if_dir/flights.txt"
+    return 0
+  fi
+  rm -f "$if_dir/flights.new"
+  if_at=$(cat "$if_dir/flights.at" 2>/dev/null)
+  if [ -s "$if_dir/flights.txt" ] && is_num "$if_at"; then
+    echo "kind=last age=$(( $(now) - if_at ))"
+    cat "$if_dir/flights.txt"
+  else
+    echo "kind=none age=0"
+  fi
+}
+
+# iceland webcam: the same header line, then the JPG bytes (the page checks
+# they start FF D8, as for the still). The last frame is kept with its age;
+# the page decides whether it is fresh enough to show.
+iceland_webcam() {
+  iw_dir="$RUN/iceland"
+  mkdir -p "$iw_dir"
+  if fetch_to "$iw_dir/cam.new" "$CAM_URL" && [ "$(fsize "$iw_dir/cam.new")" -ge "$CAM_MIN" ]; then
+    mv "$iw_dir/cam.new" "$iw_dir/cam.jpg"
+    now > "$iw_dir/cam.at"
+    echo "kind=fresh age=0"
+    cat "$iw_dir/cam.jpg"
+    return 0
+  fi
+  rm -f "$iw_dir/cam.new"
+  iw_at=$(cat "$iw_dir/cam.at" 2>/dev/null)
+  if [ -s "$iw_dir/cam.jpg" ] && is_num "$iw_at"; then
+    echo "kind=last age=$(( $(now) - iw_at ))"
+    cat "$iw_dir/cam.jpg"
+  else
+    echo "kind=none age=0"
+  fi
+}
+
 engine() {
   echo "@vitals"; vitals
   echo "@state"; state
+  sh "$DIR/bin/impetus-phone" list 2>/dev/null | sed -n 's/^phone=/paired=/p'
   echo "@talk"; netstat -tnp 2>/dev/null
   echo "@log"; logtail
 }
@@ -743,6 +900,164 @@ probe() {
   if [ -r "$THERMAL" ] || [ -r /proc/thermalinfo/soc_temperature ]; then echo "temp=1"; else echo "temp=0"; fi
 }
 
+# ---------- the bedtime nudge (#24) ----------
+
+# At the hour the page sets, with the TV on and no scene or sleep timer
+# running, Impetus is opened with {notice:"bedtime"}: a card that offers
+# WIND DOWN. Left alone for $BED_CARD seconds, the app that was on comes back
+# and its backlight goes down one step at once and then every <every> minutes,
+# never below <floor>. A key press (any byte from an input device), another
+# app in front or a scene ends it, and the backlight goes back. The value from
+# before is kept in orig.<app>, the record a scene uses, so a restart or
+# `restore` puts it back too. Nothing here is waited on by Home.
+BED_CARD=${IMPETUS_BED_CARD:-60}
+BED_WINDOW=10800   # the nudge still comes this long after the hour (a TV turned on late)
+BED_INPUT=${IMPETUS_INPUT:-/dev/input/event*}
+
+bed_set() {
+  bs_at= bs_step=10 bs_every=15 bs_floor=10
+  for a in "$@"; do
+    k=${a%%=*}; v=${a#*=}
+    case "$k" in
+      at) is_num "$v" || die at; bs_at=$v ;;
+      step) is_num "$v" && [ "$v" -ge 1 ] && [ "$v" -le 50 ] || die step; bs_step=$v ;;
+      every) is_num "$v" && [ "$v" -ge 1 ] && [ "$v" -le 120 ] || die every; bs_every=$v ;;
+      floor) is_num "$v" && [ "$v" -le 100 ] || die floor; bs_floor=$v ;;
+      *) die word ;;
+    esac
+  done
+  [ -n "$bs_at" ] || die at
+  mkdir -p "$RUN"
+  # The page sends the hour each time it is shown: tonight's, once asked, is
+  # not asked again.
+  [ "$(cat "$RUN/bedtime.done" 2>/dev/null)" = "$bs_at" ] || echo "$bs_at" > "$RUN/bedtime.at"
+  echo "$bs_step $bs_every $bs_floor" > "$RUN/bedtime.conf"
+  keeper_ensure
+  echo ok=1
+}
+
+# On, as far as the TV says. A state other than Active (Screen Off, Suspend,
+# Active Standby) or no answer: not on.
+bed_tv_on() {
+  bo_r=$(luna "$PWR/getPowerState" '{}')
+  ok "$bo_r" || return 1
+  bo_s=$(printf '%s\n' "$bo_r" | jget state)
+  [ -z "$bo_s" ] || [ "$bo_s" = Active ]
+}
+
+# One reader per input device. The first byte from any of them is a key.
+bed_watch() {
+  bed_unwatch
+  bw_i=0
+  for bw_d in $BED_INPUT; do
+    [ -r "$bw_d" ] || continue
+    bw_i=$((bw_i + 1))
+    (
+      head -c 1 "$bw_d" > "$RUN/bedtime.in.$bw_i" 2>/dev/null &
+      echo "$!" >> "$RUN/bedtime.watch"
+      wait "$!"
+      [ -s "$RUN/bedtime.in.$bw_i" ] && mark "$RUN/bedtime.key"
+    ) >/dev/null 2>&1 </dev/null &
+  done
+}
+bed_unwatch() {
+  if [ -r "$RUN/bedtime.watch" ]; then
+    while read -r bu_p; do is_num "$bu_p" && kill "$bu_p" 2>/dev/null; done < "$RUN/bedtime.watch"
+  fi
+  rm -f "$RUN/bedtime.watch" "$RUN"/bedtime.in.* "$RUN/bedtime.key"
+}
+
+# End the dimming. With 1 the backlight goes back: now when its app is in
+# front, else when it next is (pending.<app>, as after a scene).
+bed_end() {
+  be_t=$(cat "$RUN/bedtime.dim" 2>/dev/null)
+  bed_unwatch
+  rm -f "$RUN/bedtime.dim" "$RUN/bedtime.next" "$RUN/bedtime.since"
+  [ "$1" = 1 ] && safe_id "$be_t" && [ -e "$RUN/orig.$be_t" ] || return 0
+  if [ "$(front)" = "$be_t" ]; then restore_target "$be_t"; else mark "$RUN/pending.$be_t"; fi
+}
+
+# One turn, under the lock: ask at the hour, start dimming when the card was
+# left alone, take the next step or end it.
+bed_tick() {
+  bt_n=$(now)
+  bt_at=$(cat "$RUN/bedtime.at" 2>/dev/null)
+  if is_num "$bt_at" && [ "$bt_n" -ge "$bt_at" ]; then
+    # The latest hour that has come; the next one is a day on (the page puts
+    # it right when it is next shown, across a clock change).
+    bt_last=$((bt_at + (bt_n - bt_at) / 86400 * 86400))
+    echo "$bt_last" > "$RUN/bedtime.done"
+    echo $((bt_last + 86400)) > "$RUN/bedtime.at"
+    if [ $((bt_n - bt_last)) -lt "$BED_WINDOW" ] && [ ! -e "$RUN/scene.id" ] && [ ! -s "$RUN/sleep.until" ] &&
+       [ ! -e "$RUN/bedtime.dim" ] && bed_tv_on; then
+      bt_f=$(front)
+      rm -f "$RUN/bedtime.prev"
+      [ "$bt_f" != "$APP" ] && safe_id "$bt_f" && echo "$bt_f" > "$RUN/bedtime.prev"
+      echo "$bt_n" > "$RUN/bedtime.asked"
+      launch "$APP" "{\"notice\":\"bedtime\",\"at\":$bt_last}"
+    fi
+  fi
+  bt_k=$(cat "$RUN/bedtime.asked" 2>/dev/null)
+  if is_num "$bt_k" && [ "$bt_n" -ge $((bt_k + BED_CARD)) ]; then
+    rm -f "$RUN/bedtime.asked"
+    # Left alone means the card is still in front: someone who went elsewhere
+    # is up, and is not dimmed.
+    if [ "$(front)" = "$APP" ] && [ ! -e "$RUN/scene.id" ] && [ ! -s "$RUN/sleep.until" ]; then
+      bt_t=$(cat "$RUN/bedtime.prev" 2>/dev/null)
+      if safe_id "$bt_t"; then launch "$bt_t"; else bt_t=$APP; fi
+      echo "$bt_t" > "$RUN/bedtime.dim"
+      echo "$bt_n" > "$RUN/bedtime.next"
+      echo "$bt_n" > "$RUN/bedtime.since"
+      bed_watch
+    fi
+    rm -f "$RUN/bedtime.prev"
+  fi
+  bt_t=$(cat "$RUN/bedtime.dim" 2>/dev/null)
+  safe_id "$bt_t" || return 0
+  if [ -e "$RUN/scene.id" ]; then
+    # A scene on the same app now owns the record and puts it back when it ends.
+    if [ "$(cat "$RUN/scene.target" 2>/dev/null)" = "$bt_t" ]; then bed_end 0; else bed_end 1; fi
+    return 0
+  fi
+  [ -e "$RUN/bedtime.key" ] && { bed_end 1; return 0; }
+  bt_f=$(front)
+  bt_s=$(cat "$RUN/bedtime.since" 2>/dev/null)
+  # The app just brought back may take a moment to come to the front.
+  if [ "$bt_f" != "$bt_t" ] && { ! is_num "$bt_s" || [ "$bt_n" -ge $((bt_s + FRONTWAIT)) ]; }; then
+    bed_end 1; return 0
+  fi
+  bt_x=$(cat "$RUN/bedtime.next" 2>/dev/null)
+  [ "$bt_f" = "$bt_t" ] && is_num "$bt_x" && [ "$bt_n" -ge "$bt_x" ] || return 0
+  bt_step=10 bt_every=15 bt_floor=10
+  [ -r "$RUN/bedtime.conf" ] && read -r bt_step bt_every bt_floor < "$RUN/bedtime.conf"
+  is_num "$bt_step" && is_num "$bt_every" && is_num "$bt_floor" || return 0
+  echo $((bt_n + bt_every * 60)) > "$RUN/bedtime.next"
+  bt_cur=$(pic_read backlight | jget backlight)
+  is_num "$bt_cur" || return 0
+  bt_new=$((bt_cur - bt_step))
+  [ "$bt_new" -lt "$bt_floor" ] && bt_new=$bt_floor
+  [ "$bt_new" -lt "$bt_cur" ] && apply_pairs "$RUN/orig.$bt_t" "backlight:$bt_new"
+  return 0
+}
+
+bed_verb() {
+  mkdir -p "$RUN"
+  bv=$1
+  [ $# -gt 0 ] && shift
+  case "$bv" in
+    set) bed_set "$@" ;;
+    off) lock; rm -f "$RUN/bedtime.at" "$RUN/bedtime.conf" "$RUN/bedtime.asked" "$RUN/bedtime.prev"; bed_end 1; unlock; echo ok=1 ;;
+    wake) lock; bed_end 1; unlock; echo ok=1 ;;
+    answer)
+      case "$1" in winddown|later) ;; *) die answer ;; esac
+      lock
+      echo "prev=$(cat "$RUN/bedtime.prev" 2>/dev/null)"
+      rm -f "$RUN/bedtime.asked" "$RUN/bedtime.prev"
+      unlock ;;
+    *) die bedtime ;;
+  esac
+}
+
 # ---------- the keeper ----------
 
 keeper_alive() {
@@ -772,6 +1087,7 @@ recover() {
     cp "$KEEP/vol" "$RUN/vol" && echo 0 > "$RUN/vol.tries"
   fi
   if [ -e "$KEEP/shield.on" ] && [ ! -e "$RUN/shield.on" ]; then shield_on >/dev/null; fi
+  phone_keep
 }
 
 # Follows the app in front without polling: one subscription, one line per
@@ -861,6 +1177,8 @@ tick() {
   # after a restart) is tried again while no scene is on.
   if [ -e "$RUN/vol.tries" ] && [ ! -e "$RUN/scene.id" ]; then lock; vol_restore; unlock; fi
   lock; due; unlock
+  lock; bed_tick; unlock
+  phone_keep
 }
 
 keeper() {
@@ -915,6 +1233,7 @@ restore_all() {
     safe_id "$t" && [ ! -e "$RUN/orig.$t" ] && cp "$f" "$RUN/orig.$t"
   done
   [ -s "$RUN/vol" ] || cp "$KEEP/vol" "$RUN/vol" 2>/dev/null
+  bed_unwatch; rm -f "$RUN"/bedtime.*   # a dimmed backlight is in orig.<app>, put back below
   scene_clear
   vol_restore || { sleep 1; vol_restore; } || { sleep 1; vol_restore; }
   rm -f "$RUN/vol" "$RUN/vol.tries" "$KEEP/vol"
@@ -936,11 +1255,132 @@ restore_all() {
     fi
   done
   rm -f "$RUN"/tries.*
+  phone_stop
   lock
   if shield_off_quiet; then rm -f "$KEEP/shield.on"; else ra_left="$ra_left hosts"; fi
   unlock
   if [ -n "$ra_left" ]; then echo "error=notrestored$ra_left"; return 1; fi
   echo ok=1
+}
+
+# ---------- the phone remote (issue #21) ----------
+
+# The web server is one replaceable part: anything that serves $WWW and runs
+# $WWW/cgi-bin/api as CGI will do. busybox httpd first, then the small node
+# server in bin/phone-serve.js. Empty when neither is here.
+server_kind() {
+  if command -v httpd >/dev/null 2>&1; then echo httpd
+  elif busybox httpd --help 2>&1 | grep -q 'Usage: httpd'; then echo "busybox httpd"
+  elif command -v node >/dev/null 2>&1 && [ -r "$DIR/bin/phone-serve.js" ]; then echo node
+  fi
+}
+
+phone_alive() {
+  pa_p=
+  [ -r "$RUN/phone.server" ] && read -r pa_p pa_x < "$RUN/phone.server"
+  is_num "$pa_p" && kill -0 "$pa_p" 2>/dev/null
+}
+
+port_busy() { netstat -ltn 2>/dev/null | grep -q "[:.]$1 "; }
+
+# The TV's own address on the home network, for the engine room's line.
+lan_addr() {
+  { ip -4 -o addr show 2>/dev/null | awk '{print $4}'
+    ifconfig 2>/dev/null | awk '$1 == "inet" { sub(/^addr:/, "", $2); print $2 }'
+  } | cut -d/ -f1 | grep -v '^127[.]' | grep '^[0-9][0-9.]*$' | head -n 1
+}
+
+# What the server shows: the phone page, the page logic and the owner's list,
+# the font, and the CGI door. Nothing else of the app's folder (state/ holds
+# the tokens) is reachable from the network.
+WWW="$RUN/www"
+www_build() {
+  rm -rf "$WWW.new"
+  if mkdir -p "$WWW.new/cgi-bin" "$WWW.new/fonts" 2>/dev/null &&
+     cp "$DIR/phone/index.html" "$DIR/phone/phone.css" "$DIR/phone/phone.js" "$DIR/logic.js" "$DIR/config.js" "$WWW.new/" 2>/dev/null &&
+     cp "$DIR/fonts/Saira-Variable.woff2" "$WWW.new/fonts/" 2>/dev/null &&
+     { echo "#!/bin/sh"; echo "exec sh '$DIR/bin/impetus-phone' cgi"; } > "$WWW.new/cgi-bin/api" 2>/dev/null &&
+     chmod 755 "$WWW.new/cgi-bin/api" 2>/dev/null &&
+     # busybox httpd: the home network only, and the font's type.
+     { for wb_l in A:10.0.0.0/8 A:172.16.0.0/12 A:192.168.0.0/16 A:127.0.0.1 'D:*' .woff2:font/woff2; do
+         echo "$wb_l"; done; } > "$RUN/phone-httpd.conf" 2>/dev/null; then
+    rm -rf "$WWW"
+    mv "$WWW.new" "$WWW"
+  else
+    rm -rf "$WWW.new"; return 1
+  fi
+}
+
+phone_start() {
+  mkdir -p "$RUN"
+  if phone_alive; then
+    read -r ps_p ps_port ps_kind < "$RUN/phone.server"
+    echo ok=1; echo "port=$ps_port"; return 0
+  fi
+  ps_kind=$(server_kind)
+  [ -n "$ps_kind" ] || { echo "error=noserver"; return 1; }
+  www_build || { echo "error=www"; return 1; }
+  for ps_port in $PHONE_PORTS; do
+    is_num "$ps_port" || continue
+    port_busy "$ps_port" && continue
+    if [ "$ps_kind" = node ]; then
+      node "$DIR/bin/phone-serve.js" "$ps_port" "$WWW" >/dev/null 2>&1 </dev/null &
+    else
+      $ps_kind -f -p "$ps_port" -h "$WWW" -c "$RUN/phone-httpd.conf" >/dev/null 2>&1 </dev/null &
+    fi
+    ps_p=$!
+    # A server that could not take the port ends at once.
+    sleep 1
+    if kill -0 "$ps_p" 2>/dev/null; then
+      echo "$ps_p $ps_port ${ps_kind##* }" > "$RUN/phone.server"
+      mkdir -p "$KEEP" 2>/dev/null && mark "$KEEP/phone.on"
+      rm -f "$RUN/phone.retry"
+      echo ok=1; echo "port=$ps_port"; return 0
+    fi
+  done
+  echo "error=noport"; return 1
+}
+
+# Stops the server and drops the wish to have it ($KEEP/phone.on). Paired
+# phones stay paired.
+phone_stop() {
+  if phone_alive; then kill "$pa_p" 2>/dev/null; fi
+  rm -f "$RUN/phone.server" "$RUN/phone.retry" "$RUN/phone.code" "$KEEP/phone.on"
+  rm -rf "$WWW"
+}
+
+# The keeper brings the server back after a restart or a crash while the
+# owner wants it on; once a minute at most, so a port that stays taken costs
+# little.
+phone_keep() {
+  [ -e "$KEEP/phone.on" ] || return 0
+  phone_alive && return 0
+  pk_n=$(now)
+  pk_at=$(cat "$RUN/phone.retry" 2>/dev/null)
+  is_num "$pk_at" && [ "$pk_n" -lt "$pk_at" ] && return 0
+  phone_start >/dev/null 2>&1
+  # Written after the start too (which clears it), so a server that keeps
+  # dying is started once a minute, not on every turn.
+  echo $((pk_n + PHONE_RETRY)) > "$RUN/phone.retry"
+}
+
+# Open one app. Deep-link params come base64-coded, so they pass the word
+# check; params that do not decode to one JSON object on one line are left out.
+open_app() {
+  oa_id= oa_p= oa_j=
+  for a in "$@"; do
+    case "$a" in id=*) oa_id=${a#id=} ;; params=*) oa_p=${a#params=} ;; *) die word ;; esac
+  done
+  safe_id "$oa_id" || die id
+  if [ -n "$oa_p" ]; then
+    [ ${#oa_p} -le 700 ] || die params
+    oa_j=$(printf '%s' "$oa_p" | base64 -d 2>/dev/null)
+    case "$oa_j" in "{"*"}") ;; *) oa_j= ;; esac
+    [ "$(printf '%s\n' "$oa_j" | wc -l)" -le 1 ] || oa_j=
+  fi
+  if [ -n "$oa_j" ]; then oa_r=$(luna "$SAM/launch" "{\"id\":\"$oa_id\",\"params\":$oa_j}")
+  else oa_r=$(luna "$SAM/launch" "{\"id\":\"$oa_id\"}"); fi
+  if ok "$oa_r"; then echo ok=1; else echo "error=refused"; return 1; fi
 }
 
 # ---------- verbs ----------
@@ -951,7 +1391,11 @@ for a in "$@"; do safe "$a" || die word; done
 verb=$1
 [ $# -gt 0 ] && shift
 case "$verb" in
-  probe) probe ;;
+  probe)
+    # Also kept for the phone page, which cannot afford a probe per visit.
+    mkdir -p "$RUN"
+    probe > "$RUN/caps.new"; cat "$RUN/caps.new"
+    mv "$RUN/caps.new" "$RUN/caps" 2>/dev/null ;;
   start)
     mkdir -p "$RUN"
     for a in "$@"; do
@@ -977,6 +1421,23 @@ case "$verb" in
     [ $# -gt 0 ] && shift
     case "$sub" in get) spotify_get ;; set) spotify_set "$@" ;; forget) spotify_forget ;; *) die spotify ;; esac ;;
   engine) engine ;;
+  iceland) case "$1" in quakes) iceland_quakes ;; flights) iceland_flights ;; webcam) iceland_webcam ;; *) die iceland ;; esac ;;
+  bedtime) bed_verb "$@" ;;
+  open) open_app "$@" ;;
+  standby)
+    mkdir -p "$RUN"
+    lock; scene_off_locked; unlock
+    if standby; then echo ok=1; else echo "error=refused"; exit 1; fi ;;
+  phone)
+    sub=$1
+    [ $# -gt 0 ] && shift
+    case "$sub" in
+      start) phone_start ;;
+      stop) phone_stop; echo ok=1 ;;
+      list) sh "$DIR/bin/impetus-phone" list ;;
+      revoke) sh "$DIR/bin/impetus-phone" revoke "$@" ;;
+      *) die phone ;;
+    esac ;;
   restore) restore_all ;;
   keeper) keeper ;;
   tick) mkdir -p "$RUN"; tick; echo ok=1 ;;

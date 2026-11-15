@@ -61,6 +61,7 @@
       <nav id="scenes" class="scenes"></nav>
       <p id="shieldline" class="shieldline" hidden><span class="what">SHIELD</span><span id="shieldcount" class="n">OFF</span></p>
       <button id="door" class="key door" data-focus hidden>ENGINE ROOM</button>
+      <button id="isledoor" class="key door" data-focus hidden>ICELAND</button>
     </section>
   </section>
 
@@ -91,10 +92,32 @@
       <ol id="talklist" class="talklist"></ol>
     </section>
 
-    <section class="slab log">
-      <h2 class="label">LOG</h2>
-      <ol id="loglist" class="loglist"></ol>
+    <section class="col-right">
+      <button id="phone" class="key phonekey" data-focus hidden>
+        <span class="name">PHONE</span>
+        <span id="phonestate" class="state">OFF</span>
+        <span class="does">A phone on this Wi-Fi opens the address; a code on this screen pairs it.</span>
+      </button>
+      <nav id="phones" class="phones" hidden></nav>
+      <section class="slab log">
+        <h2 class="label">LOG</h2>
+        <ol id="loglist" class="loglist"></ol>
+      </section>
     </section>
+  </section>
+
+  <!-- Room 4: Iceland, behind its door in the control room. Read only; drawn by iceland.js -->
+  <section id="iceland" class="room isleroom" aria-hidden="true">
+    <svg id="islebase" class="islelayer" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+    <div id="islemotion" class="islelayer islemotion"></div>
+    <svg id="islequakes" class="islelayer" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+    <svg id="isleflights" class="islelayer" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+    <div id="islecam" class="islecam">
+      <img id="islecamimg" alt="">
+      <p class="camlbl">WEBCAM</p>
+      <p class="camwhere">Gíghæð, toward Sundhnúkur</p>
+      <p id="islecamsrc" class="camsrc"></p>
+    </div>
   </section>
 
   <!-- The sleep notice: two minutes before standby, any key cancels -->
@@ -102,6 +125,23 @@
     <h2 class="label">STANDBY IN</h2>
     <p id="countdown" class="countdown">2:00</p>
     <p class="noticeline">Press any key to stay up.</p>
+  </section>
+
+  <!-- The bedtime card (#24): at the set hour, one quiet offer -->
+  <section id="bedtime" class="room bedtime" aria-hidden="true">
+    <section class="bedcard">
+      <span class="lead"></span>
+      <h2 class="label">BEDTIME <span id="bedclock" class="n"></span></h2>
+      <p class="bedline">Wind down for the night?</p>
+      <nav class="bedkeys">
+        <button id="bedgo" class="key scene" data-focus>
+          <span id="bedname" class="name">WIND DOWN</span>
+          <span id="beddoes" class="does"></span>
+        </button>
+        <button id="bedlater" class="key door" data-focus>NOT TONIGHT</button>
+      </nav>
+      <p id="bednote" class="bednote"></p>
+    </section>
   </section>
 
   <!-- The music piece (#22): opened by the MUSIC scene, any key leaves it -->
@@ -134,6 +174,8 @@
 <script src="logic.js"></script>
 <script src="config.js"></script>
 <script src="luna.js"></script>
+<script src="iceland/map.js"></script>
+<script src="iceland.js"></script>
 <script src="music-logic.js"></script>
 <script src="music.js"></script>
 <script src="home.js"></script>

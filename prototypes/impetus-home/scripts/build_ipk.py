@@ -23,7 +23,7 @@ APP_DIR = os.path.join(ROOT, "app")
 # Everything else is text and goes in with LF line ends: the TV's shell does
 # not run a script with CRLF.
 BINARY = (".woff2", ".png")
-EXECUTABLE = ("bin/impetus-ctl",)
+EXECUTABLE = ("bin/impetus-ctl", "bin/impetus-phone")
 # The helper's own folder on the TV; never part of a package.
 SKIP_DIRS = ("state",)
 

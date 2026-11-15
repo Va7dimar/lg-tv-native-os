@@ -47,6 +47,13 @@ window.IMPETUS_CONFIG = {
       launch: "last", picture: { backlight: 25 }, volumeMax: 12, sleepMinutes: 60 }
   ],
 
+  // The bedtime nudge: at this hour, if the TV is on and no scene runs, a
+  // quiet card offers the scene named here. Left alone for a minute, the
+  // picture goes back to what was on and its backlight steps down by
+  // stepBacklight every everyMinutes, never below floorBacklight. Any key
+  // puts it back. Drop `at` (or the whole entry) to switch it off.
+  bedtime: { at: "22:30", scene: "winddown", stepBacklight: 10, everyMinutes: 15, floorBacklight: 10 },
+
   // App ids listed here come first, in this order; the rest follow by name.
   order: ["youtube.leanback.v4", "spotify-beehive"],
   // App ids never shown. Inputs are not apps (they are system apps) and never

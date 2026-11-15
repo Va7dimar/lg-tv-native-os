@@ -29,31 +29,47 @@ Enter (OK) and Backspace or Escape (BACK) drive it. The TV is a stand-in
 | Query | Does |
 |---|---|
 | `t=2026-11-14T21:10:00Z` | sets the clock (the sun follows) |
-| `room=control` or `room=engine` | opens in that room |
+| `room=control`, `room=engine` or `room=iceland` | opens in that room |
+| `quakes=fixture` | Iceland gets the 15.11.2026 list (clock set to 00:20 UTC unless `t` is given); without it the feed has nothing yet |
+| `feed=down` | the helper has only its last copy: the quiet `feed down since` line |
+| `fps=1` | frames per second, top left |
+| `flights=fixture` | two aircraft of 15.11.2026, a minute further on each call; without it the flight feed has nothing |
+| `cam=fixture` | a stand-in road-camera frame; it shows only in daylight at the camera (try `t=2026-11-15T13:00:00Z`) |
 | `scene=film`, `scene=winddown` | a scene is already on |
 | `shield=on` | the shield is on and counting |
 | `still=live`, `last`, `none`, `black` | what the Apple TV slab gets |
 | `caps=capture,picture` | parts this TV cannot do (see `probe`) |
 | `notice=sleep` | the two-minute notice before standby |
 | `room=music` | the music piece (#22); with `np=demo` three made-up tracks, `np=paused` one held, none the quiet idle state; `beat=demo` a stand-in beat |
+| `notice=bedtime` | the bedtime card (WIND DOWN or NOT TONIGHT) |
+| `phone=on` | the phone remote's server is on (engine room) |
+
+The phone remote's page: `http://localhost:8765/preview/phone.html` at phone
+width (e.g. 390×844), with `paired=1`, `scene=`, `shield=on`, `caps=` and
+`tv=down` (the TV does not answer).
 
 ## Test
 
 ```sh
-node tests/test_logic.js      # the page's logic: 24 tests
+node tests/test_logic.js      # the page's logic: 44 tests
 node tests/test_music.js      # the music piece's logic and its scene words: 23 tests
-sh tests/test_ctl.sh          # the root helper against a stand-in TV: 278 checks
+sh tests/test_ctl.sh          # the root helper against a stand-in TV: 444 checks
 python tests/test_ipk.py      # the package: layout, line ends, modes, same bytes twice
 ```
 
 `test_ctl.sh` needs a POSIX shell (dash or busybox ash; on Windows, WSL).
 It runs the real helper and keeper with stand-ins for `luna-send`, `mount`,
-`umount`, `iptables` and `node` in `tests/stubs/`, in a scratch folder.
+`umount`, `iptables`, `node` and `httpd` in `tests/stubs/`, in a scratch folder.
+
+`scripts/probe_phone.sh` is run on the TV, not the PC: it reads (and changes
+nothing) whether the TV can serve the phone remote (busybox httpd and CGI, nc,
+node, free ports 8090–8093, a /tmp that can run a script).
 
 ## Build
 
 ```sh
 python scripts/build_ipk.py   # build/org.va7dimar.home_<version>_all.ipk and its SHA256
+python scripts/build_iceland_map.py   # app/iceland/map.js from pinned, hash-checked sources (only when they change)
 ```
 
 No LG SDK. The same files always give the same bytes.
@@ -87,6 +103,8 @@ Ideas that were wanted and parked, one issue each:
 | `app/` | the web app: `index.html`, `home.css`, `home.js` (rooms and keys), `logic.js` (pure functions), `luna.js` (the TV's services), `config.js`, `music.js` and `music-logic.js` (the music piece, #22) |
 | `app/bin/impetus-ctl` | the root helper and the keeper |
 | `app/bin/shield-count.js` | counts calls the shield stopped |
+| `app/iceland/` | the Iceland room's map, generated (coast CC BY 4.0, see `LICENSE-map.txt`) |
+| `app/bin/impetus-phone`, `app/bin/phone-serve.js`, `app/phone/` | the phone remote: its CGI door (pairing, tokens), the node fallback server, the phone page |
 | `boot/impetus-home` | the boot hook that makes Impetus the default Home |
 | `preview/` | the PC preview |
 | `tests/`, `scripts/` | host tests, the IPK build, and `probe_sound.sh` (run at the TV: can root read the sound?) |
