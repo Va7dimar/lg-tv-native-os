@@ -1,9 +1,10 @@
 // Impetus Home controller: the living room, the control room, the engine
-// room, the sleep notice, the bedtime card and the turns between them. Rules: DESIGN.md.
+// room, Iceland, the sleep notice, the bedtime card and the turns between them. Rules: DESIGN.md.
 // Chromium 79: ES5 only.
 (function () {
   "use strict";
   var L = window.ImpetusLogic, LUNA = window.ImpetusLuna, CFG = window.IMPETUS_CONFIG;
+  var ML = window.ImpetusMusicLogic, MUSIC = window.ImpetusMusic;
   var $ = function (id) { return document.getElementById(id); };
 
   var HORIZON = 691, ARC_RISE = 330, X0 = -140, X1 = 2060;
@@ -11,13 +12,16 @@
   var NOTICE_SECONDS = 120;   // the keeper brings the notice up this long before standby
   var TALK_ROWS = 9, LOG_LINES = 14, PHONE_ROWS = 4;
 
-  var room = "living";        // living | control | engine | overhead | notice | bedtime
+  var room = "living";        // living | control | engine | overhead | iceland | notice | bedtime | music
   var focusIdx = 0, focusables = [];
   var idleTimer = null, stateTimer = null, stillTimer = null, engineTimer = null, noticeTimer = null;
   var caps = {}, state = {}, sceneKeys = [];
   var stillBusy = false, liveDead = false;
   var conns = [], hosts = {}, resolving = {};
   var noticeUntil = 0, dismissed = 0, cancelling = false;
+  var musicTaken = 0;         // the "at" of the last {show: "music"} params taken
+  var isleBuilt = false, isleState = null, isleBusy = 0, isleFetchTimer = null, isleAgeTimer = null;
+  var flightState = null, flightBusy = 0, flightTimer = null, camBusy = 0, camTimer = null;
   var BED_CARD = 60;          // the keeper takes over (dims) when the card is left this long
   var bedAt = 0, bedAnswered = 0, bedTimer = null, bedSent = 0;
   var phonesSig = null, armedPhone = null, armTimer = null;
@@ -331,6 +335,87 @@
     });
   }
 
+  // ---------- Room 4: Iceland ----------
+  // Drawn at once from what it last had, then fetched on the way in and every
+  // 120 s, one fetch at a time; the lights age once a minute. A failed fetch
+  // only turns the source line to "feed down since"; keys never wait on it.
+  function drawIceland() { window.ImpetusIceland.draw(isleState, Date.now()); }
+
+  function fetchIceland() {
+    if (isleBusy && Date.now() - isleBusy < 30000) return;   // one in flight; a lost answer frees the slot after 30 s
+    var mine = isleBusy = Date.now();
+    LUNA.ctl(["iceland", "quakes"]).then(function (text) {
+      return L.parseQuakeReply(text, Date.now());
+    }, function () {
+      return { kind: "none", age: 0, quakes: null };
+    }).then(function (r) {
+      if (isleBusy === mine) isleBusy = 0;
+      isleState = L.isleStep(isleState, r, Date.now());
+      if (room === "iceland") drawIceland();
+    });
+  }
+
+  // Aircraft: every 60 s while open, one fetch at a time, the same calm rule.
+  function fetchFlights() {
+    if (flightBusy && Date.now() - flightBusy < 30000) return;
+    var mine = flightBusy = Date.now();
+    LUNA.ctl(["iceland", "flights"]).then(function (text) {
+      return L.parseFlightReply(text, Date.now());
+    }, function () {
+      return { kind: "none", age: 0, flights: null };
+    }).then(function (r) {
+      if (flightBusy === mine) flightBusy = 0;
+      flightState = L.flightStep(flightState, r, Date.now());
+      if (room === "iceland") window.ImpetusIceland.drawFlights(flightState, Date.now());
+    });
+  }
+
+  // The road camera: a frame a minute while open. The window shows only a
+  // young frame in daylight at the camera; otherwise it is simply not there.
+  function fetchWebcam() {
+    if (camBusy && Date.now() - camBusy < 30000) return;
+    var mine = camBusy = Date.now();
+    LUNA.webcam().then(null, function () { return { kind: "none", age: 0, src: null }; }).then(function (c) {
+      if (camBusy === mine) camBusy = 0;
+      if (room !== "iceland") return;
+      var box = $("islecam"), now = Date.now();
+      if (!c.src || !L.webcamShown(c.kind, c.age, now)) { box.classList.remove("on"); return; }
+      $("islecamimg").src = c.src;
+      $("islecamsrc").textContent = L.webcamCredit(c.age, now);
+      box.classList.add("on");
+    });
+  }
+
+  function openIceland() {
+    var I = window.ImpetusIceland;
+    if (!isleBuilt) { I.build($("islebase"), $("islequakes"), $("islemotion"), $("isleflights")); isleBuilt = true; }
+    drawIceland();
+    // Planes last seen over 3 min ago are not drawn again on the way back in.
+    if (flightState) flightState = { trails: L.flightTrails(flightState.trails, [], Date.now()), goodAt: flightState.goodAt, down: flightState.down };
+    I.drawFlights(flightState, Date.now());
+    fetchIceland();
+    fetchFlights();
+    $("islecam").classList.remove("on");   // an old frame never shows on the way in
+    fetchWebcam();
+    isleFetchTimer = setInterval(fetchIceland, 120000);
+    isleAgeTimer = setInterval(drawIceland, 60000);
+    flightTimer = setInterval(fetchFlights, 60000);
+    camTimer = setInterval(fetchWebcam, 60000);
+  }
+
+  // ?fps=1 (or launch params with "fps"): frames per second, top left, for the TV check.
+  function showFps() {
+    var box = document.createElement("div"), n = 0, t0 = Date.now();
+    box.className = "fps";
+    document.body.appendChild(box);
+    (function tick() {
+      n++;
+      var t = Date.now();
+      if (t - t0 >= 1000) { box.textContent = Math.round(n * 1000 / (t - t0)) + " fps"; n = 0; t0 = t; }
+      requestAnimationFrame(tick);
+    })();
+  }
+
   // ---------- The phone remote (issue #21) ----------
   // The PHONE switch starts or stops the helper's web server; each paired
   // phone is a bar that revokes it on a second press within a few seconds.
@@ -490,8 +575,9 @@
   // ---------- Focus ----------
   function collect() {
     var keep = focusables[focusIdx];
-    var sel = room === "engine" ? "#engine [data-focus]" : room === "bedtime" ? "#bedtime [data-focus]" :
-      room === "overhead" ? "#overhead [data-focus]" : "#control [data-focus]";
+    var sel = room === "engine" ? "#engine [data-focus]" : room === "iceland" ? "#iceland [data-focus]" :
+      room === "bedtime" ? "#bedtime [data-focus]" : room === "overhead" ? "#overhead [data-focus]" :
+      "#control [data-focus]";
     focusables = Array.prototype.slice.call(document.querySelectorAll(sel))
       .filter(function (el) { return !el.hidden; });
     var i = focusables.indexOf(keep);
@@ -539,20 +625,25 @@
     b.toggle("open", next === "control");
     b.toggle("deep", next === "engine");
     b.toggle("up", next === "overhead");
+    b.toggle("isle", next === "iceland");
     b.toggle("notice", next === "notice");
+    b.toggle("music", next === "music");
     b.toggle("bedtime", next === "bedtime");
-    ["control", "engine", "overhead", "notice", "bedtime"].forEach(function (id) {
+    ["control", "engine", "overhead", "iceland", "notice", "bedtime", "music"].forEach(function (id) {
       $(id).setAttribute("aria-hidden", next === id ? "false" : "true");
     });
     if (prev === "overhead" && next !== "overhead") window.ImpetusOverhead.leave();
     clearInterval(stateTimer); clearInterval(stillTimer); clearInterval(engineTimer);
     clearInterval(noticeTimer); clearTimeout(idleTimer); clearTimeout(bedTimer);
+    clearInterval(isleFetchTimer); clearInterval(isleAgeTimer); clearInterval(flightTimer); clearInterval(camTimer);
+    if (next === "music") MUSIC.start(); else if (prev === "music") MUSIC.stop();
     collect();
     if (next === "control") {
       // Arriving from the living room lands on APPLE TV; coming back out of
-      // the engine room lands on its door.
-      focusIdx = prev === "engine" ? Math.max(0, focusables.indexOf($("door"))) :
-        prev === "overhead" ? Math.max(0, focusables.indexOf($("skydoor"))) : 0;
+      // the engine room, Iceland or the overhead room lands on that room's door.
+      var back = prev === "engine" ? $("door") : prev === "iceland" ? $("isledoor") :
+        prev === "overhead" ? $("skydoor") : null;
+      focusIdx = back ? Math.max(0, focusables.indexOf(back)) : 0;
       liveDead = false;
       refreshState(); refreshStill();
       stateTimer = setInterval(refreshState, every(CFG.stateEverySeconds, 5));
@@ -566,6 +657,11 @@
     } else if (next === "overhead") {
       window.ImpetusOverhead.enter();
       bumpIdle();
+    } else if (next === "music") {
+      // The piece runs on its own; no timers of the rooms behind it.
+    } else if (next === "iceland") {
+      focusIdx = 0;
+      openIceland();               // a resting view: no idle timer
     } else if (next === "bedtime") {
       focusIdx = 0;
       // Left alone: the keeper brings back what was on; this page steps aside.
@@ -592,9 +688,11 @@
       else if (k === KEY.OK) press();
       return;
     }
-    if (room === "living") { setRoom("control"); return; } // the opening key does nothing else
-    bumpIdle();
-    if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) setRoom(room === "engine" || room === "overhead" ? "control" : "living");
+    if (room === "living" || room === "music") { setRoom("control"); return; } // the opening key does nothing else
+    if (room !== "iceland") bumpIdle();
+    if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) {
+      setRoom(room === "engine" || room === "iceland" || room === "overhead" ? "control" : "living");
+    }
     else if (k === KEY.LEFT) moveFocus("left");
     else if (k === KEY.RIGHT) moveFocus("right");
     else if (k === KEY.UP) moveFocus("up");
@@ -609,13 +707,18 @@
     if (p.notice === "sleep" && until > Date.now() / 1000 && until !== dismissed) { showNotice(until); return; }
     var at = Number(p.at);
     if (p.notice === "bedtime" && at > 0 && at !== bedAnswered && room !== "notice") { showBedtime(at); return; }
+    // The MUSIC scene: the keeper opens Impetus with {show: "music", at}.
+    // A relaunch and the page coming back in front both bring the same params:
+    // the second one leaves the piece on.
+    if (ML.showMusic(p, Date.now(), musicTaken)) { musicTaken = at; setRoom("music", true); return; }
+    if (room === "music" && p.show === "music" && at === musicTaken) return;
     if (room !== "notice" && room !== "bedtime") setRoom("living", true);
     sendBedtime(false);
     refreshState();
   }
 
   function launchParams() {
-    // PC preview: ?notice=sleep shows the notice, ?room=control|engine opens a room.
+    // PC preview: ?notice=sleep shows the notice, ?room=control|engine|iceland|music opens a room.
     var q = location.search || "";
     if (/[?&]notice=sleep/.test(q)) return { notice: "sleep", until: Math.round(Date.now() / 1000) + NOTICE_SECONDS };
     if (/[?&]notice=bedtime/.test(q)) return { notice: "bedtime", at: Math.round(Date.now() / 1000) };
@@ -624,14 +727,20 @@
 
   // ---------- Start ----------
   fit();
+  if (/[?&]fps=1/.test(location.search || "") || /fps/.test(String((window.PalmSystem && window.PalmSystem.launchParams) || ""))) showFps();
   window.addEventListener("resize", fit);
   document.addEventListener("keydown", onKey);
   document.addEventListener("webOSRelaunch", function (e) { arrive(e && e.detail); });
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) arrive(launchParams()); });
+  document.addEventListener("visibilitychange", function () {
+    // The piece stops (no drawing, no asking Spotify) whenever another app is in front.
+    if (document.hidden) { if (room === "music") setRoom("living", true); return; }
+    arrive(launchParams());
+  });
 
   $("appletv")._press = function () { return LUNA.launch(CFG.appleTv.id); };
   $("door")._press = function () { setRoom("engine"); };
   $("skydoor")._press = function () { setRoom("overhead"); };
+  $("isledoor")._press = function () { setRoom("iceland"); };
   $("shield")._press = pressShield;
   $("bedgo")._press = pressBedGo;
   $("bedlater")._press = pressBedLater;
@@ -652,13 +761,14 @@
     $("door").hidden = !caps.exec;
     $("skydoor").hidden = !caps.exec;
     if (caps.exec) window.ImpetusOverhead.start(LUNA.ctl);
+    $("isledoor").hidden = !caps.exec;
     $("shieldline").hidden = !caps.shield;
     $("shield").hidden = !caps.shield;
     collect(); paintFocus();
     if (caps.exec) LUNA.ctl(["start", "target=" + CFG.appleTv.id]).then(noop, noop);
     sendBedtime(true);
     arrive(launchParams());
-    var m = /[?&]room=(control|engine|overhead)/.exec(location.search || "");
+    var m = /[?&]room=(control|engine|overhead|iceland|music)/.exec(location.search || "");
     if (m) setRoom(m[1], true);
   });
 })();

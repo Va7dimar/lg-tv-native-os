@@ -16,10 +16,16 @@
 //        scene=<id> (a scene already on)  shield=on
 //        room=overhead  sky=down (no orbits, no planes)  place=none (no home set)
 //        e.g. ?room=overhead&t=2026-11-16T19:58:30Z is an ISS pass over the placeholder
+//        room=iceland  quakes=fixture (the 15.11 list; sets t to 00:20 UTC unless t is given) | none
+//        feed=down (the helper has only its last copy)  fps=1 (frames per second, top left)
+//        flights=fixture (two aircraft of 15.11, a minute further on each call)
+//        cam=fixture (a stand-in road-camera frame; shown only in daylight at the camera)
+//        room=music  np=demo|paused  beat=demo   (the music piece, #22)
 (function () {
   var q = location.search;
   function arg(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(q); return m ? decodeURIComponent(m[1]) : ""; }
-  if (arg("t")) { var fixed = new Date(arg("t")).getTime(), base = Date.now(), RD = Date;
+  var at = arg("t") || (arg("quakes") === "fixture" ? "2026-11-15T00:20:00Z" : "");
+  if (at) { var fixed = new Date(at).getTime(), base = Date.now(), RD = Date;
     window.Date = function (a, b, c, d, e, f, g) { if (arguments.length === 0) return new RD(fixed + (RD.now() - base)); return arguments.length === 1 ? new RD(a) : new RD(a, b, c || 1, d || 0, e || 0, f || 0, g || 0); };
     window.Date.now = function () { return fixed + (RD.now() - base); }; window.Date.prototype = RD.prototype;
     window.Date.UTC = RD.UTC; window.Date.parse = RD.parse; }
@@ -124,10 +130,29 @@
     if (verb === "sleep") { tv.sleep = ""; return "prev=netflix"; }
     if (verb === "bedtime" && w[1] === "answer") { console.log("ctl", w.join(" ")); return "prev=netflix"; }
     if (verb === "shield") { tv.shield = w[1] === "on"; tv.hits = 0; return "ok=1"; }
+    if (verb === "iceland" && w[1] === "flights") {
+      // flights=fixture: the two aircraft of 15.11 01:09, flown on a minute per call so trails grow.
+      if (arg("flights") !== "fixture") return "kind=none age=0";
+      var fq = new XMLHttpRequest(); fq.open("GET", "../tests/fixtures/adsb-lol-2026-11-15.json", false); fq.send();
+      var fd = JSON.parse(fq.responseText), dt = 60 * (tv.flightCalls = (tv.flightCalls || 0) + 1);
+      fd.ac.forEach(function (a) {
+        var nm = a.gs * dt / 3600, rad = a.track * Math.PI / 180;
+        a.lat += nm * Math.cos(rad) / 60; a.lon += nm * Math.sin(rad) / 60 / Math.cos(a.lat * Math.PI / 180); a.seen_pos = 1;
+      });
+      fd.now = Date.now();
+      return (arg("feed") === "down" ? "kind=last age=840\n" : "kind=fresh age=0\n") + JSON.stringify(fd);
+    }
+    if (verb === "iceland" && w[1] === "quakes") {
+      if (arg("quakes") !== "fixture") return "kind=none age=0";
+      var fx = new XMLHttpRequest(); fx.open("GET", "../tests/fixtures/vedur-quakeinfo-2026-11-15.txt", false); fx.send();
+      // feed=down: the helper could not reach the Met Office and answers with its last copy, 14 min old.
+      return (arg("feed") === "down" ? "kind=last age=840\n" : "kind=fresh age=0\n") + fx.responseText;
+    }
     if (verb === "phone" && w[1] === "revoke") {
       tv.phones = tv.phones.filter(function (p) { return "id=" + p[0] !== w[2]; }); return "ok=1";
     }
     if (verb === "phone") { tv.phone = w[1] === "start"; return tv.phone ? "ok=1\nport=8090" : "ok=1"; }
+    if (verb === "spotify") return w[1] === "get" ? "linked=0" : "ok=1";
     if (verb === "engine") {
       return ["@vitals", "temp=" + (46000 + Math.floor(Math.random() * 3000)), "uptime=" + (93784 + (nowS() % 1000)),
         "memtotal=1543168", "memavail=" + (612000 + Math.floor(Math.random() * 20000)), "disktotal=1048576", "diskused=412300",
@@ -161,10 +186,63 @@
     return { kind: "last", age: 720, src: frame || (frame = makeFrame(false)) };
   };
 
+  // cam=fixture: a drawn 4:3 road-camera frame (lava field, ridge, title bar);
+  // feed=down makes it the last frame, 14 min old, so the window stays away.
+  var camFrame = null;
+  window.MOCK_WEBCAM = function () {
+    if (arg("cam") !== "fixture") return { kind: "none", age: 0, src: null };
+    if (!camFrame) {
+      var c = document.createElement("canvas"); c.width = 640; c.height = 480;
+      var g = c.getContext("2d"), sky = g.createLinearGradient(0, 0, 0, 300);
+      sky.addColorStop(0, "#6f7d8c"); sky.addColorStop(1, "#c9c3b4");
+      g.fillStyle = sky; g.fillRect(0, 0, 640, 480);
+      g.fillStyle = "#3b3a37"; g.beginPath(); g.moveTo(0, 300); g.lineTo(140, 262); g.lineTo(260, 284); g.lineTo(360, 236);
+      g.lineTo(420, 250); g.lineTo(520, 228); g.lineTo(640, 270); g.lineTo(640, 480); g.lineTo(0, 480); g.fill();
+      g.fillStyle = "#24231f"; g.fillRect(0, 380, 640, 100);
+      g.fillStyle = "#e8e8e8"; g.beginPath(); g.moveTo(290, 480); g.lineTo(318, 330); g.lineTo(322, 330); g.lineTo(350, 480); g.fill();
+      g.fillStyle = "#000"; g.fillRect(0, 0, 640, 22); g.fillRect(0, 458, 640, 22);
+      g.fillStyle = "#fff"; g.font = "14px sans-serif"; g.fillText("Gighaed - stand-in frame", 8, 16);
+      camFrame = c.toDataURL("image/jpeg", 0.8);
+    }
+    return arg("feed") === "down" ? { kind: "last", age: 840, src: camFrame } : { kind: "fresh", age: 0, src: camFrame };
+  };
+
+  // The music piece (#22): room=music opens it. np=demo plays three made-up
+  // tracks of 40 s with drawn covers (np=paused holds the first, no np = the
+  // quiet idle state); beat=demo adds a 118 bpm stand-in beat.
+  function makeCover(stops, sun) {
+    var c = document.createElement("canvas"); c.width = 300; c.height = 300;
+    var g = c.getContext("2d"), grad = g.createLinearGradient(0, 0, 300, 300);
+    stops.forEach(function (s, i) { grad.addColorStop(i / (stops.length - 1), s); });
+    g.fillStyle = grad; g.fillRect(0, 0, 300, 300);
+    g.fillStyle = sun; g.beginPath(); g.arc(196, 118, 54, 0, 7); g.fill();
+    g.fillStyle = "rgba(0,0,0,0.55)"; g.fillRect(0, 214, 300, 86);
+    return c.toDataURL("image/png");
+  }
+  var demo = [
+    { id: "demo-1", title: "Northern Lights Over Esja", artist: "The Stand-ins", stops: ["#2a0b3d", "#c2185b", "#ff8a3d"], sun: "#ffd27a" },
+    { id: "demo-2", title: "Harbour at Dusk", artist: "Preview Orchestra", stops: ["#03122b", "#0d47a1", "#26c6da"], sun: "#b2ebf2" },
+    { id: "demo-3", title: "Glacier Run", artist: "Mock Ensemble, Placeholder", stops: ["#0b2a12", "#2e7d32", "#cddc39"], sun: "#fff59d" }
+  ];
+  var npMode = arg("np"), t0 = Date.now();
+  if (npMode === "demo" || npMode === "paused") {
+    window.MOCK_NOWPLAYING = function (now) {
+      var dur = 40000, el = now - t0, i = npMode === "paused" ? 0 : Math.floor(el / dur) % demo.length, d = demo[i];
+      if (!d.cover) d.cover = makeCover(d.stops, d.sun);
+      return { kind: "track", id: d.id, title: d.title, artist: d.artist, cover: d.cover, playing: npMode !== "paused",
+        progressMs: npMode === "paused" ? 13000 : el % dur, durationMs: dur, at: now };
+    };
+  }
+  if (arg("beat") === "demo") {
+    var demoBeat = null;
+    window.ImpetusBeat = { read: function (ms) { return (demoBeat || (demoBeat = window.ImpetusMusicLogic.demoSource(118))).read(ms); } };
+  }
+
   var x = new XMLHttpRequest(); x.open("GET", "index.html", false); x.send();
   var m = /<div id="stage">([\s\S]*?)<\/div>\s*<script/.exec(x.responseText);
   document.getElementById("stage").innerHTML = m[1];
-  ["../preview/mock-apps.js", "logic.js", "config.js", "luna.js", "sky/satellite.min.js", "sky-logic.js", "overhead.js", "home.js"].forEach(function (s) {
+  ["../preview/mock-apps.js", "logic.js", "config.js", "luna.js", "sky/satellite.min.js", "sky-logic.js", "overhead.js",
+   "iceland/map.js", "iceland.js", "music-logic.js", "music.js", "home.js"].forEach(function (s) {
     var e = document.createElement("script"); e.src = s; e.async = false; document.body.appendChild(e);
   });
 })();

@@ -100,6 +100,16 @@
     });
   }
 
+  // The Iceland room's road camera -> {kind: "fresh"|"last"|"none", age, src}.
+  function webcam() {
+    if (root.MOCK_WEBCAM) return Promise.resolve(root.MOCK_WEBCAM());
+    return ctlRaw(["iceland", "webcam"]).then(function (res) {
+      var s = L.parseWebcam(res.stdoutBytes ? atob(res.stdoutBytes) : "");
+      if (s.kind === "none") return { kind: "none", age: 0, src: null };
+      return { kind: s.kind, age: s.age, src: "data:image/jpeg;base64," + btoa(s.body) };
+    });
+  }
+
   function hostOf(ip) {
     if (!IP.test(ip)) return Promise.resolve(null);
     if (root.MOCK_HOSTS) return Promise.resolve(root.MOCK_HOSTS[ip] || null);
@@ -109,5 +119,5 @@
   }
 
   root.ImpetusLuna = { call: call, listApps: listApps, launch: launch,
-    ctl: ctl, still: still, hostOf: hostOf };
+    ctl: ctl, still: still, webcam: webcam, hostOf: hostOf };
 })(this);

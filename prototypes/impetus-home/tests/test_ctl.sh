@@ -710,6 +710,75 @@ sleep 1
 is "boot hook: the screen coming back on is not a wake" "$(calls applicationmanager/launch)" 1
 kill "$(cat "$W/hook.pid")" 2>/dev/null
 
+# ---------- iceland quakes: the Met Office feed, read only ----------
+reset
+export IMPETUS_FETCHWAIT=2 IMPETUS_NOW=1794700000
+QPAGE="$HERE/fixtures/vedur-quakeinfo-2026-11-15.txt"
+{ echo "<html><script>"; cat "$QPAGE"; echo "</script>nothing else</html>"; } > "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland quakes)
+is "iceland: a good page is fresh" "$(echo "$out" | head -n 1)" "kind=fresh age=0"
+is "iceland: only the quakeInfo lines come back" "$(echo "$out" | sed 1d)" "$(cat "$QPAGE")"
+is "iceland: the fixed address is fetched" "$(calls 'fetch curl https://en.vedur.is/earthquakes-and-volcanism/earthquakes/')" 1
+no "iceland: no lock is left or taken" held
+rm -f "$STUB_TV/net.page"
+export IMPETUS_NOW=1794700300
+out=$(sh "$CTL" iceland quakes)
+is "iceland: no network gives the last copy with its age" "$(echo "$out" | head -n 1)" "kind=last age=300"
+is "iceland: the last copy is whole" "$(echo "$out" | sed 1d)" "$(cat "$QPAGE")"
+echo "<html>We are down for maintenance</html>" > "$STUB_TV/net.page"
+is "iceland: a page without the list keeps the last copy" "$(sh "$CTL" iceland quakes | head -n 1)" "kind=last age=300"
+rm -f "$STUB_TV/net.page"; touch "$STUB_TV/net.hang"
+t0=$(date +%s); out=$(sh "$CTL" iceland quakes | head -n 1); t1=$(date +%s)
+is "iceland: a hanging fetch falls back to the last copy" "$out" "kind=last age=300"
+yes "iceland: a hanging fetch is given up within its wait" [ $((t1 - t0)) -le 4 ]
+rm -f "$STUB_TV/net.hang" "$RUN/iceland/quakes.txt"
+is "iceland: nothing kept and no network is none" "$(sh "$CTL" iceland quakes)" "kind=none age=0"
+cp "$QPAGE" "$STUB_TV/net.page"
+is "iceland: busybox wget works the same" "$(IMPETUS_FETCHER=wget sh "$CTL" iceland quakes | head -n 1)" "kind=fresh age=0"
+is "iceland: wget was the one used" "$(calls 'fetch wget ')" 1
+rm -f "$STUB_TV/net.page"
+
+# ---------- iceland flights: adsb.lol, read only ----------
+FPAGE="$HERE/fixtures/adsb-lol-2026-11-15.json"
+export IMPETUS_NOW=1794700000
+cp "$FPAGE" "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland flights)
+is "flights: a good answer is fresh" "$(echo "$out" | head -n 1)" "kind=fresh age=0"
+is "flights: the answer comes back whole" "$(echo "$out" | sed 1d)" "$(cat "$FPAGE")"
+is "flights: the fixed address is fetched" "$(calls 'fetch curl https://api.adsb.lol/v2/point/64.9/-19/250')" 1
+no "flights: no lock is left or taken" held
+export IMPETUS_NOW=1794700060
+echo '{"error":"rate limited"}' > "$STUB_TV/net.page"
+is "flights: an answer without aircraft keeps the last copy" "$(sh "$CTL" iceland flights | head -n 1)" "kind=last age=60"
+rm -f "$STUB_TV/net.page"
+out=$(sh "$CTL" iceland flights)
+is "flights: no network gives the last copy with its age" "$(echo "$out" | head -n 1)" "kind=last age=60"
+is "flights: the last copy is whole" "$(echo "$out" | sed 1d)" "$(cat "$FPAGE")"
+yes "flights: the quake copy is untouched" [ -s "$RUN/iceland/quakes.txt" ]
+rm -f "$RUN/iceland/flights.txt"
+is "flights: nothing kept and no network is none" "$(sh "$CTL" iceland flights)" "kind=none age=0"
+rm -f "$STUB_TV/net.page"
+
+# ---------- iceland webcam: one road-camera frame, read only ----------
+export IMPETUS_NOW=1794700000
+{ printf '\377\330'; head -c 3000 /dev/zero; } > "$STUB_TV/net.page"
+sh "$CTL" iceland webcam > "$W/cam.out"
+is "webcam: a frame is fresh" "$(head -n 1 "$W/cam.out")" "kind=fresh age=0"
+is "webcam: the frame's bytes come back whole" "$(sed 1d "$W/cam.out" | wc -c | tr -d ' ')" 3002
+is "webcam: the fixed address is fetched" "$(calls 'fetch curl https://www.vegagerdin.is/vgdata/vefmyndavelar/gighaed_1.jpg')" 1
+no "webcam: no lock is left or taken" held
+export IMPETUS_NOW=1794700090
+echo "Not Found" > "$STUB_TV/net.page"
+is "webcam: a tiny answer keeps the last frame" "$(sh "$CTL" iceland webcam | head -n 1)" "kind=last age=90"
+rm -f "$STUB_TV/net.page"
+is "webcam: no network gives the last frame with its age" "$(sh "$CTL" iceland webcam | head -n 1)" "kind=last age=90"
+rm -f "$RUN/iceland/cam.jpg"
+is "webcam: nothing kept and no network is none" "$(sh "$CTL" iceland webcam)" "kind=none age=0"
+refused "an unknown feed" iceland iceland planes
+refused "an address from the page" word iceland quakes 'url=http://x;reboot'
+unset IMPETUS_FETCHWAIT IMPETUS_NOW
+
+
 # ---------- the bedtime nudge (#24) ----------
 # A fifo stands in for the remote: nothing comes out of it until a test
 # writes a byte, as a key press would.
@@ -1112,6 +1181,66 @@ sh "$CTL" phone stop >/dev/null
 # The shield must never block a feed of the overhead room.
 is "shield: no feed host is in its list" "$(grep -c -i -E 'celestrak|adsb' "$HERE/../app/shield/hosts.txt")" 0
 unset IMPETUS_FETCHER
+
+# ---------- #22: MUSIC with the piece instead of a dark screen ----------
+reset
+refused "the piece after 601 s" piece scene on id=music piece=601
+refused "the piece with a leading zero" piece scene on id=music piece=020
+reset
+IMPETUS_NOW=40000 sh "$CTL" scene on id=music launch=spotify-beehive piece=20 screenoff=20 >/dev/null
+wait_for '[ -s "$RUN/piece.at" ]'; settle
+is "piece: Spotify is opened" "$(cat "$STUB_TV/front")" spotify-beehive
+is "piece: the hour is set" "$(st piece)" 40020
+is "piece: it takes the place of the dark screen" "$(st screenoff)" ""
+is "piece: no screen-off toast" "$(calls 'Screen off in')" 0
+tv_front spotify-beehive
+IMPETUS_NOW=40010 sh "$CTL" tick >/dev/null
+is "piece: nothing opens before its hour" "$(calls '"show":"music"')" 0
+IMPETUS_NOW=40021 sh "$CTL" tick >/dev/null
+is "piece: Impetus opens with the piece" "$(calls "{\"id\":\"$US\",\"params\":{\"show\":\"music\",\"at\":40021}}")" 1
+is "piece: the screen is never turned off" "$(calls turnOffScreen)" 0
+is "piece: once" "$(st piece)" ""
+is "piece: the scene stays on" "$(st scene)" music
+IMPETUS_NOW=40030 sh "$CTL" tick >/dev/null
+is "piece: not opened again" "$(calls '"show":"music"')" 1
+reset
+IMPETUS_NOW=40000 sh "$CTL" scene on id=music launch=spotify-beehive piece=20 >/dev/null
+wait_for '[ -s "$RUN/piece.at" ]'; settle
+tv_front netflix
+IMPETUS_NOW=40021 sh "$CTL" tick >/dev/null
+is "piece: not over another app in front" "$(calls '"show":"music"')" 0
+reset
+IMPETUS_NOW=40000 sh "$CTL" scene on id=music launch=spotify-beehive piece=20 >/dev/null
+wait_for '[ -s "$RUN/piece.at" ]'; settle
+sh "$CTL" scene off >/dev/null
+no "piece: scene off drops its hour" test -e "$RUN/piece.at"
+
+# ---------- #22: the Spotify sign-in file ----------
+reset
+is "spotify: no sign-in" "$(sh "$CTL" spotify get)" "linked=0"
+refused "spotify: an unknown sub-verb" spotify spotify show
+refused "spotify: shell text in a token" word spotify set client=abc 'refresh=a;b'
+refused "spotify: no client" client spotify set refresh=abc
+refused "spotify: no refresh token" refresh spotify set client=abc
+refused "spotify: an unknown word" word spotify set client=abc refresh=def extra=1
+is "spotify: set" "$(IMPETUS_NOW=50000 sh "$CTL" spotify set client=c0ffee12 refresh=AQB-x_y.z1)" "ok=1"
+is "spotify: get" "$(sh "$CTL" spotify get | tr '\n' ' ')" "linked=1 client=c0ffee12 refresh=AQB-x_y.z1 "
+is "spotify: the file format" "$(tr '\n' ' ' < "$KEEP/spotify")" "v=1 client=c0ffee12 refresh=AQB-x_y.z1 saved=50000 "
+is "spotify: only root reads it" "$(ls -l "$KEEP/spotify" | cut -c1-10)" "-rw-------"
+out=$(sh "$CTL" spotify set client=c0ffee12 refresh=NEWNEW was=OLDOLD)
+is "spotify: a token turn after a new sign-in is refused" "$out" "error=changed"
+is "spotify: and the new sign-in stays" "$(sh "$CTL" spotify get | sed -n 's/^refresh=//p')" "AQB-x_y.z1"
+is "spotify: a token turn on the kept token" "$(sh "$CTL" spotify set client=c0ffee12 refresh=NEWNEW was=AQB-x_y.z1)" "ok=1"
+is "spotify: the turned token is kept" "$(sh "$CTL" spotify get | sed -n 's/^refresh=//p')" "NEWNEW"
+no "spotify: no lock left" held
+printf 'v=1\nclient=c0ffee12\nrefresh=bad token\n' > "$KEEP/spotify"
+is "spotify: a damaged file is no sign-in" "$(sh "$CTL" spotify get)" "linked=0"
+sh "$CTL" spotify set client=c0ffee12 refresh=AQB >/dev/null
+sh "$CTL" restore >/dev/null
+yes "spotify: restore keeps the sign-in" test -s "$KEEP/spotify"
+is "spotify: forget" "$({ sh "$CTL" spotify forget; sh "$CTL" spotify get; } | tr '\n' ' ')" "ok=1 linked=0 "
+no "spotify: forget leaves no file" test -e "$KEEP/spotify"
+yes "spotify: the shipped shield blocks no Spotify host" sh -c "! grep -qiE 'spotify|scdn' '$HERE/../app/shield/hosts.txt'"
 
 echo "$n checks, $failed failed"
 [ "$failed" = 0 ]
