@@ -1,5 +1,5 @@
 // Impetus Home controller: the living room, the control room, the engine
-// room, Iceland, the sleep notice and the turns between them. Rules: DESIGN.md.
+// room, Iceland, the sleep notice, the bedtime card and the turns between them. Rules: DESIGN.md.
 // Chromium 79: ES5 only.
 (function () {
   "use strict";
@@ -20,6 +20,8 @@
   var noticeUntil = 0, dismissed = 0, cancelling = false;
   var isleBuilt = false, isleState = null, isleBusy = 0, isleFetchTimer = null, isleAgeTimer = null;
   var flightState = null, flightBusy = 0, flightTimer = null, camBusy = 0, camTimer = null;
+  var BED_CARD = 60;          // the keeper takes over (dims) when the card is left this long
+  var bedAt = 0, bedAnswered = 0, bedTimer = null, bedSent = 0;
   var phonesSig = null, armedPhone = null, armTimer = null;
 
   function every(seconds, fallback) { return (seconds || fallback) * 1000; }
@@ -202,6 +204,7 @@
       state = L.parseKv(text);
       paintState();
       checkNotice();
+      checkBedtime();
     }, noop);
   }
 
@@ -501,10 +504,77 @@
     if (left > 0 && left <= NOTICE_SECONDS) showNotice(until);
   }
 
+  // ---------- The bedtime card (#24) ----------
+  // The keeper opens Impetus with {notice: "bedtime", at} at the set hour.
+  // WIND DOWN runs that scene; NOT TONIGHT (or BACK) goes back to what was
+  // on. Left alone, the keeper brings back what was on and dims it.
+
+  function bedScene() {
+    var id = CFG.bedtime && CFG.bedtime.scene, found = null;
+    (CFG.scenes || []).forEach(function (s) { if (s.id === id) found = s; });
+    return found && L.sceneWords(found, sceneCtx()) ? found : null;
+  }
+
+  // Tell the keeper when (tonight's or tomorrow's hour, local time). Sent at
+  // start and again at most once an hour as Impetus is shown; no hour, no
+  // exec or no scene to offer: no nudge.
+  function sendBedtime(force) {
+    if (!caps.exec || (!force && Date.now() - bedSent < 3600000)) return;
+    bedSent = Date.now();
+    var words = bedScene() ? L.bedtimeWords(CFG.bedtime, Date.now()) : null;
+    LUNA.ctl(words || ["bedtime", "off"]).then(noop, noop);
+  }
+
+  function showBedtime(at) {
+    var scene = bedScene();
+    if (!scene) return;
+    bedAt = at;
+    $("bedclock").textContent = L.formatClock(new Date(at * 1000));
+    $("bedname").textContent = scene.label || scene.id.toUpperCase();
+    $("beddoes").textContent = scene.does || "";
+    var b = CFG.bedtime || {};
+    $("bednote").textContent = "Left alone, the picture dims a step every " + (b.everyMinutes || 15) +
+      " min. Any key brings it back.";
+    setRoom("bedtime", true);
+  }
+
+  function bedAnswer(word) {
+    bedAnswered = bedAt;
+    return LUNA.ctl(["bedtime", "answer", word]).then(function (text) { return L.parseKv(text).prev; }, noop);
+  }
+
+  function pressBedGo() {
+    var scene = bedScene();
+    return bedAnswer("winddown").then(function () {
+      setRoom("living", true);
+      if (scene) return pressScene(scene);
+    });
+  }
+
+  function pressBedLater() {
+    return bedAnswer("later").then(function (prev) {
+      setRoom("living", true);
+      if (L.isSafeId(prev)) return LUNA.launch(prev);
+    });
+  }
+
+  // The keeper's params lost on the way: the state says a card is asked.
+  // A dimming the state names ends here too: this page only asks it after a
+  // key opened the control room.
+  function checkBedtime() {
+    var asked = Number(state.bedask);
+    if (room !== "bedtime" && asked > 0 && asked !== bedAnswered && Date.now() / 1000 - asked < BED_CARD) {
+      bedAnswered = asked;
+      showBedtime(asked);
+    }
+    if (state.dim && room === "control") LUNA.ctl(["bedtime", "wake"]).then(noop, noop);
+  }
+
   // ---------- Focus ----------
   function collect() {
     var keep = focusables[focusIdx];
-    var sel = room === "engine" ? "#engine [data-focus]" : room === "iceland" ? "#iceland [data-focus]" : "#control [data-focus]";
+    var sel = room === "engine" ? "#engine [data-focus]" : room === "iceland" ? "#iceland [data-focus]" :
+      room === "bedtime" ? "#bedtime [data-focus]" : "#control [data-focus]";
     focusables = Array.prototype.slice.call(document.querySelectorAll(sel))
       .filter(function (el) { return !el.hidden; });
     var i = focusables.indexOf(keep);
@@ -514,7 +584,7 @@
   function paintFocus() {
     var old = document.querySelectorAll(".focused");
     for (var i = 0; i < old.length; i++) old[i].classList.remove("focused");
-    if ((room === "control" || room === "engine") && focusables[focusIdx]) {
+    if ((room === "control" || room === "engine" || room === "bedtime") && focusables[focusIdx]) {
       focusables[focusIdx].classList.add("focused");
     }
   }
@@ -553,11 +623,12 @@
     b.toggle("deep", next === "engine");
     b.toggle("isle", next === "iceland");
     b.toggle("notice", next === "notice");
-    ["control", "engine", "iceland", "notice"].forEach(function (id) {
+    b.toggle("bedtime", next === "bedtime");
+    ["control", "engine", "iceland", "notice", "bedtime"].forEach(function (id) {
       $(id).setAttribute("aria-hidden", next === id ? "false" : "true");
     });
     clearInterval(stateTimer); clearInterval(stillTimer); clearInterval(engineTimer);
-    clearInterval(noticeTimer); clearTimeout(idleTimer);
+    clearInterval(noticeTimer); clearTimeout(idleTimer); clearTimeout(bedTimer);
     clearInterval(isleFetchTimer); clearInterval(isleAgeTimer); clearInterval(flightTimer); clearInterval(camTimer);
     collect();
     if (next === "control") {
@@ -578,6 +649,10 @@
     } else if (next === "iceland") {
       focusIdx = 0;
       openIceland();               // a resting view: no idle timer
+    } else if (next === "bedtime") {
+      focusIdx = 0;
+      // Left alone: the keeper brings back what was on; this page steps aside.
+      bedTimer = setTimeout(function () { bedAnswered = bedAt; setRoom("living", true); }, (BED_CARD + 5) * 1000);
     } else if (next === "notice") {
       drawNotice();
       noticeTimer = setInterval(drawNotice, 500);
@@ -591,6 +666,15 @@
     var k = e.keyCode;
     e.preventDefault();
     if (room === "notice") { cancelNotice(); return; }
+    if (room === "bedtime") {
+      if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) pressBedLater().then(noop, noop);
+      else if (k === KEY.LEFT) moveFocus("left");
+      else if (k === KEY.RIGHT) moveFocus("right");
+      else if (k === KEY.UP) moveFocus("up");
+      else if (k === KEY.DOWN) moveFocus("down");
+      else if (k === KEY.OK) press();
+      return;
+    }
     if (room === "living") { setRoom("control"); return; } // the opening key does nothing else
     if (room !== "iceland") bumpIdle();
     if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) setRoom(room === "engine" || room === "iceland" ? "control" : "living");
@@ -606,7 +690,10 @@
   function arrive(raw) {
     var p = L.parseLaunchParams(raw), until = Number(p.until);
     if (p.notice === "sleep" && until > Date.now() / 1000 && until !== dismissed) { showNotice(until); return; }
-    if (room !== "notice") setRoom("living", true);
+    var at = Number(p.at);
+    if (p.notice === "bedtime" && at > 0 && at !== bedAnswered && room !== "notice") { showBedtime(at); return; }
+    if (room !== "notice" && room !== "bedtime") setRoom("living", true);
+    sendBedtime(false);
     refreshState();
   }
 
@@ -614,6 +701,7 @@
     // PC preview: ?notice=sleep shows the notice, ?room=control|engine|iceland opens a room.
     var q = location.search || "";
     if (/[?&]notice=sleep/.test(q)) return { notice: "sleep", until: Math.round(Date.now() / 1000) + NOTICE_SECONDS };
+    if (/[?&]notice=bedtime/.test(q)) return { notice: "bedtime", at: Math.round(Date.now() / 1000) };
     return window.PalmSystem ? window.PalmSystem.launchParams : null;
   }
 
@@ -629,6 +717,8 @@
   $("door")._press = function () { setRoom("engine"); };
   $("isledoor")._press = function () { setRoom("iceland"); };
   $("shield")._press = pressShield;
+  $("bedgo")._press = pressBedGo;
+  $("bedlater")._press = pressBedLater;
   $("phone")._press = pressPhone;
 
   drawLiving();
@@ -649,6 +739,7 @@
     $("shield").hidden = !caps.shield;
     collect(); paintFocus();
     if (caps.exec) LUNA.ctl(["start", "target=" + CFG.appleTv.id]).then(noop, noop);
+    sendBedtime(true);
     arrive(launchParams());
     var m = /[?&]room=(control|engine|iceland)/.exec(location.search || "");
     if (m) setRoom(m[1], true);

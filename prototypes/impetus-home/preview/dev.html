@@ -10,7 +10,7 @@
 <div id="stage"></div>
 <script>
 // PC preview: load index.html's stage markup, mock the TV, then the app.
-// Query: t=<ISO time>  room=control|engine  notice=sleep
+// Query: t=<ISO time>  room=control|engine  notice=sleep|bedtime
 //        still=live|last|none|black  caps=<names to switch off, comma separated>
 //        scene=<id> (a scene already on)  shield=on
 //        room=iceland  quakes=fixture (the 15.11 list; sets t to 00:20 UTC unless t is given) | none
@@ -87,6 +87,7 @@
     }
     if (verb === "scene") { tv.scene = ""; tv.end = tv.sleep = tv.screenoff = ""; return "ok=1"; }
     if (verb === "sleep") { tv.sleep = ""; return "prev=netflix"; }
+    if (verb === "bedtime" && w[1] === "answer") { console.log("ctl", w.join(" ")); return "prev=netflix"; }
     if (verb === "shield") { tv.shield = w[1] === "on"; tv.hits = 0; return "ok=1"; }
     if (verb === "iceland" && w[1] === "flights") {
       // flights=fixture: the two aircraft of 15.11 01:09, flown on a minute per call so trails grow.

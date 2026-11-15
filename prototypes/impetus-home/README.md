@@ -40,6 +40,7 @@ Enter (OK) and Backspace or Escape (BACK) drive it. The TV is a stand-in
 | `still=live`, `last`, `none`, `black` | what the Apple TV slab gets |
 | `caps=capture,picture` | parts this TV cannot do (see `probe`) |
 | `notice=sleep` | the two-minute notice before standby |
+| `notice=bedtime` | the bedtime card (WIND DOWN or NOT TONIGHT) |
 | `phone=on` | the phone remote's server is on (engine room) |
 
 The phone remote's page: `http://localhost:8765/preview/phone.html` at phone
@@ -49,8 +50,8 @@ width (e.g. 390×844), with `paired=1`, `scene=`, `shield=on`, `caps=` and
 ## Test
 
 ```sh
-node tests/test_logic.js      # the page's logic: 41 tests
-sh tests/test_ctl.sh          # the root helper against a stand-in TV: 363 checks
+node tests/test_logic.js      # the page's logic: 44 tests
+sh tests/test_ctl.sh          # the root helper against a stand-in TV: 410 checks
 python tests/test_ipk.py      # the package: layout, line ends, modes, same bytes twice
 ```
 

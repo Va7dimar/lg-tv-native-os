@@ -777,6 +777,147 @@ is "webcam: nothing kept and no network is none" "$(sh "$CTL" iceland webcam)" "
 refused "an unknown feed" iceland iceland planes
 refused "an address from the page" word iceland quakes 'url=http://x;reboot'
 unset IMPETUS_FETCHWAIT IMPETUS_NOW
+
+
+# ---------- the bedtime nudge (#24) ----------
+# A fifo stands in for the remote: nothing comes out of it until a test
+# writes a byte, as a key press would.
+export IMPETUS_INPUT="$W/input"
+bed_reset() {
+  [ -r "$RUN/bedtime.watch" ] && kill $(cat "$RUN/bedtime.watch") 2>/dev/null
+  reset
+  rm -f "$W/input"; mkfifo "$W/input"
+  tv_front netflix
+}
+asks() { calls '"notice":"bedtime"'; }
+AT=100000
+reset
+refused "a bedtime hour that is not a number" at bedtime set at=x
+refused "a bedtime without an hour" at bedtime set step=5
+refused "a dimming step of 0" step bedtime set at=$AT step=0
+refused "a floor above 100" floor bedtime set at=$AT floor=101
+refused "an unknown bedtime word" word bedtime set at=$AT bogus=1
+refused "an unknown answer" answer bedtime answer maybe
+refused "an unknown bedtime verb" bedtime bedtime soon
+
+bed_reset
+is "bedtime: set answers at once" "$(sh "$CTL" bedtime set at=$AT)" "ok=1"
+is "bedtime: state names the hour" "$(st bedtime)" "$AT"
+IMPETUS_NOW=$((AT - 10)) sh "$CTL" tick >/dev/null
+is "bedtime: before the hour, no card" "$(asks)" 0
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+is "bedtime: at the hour the card is opened" "$(asks)" 1
+is "bedtime: state says the card is asked" "$(st bedask)" "$AT"
+is "bedtime: the next hour is a day on" "$(st bedtime)" "$((AT + 86400))"
+sh "$CTL" bedtime set at=$AT >/dev/null
+is "bedtime: the page sending tonight's hour again does not ask again" "$(st bedtime)" "$((AT + 86400))"
+IMPETUS_NOW=$((AT + 3)) sh "$CTL" tick >/dev/null
+is "bedtime: asked once" "$(asks)" 1
+is "bedtime: NOT TONIGHT names the app that was on" "$(sh "$CTL" bedtime answer later | head -n 1)" "prev=netflix"
+tv_front "$US"
+IMPETUS_NOW=$((AT + 61)) sh "$CTL" tick >/dev/null
+is "bedtime: answered, nothing dims" "$(st dim)" ""
+is "bedtime: answered, no picture change" "$(calls setSystemSettings)" 0
+
+# Left alone: what was on comes back and steps down, never below the floor.
+bed_reset
+sh "$CTL" bedtime set at=$AT step=20 every=15 floor=25 >/dev/null
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+tv_front "$US"
+IMPETUS_NOW=$((AT + 61)) sh "$CTL" tick >/dev/null
+is "bedtime: left alone, the app that was on is brought back" "$(cat "$STUB_TV/front")" netflix
+is "bedtime: and it is dimming" "$(st dim)" netflix
+is "bedtime: the card is no longer asked" "$(st bedask)" ""
+tv_front netflix
+IMPETUS_NOW=$((AT + 64)) sh "$CTL" tick >/dev/null
+is "bedtime: first step down" "$(pic netflix backlight)" 50
+is "bedtime: the backlight from before is kept where a restart finds it" "$(grep -c '^pic|backlight|70|' "$KEEP/orig.netflix")" 1
+IMPETUS_NOW=$((AT + 300)) sh "$CTL" tick >/dev/null
+is "bedtime: no step before 15 minutes" "$(pic netflix backlight)" 50
+IMPETUS_NOW=$((AT + 64 + 900)) sh "$CTL" tick >/dev/null
+is "bedtime: the next step after 15 minutes" "$(pic netflix backlight)" 30
+IMPETUS_NOW=$((AT + 64 + 1800)) sh "$CTL" tick >/dev/null
+is "bedtime: never below the floor" "$(pic netflix backlight)" 25
+printf 'x' > "$W/input"
+wait_for '[ -e "$RUN/bedtime.key" ]'
+IMPETUS_NOW=$((AT + 64 + 1810)) sh "$CTL" tick >/dev/null
+is "bedtime: a key brings the picture back" "$(pic netflix backlight)" 70
+is "bedtime: and ends the dimming" "$(st dim)" ""
+is "bedtime: nothing is left on disk" "$(ls "$KEEP" | wc -l | tr -d ' ')" 0
+c=$(calls setSystemSettings)
+IMPETUS_NOW=$((AT + 64 + 2800)) sh "$CTL" tick >/dev/null
+is "bedtime: no step after the key" "$(calls setSystemSettings)" "$c"
+
+# Another app in front ends it too; the backlight waits for its own app.
+bed_reset
+sh "$CTL" bedtime set at=$AT >/dev/null
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+tv_front "$US"
+IMPETUS_NOW=$((AT + 61)) sh "$CTL" tick >/dev/null
+tv_front netflix
+IMPETUS_NOW=$((AT + 62)) sh "$CTL" tick >/dev/null
+is "bedtime: default step of 10" "$(pic netflix backlight)" 60
+tv_front "$HDMI"
+IMPETUS_NOW=$((AT + 100)) sh "$CTL" tick >/dev/null
+is "bedtime: another app in front ends the dimming" "$(st dim)" ""
+is "bedtime: its picture is untouched" "$(pic $HDMI backlight)" 80
+tv_front netflix
+IMPETUS_NOW=$((AT + 110)) sh "$CTL" tick >/dev/null
+is "bedtime: the dimmed app gets its backlight back when it is in front" "$(pic netflix backlight)" 70
+
+# The card left, but someone went elsewhere: up, so nothing dims.
+bed_reset
+sh "$CTL" bedtime set at=$AT >/dev/null
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+tv_front "$HDMI"
+IMPETUS_NOW=$((AT + 61)) sh "$CTL" tick >/dev/null
+is "bedtime: card left for another app, nothing dims" "$(st dim)$(calls setSystemSettings)" "0"
+
+# No card while a scene or a sleep timer runs, or long after the hour.
+bed_reset
+sh "$CTL" bedtime set at=$AT >/dev/null
+echo winddown > "$RUN/scene.id"
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+is "bedtime: no card while a scene is on" "$(asks)" 0
+rm -f "$RUN/scene.id"
+echo $((AT + 86400 + 5000)) > "$RUN/sleep.until"
+IMPETUS_NOW=$((AT + 86400)) sh "$CTL" tick >/dev/null
+is "bedtime: no card while the sleep timer runs" "$(asks)" 0
+rm -f "$RUN/sleep.until"
+IMPETUS_NOW=$((AT + 2 * 86400 + 4 * 3600)) sh "$CTL" tick >/dev/null
+is "bedtime: no card four hours after the hour" "$(asks)" 0
+is "bedtime: the hour still moves on to the next day" "$(st bedtime)" "$((AT + 3 * 86400))"
+echo getPowerState > "$STUB_TV/hang"
+IMPETUS_LUNAWAIT=1 IMPETUS_NOW=$((AT + 3 * 86400)) sh "$CTL" tick >/dev/null
+is "bedtime: no card when the TV gives no power state" "$(asks)" 0
+rm -f "$STUB_TV/hang"
+
+# off, wake and the way back.
+bed_reset
+sh "$CTL" bedtime set at=$AT >/dev/null
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+tv_front "$US"
+IMPETUS_NOW=$((AT + 61)) sh "$CTL" tick >/dev/null
+tv_front netflix
+IMPETUS_NOW=$((AT + 62)) sh "$CTL" tick >/dev/null
+is "bedtime: wake answers" "$(sh "$CTL" bedtime wake)" "ok=1"
+is "bedtime: wake puts the backlight back" "$(pic netflix backlight)" 70
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+IMPETUS_NOW=$((AT + 86400)) sh "$CTL" tick >/dev/null
+tv_front "$US"
+IMPETUS_NOW=$((AT + 86461)) sh "$CTL" tick >/dev/null
+tv_front netflix
+IMPETUS_NOW=$((AT + 86462)) sh "$CTL" tick >/dev/null
+is "bedtime: dimming again the next night" "$(pic netflix backlight)" 60
+sh "$CTL" restore >/dev/null
+is "way back: a dimmed backlight is put back" "$(pic netflix backlight)" 70
+is "way back: no bedtime is left" "$(ls "$RUN" | grep -c '^bedtime')" 0
+bed_reset
+sh "$CTL" bedtime set at=$AT >/dev/null
+is "bedtime: off answers" "$(sh "$CTL" bedtime off)" "ok=1"
+IMPETUS_NOW=$AT sh "$CTL" tick >/dev/null
+is "bedtime: off, no card" "$(asks)" 0
+unset IMPETUS_INPUT
 # ---------- the phone remote (issue #21) ----------
 # tests/stubs/httpd stands in for busybox httpd; the CGI door is run by hand
 # the way httpd runs it: POST, CONTENT_LENGTH, the body on stdin.

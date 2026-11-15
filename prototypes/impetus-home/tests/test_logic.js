@@ -501,6 +501,36 @@ t("shield: none of its names blocks a host the Iceland room needs", () => {
   }
 });
 
+t("nextBedtime: tonight's hour, still tonight's a while after, then tomorrow's", () => {
+  const at = (h, m, day) => new Date(2026, 10, day || 14, h, m).getTime();
+  assert.strictEqual(L.nextBedtime(at(20, 0), "22:30"), at(22, 30) / 1000);
+  assert.strictEqual(L.nextBedtime(at(23, 59), "22:30"), at(22, 30) / 1000);     // TV turned on late
+  assert.strictEqual(L.nextBedtime(at(1, 30, 15), "22:30"), at(22, 30, 15) / 1000); // past the window
+  assert.strictEqual(L.nextBedtime(at(23, 0), "00:15"), at(0, 15, 15) / 1000);    // after midnight
+  assert.strictEqual(L.nextBedtime(at(0, 20, 15), "00:15"), at(0, 15, 15) / 1000);
+  for (const bad of ["24:00", "7:30", "22.30", "", null, "22:30;reboot"]) assert.strictEqual(L.nextBedtime(at(20, 0), bad), null);
+});
+
+t("bedtimeWords: safe helper words, defaults, off and malformed", () => {
+  const now = new Date(2026, 10, 14, 20, 0).getTime();
+  const w = L.bedtimeWords({ at: "22:30", scene: "winddown" }, now);
+  assert.deepStrictEqual(w, ["bedtime", "set", "at=" + new Date(2026, 10, 14, 22, 30).getTime() / 1000, "step=10", "every=15", "floor=10"]);
+  assert.ok(L.ctlCommand("/media/developer/apps/usr/palm/applications/org.va7dimar.home", w));
+  assert.deepStrictEqual(L.bedtimeWords({ at: "23:00", stepBacklight: 5, everyMinutes: 10, floorBacklight: 0 }, now).slice(3),
+    ["step=5", "every=10", "floor=0"]);
+  assert.strictEqual(L.bedtimeWords(null, now), null);
+  assert.strictEqual(L.bedtimeWords({ scene: "winddown" }, now), null);
+  assert.strictEqual(L.bedtimeWords({ at: "22:30", stepBacklight: 0 }, now), null);
+  assert.strictEqual(L.bedtimeWords({ at: "22:30", everyMinutes: "15" }, now), null);
+  assert.strictEqual(L.bedtimeWords({ at: "22:30", floorBacklight: 101 }, now), null);
+});
+
+t("the shipped config: the bedtime nudge offers a scene that exists", () => {
+  const c = global.window.IMPETUS_CONFIG;
+  assert.ok(L.bedtimeWords(c.bedtime, Date.now()));
+  assert.ok(c.scenes.some(s => s.id === c.bedtime.scene));
+});
+
 t("phoneBody: key lines and word lines, nothing unsafe", () => {
   assert.strictEqual(L.phoneBody({ op: "do", t: "ab12" }, ["scene", "off"]), "op=do\nt=ab12\nw=scene\nw=off\n");
   assert.strictEqual(L.phoneBody({ op: "hello", t: "" }, []), "op=hello\n");
