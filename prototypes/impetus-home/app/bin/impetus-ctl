@@ -28,6 +28,9 @@
 #                         the bedtime nudge (#24): when, and how the picture dims
 #   bedtime off | wake    no nudge | end the dimming, the picture goes back
 #   bedtime answer winddown|later   the card was answered; prints prev=<app>
+#   sky place [set lat=<deg> lon=<deg> | clear]   the home position (#23)
+#   sky orbits | sky planes at=<lat>,<lon>   the overhead room's feeds, read
+#                         only, no lock (bin/impetus-sky)
 #   restore              the way back: scene off, shield off, phone server
 #                         and keeper stopped
 #   keeper | tick         the background loop, or one turn of it
@@ -1099,7 +1102,7 @@ WWW="$RUN/www"
 www_build() {
   rm -rf "$WWW.new"
   if mkdir -p "$WWW.new/cgi-bin" "$WWW.new/fonts" 2>/dev/null &&
-     cp "$DIR/phone/index.html" "$DIR/phone/phone.css" "$DIR/phone/phone.js" "$DIR/logic.js" "$DIR/config.js" "$WWW.new/" 2>/dev/null &&
+     cp "$DIR/phone/index.html" "$DIR/phone/phone.css" "$DIR/phone/phone.js" "$DIR/logic.js" "$DIR/config.js" "$DIR/sky-logic.js" "$WWW.new/" 2>/dev/null &&
      cp "$DIR/fonts/Saira-Variable.woff2" "$WWW.new/fonts/" 2>/dev/null &&
      { echo "#!/bin/sh"; echo "exec sh '$DIR/bin/impetus-phone' cgi"; } > "$WWW.new/cgi-bin/api" 2>/dev/null &&
      chmod 755 "$WWW.new/cgi-bin/api" 2>/dev/null &&
@@ -1235,6 +1238,7 @@ case "$verb" in
       revoke) sh "$DIR/bin/impetus-phone" revoke "$@" ;;
       *) die phone ;;
     esac ;;
+  sky) sh "$DIR/bin/impetus-sky" "$@" ;;
   restore) restore_all ;;
   keeper) keeper ;;
   tick) mkdir -p "$RUN"; tick; echo ok=1 ;;

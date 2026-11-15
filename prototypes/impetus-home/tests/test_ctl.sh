@@ -990,5 +990,128 @@ is "phone: every port taken" "$(sh "$CTL" phone start)" "error=noport"
 is "phone: an unknown phone word" "$(sh "$CTL" phone maybe)" "error=phone"
 is "phone helper: an unknown mode" "$(sh "$HERE/../app/bin/impetus-phone" bogus)" "error=mode"
 
+# ---------- the overhead room (issue #23) ----------
+# tests/stubs/curl is the network: it serves net.page for any URL. The
+# fixtures are real answers cut down: CelesTrak's elements (the ISS, the
+# Starlink launches of 2026 and four of 2019 that are no trains) and adsb.lol.
+reset
+FIX="$HERE/fixtures"
+export IMPETUS_FETCHER=curl
+sky() { sh "$CTL" sky "$@"; }
+is "sky place: none set" "$(sky place | tr '\n' ' ')" "ok=1 place=none "
+is "sky place set: answers" "$(sky place set lat=64.1466 lon=-21.9426)" "ok=1"
+is "sky place: read back" "$(sky place | tr '\n' ' ')" "ok=1 lat=64.1466 lon=-21.9426 "
+is "sky place: the owner's only" "$(ls -l "$KEEP/place" | cut -c1-10)" "-rw-------"
+for v in "lat=91 lon=0" "lat=-90.5 lon=0" "lat=64.1 lon=181" "lat=64.123456 lon=1" "lat=064.1 lon=1" \
+         "lat=6.4.1 lon=1" "lat=. lon=1" "lat=64. lon=1" "lat=1e2 lon=0" "lat=64.1" "lat=64 lon=1 x=2"; do
+  # shellcheck disable=SC2086
+  out=$(sky place set $v)
+  case "$out" in error=*) ok "sky place set: refused '$v'" ;; *) bad "sky place set: refused '$v' (got '$out')" ;; esac
+done
+refused "sky: shell text in a place" word sky place set 'lat=64;reboot' lon=1
+is "sky place: a refusal keeps the good one" "$(sky place | sed -n 's/^lat=//p')" "64.1466"
+is "sky place: a mangled file reads as none" "$(echo 'lat=$(reboot)' > "$KEEP/place"; sky place | tr '\n' ' ')" "ok=1 place=none "
+is "sky place clear: answers" "$(sky place clear)" "ok=1"
+no "sky place clear: the file is gone" test -e "$KEEP/place"
+is "sky: an unknown sky mode" "$(sky bogus)" "error=sky"
+is "sky: an unknown place word" "$(sky place maybe)" "error=place"
+is "sky: no TV service was asked" "$(grep -c -v '^fetch ' "$STUB_TV/calls")" 0
+
+# Orbits: answered at once from the copy, fetched in the background.
+cp "$FIX/celestrak-2026-11-15.tle" "$STUB_TV/net.page"
+o=$(sky orbits)
+is "orbits: nothing kept yet, both sections none" "$(echo "$o" | tr '\n' ' ')" "@iss kind=none age=0 @trains kind=none age=0 "
+yes "orbits: the background fetch lands" wait_for '[ -s "$RUN/sky/iss.tle" ] && [ -s "$RUN/sky/trains.tle" ] && [ ! -e "$RUN/sky/orbits.pid" ]'
+o=$(sky orbits)
+is "orbits: now both fresh" "$(echo "$o" | grep -c '^kind=fresh age=')" 2
+is "orbits: the ISS alone in its section" "$(echo "$o" | sed -n '/^@iss/,/^@trains/p' | grep '^[12] ' | cut -c1-7 | tr '\n' ' ')" "1 25544 2 25544 "
+is "orbits: its name kept" "$(echo "$o" | sed -n '3p' | sed 's/ *$//')" "ISS (ZARYA)"
+tr_sec=$(echo "$o" | sed -n '/^@trains/,$p')
+is "orbits: the trains are the 8 newest launches" "$(echo "$tr_sec" | grep '^1 ' | cut -c10-14 | sort -u | wc -l | tr -d ' ')" 8
+is "orbits: an old launch is no train" "$(echo "$tr_sec" | grep -c '^1 .\{8\}19074')" 0
+is "orbits: every train line 1 has its line 2" "$(echo "$tr_sec" | grep -c '^1 ')" "$(echo "$tr_sec" | grep -c '^2 ')"
+is "orbits: two fetches, ISS and Starlink, from CelesTrak" "$(grep -c '^fetch curl https://celestrak.org/NORAD/elements/gp.php?' "$STUB_TV/calls")" 2
+sky orbits >/dev/null; sleep 0.5
+is "orbits: a fresh copy is not fetched again" "$(calls 'fetch curl')" 2
+no "orbits: no lock is taken" held
+later=$(( $(date +%s) + 21601 ))
+rm -f "$STUB_TV/net.page"
+o=$(IMPETUS_NOW=$later sky orbits)
+is "orbits: an old copy is answered as last" "$(echo "$o" | grep -c '^kind=last')" 2
+yes "orbits: a failed fetch is written down" wait_for '[ -e "$RUN/sky/orbits.fail" ] && [ ! -e "$RUN/sky/orbits.pid" ]'
+yes "orbits: and the old copy is kept" test -s "$RUN/sky/iss.tle"
+c=$(calls 'fetch curl')
+IMPETUS_NOW=$((later + 600)) sky orbits >/dev/null; sleep 0.5
+is "orbits: no new try for half an hour after a failure" "$(calls 'fetch curl')" "$c"
+awk '{ printf "%s%c%c", $0, 13, 10 }' "$FIX/celestrak-2026-11-15.tle" > "$STUB_TV/net.page"
+IMPETUS_NOW=$((later + 1801)) sky orbits >/dev/null
+yes "orbits: tried again after it" wait_for '[ ! -e "$RUN/sky/orbits.fail" ] && [ ! -e "$RUN/sky/orbits.pid" ]'
+is "orbits: CRLF lines are kept as plain lines" "$(cat "$RUN/sky/iss.tle" "$RUN/sky/trains.tle" | tr -d -c '\r' | wc -c | tr -d ' ')" 0
+echo '<html>Maintenance</html>' > "$STUB_TV/net.page"
+rm -f "$RUN/sky/iss.tle.at"
+IMPETUS_NOW=$((later + 1802)) sky orbits >/dev/null
+yes "orbits: a page that is no elements is not kept" wait_for '[ -e "$RUN/sky/orbits.fail" ] && [ ! -e "$RUN/sky/orbits.pid" ]'
+is "orbits: the copy before it stays" "$(grep -c '^1 25544' "$RUN/sky/iss.tle")" 1
+: > "$STUB_TV/net.hang"
+rm -f "$RUN/sky/orbits.fail"
+t0=$(date +%s)
+IMPETUS_ORBITWAIT=2 sh "$CTL" sky orbits >/dev/null
+t1=$(date +%s)
+yes "orbits: a hung network never holds up the answer" [ $((t1 - t0)) -le 1 ]
+yes "orbits: the hung fetch is given up" wait_for '[ ! -e "$RUN/sky/orbits.pid" ]'
+rm -f "$STUB_TV/net.hang"
+
+# Planes: the rounded point only, a short copy, never a lock.
+cp "$FIX/adsb-lol-sky.json" "$STUB_TV/net.page"
+: > "$STUB_TV/calls"
+is "planes: two decimals are refused" "$(sky planes at=64.15,-21.9)" "error=at"
+is "planes: two decimals in the longitude too" "$(sky planes at=64.1,-21.94)" "error=at"
+is "planes: no point" "$(sky planes)" "error=at"
+is "planes: a point without its comma" "$(sky planes at=64.1)" "error=at"
+is "planes: a point off the earth" "$(sky planes at=95.0,1.0)" "error=at"
+is "planes: an unknown word" "$(sky planes at=64.1,-21.9 x=1)" "error=word"
+is "planes: nothing fetched for a refusal" "$(calls 'fetch')" 0
+p=$(IMPETUS_NOW=5000 sky planes at=64.1,-21.9)
+is "planes: fresh" "$(echo "$p" | head -n 1)" "kind=fresh age=0"
+is "planes: the body is adsb.lol's" "$(echo "$p" | grep -c '"ACA7054')" 1
+is "planes: asked about the rounded point, 54 nm" "$(calls 'fetch curl https://api.adsb.lol/v2/point/64.1/-21.9/54')" 1
+IMPETUS_NOW=5010 sky planes at=64.1,-21.9 >/dev/null
+is "planes: asked again within 20 s, the copy" "$(calls 'fetch')" 1
+rm -f "$STUB_TV/net.page"
+p=$(IMPETUS_NOW=5070 sky planes at=64.1,-21.9)
+is "planes: network gone, the last copy" "$(echo "$p" | head -n 1)" "kind=last age=70"
+is "planes: another point has no copy" "$(IMPETUS_NOW=5080 sky planes at=64.2,-21.9)" "kind=none age=0"
+echo '{"msg":"rate limited"}' > "$STUB_TV/net.page"
+is "planes: an answer without aircraft is not kept" "$(IMPETUS_NOW=5200 sky planes at=64.0,-22.0)" "kind=none age=0"
+: > "$STUB_TV/net.hang"
+t0=$(date +%s)
+IMPETUS_FETCHWAIT=1 sh "$CTL" sky planes at=64.0,-22.0 >/dev/null
+t1=$(date +%s)
+yes "planes: a hung network is given up in seconds" [ $((t1 - t0)) -le 3 ]
+rm -f "$STUB_TV/net.hang"
+no "planes: no lock is taken" held
+
+# The phone may set and read the home position, nothing else of the sky.
+mkdir -p "$KEEP"
+echo "a1b2c3 0123456789abcdef0123456789abcdef Test 1000" > "$KEEP/phones"
+papi() {
+  ap_b=$(printf '%s\n' "$@")
+  printf '%s\n' "$ap_b" | REQUEST_METHOD=POST CONTENT_LENGTH=$((${#ap_b} + 1)) sh "$HERE/../app/bin/impetus-phone" cgi | tr -d '\r' | sed '1,/^$/d'
+}
+T=t=0123456789abcdef0123456789abcdef
+is "phone: may set the home position" "$(papi op=do $T w=sky w=place w=set w=lat=64.1466 w=lon=-21.9426)" "ok=1"
+is "phone: may read it back" "$(papi op=do $T w=sky w=place | tr '\n' ' ')" "ok=1 lat=64.1466 lon=-21.9426 "
+is "phone: may clear it" "$(papi op=do $T w=sky w=place w=clear)" "ok=1"
+is "phone: may not ask for the orbits" "$(papi op=do $T w=sky w=orbits)" "error=verb"
+is "phone: may not ask for planes" "$(papi op=do $T w=sky w=planes w=at=64.1,-21.9)" "error=verb"
+is "phone: a bad position is refused by the helper" "$(papi op=do $T w=sky w=place w=set w=lat=99 w=lon=1)" "error=lat"
+sh "$CTL" phone start >/dev/null
+yes "phone: the www copy has sky-logic.js" test -s "$RUN/www/sky-logic.js"
+sh "$CTL" phone stop >/dev/null
+
+# The shield must never block a feed of the overhead room.
+is "shield: no feed host is in its list" "$(grep -c -i -E 'celestrak|adsb' "$HERE/../app/shield/hosts.txt")" 0
+unset IMPETUS_FETCHER
+
 echo "$n checks, $failed failed"
 [ "$failed" = 0 ]

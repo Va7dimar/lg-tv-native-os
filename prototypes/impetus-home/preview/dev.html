@@ -5,6 +5,7 @@
 <title>Impetus</title>
 <base href="../app/">
 <link rel="stylesheet" href="home.css">
+<link rel="stylesheet" href="overhead.css">
 </head>
 <body>
 <div id="stage"></div>
@@ -13,12 +14,15 @@
 // Query: t=<ISO time>  room=control|engine  notice=sleep|bedtime
 //        still=live|last|none|black  caps=<names to switch off, comma separated>
 //        scene=<id> (a scene already on)  shield=on
+//        room=overhead  sky=down (no orbits, no planes)  place=none (no home set)
+//        e.g. ?room=overhead&t=2026-11-16T19:58:30Z is an ISS pass over the placeholder
 (function () {
   var q = location.search;
   function arg(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(q); return m ? decodeURIComponent(m[1]) : ""; }
   if (arg("t")) { var fixed = new Date(arg("t")).getTime(), base = Date.now(), RD = Date;
     window.Date = function (a, b, c, d, e, f, g) { if (arguments.length === 0) return new RD(fixed + (RD.now() - base)); return arguments.length === 1 ? new RD(a) : new RD(a, b, c || 1, d || 0, e || 0, f || 0, g || 0); };
-    window.Date.now = function () { return fixed + (RD.now() - base); }; window.Date.prototype = RD.prototype; }
+    window.Date.now = function () { return fixed + (RD.now() - base); }; window.Date.prototype = RD.prototype;
+    window.Date.UTC = RD.UTC; window.Date.parse = RD.parse; }
   function nowS() { return Math.round(Date.now() / 1000); }
 
   var off = arg("caps").split(",");
@@ -59,8 +63,45 @@
     "2026-11-14T21:03:40.004410Z [5579.984] user.err rdxd [] upload failed host=eic.rdx2.lgtvsdp.com session 0f3c9a7be21d4c55aa01"
   ].join("\n");
 
+  // The sky (#23): orbits from the test fixture, a few planes flying
+  // straight lines around the placeholder, the placeholder as home.
+  var tle = null;
+  function skyOrbits() {
+    if (arg("sky") === "down") return "@iss\nkind=none age=0\n@trains\nkind=none age=0";
+    if (tle === null) {
+      var r = new XMLHttpRequest(); r.open("GET", "../tests/fixtures/celestrak-2026-11-15.tle", false); r.send();
+      var l = r.responseText.split("\n"), iss = [], trains = [];
+      for (var i = 0; i + 2 < l.length; i += 3) {
+        if (l[i + 1].indexOf("1 25544") === 0) iss.push(l[i], l[i + 1], l[i + 2]);
+        else if (l[i + 1].slice(9, 14) !== "19074") trains.push(l[i], l[i + 1], l[i + 2]);
+      }
+      tle = { iss: iss.join("\n"), trains: trains.join("\n") };
+    }
+    return "@iss\nkind=fresh age=3600\n" + tle.iss + "\n@trains\nkind=fresh age=3600\n" + tle.trains;
+  }
+  var flights = [["4cc2a1", "ICE614", 63.95, -22.4, 34000, 62], ["406b3c", "EZY73KL", 64.5, -21.3, 37000, 238],
+    ["4cc27f", "ICE29K", 64.0, -21.9, 6200, 95], ["a8d4f1", "UAL52", 64.6, -22.9, 39000, 285]];
+  function skyPlanes() {
+    if (arg("sky") === "down") return "kind=none age=0";
+    var h = (Date.now() % 3600000) / 3600000;
+    var ac = flights.map(function (f) {
+      var km = (800 * h - 400) * 0.2, a = f[5] * Math.PI / 180;
+      return { hex: f[0], flight: f[1] + "  ", alt_baro: f[4], alt_geom: f[4] + 150, track: f[5], seen_pos: 1.2,
+        lat: f[2] + km * Math.cos(a) / 111.2, lon: f[3] + km * Math.sin(a) / (111.2 * Math.cos(f[2] * Math.PI / 180)) };
+    });
+    return "kind=fresh age=4\n" + JSON.stringify({ ac: ac, now: Date.now(), total: ac.length });
+  }
+  function sky(w) {
+    if (w[1] === "place" && !w[2]) return arg("place") === "none" ? "ok=1\nplace=none" : "ok=1\nlat=64.1466\nlon=-21.9426";
+    if (w[1] === "place") { console.log("ctl", w.join(" ")); return "ok=1"; }
+    if (w[1] === "orbits") return skyOrbits();
+    if (w[1] === "planes") return skyPlanes();
+    return "error=sky";
+  }
+
   window.MOCK_CTL = function (w) {
     var verb = w[0];
+    if (verb === "sky") return sky(w);
     if (verb === "probe") {
       if (off.indexOf("exec") >= 0) throw new Error("no exec");
       return ["exec", "capture", "picture", "screenoff", "sleep", "volume", "shield", "count", "log", "temp"]
@@ -123,7 +164,7 @@
   var x = new XMLHttpRequest(); x.open("GET", "index.html", false); x.send();
   var m = /<div id="stage">([\s\S]*?)<\/div>\s*<script/.exec(x.responseText);
   document.getElementById("stage").innerHTML = m[1];
-  ["../preview/mock-apps.js", "logic.js", "config.js", "luna.js", "home.js"].forEach(function (s) {
+  ["../preview/mock-apps.js", "logic.js", "config.js", "luna.js", "sky/satellite.min.js", "sky-logic.js", "overhead.js", "home.js"].forEach(function (s) {
     var e = document.createElement("script"); e.src = s; e.async = false; document.body.appendChild(e);
   });
 })();

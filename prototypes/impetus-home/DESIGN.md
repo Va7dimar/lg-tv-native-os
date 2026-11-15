@@ -145,6 +145,51 @@ should drive the control room's main actions without an app install.
 - **Known gaps.** Plain HTTP on the home network: anyone on the Wi-Fi who
   sees a request can copy its token. Revoke from the engine room ends it.
 
+## Overhead (issue #23)
+
+What is over the house right now: the ISS, the Starlink trains, the planes.
+Machines only; moon, aurora and weather are #9. The door OVERHEAD sits in
+the control room above ENGINE ROOM; the room rises from below (`body.up`),
+as the engine room turns in from the side. BACK returns to the control room.
+
+- **The dome.** The left third holds the words, the right two thirds a sky
+  dome from the home position: zenith in the middle, horizon at the rim,
+  north up, east left (looking up). Rings at 30° and 60°. The ISS is a white
+  dot with a halo; during a pass its whole path is drawn dashed, the part it
+  is visible on in green, the part behind it in white. Before a pass, the
+  next one's path, its start mark and its time. Starlink satellites are small
+  dots (sunlit ones brighter), a train is a line through one launch's dots.
+  Planes are arrows along their track, the three nearest named.
+- **The words.** Where the ISS is now (over which point, how high), the next
+  visible pass in big type (the time, TODAY / TOMORROW / the weekday, and
+  "rises in the W, 61° high, sets in the E"), the trains and the planes in
+  plain lines, and a quiet sources line with each feed's age.
+- **Visible** means at least 5° up, the ISS in sunlight and the sun at least
+  6° under the home horizon. 5° and not 10°: from a city the low part of a
+  pass is still worth looking for, and the path shows where.
+- **The control-room note.** When a visible pass starts within the next
+  12 hours (tonight), the door gets a green dot and `ISS 19:57`.
+- **The math is on the TV.** `sky/satellite.min.js` (satellite.js 4.1.4,
+  MIT) runs SGP4 on the elements the helper fetched; `sky-logic.js` adds the
+  sun, the look angles, the passes and the dome. The home position never
+  leaves the TV: the elements are the same for everyone, and the planes feed
+  is asked about a point rounded to 0.1° (about 11 km).
+- **Feeds** (public, no key): CelesTrak GP elements for the ISS (`CATNR=25544`)
+  and the Starlink group, cut to the 8 newest launches, fetched at most every
+  6 h, 30 min after a failure; adsb.lol `v2/point/<lat>/<lon>/54` for planes,
+  at most every 20 s, asked every 30 s while the room is open. The helper
+  answers at once from its copy and fetches in the background; a hung network
+  is given up, never waited on.
+- **The home position** is typed on the phone remote (HOME POSITION, "64.1466,
+  -21.9426" as a map app gives it) and kept on the TV only, in `keep/place`
+  (mode 600). Not set: central Reykjavík, said as such on the phone.
+- **Calm failure.** A feed that is down shows as "feed down" in the sources
+  line; the ISS falls back to its last elements (good for days), planes
+  simply are not drawn. No box, no spinner. Nothing in the room blocks Home
+  or the control room: every helper call is answered from the copy.
+- **Not the shield's business.** None of the shield's 45 hosts is a feed
+  host (checked by the tests).
+
 ## Shared rules
 
 | Rule | Value | Source |

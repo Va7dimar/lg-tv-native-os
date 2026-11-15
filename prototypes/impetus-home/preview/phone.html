@@ -40,12 +40,14 @@
     if (f.op === "apps") return JSON.stringify({ returnValue: true, apps: window.MOCK_APPS || [] });
     if (w[0] === "scene") { tv.scene = w[1] === "on" ? w[2].slice(3) : ""; return "ok=1"; }
     if (w[0] === "shield") { tv.shield = w[1] === "on"; return "ok=1"; }
+    if (w[0] === "sky" && w[2] === "set") { tv.place = [w[3].slice(4), w[4].slice(4)]; return "ok=1"; }
+    if (w[0] === "sky") return tv.place ? "ok=1\nlat=" + tv.place[0] + "\nlon=" + tv.place[1] : "ok=1\nplace=none";
     return "ok=1";
   };
   var x = new XMLHttpRequest(); x.open("GET", "phone/index.html", false); x.send();
   var m = /<body>([\s\S]*?)<script/.exec(x.responseText);
   document.body.insertAdjacentHTML("afterbegin", m[1]);
-  ["../preview/mock-apps.js", "logic.js", "config.js", "phone/phone.js"].forEach(function (s) {
+  ["../preview/mock-apps.js", "logic.js", "sky-logic.js", "config.js", "phone/phone.js"].forEach(function (s) {
     var e = document.createElement("script"); e.src = s; e.async = false; document.body.appendChild(e);
   });
 })();

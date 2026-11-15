@@ -11,7 +11,7 @@
   var NOTICE_SECONDS = 120;   // the keeper brings the notice up this long before standby
   var TALK_ROWS = 9, LOG_LINES = 14, PHONE_ROWS = 4;
 
-  var room = "living";        // living | control | engine | notice
+  var room = "living";        // living | control | engine | overhead | notice | bedtime
   var focusIdx = 0, focusables = [];
   var idleTimer = null, stateTimer = null, stillTimer = null, engineTimer = null, noticeTimer = null;
   var caps = {}, state = {}, sceneKeys = [];
@@ -490,7 +490,8 @@
   // ---------- Focus ----------
   function collect() {
     var keep = focusables[focusIdx];
-    var sel = room === "engine" ? "#engine [data-focus]" : room === "bedtime" ? "#bedtime [data-focus]" : "#control [data-focus]";
+    var sel = room === "engine" ? "#engine [data-focus]" : room === "bedtime" ? "#bedtime [data-focus]" :
+      room === "overhead" ? "#overhead [data-focus]" : "#control [data-focus]";
     focusables = Array.prototype.slice.call(document.querySelectorAll(sel))
       .filter(function (el) { return !el.hidden; });
     var i = focusables.indexOf(keep);
@@ -537,18 +538,21 @@
     b.toggle("instant", !!instant);
     b.toggle("open", next === "control");
     b.toggle("deep", next === "engine");
+    b.toggle("up", next === "overhead");
     b.toggle("notice", next === "notice");
     b.toggle("bedtime", next === "bedtime");
-    ["control", "engine", "notice", "bedtime"].forEach(function (id) {
+    ["control", "engine", "overhead", "notice", "bedtime"].forEach(function (id) {
       $(id).setAttribute("aria-hidden", next === id ? "false" : "true");
     });
+    if (prev === "overhead" && next !== "overhead") window.ImpetusOverhead.leave();
     clearInterval(stateTimer); clearInterval(stillTimer); clearInterval(engineTimer);
     clearInterval(noticeTimer); clearTimeout(idleTimer); clearTimeout(bedTimer);
     collect();
     if (next === "control") {
       // Arriving from the living room lands on APPLE TV; coming back out of
       // the engine room lands on its door.
-      focusIdx = prev === "engine" ? Math.max(0, focusables.indexOf($("door"))) : 0;
+      focusIdx = prev === "engine" ? Math.max(0, focusables.indexOf($("door"))) :
+        prev === "overhead" ? Math.max(0, focusables.indexOf($("skydoor"))) : 0;
       liveDead = false;
       refreshState(); refreshStill();
       stateTimer = setInterval(refreshState, every(CFG.stateEverySeconds, 5));
@@ -558,6 +562,9 @@
       focusIdx = 0;
       refreshEngine();
       engineTimer = setInterval(refreshEngine, every(CFG.engineEverySeconds, 5));
+      bumpIdle();
+    } else if (next === "overhead") {
+      window.ImpetusOverhead.enter();
       bumpIdle();
     } else if (next === "bedtime") {
       focusIdx = 0;
@@ -587,7 +594,7 @@
     }
     if (room === "living") { setRoom("control"); return; } // the opening key does nothing else
     bumpIdle();
-    if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) setRoom(room === "engine" ? "control" : "living");
+    if (k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC) setRoom(room === "engine" || room === "overhead" ? "control" : "living");
     else if (k === KEY.LEFT) moveFocus("left");
     else if (k === KEY.RIGHT) moveFocus("right");
     else if (k === KEY.UP) moveFocus("up");
@@ -624,6 +631,7 @@
 
   $("appletv")._press = function () { return LUNA.launch(CFG.appleTv.id); };
   $("door")._press = function () { setRoom("engine"); };
+  $("skydoor")._press = function () { setRoom("overhead"); };
   $("shield")._press = pressShield;
   $("bedgo")._press = pressBedGo;
   $("bedlater")._press = pressBedLater;
@@ -642,13 +650,15 @@
     caps = c;
     renderScenes();
     $("door").hidden = !caps.exec;
+    $("skydoor").hidden = !caps.exec;
+    if (caps.exec) window.ImpetusOverhead.start(LUNA.ctl);
     $("shieldline").hidden = !caps.shield;
     $("shield").hidden = !caps.shield;
     collect(); paintFocus();
     if (caps.exec) LUNA.ctl(["start", "target=" + CFG.appleTv.id]).then(noop, noop);
     sendBedtime(true);
     arrive(launchParams());
-    var m = /[?&]room=(control|engine)/.exec(location.search || "");
+    var m = /[?&]room=(control|engine|overhead)/.exec(location.search || "");
     if (m) setRoom(m[1], true);
   });
 })();

@@ -1,0 +1,265 @@
+#!/bin/sh
+# impetus-sky: the overhead room's side of the helper (issue #23).
+#
+# impetus-ctl runs it for the verb `sky`, after its own word check. It
+# changes nothing on the TV and takes no lock: a feed must never hold up a
+# scene, the still or `restore`.
+#
+# Modes
+#   place                       ok=1, then lat=<deg> lon=<deg>, or place=none
+#   place set lat=<deg> lon=<deg>   the home position (the phone page or SSH)
+#   place clear                 forget it
+#   orbits                      @iss and @trains sections, each a line
+#                               "kind=fresh|last|none age=<s>" and then TLE text.
+#                               Never waits for the network: a copy older than
+#                               $ORBIT_EVERY starts one fetch in the background
+#                               and the copy kept is answered at once.
+#   planes at=<lat>,<lon>       one line "kind=fresh|last|none age=<s>", then
+#                               adsb.lol's JSON for 100 km around that point.
+#                               The page sends the point rounded to 0.1 degree
+#                               (about 10 km), so the exact home never leaves
+#                               the TV; anything finer is refused.
+#
+# Files: $KEEP/place (mode 600, survives a restart; only the TV holds it):
+# "lat=<deg>" and "lon=<deg>". $RUN/sky (memory): the copies of the feeds.
+#
+# Feeds (no key): CelesTrak's orbit elements (ISS by catalogue number, the
+# Starlink group, of which only the $TRAINS newest launches are kept: those
+# are the trains) and adsb.lol's aircraft (ODbL). CelesTrak asks for one
+# download per element set every couple of hours at most: a copy is fetched
+# every $ORBIT_EVERY seconds, and a failed fetch is not tried again for
+# $ORBIT_RETRY seconds.
+
+umask 077
+
+DIR=$(cd "$(dirname "$0")/.." 2>/dev/null && pwd)
+RUN=${IMPETUS_RUN:-/tmp/impetus}
+KEEP=${IMPETUS_KEEP:-$DIR/state}
+SKY="$RUN/sky"
+PLACE="$KEEP/place"
+
+ISS_URL=${IMPETUS_ISS_URL:-https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=tle}
+STARLINK_URL=${IMPETUS_STARLINK_URL:-https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle}
+PLANES_URL=${IMPETUS_PLANES_URL:-https://api.adsb.lol/v2/point}
+PLANES_NM=54                          # nautical miles around the point: 100 km
+TRAINS=8                              # newest Starlink launches kept
+ORBIT_EVERY=${IMPETUS_ORBIT_EVERY:-21600}   # seconds a copy of the elements is good for
+ORBIT_RETRY=${IMPETUS_ORBIT_RETRY:-1800}    # seconds after a failed fetch before the next
+PLANES_EVERY=20                       # seconds; a closer ask gets the copy kept
+FETCHWAIT=${IMPETUS_FETCHWAIT:-10}    # seconds the planes fetch may take
+ORBITWAIT=${IMPETUS_ORBITWAIT:-60}    # seconds an elements fetch may take (the Starlink set is ~2 MB)
+FETCHMAX=6000000                      # bytes; a larger answer is not the feed
+
+now() { if [ -n "$IMPETUS_NOW" ]; then echo "$IMPETUS_NOW"; else date +%s; fi; }
+is_num() { case "$1" in ""|*[!0-9]*) return 1 ;; esac; [ ${#1} -le 12 ]; }
+
+# A decimal degree: digits, at most $2 before the point, at most 5 after,
+# with a sign, and within +-$3.
+deg_ok() { # value int-digits limit
+  dk_v=${1#-}
+  case "$dk_v" in ""|.*|*.|*[!0-9.]*|*.*.*) return 1 ;; esac
+  dk_i=${dk_v%%.*}
+  [ ${#dk_i} -le "$2" ] || return 1
+  case "$dk_v" in *.*) [ ${#dk_v} -le $((${#dk_i} + 6)) ] || return 1 ;; esac
+  awk -v v="$dk_v" -v m="$3" 'BEGIN { exit !(v + 0 <= m) }'
+}
+
+# ---------- the home position ----------
+
+place_show() {
+  pl_lat= pl_lon=
+  if [ -r "$PLACE" ]; then
+    pl_lat=$(sed -n 's/^lat=//p' "$PLACE" | head -n 1)
+    pl_lon=$(sed -n 's/^lon=//p' "$PLACE" | head -n 1)
+  fi
+  echo ok=1
+  if deg_ok "$pl_lat" 2 90 && deg_ok "$pl_lon" 3 180; then echo "lat=$pl_lat"; echo "lon=$pl_lon"
+  else echo "place=none"; fi
+}
+
+place_set() {
+  ps_lat= ps_lon=
+  for a in "$@"; do
+    case "$a" in
+      lat=*) ps_lat=${a#lat=} ;;
+      lon=*) ps_lon=${a#lon=} ;;
+      *) echo "error=word"; return 1 ;;
+    esac
+  done
+  deg_ok "$ps_lat" 2 90 || { echo "error=lat"; return 1; }
+  deg_ok "$ps_lon" 3 180 || { echo "error=lon"; return 1; }
+  mkdir -p "$KEEP" 2>/dev/null
+  # Written whole and moved into place: a cut-off write keeps the old one.
+  if printf 'lat=%s\nlon=%s\n' "$ps_lat" "$ps_lon" > "$PLACE.new" 2>/dev/null &&
+     chmod 600 "$PLACE.new" 2>/dev/null && mv "$PLACE.new" "$PLACE" 2>/dev/null; then
+    echo ok=1
+  else
+    rm -f "$PLACE.new" 2>/dev/null; echo "error=write"; return 1
+  fi
+}
+
+# ---------- fetching ----------
+
+# Which tool fetches on this TV: curl when there is one, else busybox wget.
+fetcher() {
+  if [ -n "$IMPETUS_FETCHER" ]; then echo "$IMPETUS_FETCHER"; return; fi
+  if command -v curl >/dev/null 2>&1; then echo curl
+  elif command -v wget >/dev/null 2>&1; then echo wget
+  fi
+}
+
+# fetch_to <file> <url> <seconds>: the whole answer or nothing, given up
+# after <seconds> (busybox wget's own timeout is per read, not in all).
+fetch_to() {
+  ft_tool=$(fetcher)
+  [ -n "$ft_tool" ] || return 1
+  rm -f "$1.part"
+  (
+    case "$ft_tool" in
+      curl) curl -fsSL -m "$3" -o "$1.part" "$2" </dev/null >/dev/null 2>&1 & ;;
+      *) wget -q -T "$3" -O "$1.part" "$2" </dev/null >/dev/null 2>&1 & ;;
+    esac
+    ft_p=$!
+    (
+      trap 'kill "$ft_s" 2>/dev/null; exit 0' TERM
+      sleep "$3" & ft_s=$!
+      wait "$ft_s" && kill "$ft_p" 2>/dev/null
+    ) >/dev/null 2>&1 </dev/null &
+    ft_w=$!
+    wait "$ft_p"; ft_r=$?
+    kill "$ft_w" 2>/dev/null
+    exit "$ft_r"
+  ) 2>/dev/null || { rm -f "$1.part"; return 1; }
+  ft_n=$(wc -c < "$1.part" 2>/dev/null)
+  if [ -z "$ft_n" ] || [ "$ft_n" -eq 0 ] || [ "$ft_n" -gt "$FETCHMAX" ]; then rm -f "$1.part"; return 1; fi
+  mv "$1.part" "$1"
+}
+
+# The header line for a kept copy: fresh while younger than $2 seconds.
+kind_of() { # file max-age
+  ko_at=$(cat "$1.at" 2>/dev/null)
+  if [ -s "$1" ] && is_num "$ko_at"; then
+    ko_age=$(( $(now) - ko_at )); [ "$ko_age" -ge 0 ] || ko_age=0
+    if [ "$ko_age" -lt "$2" ]; then echo "kind=fresh age=$ko_age"; else echo "kind=last age=$ko_age"; fi
+  else
+    echo "kind=none age=0"
+  fi
+}
+
+# ---------- orbits ----------
+
+# Only the three lines of one object: its name, line 1 and line 2.
+iss_only() {
+  tr -d '\r' < "$1" | awk '
+    /^1 25544U/ { l1 = $0; nm = prev }
+    /^2 25544 / && l1 != "" { if (nm == "" || nm ~ /^[12] /) nm = "ISS (ZARYA)"; print nm; print l1; print; exit }
+    { prev = $0 }'
+}
+
+# The Starlink set cut to the $TRAINS newest launches (the international
+# designator in line 1: two-digit year, launch number of the year).
+trains_only() {
+  tr -d '\r' < "$1" | awk -v keep="$TRAINS" '
+    /^1 / && prev ~ /^STARLINK/ {
+      y = substr($0, 10, 2) + 0; k = (y < 57 ? 2000 + y : 1900 + y) * 1000 + substr($0, 12, 3)
+      nm[++n] = prev; a[n] = $0; key[n] = k; seen[k] = 1; next
+    }
+    /^2 / && n > 0 && b[n] == "" && substr($0, 3, 5) == substr(a[n], 3, 5) { b[n] = $0; next }
+    { prev = $0 }
+    END {
+      m = 0; for (k in seen) ks[++m] = k
+      for (i = 1; i <= m; i++) for (j = i + 1; j <= m; j++) if (ks[j] > ks[i]) { t = ks[i]; ks[i] = ks[j]; ks[j] = t }
+      for (i = 1; i <= m && i <= keep; i++) want[ks[i]] = 1
+      for (i = 1; i <= n; i++) if (want[key[i]] && b[i] != "") { print nm[i]; print a[i]; print b[i] }
+    }'
+}
+
+# One background fetch of both sets. A set that comes back without what it
+# should hold keeps its last copy; a failure holds off the next try.
+orbits_fetch() {
+  of_ok=1
+  if fetch_to "$SKY/iss.raw" "$ISS_URL" "$ORBITWAIT" && iss_only "$SKY/iss.raw" > "$SKY/iss.new" &&
+     [ "$(grep -c '^[12] 25544' "$SKY/iss.new")" = 2 ]; then
+    mv "$SKY/iss.new" "$SKY/iss.tle"; now > "$SKY/iss.tle.at"
+  else of_ok=0; fi
+  if fetch_to "$SKY/starlink.raw" "$STARLINK_URL" "$ORBITWAIT" && trains_only "$SKY/starlink.raw" > "$SKY/trains.new" &&
+     grep -q '^1 ' "$SKY/trains.new"; then
+    mv "$SKY/trains.new" "$SKY/trains.tle"; now > "$SKY/trains.tle.at"
+  else of_ok=0; fi
+  rm -f "$SKY/iss.raw" "$SKY/iss.new" "$SKY/starlink.raw" "$SKY/trains.new"
+  if [ "$of_ok" = 1 ]; then rm -f "$SKY/orbits.fail"; else now > "$SKY/orbits.fail"; fi
+  rm -f "$SKY/orbits.pid"
+}
+
+# True when a fetch is due: a copy is missing or old, no fetch runs, and the
+# last failure is long enough ago.
+orbits_due() {
+  od_pid=$(cat "$SKY/orbits.pid" 2>/dev/null)
+  if is_num "$od_pid" && kill -0 "$od_pid" 2>/dev/null; then return 1; fi
+  od_fail=$(cat "$SKY/orbits.fail" 2>/dev/null)
+  if is_num "$od_fail" && [ $(( $(now) - od_fail )) -lt "$ORBIT_RETRY" ]; then return 1; fi
+  for od_f in iss trains; do
+    case "$(kind_of "$SKY/$od_f.tle" "$ORBIT_EVERY")" in kind=fresh*) ;; *) return 0 ;; esac
+  done
+  return 1
+}
+
+orbits() {
+  mkdir -p "$SKY"
+  if orbits_due; then
+    # Away from the answer: the exec service waits for every writer to close.
+    ( orbits_fetch ) </dev/null >/dev/null 2>&1 &
+    echo "$!" > "$SKY/orbits.pid"
+  fi
+  for o_f in iss trains; do
+    echo "@$o_f"
+    kind_of "$SKY/$o_f.tle" "$ORBIT_EVERY"
+    [ -s "$SKY/$o_f.tle" ] && cat "$SKY/$o_f.tle"
+  done
+  return 0
+}
+
+# ---------- planes ----------
+
+planes() {
+  pn_at=
+  for a in "$@"; do
+    case "$a" in at=*) pn_at=${a#at=} ;; *) echo "error=word"; return 1 ;; esac
+  done
+  pn_lat=${pn_at%%,*}; pn_lon=${pn_at#*,}
+  [ "$pn_lat" != "$pn_at" ] || { echo "error=at"; return 1; }
+  # One decimal at most: the point is the home's neighbourhood, never the home.
+  case "$pn_lat" in *.??*) echo "error=at"; return 1 ;; esac
+  case "$pn_lon" in *.??*) echo "error=at"; return 1 ;; esac
+  deg_ok "$pn_lat" 2 90 && deg_ok "$pn_lon" 3 180 || { echo "error=at"; return 1; }
+  mkdir -p "$SKY"
+  pn_f="$SKY/planes.json"
+  # The copy belongs to one point; another point starts over.
+  [ "$(cat "$SKY/planes.where" 2>/dev/null)" = "$pn_at" ] || rm -f "$pn_f" "$pn_f.at"
+  case "$(kind_of "$pn_f" "$PLANES_EVERY")" in
+    kind=fresh*) ;;
+    *)
+      if fetch_to "$SKY/planes.new" "$PLANES_URL/$pn_lat/$pn_lon/$PLANES_NM" "$FETCHWAIT" &&
+         grep -q '"ac"' "$SKY/planes.new" && grep -q '"now"' "$SKY/planes.new"; then
+        mv "$SKY/planes.new" "$pn_f"; now > "$pn_f.at"; echo "$pn_at" > "$SKY/planes.where"
+      fi
+      rm -f "$SKY/planes.new" ;;
+  esac
+  kind_of "$pn_f" 60
+  [ -s "$pn_f" ] && cat "$pn_f"
+  return 0
+}
+
+case "$1" in
+  place)
+    shift
+    case "$1" in
+      "") place_show ;;
+      set) shift; place_set "$@" ;;
+      clear) rm -f "$PLACE"; echo ok=1 ;;
+      *) echo "error=place"; exit 2 ;;
+    esac ;;
+  orbits) orbits ;;
+  planes) shift; planes "$@" ;;
+  *) echo "error=sky"; exit 2 ;;
+esac

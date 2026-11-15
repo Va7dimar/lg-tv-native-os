@@ -314,6 +314,22 @@ before it is left in place.
   (`impetus-ctl`) gives a different line shape on this TV.
 - **Relaunch:** with Impetus already open in the background, opening it
   again shows the living room, not a stale room.
+- **Overhead (#23):**
+  - `which curl wget` and `curl -sS -o /dev/null -w '%{http_code}' https://celestrak.org/`
+    print a fetcher and 200 (HTTPS works from the helper). Then the same for
+    `https://api.adsb.lol/`. If only wget is there, set nothing: the helper
+    picks it.
+  - `impetus-ctl sky orbits` answers at once with `kind=none` the first time,
+    and a few seconds later `kind=fresh` with the elements: the background
+    fetch outlived the exec call.
+  - The orbits answer (about 35 KB) arrives whole through the exec service;
+    the room shows the trains.
+  - Enter the home position from the phone remote; `sky place` on the TV reads
+    it back, and the room's top line names it.
+  - Compare the next pass with Heavens-Above for the same position: the start
+    time within a minute.
+  - On the 65": the dome and the big pass time read from the sofa; the
+    OVERHEAD door fits in the control room's column with three scenes.
 
 ## 11. Write it down
 

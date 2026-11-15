@@ -37,6 +37,9 @@ Enter (OK) and Backspace or Escape (BACK) drive it. The TV is a stand-in
 | `notice=sleep` | the two-minute notice before standby |
 | `notice=bedtime` | the bedtime card (WIND DOWN or NOT TONIGHT) |
 | `phone=on` | the phone remote's server is on (engine room) |
+| `room=overhead` | opens the overhead room (#23); `t=2026-11-16T19:58:30Z` is mid-pass |
+| `sky=down` | the orbit and plane feeds are down |
+| `place=none` | no home position set (central Reykjavík) |
 
 The phone remote's page: `http://localhost:8765/preview/phone.html` at phone
 width (e.g. 390×844), with `paired=1`, `scene=`, `shield=on`, `caps=` and
@@ -96,6 +99,7 @@ Ideas that were wanted and parked, one issue each:
 | `app/bin/impetus-ctl` | the root helper and the keeper |
 | `app/bin/shield-count.js` | counts calls the shield stopped |
 | `app/bin/impetus-phone`, `app/bin/phone-serve.js`, `app/phone/` | the phone remote: its CGI door (pairing, tokens), the node fallback server, the phone page |
+| `app/bin/impetus-sky`, `app/sky-logic.js`, `app/overhead.js`, `app/overhead.css`, `app/sky/` | the overhead room (#23): the feeds and the home position, the orbit math, the room, satellite.js |
 | `boot/impetus-home` | the boot hook that makes Impetus the default Home |
 | `preview/` | the PC preview |
 | `tests/`, `scripts/` | host tests and the IPK build |

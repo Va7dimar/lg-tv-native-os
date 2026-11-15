@@ -48,10 +48,19 @@
   <h2 id="appslabel" class="label" hidden>APPS</h2>
   <nav id="apps" class="apps"></nav>
 
+  <h2 class="label">HOME POSITION</h2>
+  <form id="placeform" class="placeform">
+    <input id="place" class="place" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+      placeholder="64.1466, -21.9426">
+    <button id="placesave" class="key wide" type="submit"><span class="name">SAVE ON THE TV</span></button>
+  </form>
+  <p id="placeline" class="line"></p>
+
   <button id="standby" class="key standby" type="button"><span class="name">STANDBY</span></button>
 </main>
 
 <script src="logic.js"></script>
+<script src="sky-logic.js"></script>
 <script src="config.js"></script>
 <script src="phone.js"></script>
 </body>
